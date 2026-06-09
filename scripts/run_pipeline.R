@@ -28,6 +28,7 @@
 library(DBI)
 library(RSQLite)
 library(dplyr)
+library(rmarkdown)
 
 # ============================
 # CONFIGURATION
@@ -38,8 +39,21 @@ if (basename(getwd()) == "scripts") setwd("..")
 DB_DEMO <- "database/geochem_demo.sqlite"
 DB_PROD <- "database/geochem_operational.sqlite"
 
+# -----------------------------------------------
+# TOGGLE MODE: "DEMO" (rebuilds database) vs "OPERATIONAL" (preserves existing data)
+# -----------------------------------------------
+
 MODE <- "DEMO"   # DEMO | OPERATIONAL
 DB_PATH <- if (MODE == "DEMO") DB_DEMO else DB_PROD
+
+# -----------------------------------------------
+# TOGGLE (TRUE/FALSE) TO BUILD WEBSITE AFTER DATABASE CREATION
+# -----------------------------------------------
+BUILD_WEBSITE <- TRUE
+
+# -----------------------------------------------
+# TOGGLE (TRUE/FALSE) TO SELECT DATA TO INGEST
+# -----------------------------------------------
 
 RUN_INGEST <- list(
   ndep   = TRUE,
@@ -409,7 +423,7 @@ export_geopackage(con, mode = MODE)
 
 message("\n[EXPORT] Writing website CSV outputs")
 
-dir.create("website/data", recursive = TRUE, showWarnings = FALSE)
+dir.create("docs/data", recursive = TRUE, showWarnings = FALSE)
 
 write.csv(
   dbGetQuery(con, "
@@ -417,7 +431,7 @@ write.csv(
     FROM Ingest_Run_Log
     ORDER BY timestamp
   "),
-  "website/data/ingest_log.csv",
+  "docs/data/ingest_log.csv",
   row.names = FALSE
 )
 
@@ -426,7 +440,7 @@ write.csv(
     SELECT logger_id, timestamp, temperature
     FROM Temperature_Observations
   "),
-  "website/data/temp_sample.csv",
+  "docs/data/temp_sample.csv",
   row.names = FALSE
 )
 
@@ -442,9 +456,48 @@ write.csv(
       w.basin_name
     FROM Wells w
   "),
-  "website/data/well_sample.csv",
+  "docs/data/well_sample.csv",
   row.names = FALSE
 )
+
+# ============================================================
+# WEBSITE BUILD STAGE
+# ============================================================
+
+message("\n==============================")
+message(" WEBSITE BUILD")
+message("==============================")
+
+build_website <- function() {
+  
+  if (!dir.exists("website")) {
+    stop("[WEBSITE] website directory not found")
+  }
+  
+  dir.create("docs", showWarnings = FALSE)
+  
+  message("[WEBSITE] Rendering site from 'website/' → 'docs/'")
+  
+  start_time <- Sys.time()
+  
+  tryCatch({
+    
+    rmarkdown::render_site("website")
+    
+    elapsed <- round(difftime(Sys.time(), start_time, units = "secs"), 1)
+    
+    message("✅ Website built successfully (", elapsed, " sec)")
+    
+  }, error = function(e) {
+    warning("[WEBSITE] Build failed: ", e$message)
+  })
+}
+
+if (BUILD_WEBSITE) {
+  build_website()
+} else {
+  message("[WEBSITE] Skipping build")
+}
 
 # ============================================================
 # CLEANUP

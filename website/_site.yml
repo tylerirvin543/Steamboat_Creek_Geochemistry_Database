@@ -1,5 +1,5 @@
 name: "steamboat-project"
-output_dir: "website"
+output_dir: "../docs"
 
 navbar:
   title: "Steamboat Data Pipeline"
@@ -16,3 +16,9 @@ navbar:
       href: pipeline.html
     - text: "About"
       href: about.html
+
+
+output:
+  html_document:
+    theme: cosmo
+    toc: true
