@@ -1,0 +1,150 @@
+---
+title: "Steamboat Environmental Data System"
+output: html_document
+---
+
+# 🌎 Steamboat Environmental Monitoring System
+
+A reproducible pipeline integrating **geochemistry, field observations, and temperature logger data** into a unified relational and GIS-ready system.
+
+---
+
+## 🔁 System Overview
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(DiagrammeR)
+
+DiagrammeR::grViz("
+digraph {
+  rankdir=LR;
+  node [shape=box style=filled fillcolor=lightblue]
+
+  NDEP -> Database
+  Field -> Database
+  Loggers -> Database
+  Database -> GIS
+}
+")
+```
+
+---
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+
+# Load data quietly (no visible section)
+data_path <- "docs/data/ingest_log.csv"
+
+if (file.exists(data_path)) {
+
+  ingest_log <- read_csv(data_path, show_col_types = FALSE) |>
+    mutate(timestamp = ymd_hms(timestamp)) |>
+    arrange(timestamp)
+
+} else {
+
+  ingest_log <- NULL
+}
+```
+
+---
+
+## 🧱 Database Composition
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(ggplot2)
+library(readr)
+library(dplyr)
+
+# optional: export this from pipeline later for GitHub Pages
+# for now we assume you will create a CSV like this in run_pipeline
+
+table_path <- "docs/data/table_counts.csv"
+
+if (file.exists(table_path)) {
+
+  table_counts <- read_csv(table_path, show_col_types = FALSE)
+
+  print(
+    ggplot(table_counts,
+           aes(x = reorder(table, n_rows),
+               y = n_rows)) +
+      geom_col(fill = "darkgreen") +
+      coord_flip() +
+      labs(
+        title = "Database Composition by Table",
+        x = "Table",
+        y = "Number of Records"
+      ) +
+      theme_minimal()
+  )
+
+} else {
+
+  plot.new()
+  text(0.5, 0.5, "Database breakdown will appear after export")
+
+}
+```
+
+---
+
+## 📈 Database Growth
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if (!is.null(ingest_log) && nrow(ingest_log) > 0) {
+
+  plot_data <- ingest_log |>
+    mutate(cumulative = cumsum(measurements_inserted))
+
+  print(
+    ggplot(plot_data,
+           aes(x = timestamp,
+               y = cumulative,
+               color = data_source)) +
+
+      geom_line(linewidth = 1.2) +
+      geom_point(size = 2.5) +
+
+      labs(
+        title = "Database Growth Over Time",
+        subtitle = "Cumulative records inserted through ingestion pipeline",
+        x = "",
+        y = "Total Records",
+        color = "Source"
+      ) +
+
+      theme_minimal() +
+
+      theme(
+        plot.title = element_text(face = "bold"),
+        legend.position = "bottom"
+      )
+  )
+
+} else {
+
+  plot.new()
+  text(0.5, 0.5, "No data available")
+
+}
+```
+
+---
+
+## 🧭 Explore
+
+- 📘 **Project** → scientific context and motivation  
+- ⚙️ **Pipeline** → ingestion and processing design  
+- 🧱 **Data** → schema and relationships  
+- 📊 **Results** → analysis and outputs  
+- 👤 **About** → author and tools  
+
+---
+
+## ✅ Status
+
+System is operational and updated via controlled ingestion workflows.

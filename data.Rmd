@@ -1,0 +1,250 @@
+---
+title: "Data and Schema"
+output: html_document
+---
+
+# Data & Structure
+
+This system integrates multiple environmental datasets into a unified, structured database designed for reproducible scientific analysis.
+
+---
+
+## 📥 Data Sources
+
+The database integrates heterogeneous inputs collected across multiple workflows:
+
+- **Regulatory data (NDEP)** — long-term chemistry records  
+- **Field measurements** — site-based sampling campaigns  
+- **Laboratory analyses** — high-quality analytical chemistry (in progress)  
+- **Temperature loggers** — continuous thermal monitoring  
+
+Each source has different structure, frequency, and quality constraints, requiring controlled ingestion and validation.
+
+---
+
+## 🔄 Data Flow
+
+All data entering the system pass through a controlled sequence of transformations:
+
+**Raw Input → Validation → Standardization → Database → Derived Outputs**
+
+Key features of this process:
+
+- Raw inputs are never modified  
+- All transformations are scripted and version-controlled  
+- External identifiers (e.g., station codes) are translated into internal database keys  
+- Invalid or inconsistent data are rejected during ingest  
+
+### Archival and Provenance
+
+To preserve reproducibility:
+
+- All raw field templates are **archived before ingestion**  
+- Templates are **cleared only after successful ingest**  
+- This prevents duplication while maintaining a complete history of inputs  
+
+---
+
+## 🧱 Database Structure
+
+The system is built on a normalized relational schema with the following core tables:
+
+- **Locations** — spatial reference points  
+- **Sampling_Events** — time-based groupings of observations  
+- **Samples** — discrete physical observations  
+- **Field_Measurements** — in-situ measurements  
+- **Lab_Analyses** — analytical chemistry results  
+- **Temperature_Observations** — high-frequency time-series data  
+
+### Design Principles
+
+- normalized relational structure  
+- strict foreign key relationships  
+- append-only time series (no overwriting)  
+- explicit separation of raw vs. derived data  
+
+---
+
+## 🌡️ Continuous vs Discrete Data
+
+A key feature of the system is the integration of:
+
+### Discrete observations
+- field measurements  
+- laboratory chemistry  
+
+### Continuous observations
+- temperature logger data  
+
+Continuous data enable:
+
+- detection of short-term variability  
+- temporal pattern recognition  
+- higher-resolution system monitoring  
+
+---
+
+## 📊 Data Behavior
+
+### Source Integration
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(DBI)
+library(RSQLite)
+library(ggplot2)
+
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_demo.sqlite")
+
+if (dbGetQuery(con, "SELECT COUNT(*) n FROM Lab_Analyses")$n == 0) {
+
+  cat("Laboratory data not yet available.")
+
+} else {
+
+  source_df <- dbGetQuery(con, "
+SELECT
+  CASE
+    WHEN source_id = 1 THEN 'NDEP'
+    WHEN source_id = 2 THEN 'Field'
+    ELSE 'Other'
+  END AS data_source,
+  COUNT(*) AS n
+FROM Lab_Analyses
+GROUP BY data_source
+")
+
+# Ensure both categories exist
+all_sources <- data.frame(
+  data_source = c("NDEP", "Field")
+)
+
+source_df <- merge(all_sources, source_df, all.x = TRUE)
+source_df$n[is.na(source_df$n)] <- 0
+
+# Plot
+print(
+ggplot(source_df, aes(x = data_source, y = n, fill = data_source)) +
+  geom_col() +
+  labs(
+    title = "Integration of Chemistry Data Sources",
+    subtitle = "Field chemistry not yet ingested",
+    x = "Data Source",
+    y = "Number of Records"
+  ) +
+  scale_fill_manual(values = c("steelblue", "orange")) +
+  theme_minimal()
+)
+}
+```
+
+---
+
+### Ingestion Through Time
+
+cat("**Note:** In DEMO mode, all ingestion events are replayed from scratch. In OPERATIONAL mode, this plot reflects real-time database growth.")
+
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ingest_log <- dbGetQuery(con, "
+SELECT
+  timestamp,
+  data_source,
+  measurements_inserted
+FROM Ingest_Run_Log
+ORDER BY timestamp;
+")
+
+library(lubridate)
+library(dplyr)
+
+ingest_log$timestamp <- ymd_hms(ingest_log$timestamp)
+
+ingest_log <- ingest_log |>
+  arrange(timestamp) |>
+  mutate(cumulative = cumsum(measurements_inserted))
+
+print(
+ggplot(ingest_log,
+       aes(x = timestamp,
+           y = cumulative,
+           color = data_source)) +
+  geom_line(linewidth = 1.2) +
+  geom_point(size = 2) +
+  geom_vline(aes(xintercept = timestamp),
+           linetype = "dashed",
+           alpha = 0.2) +
+  labs(
+    title = "Cumulative Database Growth",
+    subtitle = "Each step represents an ingestion event",
+    x = "Time",
+    y = "Total Records",
+    color = "Data Source"
+  ) +
+  theme_minimal()
+)
+```
+
+---
+
+These patterns reflect:
+
+- incremental database growth  
+- integration across multiple data sources  
+- reproducibility of ingestion workflows  
+
+---
+
+## 🔬 Geochemical Modeling
+
+Validated chemistry is transformed into **PHREEQC-ready inputs**, enabling:
+
+- forward speciation modeling  
+- inverse modeling of hydrothermal processes  
+
+Model outputs are written back into the system, preserving the relationship between:
+
+```
+raw observations → derived chemistry → interpreted processes
+```
+
+---
+
+## 🔁 Reproducibility
+
+All steps in the system are:
+
+- scripted  
+- version-controlled  
+- reproducible  
+
+No manual edits are made to the database.
+
+Every dataset can be:
+
+- traced to a specific input  
+- reprocessed from raw data  
+- validated through ingestion logs  
+
+---
+
+## 📸 Image Data
+
+Photographic observations are stored as structured metadata and linked to:
+
+- locations  
+- sampling events  
+- field measurements  
+
+Images are stored externally, while metadata remain relational.
+
+---
+
+## ✅ Current State
+
+The system is actively evolving.
+
+- Temperature logger data are fully integrated  
+- Field and sampling data workflows are operational  
+- Laboratory chemistry ingestion is ongoing  
+
+&gt; In operational mode, ingestion is explicitly controlled, and the database evolves incrementally over time.

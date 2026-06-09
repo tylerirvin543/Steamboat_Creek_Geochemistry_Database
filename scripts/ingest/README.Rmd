@@ -1,0 +1,115 @@
+
+---
+title: "Data Ingestion Workflow"
+output: github_document
+---
+
+
+## Philosophy
+
+- Ingest scripts read raw files and write to the database
+- No manual edits are made to raw data
+- All joins use explicit identifiers (never names)
+- Scripts are safe to re-run (idempotent where possible)
+
+## Overview
+
+This folder contains all scripts responsible for ingesting raw data into the
+SQLite database.
+
+Each data source has its own adapter:
+
+- `ingest_ndep.R`  
+  Ingests NDEP StationData and NormalizedData into core tables.
+
+- `ingest_field.R`  
+  Ingests structured field metadata templates.
+
+- `ingest_lab.R`  
+  Ingests normalized long-format laboratory chemistry.
+
+- `ingest_temperature_loggers.R`  
+  Ingests logger deployment metadata and (optionally) time-series
+  observations, reconciling deployment periods from observed timestamps.
+
+- `update_all_data.R`  
+  Master orchestrator that runs all ingestion scripts in the correct order.
+
+
+All adapters follow the same principles:
+- Validate first
+- Archive raw inputs
+- Insert relational data
+- Wipe working templates only on success
+
+---
+
+## Pre‑ingest utilities
+
+### prepare_lab_data.R
+
+This script converts raw laboratory outputs (typically wide-format Excel
+files) into standardized long-format CSVs suitable for database ingestion.
+
+- Reads from: `data/raw/lab/`
+- Writes to: `data/processed/lab_normalized/`
+- Run manually as needed
+- NOT called by `update_all_data.R`
+
+The resulting CSVs are then ingested by `ingest_lab.R`.
+
+
+## Run Order
+
+```r
+source("scripts/ingest/ingest_ndep.R")
+source("scripts/ingest/ingest_field.R")
+source("scripts/ingest/ingest_lab.R")
+source("scripts/ingest/ingest_temperature_loggers.R")
+```
+Or simply:
+```r
+source("scripts/ingest/update_all_data.R")
+```
+---
+
+## Validation & Errors
+
+Invalid parameter names halt ingestion
+Missing sample codes halt ingestion
+No database writes occur if validation fails
+Templates are not wiped on failure
+
+Error messages indicate:
+
+which file
+which column
+which row(s)
+
+---
+
+## Archiving
+
+Raw Excel inputs are archived to:
+
+data/processed/*_archive/YYYYMMDD_HHMM/
+
+Nothing is ever lost or overwritten.
+
+### Template Lifecycle
+
+- `locations.xlsx`: persistent reference, not wiped
+- `sampling_events.xlsx`: archived and cleared after ingest
+- `samples.xlsx`: archived and cleared after ingest
+- `field_measurements.xlsx`: archived and cleared after ingest
+
+Templates are cleared only after successful ingest.
+
+## After Ingestion
+
+After ingestion completes successfully:
+
+QC checks are run automatically
+Modeling scripts may be executed
+
+

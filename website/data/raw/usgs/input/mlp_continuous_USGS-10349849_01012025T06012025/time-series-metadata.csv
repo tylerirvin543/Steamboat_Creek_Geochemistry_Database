@@ -1,0 +1,2 @@
+x,y,id,unit_of_measure,parameter_name,parameter_code,statistic_id,hydrologic_unit_code,state_name,last_modified,begin,end,begin_utc,end_utc,computation_period_identifier,computation_identifier,thresholds,sublocation_identifier,primary,monitoring_location_id,web_description,parameter_description,parent_time_series_id
+-119.7285199,39.46574492,c384af6657264a599a8b008c9cc2336c,ft^3/s,Discharge,60,11,1.60501E+11,Nevada,12:44.5,00:00.0,05:00.0,2000-10-06 14:00:00+00:00,2026-06-06 15:05:00+00:00,Points,Instantaneous,[],,Primary,USGS-10349849,,"Discharge, cubic feet per second",

@@ -1,0 +1,145 @@
+---
+title: "Field Data Entry Instructions"
+output: github_document
+---
+
+## Purpose
+
+This folder contains Excel templates for entering field observations,
+including discrete measurements and flux transect data.
+
+These templates are the **only approved interface** for field data entry.
+
+All data must conform to these structures before ingestion.
+
+---
+
+## Files
+
+- `field_locations.xlsx`  
+  Persistent list of research sampling locations
+
+- `field_samples.xlsx`  
+  Temporary; wiped after successful ingestion
+
+- `field_measurements.xlsx`  
+  Temporary; wiped after successful ingestion
+
+- `flux_transects_template.xlsx`  
+  Used for recording stream transects and flux measurements
+
+---
+
+## Important Rules
+
+- Do not rename columns
+- Do not add or modify parameter names
+- Do not delete required columns
+- Fix all validation errors before ingestion
+- Each row must represent **one independent observation**
+
+---
+
+### Vertical Velocity Measurements
+
+If velocities are measured at multiple depths within a slice (e.g., 0.2 and 0.8 depth):
+
+- Each measurement should be recorded as a separate row
+- Use `point_id` to group measurements at the same horizontal position
+- Use `depth_fraction` to indicate relative depth (e.g., 0.2, 0.8)
+- Record `depth_m` once (repeated per row)
+
+Area is calculated using the full depth: area = depth_m * width_m
+
+Velocity values are averaged during ingestion or analysis to compute discharge.
+``
+
+---
+
+### Required Fields
+
+- `external_station_code`
+- `datetime`
+- `transect_id`
+- `point_id`
+- `depth_m`
+- `width_m`
+- `velocity_m_s`
+- `area_m2`
+- `flux_calc`
+
+---
+
+### Field Definitions
+
+- **external_station_code**  
+  Must match an existing location in the database
+
+- **datetime**  
+  Time of measurement (same for all rows in a transect)
+
+- **transect_id**  
+  Identifier for a single transect (e.g., A, B, C)
+
+- **point_id**  
+  Unique identifier for each slice (e.g., P1, P2, P3)
+
+- **depth_m**  
+  Depth of water at that slice
+
+- **width_m**  
+  Width of the slice segment (NOT total creek width)
+
+- **velocity_m_s**  
+  Measured velocity at that slice
+
+- **area_m2**  
+  Cross-sectional area of the slice
+
+- **flux_calc**  
+  Computed as: measured_value / area_m2
+  
+### Important Notes
+
+- Do NOT enter total stream width
+- Do NOT calculate total discharge in Excel
+- Do NOT average values across rows
+- Do NOT mix multiple transects without changing `transect_id`
+
+---
+
+## How Flux is Used
+
+Each row is stored independently in the database.
+
+Total discharge and flux are calculated later using: Sum(velocity * area)
+
+- this ensures accurate and reproducible results.
+
+---
+
+## What Happens on Ingestion
+
+- Raw Excel files are archived
+- Data are validated
+- Data are inserted into the database
+- Field input sheets may be cleared after successful ingestion
+
+If ingestion fails, nothing is modified.
+
+---
+
+## External Station Codes
+
+Use the following format:
+
+- `SBO_00001` (Observations)
+- `SBS_001`   (spring)
+- `SBS_002`   (seep)
+- `SBF_001`   (fumarole)
+- `SBRR_001`  (USGS Gauging station "Rhoades-Road")
+- `SBT_001`   (Transect)
+- `SBW_001`   (well)
+
+
+All codes must already exist in the Locations table.

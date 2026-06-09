@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Steamboat Hydrothermal System – Data Architecture Roadmap</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Steamboat Data Pipeline</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Home</a>
+</li>
+<li>
+  <a href="project.html">Project</a>
+</li>
+<li>
+  <a href="data.html">Data &amp; Schema</a>
+</li>
+<li>
+  <a href="results.html">Results</a>
+</li>
+<li>
+  <a href="pipeline.html">Pipeline</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Steamboat Hydrothermal System – Data
+Architecture Roadmap</h1>
+
+</div>
+
+
+<div id="project-vision" class="section level1">
+<h1>Project Vision</h1>
+<p>This project builds a fully reproducible, query-driven hydrothermal
+system platform for Steamboat Springs.</p>
+<p>The system integrates:</p>
+<ul>
+<li>field sampling</li>
+<li>NDEP regulatory chemistry</li>
+<li>NDWR hydrologic data (wells + water levels)</li>
+<li>continuous temperature sensors</li>
+<li>laboratory analyses</li>
+<li>isotope datasets (future)</li>
+<li>geochemical modeling outputs (PHREEQC)</li>
+</ul>
+<p>All data are stored in a single relational database and accessed
+through derived views and analysis workflows.</p>
+<hr />
+</div>
+<div id="core-design-philosophy" class="section level1">
+<h1>Core Design Philosophy</h1>
+<div id="single-source-of-truth" class="section level2">
+<h2>Single Source of Truth</h2>
+<p>All raw data are stored in one SQLite database:</p>
+<p>database/geochem_operational.sqlite</p>
+<p>This database contains:</p>
+<ul>
+<li>normalized tables</li>
+<li>enforced relationships</li>
+<li>reproducible ingest pipelines</li>
+</ul>
+<hr />
+</div>
+<div id="layered-architecture" class="section level2">
+<h2>Layered Architecture</h2>
+<p>The system is structured into three layers:</p>
+<p>RAW TABLES - original ingested data - never modified after
+ingestion</p>
+<p>DERIVED VIEWS - computed and cleaned datasets - reusable across
+analysis and GIS</p>
+<p>ANALYSIS AND EXPORT - R scripts perform computation - RMarkdown
+produces reports - GeoPackage exports deliver GIS-ready layers</p>
+<hr />
+</div>
+<div id="separation-of-responsibilities" class="section level2">
+<h2>Separation of Responsibilities</h2>
+<p>Database: - stores all raw and derived data</p>
+<p>Ingest scripts: - load and standardize external datasets</p>
+<p>Views: - define analysis-ready datasets</p>
+<p>R scripts: - perform calculations (gradients, mixing, etc.)</p>
+<p>RMarkdown: - visualization and interpretation</p>
+<p>GeoPackage: - GIS-ready outputs</p>
+<p>PHREEQC (future): - geochemical modeling layer</p>
+<hr />
+</div>
+<div id="modular-expansion" class="section level2">
+<h2>Modular Expansion</h2>
+<p>New data types are added through:</p>
+<ul>
+<li>new tables for raw data</li>
+<li>new views for derived results</li>
+<li>new scripts for analysis</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="current-system-status" class="section level1">
+<h1>Current System Status</h1>
+<div id="core-tables-implemented" class="section level2">
+<h2>Core Tables (Implemented)</h2>
+<ul>
+<li>Locations</li>
+<li>Wells</li>
+<li>Water_Level_Observations</li>
+<li>Sampling_Events</li>
+<li>Samples</li>
+<li>Field_Measurements</li>
+<li>Lab_Analyses</li>
+<li>Temperature_Observations</li>
+<li>Temperature_Loggers</li>
+<li>External_Location_Map</li>
+<li>Data_Sources</li>
+<li>Ingest_Run_Log</li>
+</ul>
+<hr />
+</div>
+<div id="data-sources-integrated" class="section level2">
+<h2>Data Sources Integrated</h2>
+<ul>
+<li>Field sampling campaigns</li>
+<li>NDEP chemistry</li>
+<li>Temperature loggers</li>
+<li>NDWR wells and water levels</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="hydrologic-system-ndwr-wells" class="section level1">
+<h1>Hydrologic System (NDWR Wells)</h1>
+<div id="structure" class="section level2">
+<h2>Structure</h2>
+<p>Wells table defines physical wells<br />
+Water_Level_Observations stores time-series measurements<br />
+Locations provides spatial reference</p>
+<hr />
+</div>
+<div id="analysis-views-core-hydro-layer" class="section level2">
+<h2>Analysis Views (Core Hydro Layer)</h2>
+<p>vw_hydraulic_head - computes hydraulic head from depth-to-water -
+includes measurement method flags - primary dataset for flow
+analysis</p>
+<p>vw_water_level_latest - most recent measurement per well - used for
+mapping water table surface</p>
+<p>vw_water_level_daily_best - one measurement per well per day -
+prioritizes manual measurements over sensors</p>
+<p>vw_hydraulic_head_clean - filtered dataset using only high-quality
+measurements - used for gradient analysis and modeling</p>
+<p>vw_wells_gis - GIS-ready well dataset - includes depth
+classification</p>
+<hr />
+</div>
+<div id="capabilities-now-available" class="section level2">
+<h2>Capabilities Now Available</h2>
+<ul>
+<li>hydraulic head calculation</li>
+<li>cleaned time-series</li>
+<li>map-ready groundwater surfaces</li>
+<li>well characterization</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="temperature-system" class="section level1">
+<h1>Temperature System</h1>
+<div id="structure-1" class="section level2">
+<h2>Structure</h2>
+<p>Temperature_Observations references logger_id<br />
+Temperature_Loggers links to Locations</p>
+<hr />
+</div>
+<div id="status" class="section level2">
+<h2>Status</h2>
+<ul>
+<li>ingest working</li>
+<li>time-series accessible</li>
+<li>spatial integration complete</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="geochemistry-system" class="section level1">
+<h1>Geochemistry System</h1>
+<div id="current-status" class="section level2">
+<h2>Current Status</h2>
+<ul>
+<li>NDEP chemistry integrated</li>
+<li>Lab structure implemented</li>
+</ul>
+<hr />
+</div>
+<div id="planned-views" class="section level2">
+<h2>Planned Views</h2>
+<ul>
+<li>vw_major_ions</li>
+<li>vw_charge_balance</li>
+<li>vw_chemistry_summary</li>
+</ul>
+<hr />
+</div>
+<div id="purpose" class="section level2">
+<h2>Purpose</h2>
+<ul>
+<li>unify chemistry across sources</li>
+<li>allow time and space queries</li>
+<li>provide modeling-ready inputs</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="isotope-system-planned" class="section level1">
+<h1>Isotope System (Planned)</h1>
+<p>Future integration of:</p>
+<ul>
+<li>δ18O</li>
+<li>δD</li>
+<li>other tracers</li>
+</ul>
+<p>Planned outputs include:</p>
+<ul>
+<li>mixing models</li>
+<li>recharge source identification</li>
+<li>hydrothermal classification</li>
+</ul>
+<hr />
+</div>
+<div id="gis-outputs" class="section level1">
+<h1>GIS Outputs</h1>
+<div id="geopackage" class="section level2">
+<h2>GeoPackage</h2>
+<p>output/geopackage/hydro_data.gpkg</p>
+<hr />
+</div>
+<div id="layers-included" class="section level2">
+<h2>Layers Included</h2>
+<p>Base layers: - locations - wells - logger_locations</p>
+<p>Raw data layers: - hydraulic_head - temperature_timeseries</p>
+<p>Analysis layers: - water_level_latest - water_level_daily_best -
+hydraulic_head_clean</p>
+<p>Optional layers: - lab_analyses</p>
+<hr />
+</div>
+<div id="design-principle" class="section level2">
+<h2>Design Principle</h2>
+<p>The GeoPackage is:</p>
+<ul>
+<li>analysis-ready</li>
+<li>GIS-friendly</li>
+<li>not the authoritative data source</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="analysis-workflow" class="section level1">
+<h1>Analysis Workflow</h1>
+<div id="structure-2" class="section level2">
+<h2>Structure</h2>
+<p>Database views provide input<br />
+R scripts compute results<br />
+RMarkdown produces outputs</p>
+<hr />
+</div>
+<div id="components" class="section level2">
+<h2>Components</h2>
+<p>Views: - reusable datasets</p>
+<p>R scripts: - located in scripts/analysis - perform calculations</p>
+<p>RMarkdown: - located in analysis/ - produces figures and reports</p>
+<hr />
+</div>
+<div id="key-rule" class="section level2">
+<h2>Key Rule</h2>
+<p>RMarkdown should not contain heavy computation.<br />
+All computation should occur in views or scripts.</p>
+<hr />
+</div>
+</div>
+<div id="flux-measurements-planned" class="section level1">
+<h1>Flux Measurements (Planned)</h1>
+<p>Planned table:</p>
+<p>Flux_Measurements with:</p>
+<ul>
+<li>location_id</li>
+<li>timestamp</li>
+<li>flux_value</li>
+</ul>
+<hr />
+<div id="purpose-1" class="section level2">
+<h2>Purpose</h2>
+<ul>
+<li>surface discharge estimation</li>
+<li>hydrothermal flux quantification</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="modeling-layer" class="section level1">
+<h1>Modeling Layer</h1>
+<p>PHREEQC integration will support:</p>
+<ul>
+<li>speciation</li>
+<li>saturation indices</li>
+<li>geothermometry</li>
+<li>inverse modeling</li>
+</ul>
+<hr />
+<p>Planned table:</p>
+<p>Model_Results with:</p>
+<ul>
+<li>sample_id</li>
+<li>model_type</li>
+<li>output fields</li>
+</ul>
+<hr />
+</div>
+<div id="system-structure-summary" class="section level1">
+<h1>System Structure Summary</h1>
+<p>Locations link to:</p>
+<ul>
+<li>Wells</li>
+<li>Loggers</li>
+<li>Sampling events</li>
+</ul>
+<p>Data flows into:</p>
+<ul>
+<li>Hydrologic data</li>
+<li>Temperature data</li>
+<li>Chemistry data</li>
+</ul>
+<p>These are combined through:</p>
+<ul>
+<li>analysis views</li>
+</ul>
+<p>Then used in:</p>
+<ul>
+<li>R analysis</li>
+<li>GeoPackage export</li>
+<li>modeling workflows</li>
+</ul>
+<hr />
+</div>
+<div id="development-roadmap" class="section level1">
+<h1>Development Roadmap</h1>
+<p>Phase 1 (Complete): - schema - NDEP ingest - temperature system</p>
+<p>Phase 2 (Complete): - NDWR wells - water level integration - location
+crosswalk</p>
+<p>Phase 3 (Current): - analysis views - GeoPackage expansion - R
+analysis scripts</p>
+<p>Phase 4: - hydraulic gradients - flow direction analysis - hydro +
+temperature integration</p>
+<p>Phase 5: - chemistry integration - isotope workflows - mixing
+analysis</p>
+<p>Phase 6: - PHREEQC automation - spatial interpolation - anomaly
+detection - system interpretation</p>
+<hr />
+</div>
+<div id="guiding-principles" class="section level1">
+<h1>Guiding Principles</h1>
+<ul>
+<li>maintain one database</li>
+<li>preserve raw data integrity</li>
+<li>use views for interpretation</li>
+<li>use scripts for computation</li>
+<li>use RMarkdown for reporting</li>
+<li>export clean GIS products</li>
+<li>ensure full reproducibility</li>
+</ul>
+<hr />
+</div>
+<div id="final-objective" class="section level1">
+<h1>Final Objective</h1>
+<p>Enable queries such as:</p>
+<p>“What is the hydraulic, thermal, and chemical state of any location
+through time?”</p>
+<p>and support:</p>
+<ul>
+<li>hydrogeologic interpretation</li>
+<li>geothermal system analysis</li>
+<li>reproducible scientific outputs</li>
+</ul>
+<hr />
+</div>
+<div id="notes" class="section level1">
+<h1>Notes</h1>
+<p>This roadmap evolves as:</p>
+<ul>
+<li>new datasets are added</li>
+<li>new views are created</li>
+<li>analysis methods expand</li>
+<li>modeling workflows mature</li>
+</ul>
+<hr />
+</div>
+<div id="latest-update-06052026" class="section level1">
+<h1>latest update 06/05/2026</h1>
+<p>Achievements in Current Session</p>
+<p>Implemented end-to-end ingestion pipeline</p>
+<p>NDEP chemistry NDWR wells and water levels field sampling temperature
+loggers</p>
+<p>Refactored sample identity model</p>
+<p>switched uniqueness to external_sample_id removed invalid
+spatial/time deduplication</p>
+<p>Stabilized chemistry → sample linkage</p>
+<p>ensured 1:1 mapping via SOURCESAMPLEID</p>
+<p>Built deterministic view layer</p>
+<p>all analysis views now rebuilt every run (DROP + CREATE) resolved
+stale view issues</p>
+<p>Refactored hydraulic gradient computation</p>
+<p>spatial pairing in projected coordinates coord_key consistency
+enforced geometry generation stabilized</p>
+<p>Implemented QA/QC framework</p>
+<p>structured checks across all domains summary table + CSV outputs
+non-breaking validation design</p>
+<p>Built GeoPackage export system</p>
+<p>multi-layer GIS export resolved all view/export schema mismatches
+ensured spatial + attribute consistency</p>
+<p>Analysis Views (Current) The following views are now fully
+implemented and stable:</p>
+<p>vw_hydraulic_head vw_hydraulic_head_clean vw_water_level_latest
+vw_water_level_daily_best vw_wells_gis vw_locations_gis</p>
+<p>Design Update All views are: rebuilt every pipeline run explicitly
+define required columns act as contracts for downstream use</p>
+<p>Hydraulic Gradient System (New) Status: ✅ Implemented Hydraulic
+gradients are now computed and stored as a derived dataset. Features</p>
+<p>spatial pairing of wells using projected coordinates distance-based
+filtering gradient magnitude and direction calculation vector geometry
+output (for GIS)</p>
+<p>Output</p>
+<p>Hydraulic_Gradients table vw_hydraulic_gradients view GeoPackage
+export layer</p>
+<p>QA/QC System (New) Status: ✅ Implemented A comprehensive QC
+framework now validates:</p>
+<p>sample completeness field parameter coverage chemistry integrity
+sensor data quality hydrologic consistency</p>
+<p>Output</p>
+<p>QC_Summary table (pipeline-generated) CSV reports in qc_reports/</p>
+<p>Design Principle QC is:</p>
+<p>non-destructive reproducible independent of ingest</p>
+</div>
+<div id="section" class="section level1">
+<h1>============================================================</h1>
+</div>
+<div id="latest-update-06052026-1" class="section level1">
+<h1>Latest Update — 06/05/2026</h1>
+</div>
+<div id="major-system-milestone-achieved" class="section level1">
+<h1>Major System Milestone Achieved ✅</h1>
+</div>
+<div id="section-1" class="section level1">
+<h1>============================================================</h1>
+<div id="achievements-in-current-session" class="section level2">
+<h2>🚀 Achievements in Current Session</h2>
+<p>This session completed the transition from a data ingestion project
+to a fully operational hydroinformatics system.</p>
+<hr />
+<div id="end-to-end-pipeline-stabilized" class="section level3">
+<h3>✅ End-to-End Pipeline Stabilized</h3>
+<p>The system now successfully executes:</p>
+<ul>
+<li>ingestion → database → views → analysis → QC → GIS export</li>
+</ul>
+<p>All components are:</p>
+<ul>
+<li>deterministic</li>
+<li>reproducible</li>
+<li>internally consistent</li>
+</ul>
+<hr />
+</div>
+<div id="hydraulic-gradient-system-complete" class="section level3">
+<h3>✅ Hydraulic Gradient System (Complete)</h3>
+<p>Status: ✅ Fully implemented</p>
+<p>Capabilities:</p>
+<ul>
+<li>spatial pairing of wells using projected coordinates (UTM)</li>
+<li>distance-based filtering to prevent combinatorial explosion</li>
+<li>gradient magnitude calculation (Δh / distance)</li>
+<li>flow direction (azimuth in degrees)</li>
+<li>classification into low / moderate / high gradients</li>
+</ul>
+<p>Key Outputs:</p>
+<ul>
+<li><code>Hydraulic_Gradients</code> (materialized table)</li>
+<li><code>vw_hydraulic_gradients</code> (view)</li>
+<li>GeoPackage line layer</li>
+</ul>
+<p>Design Improvements:</p>
+<ul>
+<li>stable coordinate system (EPSG:32611)</li>
+<li>efficient filtering prior to geometry generation</li>
+<li>scalable to large datasets (&gt;600k pairs handled)</li>
+</ul>
+<hr />
+</div>
+<div id="geometry-gis-export-system-major-breakthrough"
+class="section level3">
+<h3>✅ Geometry &amp; GIS Export System (Major Breakthrough)</h3>
+<p>Status: ✅ Fully operational</p>
+<p>Resolved complex issues:</p>
+<ul>
+<li>WKB vs EWKB incompatibility</li>
+<li>SQLite geometry storage limitations</li>
+<li><code>sf</code> parsing failures</li>
+<li>GeoPackage write constraints for large datasets</li>
+</ul>
+<p>Final Design Pattern:</p>
+<ul>
+<li>geometry stored in database (non-authoritative)</li>
+<li>geometry reconstructed or validated during export</li>
+<li>GeoPackage outputs always valid and GIS-ready</li>
+</ul>
+<p>Enhancements:</p>
+<ul>
+<li>gradient layer filtering (distance + magnitude)</li>
+<li>export row cap (100k features) for performance</li>
+<li>coordinate extraction from vector geometry</li>
+</ul>
+<hr />
+</div>
+<div id="qaqc-framework-operational" class="section level3">
+<h3>✅ QA/QC Framework (Operational)</h3>
+<p>Status: ✅ Implemented</p>
+<p>Checks include:</p>
+<ul>
+<li>missing spatial coordinates</li>
+<li>orphaned records</li>
+<li>gradient outliers</li>
+<li>temperature anomalies</li>
+<li>invalid chemistry values</li>
+<li>duplicate samples</li>
+</ul>
+<p>Outputs:</p>
+<ul>
+<li>database summary table (<code>QC_Summary</code>)</li>
+<li>CSV reports in <code>output/qc/</code></li>
+</ul>
+<p>Design philosophy:</p>
+<ul>
+<li>non-destructive</li>
+<li>transparent</li>
+<li>reproducible</li>
+</ul>
+<hr />
+</div>
+<div id="chemistry-system-expansion" class="section level3">
+<h3>✅ Chemistry System Expansion</h3>
+<p>Status: ✅ Stable</p>
+<p>New capabilities:</p>
+<ul>
+<li>unified chemistry via <code>vw_sample_master</code></li>
+<li>major ions extraction (<code>vw_major_ions</code>)</li>
+<li>isotope GIS layer (<code>vw_isotopes_gis</code>)</li>
+</ul>
+<p>Supports:</p>
+<ul>
+<li>spatial visualization</li>
+<li>future mixing analysis</li>
+<li>geochemical modeling</li>
+</ul>
+<hr />
+</div>
+<div id="deterministic-view-layer-critical-upgrade"
+class="section level3">
+<h3>✅ Deterministic View Layer (Critical Upgrade)</h3>
+<p>All views now:</p>
+<ul>
+<li>are rebuilt every run (<code>DROP + CREATE</code>)</li>
+<li>act as schema contracts</li>
+<li>guarantee reproducibility</li>
+</ul>
+<p>Eliminates:</p>
+<ul>
+<li>stale views</li>
+<li>schema drift</li>
+<li>inconsistent downstream analysis</li>
+</ul>
+<hr />
+</div>
+<div id="geopackage-export-production-ready" class="section level3">
+<h3>✅ GeoPackage Export (Production Ready)</h3>
+<p>Location: output/geopackage/hydro_data.gpkg</p>
+<p>Now includes:</p>
+<p>Core: - locations - wells</p>
+<p>Hydrologic: - hydraulic_head_clean - water_level_latest -
+hydraulic_gradients</p>
+<p>Thermal: - temperature_timeseries</p>
+<p>Chemistry: - samples - major_ions - isotopes - sample_flux</p>
+<p>Integrated: - temp_flow - samples_flow</p>
+<p>Design:</p>
+<ul>
+<li>GIS-ready</li>
+<li>filtered and interpretable</li>
+<li>distinct from raw data storage</li>
+</ul>
+<hr />
+</div>
+</div>
+</div>
+<div id="next-development-phases" class="section level1">
+<h1>🔮 Next Development Phases</h1>
+<hr />
+<div id="phase-4-now-starting-system-integration-flow-interpretation"
+class="section level2">
+<h2>Phase 4 (Now Starting): System Integration &amp; Flow
+Interpretation</h2>
+<p>Focus:</p>
+<ul>
+<li>gradient vector visualization</li>
+<li>spatial interpolation of hydraulic head</li>
+<li>delineation of flow systems</li>
+<li>linkage between groundwater flow and surface discharge</li>
+</ul>
+<p>Planned Work:</p>
+<ul>
+<li>flow direction field mapping</li>
+<li>gradient magnitude surfaces</li>
+<li>spatial clustering of flow regimes</li>
+</ul>
+<hr />
+</div>
+<div id="phase-5-hydrothermal-interpretation-chemistry-isotopes"
+class="section level2">
+<h2>Phase 5: Hydrothermal Interpretation (Chemistry + Isotopes)</h2>
+<p>Focus:</p>
+<ul>
+<li>δ18O / δD analysis</li>
+<li>mixing models</li>
+<li>recharge source identification</li>
+</ul>
+<p>Planned:</p>
+<ul>
+<li>meteoric water line comparisons</li>
+<li>mixing endmember models</li>
+<li>isotope–temperature coupling</li>
+</ul>
+<hr />
+</div>
+<div id="phase-6-thermalhydrologic-coupling" class="section level2">
+<h2>Phase 6: Thermal–Hydrologic Coupling</h2>
+<p>Focus:</p>
+<ul>
+<li>integration of temperature + gradients</li>
+<li>identification of upflow/downflow zones</li>
+<li>detection of thermal anomalies</li>
+</ul>
+<hr />
+</div>
+<div id="phase-7-geochemical-modeling-phreeqc" class="section level2">
+<h2>Phase 7: Geochemical Modeling (PHREEQC)</h2>
+<p>Planned capabilities:</p>
+<ul>
+<li>speciation modeling</li>
+<li>saturation indices</li>
+<li>geothermometry</li>
+<li>inverse modeling</li>
+</ul>
+<p>Future outputs:</p>
+<ul>
+<li><code>Model_Results</code> table</li>
+<li>GIS-ready geochemical layers</li>
+</ul>
+<hr />
+</div>
+<div id="phase-8-advanced-analysis-automation" class="section level2">
+<h2>Phase 8: Advanced Analysis &amp; Automation</h2>
+<ul>
+<li>spatial interpolation (kriging, IDW)</li>
+<li>anomaly detection (thermal + chemical + hydraulic)</li>
+<li>time-series trend analysis</li>
+<li>automated report generation</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="current-system-state" class="section level1">
+<h1>🎯 Current System State</h1>
+<p>You now have a fully operational platform capable of answering:</p>
+<blockquote>
+<p>“What is the hydraulic, thermal, and chemical state of the system in
+space and time?”</p>
+</blockquote>
+<hr />
+</div>
+<div id="strategic-insight" class="section level1">
+<h1>💡 Strategic Insight</h1>
+<p>This project has successfully transitioned from:</p>
+<p>Data Collection → Data System → Analytical Engine</p>
+<p>The system is now ready for:</p>
+<ul>
+<li>scientific interpretation</li>
+<li>publication-quality outputs</li>
+<li>decision-support applications</li>
+</ul>
+<hr />
+</div>
+<div id="status-summary" class="section level1">
+<h1>🟢 Status Summary</h1>
+<table>
+<thead>
+<tr class="header">
+<th>Component</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Ingestion</td>
+<td>✅ Complete</td>
+</tr>
+<tr class="even">
+<td>Database Design</td>
+<td>✅ Stable</td>
+</tr>
+<tr class="odd">
+<td>Views Layer</td>
+<td>✅ Deterministic</td>
+</tr>
+<tr class="even">
+<td>Gradients</td>
+<td>✅ Implemented</td>
+</tr>
+<tr class="odd">
+<td>QC</td>
+<td>✅ Operational</td>
+</tr>
+<tr class="even">
+<td>GIS Export</td>
+<td>✅ Production-ready</td>
+</tr>
+<tr class="odd">
+<td>Interpretation</td>
+<td>🚀 Beginning</td>
+</tr>
+</tbody>
+</table>
+<hr />
+</div>
+<div id="final-note" class="section level1">
+<h1>🚀 Final Note</h1>
+<p>This is now a <strong>real, extensible hydrogeologic
+platform</strong>.</p>
+<p>Future work will focus on: interpretation, not infrastructure.</p>
+</div>
+
+
+
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,780 @@
+Steamboat Hydrothermal Data Platform
+================
+Tyler Irvin
+
+- [Overview](#overview)
+- [Scientific Context and Purpose](#scientific-context-and-purpose)
+- [System Architecture](#system-architecture)
+  - [Repository Structure](#repository-structure)
+- [ETL Pipeline
+  (Extract–Transform–Load)](#etl-pipeline-extracttransformload)
+  - [The system implements a structured ETL
+    workflow:](#the-system-implements-a-structured-etl-workflow)
+- [Raw Data Inputs and User
+  Interaction](#raw-data-inputs-and-user-interaction)
+  - [How Users Interact with Raw
+    Data](#how-users-interact-with-raw-data)
+- [Database and Data Model](#database-and-data-model)
+- [Analysis Views](#analysis-views)
+- [Hydraulic Gradient System](#hydraulic-gradient-system)
+- [Script Architecture and Pipeline
+  Execution](#script-architecture-and-pipeline-execution)
+  - [Documentation by Folder](#documentation-by-folder)
+  - [User Data Ingestion](#user-data-ingestion)
+- [Database Structure](#database-structure)
+  - [Core Tables](#core-tables)
+  - [Analysis Layer (Views)](#analysis-layer-views)
+  - [Hydrologic Views](#hydrologic-views)
+  - [Spatial Views (GIS)](#spatial-views-gis)
+- [Quality Control System](#quality-control-system)
+  - [QA / QC Framework](#qa--qc-framework)
+  - [Outputs](#outputs)
+  - [Design Principle](#design-principle)
+- [GIS Export and Spatial
+  Integration](#gis-export-and-spatial-integration)
+- [Future Development](#future-development)
+- [Why This System Matters](#why-this-system-matters)
+- [Hydraulic Gradient System](#hydraulic-gradient-system-1)
+  - [Status: ✅ Implemented](#status-white_check_mark-implemented)
+  - [Outputs](#outputs-1)
+  - [Scientific Use](#scientific-use)
+- [Geochemistry System](#geochemistry-system)
+  - [Status: ✅ Implemented
+    (initial)](#status-white_check_mark-implemented-initial)
+  - [Capabilities](#capabilities-1)
+- [Temperature System](#temperature-system)
+  - [Status: ✅ Implemented](#status-white_check_mark-implemented-1)
+  - [Use](#use)
+- [PHREEQC Integration (Next Phase)](#phreeqc-integration-next-phase)
+  - [Goal](#goal)
+  - [Planned Outputs](#planned-outputs)
+  - [Design](#design)
+- [Isotope System (Next Phase)](#isotope-system-next-phase)
+  - [Planned Integration](#planned-integration)
+  - [Purpose](#purpose)
+  - [Design Principle](#design-principle-1)
+- [Flux System (Planned)](#flux-system-planned)
+  - [Future Table](#future-table)
+  - [Purpose](#purpose-1)
+  - [Troubleshooting and Expected
+    Errors](#troubleshooting-and-expected-errors)
+  - [Debugging Individual Ingest
+    Pipelines](#debugging-individual-ingest-pipelines)
+  - [Why This Approach Matters](#why-this-approach-matters)
+  - [Link to Github Pages Hosted Website for
+    Index.html](#link-to-github-pages-hosted-website-for-indexhtml)
+  - [Citation & Reuse](#citation--reuse)
+
+# Overview
+
+This repository implements a **fully reproducible hydrothermal data
+platform** for Steamboat Springs, Nevada. It integrates hydrologic,
+geochemical, thermal, and (future) isotopic datasets into a single
+relational database, enabling consistent analysis of system behavior
+through space and time. The system is designed for iterative field
+campaigns, regulatory data integration, and research-grade
+interpretation workflows, with outputs suitable for both GIS
+environments and geochemical modeling platforms such as PHREEQC.
+
+The underlying goal is to transform fragmented environmental
+observations into a **coherent, queryable representation of the
+hydrothermal system**, where hydraulic state, thermal behavior, and
+chemical evolution can be analyzed together.
+
+------------------------------------------------------------------------
+
+# Scientific Context and Purpose
+
+This project addresses a central hydrothermal question:
+
+> **What is the hydraulic, thermal, and geochemical state of the system
+> through time and space?**
+
+To support this, the system combines:
+
+- groundwater level data (hydraulic head and gradients)
+- geochemical measurements (major ions, field chemistry)
+- continuous temperature monitoring
+- future isotope tracers and thermodynamic modeling
+
+These datasets collectively enable interpretation of groundwater flow,
+fluid mixing, recharge sources, and hydrothermal upflow zones. The
+platform is not just a database, but an **analytical framework for
+geothermal system characterization**.
+
+------------------------------------------------------------------------
+
+# System Architecture
+
+The system follows a strict layered structure:
+
+**Raw data → Normalized database → Analysis views → Computation →
+Export**
+
+Raw datasets are never modified directly. Instead, ingestion scripts
+normalize external data into a consistent relational schema. Analysis
+views then define reusable, standardized datasets that drive all
+computation, modeling, and GIS outputs.
+
+This separation ensures reproducibility and prevents contamination of
+raw observations with downstream interpretation.
+
+------------------------------------------------------------------------
+
+## Repository Structure
+
+├── **data/**\_\_\_\_\_\_\_\_\_\_\_# Raw, processed, and derived data  
+├── **database/**\_\_\_\_\_\_\_# SQLite database and schema
+documentation  
+├── **docs/**\_\_\_\_\_\_\_\_\_\_\_# Documentation and Manuscript
+storage  
+├── **scripts/**\_\_\_\_\_\_\_\_\_# Ingestion, QC, modeling,
+visualization  
+├── **phreeqc/**\_\_\_\_\_\_\_\_# PHREEQC templates and runs (later
+stage)  
+├── **docs/**\_\_\_\_\_\_\_\_\_\_\_# Workflow diagrams and methodology  
+├── **figures/**\_\_\_\_\_\_\_\_\_# Generated plots and maps  
+├── .gitignore  
+├── .RData  
+├── .Rhistory  
+├── index.html\_\_\_\_\_\_\_# Pre-rendered demonstration output  
+├── index.Rmd\_\_\_\_\_\_\_# Reproducible demonstration document  
+├── README.html\_\_\_\_\_# Pre-rendered Instructional output  
+├── README.md\_\_\_\_\_\_\_# Reproducible Instructional document  
+└── Steamboat_project.Rproj
+
+------------------------------------------------------------------------
+
+# ETL Pipeline (Extract–Transform–Load)
+
+The platform implements a structured ETL pipeline that converts external
+datasets into a unified system.
+
+Extraction pulls data from regulatory sources (NDEP), hydrologic
+databases (NDWR), field measurements, and temperature logger files.
+Transformation standardizes identifiers, parses timestamps, handles
+qualifiers (e.g., detection limits), aligns spatial references through a
+shared `coord_key`, and maps analytes into a consistent internal schema.
+Loading inserts data into relational tables with strict uniqueness
+rules, ensuring idempotent ingest and full provenance tracking via the
+`Ingest_Run_Log`.
+
+A critical design decision is that **samples are uniquely identified by
+`external_sample_id`**, preserving the integrity of laboratory and
+isotope linkages across all datasets.
+
+## The system implements a structured ETL workflow:
+
+### Extract
+
+- NDEP regulatory datasets  
+- NDWR wells + water levels  
+- field sampling data  
+- temperature logger files  
+- (future) isotope datasets
+
+------------------------------------------------------------------------
+
+### Transform
+
+- normalization of identifiers (samples, events, stations)
+- unit standardization
+- parsing of timestamps and qualifiers
+- spatial key alignment (`coord_key`)
+- analyte mapping (NDEP → internal schema)
+
+------------------------------------------------------------------------
+
+### Load
+
+- insertion into relational SQLite database
+- idempotent ingest (no duplicates)
+- full provenance tracking via `Ingest_Run_Log`
+
+------------------------------------------------------------------------
+
+# Raw Data Inputs and User Interaction
+
+All external data enter the system through structured files located in:
+
+data/raw/
+
+- Each data source has its own expected format and ingestion pathway.
+
+Data Types The system currently supports:
+
+*NDEP regulatory exports* CSV files (NormalizedData, StationData)
+contain chemistry, station metadata, sampling identifiers
+
+*NDWR well and water level data* Excel files (site metadata + water
+levels) define well construction and time-series hydrologic data
+
+*Field sampling data* user-generated templates (Excel/CSV) define
+samples, field parameters, and metadata
+
+*Temperature logger files* CSV exports from sensors continuous
+time-series data
+
+*Laboratory data* (future expansion) structured analyte tables linked
+via external_sample_id
+
+*Flux measurements* (planned) discharge / flow measurements from springs
+and streams
+
+## How Users Interact with Raw Data
+
+Users do not manually insert data into the database. Instead, they:
+
+Place files into the appropriate data/raw/ subdirectory Ensure column
+formats match documented expectations Run run_pipeline.R with relevant
+ingest flags enabled
+
+### Key Design Principle
+
+Raw data are:
+
+- never modified after ingestion
+- archived before processing
+- transformed only through scripts
+
+This ensures complete reproducibility and provenance tracking.
+
+# Database and Data Model
+
+The SQLite database is the single source of truth and contains
+normalized tables for locations, wells, sampling events, samples,
+measurements, and observations. Relationships are enforced through
+foreign keys, and uniqueness constraints ensure data integrity without
+artificial deduplication.
+
+Hydrologic data are represented through wells and water level
+observations, while geochemistry and field measurements link directly to
+samples. Temperature data are managed as time-series associated with
+deployed loggers. Each dataset connects spatially through the Locations
+table and temporally through timestamps or sampling events.
+
+------------------------------------------------------------------------
+
+# Analysis Views
+
+All analysis views are rebuilt on every pipeline run to ensure they
+remain consistent with the evolving schema. These views define the
+contract between raw data and analysis, and all downstream computation
+depends on them.
+
+Hydrologic views compute hydraulic head from depth-to-water measurements
+and provide cleaned datasets for interpretation, including time-filtered
+and quality-filtered subsets. Spatial views expose geometry and
+consistent coordinates for GIS export, while maintaining alignment
+through the shared `coord_key`.
+
+Because views are deterministic and recreated each run, they eliminate
+the risk of stale or inconsistent derived data.
+
+------------------------------------------------------------------------
+
+# Hydraulic Gradient System
+
+Hydraulic gradients are computed as a derived dataset using spatial
+pairing of wells with synchronized measurements. Coordinates are
+projected to a metric system, distances are calculated, and head
+differences are normalized to produce gradients. Direction and magnitude
+are derived for each pair, enabling vector-based representations of
+groundwater flow.
+
+The resulting dataset is stored as a table and exported as spatial
+vectors, allowing direct visualization in GIS and supporting
+interpretation of flow paths, hydraulic structure, and potential upflow
+zones.
+
+------------------------------------------------------------------------
+
+# Script Architecture and Pipeline Execution
+
+Script Architecture and How Components Interact The system is
+intentionally modular, but all components are coordinated through the
+pipeline orchestrator.
+
+Orchestrator `run_pipeline.R`
+
+This script is the entry point and coordinates all stages:
+
+- sets runtime configuration (mode + ingest flags)
+- loads schema and helper functions
+- runs ingestion scripts conditionally
+- triggers analysis, QC, and export stages
+
+It ensures reproducible execution and enforces the correct order of
+operations.
+
+------------------------------------------------------------------------
+
+Ingestion Scripts (scripts/ingest/)
+
+Each ingestion script corresponds to a specific data source:
+
+- ingest_ndep.R → regulatory chemistry
+- ingest_ndwr.R → wells + water levels
+- ingest_field.R → field sampling
+- ingest_temperature_loggers.R → sensor time-series
+
+Each script performs:
+
+- parsing of raw files
+- normalization of identifiers
+- validation of relationships
+- insertion into database
+
+Helper scripts support these processes by handling:
+
+- datetime parsing
+- spatial alignment (coord_key)
+- sample reconstruction and lookup
+
+------------------------------------------------------------------------
+
+Analysis Scripts (scripts/analysis/) These scripts generate derived
+datasets from core tables:
+
+- create_analysis_views.R → defines reusable views
+- calc_gradients.R → computes hydraulic gradients
+
+Analysis always operates on views, not raw tables, ensuring consistency.
+
+------------------------------------------------------------------------
+
+QC Scripts (scripts/qc/) QC scripts evaluate data integrity across all
+systems:
+
+- completeness checks
+- range validation
+- structural consistency
+
+Outputs include:
+
+- QC summary table
+- CSV reports for inspection
+
+------------------------------------------------------------------------
+
+Export Scripts
+
+- create_gis_views.R → prepares spatial views
+- export_geopackage.R → writes GIS-ready layers
+
+These scripts convert relational data into formats usable in ArcGIS or
+QGIS.
+
+------------------------------------------------------------------------
+
+Key Architectural Principle Each script performs one responsibility
+only, but all are orchestrated into a unified pipeline.
+
+All scripts are designed to be both **independently executable for
+debugging** and fully integrated within the pipeline.
+
+## Documentation by Folder
+
+Detailed documentation is provided at the folder level to keep this
+project-level README concise.
+
+- `database/schema/README.md`  
+  Describes the relational schema, table definitions, and design
+  rationale.
+
+- `scripts/ingest/README.md`  
+  Documents each ingestion pipeline, expected inputs, idempotent
+  behavior, and common failure modes.
+
+- `data/raw/README.md`  
+  Describes required input formats, column conventions, and validation
+  rules for user-edited files.
+
+- `docs/README.md`  
+  Contains workflow diagrams, methodology notes, and manuscript drafts.
+
+Users are encouraged to start here, then follow links into
+subdirectories for implementation details.
+
+## User Data Ingestion
+
+Users interact with the pipeline primarily through two configuration
+blocks defined at the top of `run_pipeline.R`
+
+MODE \<- “DEMO” \# DEMO \| OPERATIONAL
+
+### DEMO Mode (Teaching & Reproducibility)
+
+- Database is rebuilt from scratch
+- Regulatory (NDEP) data are ingested automatically
+- Deterministic output suitable for instruction and documentation
+
+### OPERATIONAL Mode (Research Use)
+
+- Database persists across sessions
+
+- Schema is created once
+
+- Ingest pipelines are run explicitly
+
+- Protects real field and laboratory data from accidental rebuild
+
+- Activated in `run_pipeline.R` by setting:
+
+  MODE \<- “OPERATIONAL”
+
+### Selective Ingestion
+
+RUN_INGEST \<- list( ndep = TRUE, field = TRUE, logger = TRUE, ndwr =
+TRUE, lab = FALSE, flux = FALSE )
+
+Each flag enables or disables a specific ingestion module. This allows
+the user to:
+
+run only specific datasets (e.g., just NDWR updates) avoid unnecessary
+recomputation debug ingestion pipelines independently integrate new data
+sources incrementally
+
+------------------------------------------------------------------------
+
+# Database Structure
+
+## Core Tables
+
+- Locations  
+- Wells  
+- Water_Level_Observations  
+- Sampling_Events  
+- Samples  
+- Field_Measurements  
+- Lab_Analyses  
+- Temperature_Observations  
+- Temperature_Loggers  
+- Data_Sources  
+- Ingest_Run_Log
+
+------------------------------------------------------------------------
+
+## Analysis Layer (Views)
+
+Analysis views are **rebuilt every pipeline run** and act as the
+contract between raw data and analysis.
+
+## Hydrologic Views
+
+- `vw_hydraulic_head`
+- `vw_hydraulic_head_clean`
+- `vw_water_level_latest`
+- `vw_water_level_daily_best`
+
+------------------------------------------------------------------------
+
+### Capabilities
+
+- hydraulic head calculation  
+- clean time-series extraction  
+- well comparison across time
+
+------------------------------------------------------------------------
+
+## Spatial Views (GIS)
+
+- `vw_wells_gis`
+- `vw_locations_gis`
+- `vw_temperature_timeseries`
+
+These provide:
+
+- consistent geometry (`geom_wkt`)
+- spatial-key alignment (`coord_key`)
+- GIS-ready attributes
+
+------------------------------------------------------------------------
+
+# Quality Control System
+
+Quality control is implemented as a non-destructive validation layer
+that inspects all data domains, including field measurements, laboratory
+analyses, logger data, and hydrologic observations. QC checks identify
+missing parameters, invalid values, structural inconsistencies, and
+anomalies in time-series behavior.
+
+Results are summarized in a database table and written to CSV reports
+for inspection. QC does not alter the data; instead, it provides
+transparency and ensures that downstream analyses are based on known
+data quality.
+
+## QA / QC Framework
+
+QC checks include:
+
+- missing field parameters  
+- major ion completeness  
+- logger anomalies  
+- out-of-range temperatures  
+- orphaned samples
+
+------------------------------------------------------------------------
+
+## Outputs
+
+- QC_Summary table  
+- CSV reports (`qc_reports/`)
+
+------------------------------------------------------------------------
+
+## Design Principle
+
+QC does not modify data — it flags issues for interpretation.
+
+------------------------------------------------------------------------
+
+# GIS Export and Spatial Integration
+
+The system produces a consolidated GeoPackage containing spatial layers
+derived from analysis views. Each layer includes geometry, attributes,
+and spatial keys, allowing seamless integration into GIS platforms.
+These outputs support mapping, spatial analysis, and visualization of
+hydrologic and geochemical relationships.
+
+Gradients, temperature data, wells, and sampling locations can all be
+explored spatially, enabling interpretation of the hydrothermal system
+in a geographic context.
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+------------------------------------------------------------------------
+
+# Future Development
+
+The next stages focus on expanding analytical capability rather than
+infrastructure.
+
+Isotope data (δ18O, δD) will be integrated as a parallel measurement
+system linked to samples, enabling mixing analysis and identification of
+recharge sources. PHREEQC integration will convert chemical observations
+into thermodynamic models, producing speciation and saturation indices.
+Flux measurements will allow estimation of hydrothermal discharge and
+heat flow, completing the system’s ability to quantify mass and energy
+transport.
+
+Ultimately, these components will feed into a higher-level analysis
+layer focused on detecting hydrothermal upflow zones through the
+integration of gradients, temperature anomalies, and geochemical
+signatures.
+
+------------------------------------------------------------------------
+
+# Why This System Matters
+
+This project demonstrates how environmental data can be transformed into
+a reproducible scientific system through careful architecture. It
+enforces provenance, preserves raw observations, separates
+transformation from interpretation, and integrates multiple data domains
+into a unified analytical platform.
+
+The result is not just a database, but a **scalable hydrothermal
+modeling workflow** that can be extended to other geothermal systems and
+environmental datasets.
+
+# Hydraulic Gradient System
+
+## Status: ✅ Implemented
+
+Hydraulic gradients are computed between wells using:
+
+- spatial pairing (projected coordinates)
+- time-matched observations
+- distance-based filtering
+
+------------------------------------------------------------------------
+
+## Outputs
+
+- `Hydraulic_Gradients` table
+- vector geometries (flow direction)
+- GIS export layer
+
+------------------------------------------------------------------------
+
+## Scientific Use
+
+- groundwater flow direction mapping  
+- identification of hydraulic highs/lows  
+- detection of hydrothermal upflow zones
+
+------------------------------------------------------------------------
+
+# Geochemistry System
+
+## Status: ✅ Implemented (initial)
+
+- NDEP chemistry integrated
+- analytes standardized across sources
+- lab + field data unified
+
+------------------------------------------------------------------------
+
+## Capabilities
+
+- major ion analysis  
+- charge balance (future)  
+- geochemical trend analysis
+
+------------------------------------------------------------------------
+
+# Temperature System
+
+## Status: ✅ Implemented
+
+- continuous logger ingest
+- time-series stored and indexed
+- spatial linkage through Locations
+
+------------------------------------------------------------------------
+
+## Use
+
+- thermal anomaly detection  
+- temporal variability analysis  
+- hydrothermal signal identification
+
+------------------------------------------------------------------------
+
+# PHREEQC Integration (Next Phase)
+
+## Goal
+
+Convert observations into thermodynamic models.
+
+------------------------------------------------------------------------
+
+## Planned Outputs
+
+- speciation  
+- saturation indices  
+- geothermometers  
+- inverse models
+
+------------------------------------------------------------------------
+
+## Design
+
+PHREEQC will:
+
+consume views → produce model tables → feed analysis
+
+------------------------------------------------------------------------
+
+# Isotope System (Next Phase)
+
+## Planned Integration
+
+- δ18O  
+- δD  
+- additional tracers
+
+------------------------------------------------------------------------
+
+## Purpose
+
+- mixing analysis  
+- recharge source identification  
+- hydrothermal vs meteoric discrimination
+
+------------------------------------------------------------------------
+
+## Design Principle
+
+Isotopes:
+
+- attach to Samples  
+- do NOT require full chemistry dataset  
+- integrate via analysis views
+
+------------------------------------------------------------------------
+
+# Flux System (Planned)
+
+## Future Table
+
+Flux_Measurements:
+
+- location_id  
+- timestamp  
+- flux_value
+
+------------------------------------------------------------------------
+
+## Purpose
+
+- quantify discharge  
+- estimate heat flux  
+- constrain system mass balance
+
+------------------------------------------------------------------------
+
+## Troubleshooting and Expected Errors
+
+- This system is designed to fail loudly and informatively when
+  assumptions are violated.
+- Common errors are expected and usually indicate data or workflow
+  issues
+
+### Common Expected Errors
+
+    no such table: Locations
+
+**Cause**: Schema has not been created yet in OPERATIONAL mode Fix: Run
+schema creation once before ingesting data
+
+    invalid or closed connection
+
+**Cause**: Database connection was closed before a script attempted to
+use it Fix: Ensure that only the orchestrator (index.Rmd) manages
+dbConnect() / dbDisconnect()
+
+    Empty plots or suppressed figures
+
+**Cause**: No data have been ingested yet in OPERATIONAL mode Fix: This
+is expected behavior; ingest scripts must be run explicitly
+
+    Ingest scripts insert zero rows
+
+**Cause**: No new data or duplicate external identifiers Fix: Confirm
+that new external IDs are present in input files
+
+------------------------------------------------------------------------
+
+## Debugging Individual Ingest Pipelines
+
+*Each ingestion pipeline is designed to be run independently for
+debugging*
+
+------------------------------------------------------------------------
+
+## Why This Approach Matters
+
+*This project demonstrates reproducible science practices that scale
+beyond a single dataset:*
+
+- Clear separation between *data*, *infrastructure*, and *analysis*
+- Explicit provenance and audibility
+- Safe handling of real research data
+- Transparency in how raw observations become scientific observations
+
+This architecture is transferable to other environmental, geochemical,
+ecological, and geothermal studies.
+
+------------------------------------------------------------------------
+
+## Link to Github Pages Hosted Website for Index.html
+
+<https://tylerirvin543.github.io/Steamboat_Creek_Geochemistry_Database/>
+
+## Citation & Reuse
+
+**This repository is designed for instructional and research use. Please
+cite or aknowledge appropriately if reused or adapted.**

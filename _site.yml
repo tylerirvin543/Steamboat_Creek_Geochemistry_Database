@@ -1,0 +1,18 @@
+name: "steamboat-project"
+output_dir: "website"
+
+navbar:
+  title: "Steamboat Data Pipeline"
+  left:
+    - text: "Home"
+      href: index.html
+    - text: "Project"
+      href: project.html
+    - text: "Data & Schema"
+      href: data.html
+    - text: "Results"
+      href: results.html
+    - text: "Pipeline"
+      href: pipeline.html
+    - text: "About"
+      href: about.html

@@ -1,0 +1,231 @@
+---
+title: "Results"
+output: html_document
+---
+
+This system produces continuously growing environmental datasets that can be analyzed across temporal and (eventually) spatial dimensions.
+
+## Leaflet visualization
+
+```{r leaflet, echo=FALSE, message=FALSE, warning=FALSE}
+library(leaflet)
+library(sf)
+library(readxl)
+library(readr)
+library(ggplot2)
+library(dplyr)
+
+
+# read exported geopackage
+gpkg <- st_read(
+  "output/geopackage/hydro_data.gpkg",
+  layer = "temperature_timeseries",
+  quiet = TRUE
+)
+
+print(names(gpkg))
+
+leaflet(gpkg) |>
+  addTiles() |>
+  addCircleMarkers(
+    radius = 4,
+    color = "red",
+    popup = ~paste("Temp:", temperature)
+  )
+```
+
+---
+
+## 📈 Temporal Data Growth
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+ingest_path <- "website/data/ingest_log.csv"
+
+if (file.exists(ingest_path)) {
+
+  ingest_log <- read_csv(ingest_path, show_col_types = FALSE)
+
+  library(lubridate)
+
+ingest_log <- ingest_log %>%
+  mutate(
+    timestamp = suppressWarnings(ymd_hms(timestamp, tz = "UTC"))
+  )
+
+# fallback for numeric timestamps
+if (all(is.na(ingest_log$timestamp))) {
+  ingest_log$timestamp <- as.POSIXct(
+    as.numeric(ingest_log$timestamp),
+    origin = "1970-01-01",
+    tz = "UTC"
+  )
+}
+
+  ingest_log$cumulative <- cumsum(ingest_log$measurements_inserted)
+
+  print(
+    ggplot(ingest_log,
+           aes(timestamp, cumulative, color = data_source)) +
+      geom_line(linewidth = 1.2) +
+      labs(
+        title = "System Growth Over Time",
+        x = "Time",
+        y = "Total Records"
+      ) +
+      theme_minimal()
+  )
+
+}
+```
+
+**Insight:**  
+The database grows incrementally as new field campaigns, regulatory data, and logger deployments are ingested.
+
+---
+
+## 🧱 Database Composition
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+table_path <- "website/data/table_counts.csv"
+
+if (file.exists(table_path)) {
+
+  table_counts <- read_csv(table_path, show_col_types = FALSE)
+
+  print(
+    ggplot(table_counts,
+           aes(x = reorder(table, n_rows), y = n_rows)) +
+      geom_col(fill = "darkgreen") +
+      coord_flip() +
+      labs(
+        title = "Database Composition",
+        x = "",
+        y = "Records"
+      ) +
+      theme_minimal()
+  )
+
+}
+```
+
+---
+
+##🌡Temperature logger data over time
+
+```{r plotly, echo = FALSE, warning = FALSE, message = FALSE}
+library(readr)
+library(ggplot2)
+library(dplyr)
+library(plotly)
+
+temp_path <- "website/data/temp_sample.csv"
+
+if (!file.exists(temp_path)) {
+  
+  cat("Temperature data will appear after pipeline export.")
+  
+} else {
+  
+  temp <- read_csv(temp_path, show_col_types = FALSE)
+  
+  # --- Clean + convert ---
+  temp <- temp |>
+  mutate(
+    timestamp = as.POSIXct(timestamp, origin = "1970-01-01", tz = "UTC"),
+    location_name = paste("Logger", logger_id)
+  ) |>
+  filter(
+    !is.na(timestamp),
+    !is.na(temperature)
+  )
+
+  
+  # --- Determine grouping ---
+  if ("location_name" %in% colnames(temp)) {
+    temp <- temp |> mutate(group_var = location_name)
+    color_label <- "Location"
+    title_text <- "Temperature Time Series by Monitoring Location"
+    
+  } else if ("logger_id" %in% colnames(temp)) {
+    temp <- temp |> mutate(group_var = factor(logger_id))
+    color_label <- "Logger"
+    title_text <- "Temperature Time Series by Logger"
+    
+  } else {
+    temp <- temp |> mutate(group_var = "Temperature")
+    color_label <- NULL
+    title_text <- "Temperature Time Series"
+  }
+  
+  # --- Plot ---
+  p <- ggplot(temp,
+              aes(x = timestamp,
+                  y = temperature,
+                  color = group_var,
+                  group = group_var)) +
+    
+    geom_line(alpha = 0.8, linewidth = 0.6) +
+    
+    geom_smooth(se = FALSE, linewidth = 1.0, alpha = 0.3) +
+    
+    geom_hline(
+      yintercept = c(40, 60, 80),
+      linetype = "dashed",
+      color = "gray50",
+      alpha = 0.4
+    ) +
+    
+    labs(
+      title = title_text,
+      subtitle = "High-frequency geothermal signals",
+      x = "Time",
+      y = "Temperature (°C)",
+      color = color_label
+    ) +
+    
+    theme_minimal() +
+    theme(legend.position = "bottom")
+  
+  ggplotly(p)
+
+}
+```
+
+**Insight:**  
+Continuous temperature monitoring captures variability that is completely missed by discrete sampling campaigns, revealing short-term fluctuations and longer-term system behavior.
+
+---
+
+## 🗺️ Spatial Outputs (Upcoming)
+
+The system exports GIS-ready layers:
+
+```
+output/geopackage/temperature_data.gpkg
+```
+
+These datasets enable:
+
+- spatial visualization of temperature distributions  
+- integration with ArcGIS time-aware layers  
+- comparison across hydrothermal features  
+
+*A full spatial analysis interface will be incorporated as the dataset matures.*
+
+---
+
+## 🔬 Interpretation
+
+Even at this stage, several key observations emerge:
+
+- Temperature variability is highly dynamic and continuous  
+- Data volume grows predictably with ingestion runs  
+- The database structure supports integration across multiple data types  
+
+Future work will integrate:
+
+- geochemical analysis (laboratory results)  
+- spatial clustering and mapping  
+- process-based modeling (PHREEQC)  
+
+ 

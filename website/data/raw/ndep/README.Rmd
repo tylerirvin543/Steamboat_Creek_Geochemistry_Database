@@ -1,0 +1,43 @@
+---
+title: "NDEP Data Acquisition"
+output: github_document
+---
+
+## Source
+
+Nevada Division of Environmental Protection  
+https://nevadawaterquality.ndep.nv.gov/
+
+---
+
+## Station Selection
+
+Current ingestion is restricted to the following station codes:
+
+SB7, SB44, SB33, SB40, SB42, SB5, SB6, SB3, SB10, SB8, SB20, SB46,  
+STBT03WHITES-2, STBT03Thomas-4, STBT02Steamboat-2a
+
+---
+
+## Parameter Groups
+
+Select only:
+- FIELD – Field
+- GENERAL – General
+- METAL – Metal
+
+---
+
+## Required Files
+
+Place the following CSVs in this folder:
+- `StationData.csv`
+- `NormalizedData.csv`
+
+Do not edit these files after download.
+
+---
+
+## Last Data Pull
+
+**2026-03-20**

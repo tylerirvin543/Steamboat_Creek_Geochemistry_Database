@@ -1,0 +1,163 @@
+---
+title: "About"
+output: html_document
+---
+
+# About This Project
+
+This project was developed as part of a graduate-level data, geochemistry, and GIS workflow at the University of Nevada, Reno, within the Great Basin Center for Geothermal Energy (GBCGE).
+
+🔗 Repository:  
+https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database
+
+---
+
+# 🌋 Research Context
+
+The Steamboat Springs geothermal field represents a long-studied hydrothermal system undergoing renewed activity following decades of geothermal production.
+
+After the decline of surface expressions during sustained fluid extraction, the system reactivated in June 2025 with a geyser-like eruption exceeding 30 feet from an abandoned well.
+
+This reactivation raises fundamental questions about:
+
+- subsurface pressure dynamics  
+- fluid pathways and connectivity  
+- geochemical evolution of the system  
+
+---
+
+# 🔬 Research Questions
+
+This workflow is designed to support investigation of several key hydrothermal questions:
+
+### System Source & Driving Processes
+- Is the system **magmatic or amagmatic in origin**?  
+- What role does deep fluid input play in controlling chemistry and temperature?  
+
+### Hydrologic Connectivity
+- Is the **Lower Sinter Terrace hydrothermally connected** to the main reservoir?  
+- If connected, **to what degree and through what pathways?**  
+
+### Fluid Evolution & Chemistry
+- How does chemistry evolve during transport and discharge?  
+- Are we observing:
+  - concentration of solutes through boiling  
+  - CO₂ degassing  
+  - pH increase from buffering processes?  
+
+### Temporal Variability
+- How do **temperature and chemistry evolve through time**?  
+- Can short-term signals reveal subsurface flow or pressure changes?  
+
+---
+
+# 💧 Hydrology and Flux-Based Methods
+
+A key component of this research is the use of **chloride flux (Cl‑flux)** and related hydrologic methods to estimate mass and energy transport through the system.
+
+These approaches allow us to:
+
+- estimate total hydrothermal discharge  
+- quantify solute transport  
+- constrain subsurface flow rates  
+- link chemistry with hydrologic behavior  
+
+Flux estimates are integrated with:
+
+- field transect measurements  
+- spatial analysis in ArcGIS  
+- database-driven aggregation workflows  
+
+---
+
+# 🧪 From Data to Geochemical Modeling
+
+The ultimate goal of this system is to support **quantitative geochemical interpretation**.
+
+This includes:
+
+### Mass Balance and Inverse Modeling
+- reconstructing fluid mixing processes  
+- identifying end-member compositions  
+- quantifying gains/losses during flow  
+
+### PHREEQC Integration
+Validated chemistry is transformed into **PHREEQC-ready inputs** to enable:
+
+- forward speciation modeling  
+- inverse modeling of hydrothermal processes  
+- evaluation of mineral-fluid equilibria  
+
+This creates a direct chain from:
+
+```
+field observations → database → validated chemistry → geochemical models → interpretation
+```
+
+---
+
+# 🗺️ Spatial Analysis & GIS Integration
+
+All data are structured to support **ArcGIS-based spatial analysis** via GeoPackage exports.
+
+This enables:
+
+- querying hydrothermal features spatially  
+- mapping temperature and chemistry distributions  
+- integrating Cl‑flux transects and discharge estimates  
+- linking spatial patterns to subsurface processes  
+
+---
+
+# 🧠 Why This Workflow Matters
+
+Hydrothermal systems are inherently complex, and traditional approaches often suffer from:
+
+- disconnected datasets  
+- lack of temporal resolution  
+- limited reproducibility  
+
+This system addresses those limitations by providing:
+
+- a single source of truth (relational database)  
+- reproducible ingestion and transformation workflows  
+- integration across chemistry, temperature, and spatial data  
+- a framework for iterative hypothesis testing  
+
+---
+
+# 🧰 Tools and Technologies
+
+This project integrates multiple tools across data engineering, GIS, and geochemical modeling:
+
+- **R** (tidyverse, DBI, readxl, ggplot2)  
+- **SQLite** (relational database)  
+- **ArcGIS / GeoPackage** (spatial analysis)  
+- **PHREEQC** (geochemical modeling)  
+
+---
+
+# 🚀 Project Scope and Impact
+
+While focused on Steamboat Springs, this workflow is designed to be transferable to:
+
+- geothermal monitoring systems  
+- hydrothermal research studies  
+- environmental and geochemical datasets  
+- long-term observational networks  
+
+---
+
+# ✅ Summary
+
+This project is not just a database — it is a **reproducible scientific framework** for understanding hydrothermal systems through time.
+
+It connects:
+
+- field data  
+- regulatory datasets  
+- sensor measurements  
+- spatial analysis  
+- geochemical modeling  
+
+into a unified, extensible system for research and discovery.

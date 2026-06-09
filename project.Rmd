@@ -1,0 +1,116 @@
+---
+title: "Project Overview"
+output: html_document
+---
+
+## 🌋 Context and Motivation
+
+The Steamboat Springs geothermal field represents a dynamic hydrothermal system shaped by decades of geothermal production, fluid extraction, and reinjection.
+
+After more than forty years of declining surface activity, the system experienced a dramatic reactivation in June 2025, when a geyser-like eruption exceeding 30 feet occurred from an abandoned well.
+
+This event highlighted a fundamental challenge:
+
+> **how do we monitor and understand rapidly evolving geothermal systems through time?**
+
+---
+
+## ⚠️ The Problem
+
+Hydrothermal systems are highly variable across both **space and time**, but traditional datasets are:
+
+- sparse in time (periodic sampling)
+- heterogeneous in format (regulatory vs field vs sensor)
+- difficult to integrate across scales  
+
+As a result, critical signals — especially **short-term variability and system transitions** — are often missed.
+
+---
+
+## 🌡️ Why Temperature Matters
+
+Temperature is one of the most responsive indicators of subsurface processes.
+
+Changes in temperature can reflect:
+
+- variations in subsurface flow paths  
+- mixing between thermal and non-thermal waters  
+- pressure changes within the hydrothermal system  
+
+Unlike discrete chemistry sampling, temperature loggers provide:
+
+> ✅ **continuous, high-resolution signals of system behavior**
+
+---
+
+## 🧠 Project Approach
+
+To address these challenges, this project builds a **reproducible data system** that integrates:
+
+- regulatory chemistry datasets (NDEP)
+- field sampling campaigns  
+- continuous temperature logger records  
+
+Rather than treating these datasets independently, they are unified into a single **relational database structure**.
+
+---
+
+## 🔧 What This System Enables
+
+By structuring the data in a consistent and reproducible way, the system enables:
+
+- **time-aligned comparisons** between chemistry and temperature  
+- **integration across data sources** (regulatory, field, sensor)  
+- **high-resolution monitoring** of system dynamics  
+- **direct input into geochemical modeling workflows**  
+
+---
+
+## 🔬 From Data to Interpretation
+
+A key goal of the project is to link:
+
+```
+observations → validated data → geochemical models → interpretation
+```
+
+Validated chemistry is transformed into **PHREEQC-ready inputs**, allowing:
+
+- forward speciation analysis  
+- inverse modeling of hydrothermal processes  
+
+---
+
+## 📊 Example Signal
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+# optional: keep simple or remove until you refine
+cat("Temperature variability and temporal structure of signals will be explored in the Results section.")
+```
+
+---
+
+## ✅ Project Goal
+
+The ultimate goal is not just data storage, but:
+
+> **to create a reproducible framework for understanding how hydrothermal systems evolve through time**
+
+This system provides the foundation for:
+
+- continuous monitoring  
+- integrated analysis  
+- hypothesis-driven geochemical modeling  
+
+---
+
+## 🚀 Broader Impact
+
+While developed for Steamboat Springs, this approach is directly transferable to:
+
+- geothermal monitoring systems  
+- environmental observatories  
+- hydrogeologic studies  
+- long-term ecological data analysis  
+
+---

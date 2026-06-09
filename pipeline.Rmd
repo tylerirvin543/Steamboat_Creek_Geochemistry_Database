@@ -1,0 +1,402 @@
+---
+title: pipeline
+output: html_document
+---
+
+## Overview
+
+The system performs:
+
+1. Ingestion
+2. Validation
+3. Transformation
+4. Storage
+5. GIS export
+
+
+## System Architecture
+
+The Steamboat data system integrates multiple environmental data streams into a unified, reproducible workflow.
+
+
+```{r workflow-diagram,fig.cap="*Conceptual workflow and relational structure of the Steamboat geochemical database, illustrating the integration of regulatory, field, laboratory, and sensor data through controlled ingestion pipelines into a normalized relational schema.*", fig.width=12, fig.height=10, echo = FALSE}
+
+DiagrammeR::grViz("
+digraph steamboat_database {
+
+graph [
+  layout = dot,
+  rankdir = TB,
+  nodesep = 0.4,
+  ranksep = 0.9,
+  label = \"Steamboat Hydrothermal Data System Architecture\",
+  labelloc = t,
+  fontsize = 16
+]
+
+node [fontname = Helvetica, fontsize = 10]
+edge [color=\"#555555\"]
+
+// ============================
+// RAW INPUTS
+// ============================
+node [shape = folder, style=filled, fillcolor=\"#C7E9C0\", width=1.1]
+
+NDEP   [label=\"NDEP\\n(CSV)\"] 
+Field  [label=\"Field\\n(Excel)\"] 
+Lab    [label=\"Lab\\n(CSV/XLSX)\"] 
+Loggers[label=\"Loggers\"] 
+Flux   [label=\"Flux\"]
+NDWR   [label=\"NDWR\"]
+USGS   [label=\"USGS\"]
+Iso    [label=\"Isotopes\"]
+
+// ============================
+// INGEST
+// ============================
+node [shape = box, style=filled, fillcolor=\"#FFF7BC\"]
+
+ing_ndep   [label=\"ingest_ndep\"]
+ing_field  [label=\"ingest_field\"]
+ing_lab    [label=\"ingest_lab\"]
+ing_log    [label=\"ingest_logger\"]
+ing_flux   [label=\"ingest_flux\"]
+ing_ndwr   [label=\"ingest_ndwr\"]
+ing_usgs   [label=\"ingest_usgs\"]
+ing_iso    [label=\"ingest_iso\"]
+
+// ============================
+// TABLES
+// ============================
+node [shape = record, style=filled, fillcolor=\"#BDD7E7\"]
+
+Locations [
+  label=\"{Locations|PK location_id|lat, lon}\"
+]
+
+Events [
+  label=\"{Sampling_Events|PK event_id|date}\"
+]
+
+Samples [
+  label=\"{Samples|PK sample_id|FK location_id\\nFK event_id|time}\"
+]
+
+FieldMeas [
+  label=\"{Field_Measurements|FK sample_id|parameter|value}\"
+]
+
+LabAnalyses [
+  label=\"{Lab_Analyses|FK sample_id|analyte|value}\"
+]
+
+TempLog [
+  label=\"{Temperature_Loggers|PK logger_id|FK location_id}\"
+]
+
+TempObs [
+  label=\"{Temperature_Observations|PK obs_id|FK logger_id|timestamp|temperature}\"
+]
+
+Wells [
+  label=\"{Wells|PK well_id|depth}\"
+]
+
+WaterLevels [
+  label=\"{Water_Level_Observations|FK well_id|timestamp|level}\"
+]
+
+USGSFlow [
+  label=\"{USGS_Flow|PK record_id|station_id|timestamp|discharge}\"
+]
+
+Isotopes [
+  label=\"{Isotope_Analyses|PK analysis_id|FK sample_id|d18O|d2H}\"
+]
+
+// ============================
+// DERIVED
+// ============================
+node [shape = ellipse, style=filled, fillcolor=\"#FEC44F\"]
+
+Gradients [label=\"Hydraulic Gradients\"]
+
+// ============================
+// QC
+// ============================
+node [shape = ellipse, style=filled, fillcolor=\"#FDD0A2\"]
+
+QC [label=\"QA / QC Validation\"]
+
+// ============================
+// OUTPUTS
+// ============================
+node [shape = folder, style=filled, fillcolor=\"#D9D9D9\"]
+
+GeoPkg  [label=\"GeoPackage\"]
+Website [label=\"Website Outputs\"]
+
+// ============================
+// MODEL
+// ============================
+node [shape = ellipse, style=filled, fillcolor=\"#FEE391\"]
+
+ModelInputs [label=\"Model Inputs\"]
+Modeling    [label=\"PHREEQC Modeling\"]
+
+
+// ============================
+// RANK STRUCTURE (FIXED)
+// ============================
+{rank=same; NDEP Field Lab Loggers Flux NDWR USGS Iso}
+{rank=same; ing_ndep ing_field ing_lab ing_log ing_flux ing_ndwr ing_usgs ing_iso}
+
+{rank=same; Locations Events Wells USGSFlow}
+{rank=same; Samples WaterLevels TempLog}
+{rank=same; FieldMeas LabAnalyses TempObs Isotopes}
+
+
+// ============================
+// FLOWS
+// ============================
+
+// RAW → INGEST
+NDEP -> ing_ndep
+Field -> ing_field
+Lab -> ing_lab
+Loggers -> ing_log
+Flux -> ing_flux
+NDWR -> ing_ndwr
+USGS -> ing_usgs
+Iso  -> ing_iso
+
+// INGEST → TABLES
+ing_ndep -> Locations
+ing_ndep -> Samples
+ing_ndep -> LabAnalyses
+ing_ndep -> Events
+
+ing_field -> Events
+Events -> Samples
+ing_field -> Samples
+ing_field -> FieldMeas
+ing_field -> Locations
+
+ing_lab -> LabAnalyses
+
+ing_log -> TempLog
+TempLog -> TempObs
+Locations -> TempLog
+
+ing_flux -> FieldMeas
+
+ing_ndwr -> Wells
+Wells -> WaterLevels
+
+ing_usgs -> USGSFlow
+ing_iso  -> Isotopes
+
+// RELATION
+Locations -> Samples
+Samples   -> FieldMeas
+Samples   -> LabAnalyses
+Samples   -> Isotopes
+
+// DERIVED
+WaterLevels -> Gradients
+Wells       -> Gradients
+USGSFlow -> Gradients
+
+// QC (ALL SYSTEMS FEED HERE)
+Gradients -> QC
+FieldMeas -> QC
+LabAnalyses -> QC
+TempObs -> QC
+Isotopes -> QC
+
+// OUTPUT
+QC -> GeoPkg
+QC -> Website
+
+// MODEL (AFTER QC)
+QC -> ModelInputs
+ModelInputs -> Modeling
+
+}
+")
+```
+
+***
+
+Figure 1. Conceptual data architecture and workflow of the Steamboat hydrothermal monitoring system.
+The system integrates multiple heterogeneous data sources, including regulatory datasets (NDEP), field sampling records, laboratory geochemistry, temperature logger observations, groundwater measurements (NDWR), isotopic analyses, and surface water discharge (USGS). Raw datasets are ingested through structured pipelines into a normalized relational database centered on locations, sampling events, and samples. Derived products, such as hydraulic gradients, are computed from groundwater level observations and well metadata. All primary data streams and derived quantities are subjected to automated quality control and validation routines. Validated datasets support downstream outputs, including GIS-ready GeoPackages and web-accessible data products, as well as model inputs for hydrogeochemical simulation (e.g., PHREEQC). This framework enables integrated analysis of hydrologic, thermal, and geochemical processes within the hydrothermal system.
+
+
+This architecture reflects:
+
+- integration of heterogeneous data sources  
+- modular ingestion pipelines  
+- a normalized relational database design  
+- downstream quality control and modeling workflows  
+
+Each component is independently executable but coordinated through a central pipeline.
+
+***
+## Data Run
+
+**DEMO mode**
+- Database rebuilt from scratch
+- Deterministic
+- Used for teaching and reproducibility
+
+**OPERATIONAL mode**
+- Database persists
+- Ingest happens only when explicitly invoked
+- Protects real field and lab data
+
+Demonstration vs. Operational Databases
+
+For reproducibility and teaching purposes, figures in this document are generated from a demonstration database rebuilt from raw inputs at render time. During active research, the same ingestion pipelines are run incrementally against a persistent operational database, allowing the ingest run log to accumulate and reflect real system evolution through time. In operational mode, ingest‑history visualizations are suppressed until data are ingested, reflecting the true state of the research database prior to field or laboratory uploads.
+
+# Script Calls for Data Ingest
+
+```{r build-database, echo = TRUE, eval = FALSE}
+
+# -------------------------------
+# SETUP
+# -------------------------------
+dir.create("database", recursive = TRUE, showWarnings = FALSE)
+
+con <- DBI::dbConnect(RSQLite::SQLite(), DB_PATH)
+DBI::dbExecute(con, "PRAGMA foreign_keys = ON;")
+
+# -------------------------------
+# CORE INFRASTRUCTURE (ALWAYS ON)
+# -------------------------------
+
+# Schema
+source("database/schema/01_define_schema.R")
+
+# Helpers
+source("scripts/ingest/helpers/parse_datetime.R")
+source("scripts/ingest/helpers/update_geometry.R")
+
+# GIS + QC
+source("scripts/ingest/create_gis_views.R")
+source("scripts/ingest/export_geopackage.R")
+source("scripts/qc/validate_database.R")
+source("scripts/qc/audit_sample_duplicates.R")
+
+# -------------------------------
+# DEMO MODE: FULL RESET
+# -------------------------------
+if (MODE == "DEMO") {
+  
+  message("DEMO mode: rebuilding database")
+  
+  DBI::dbDisconnect(con)
+  unlink(DB_PATH)
+  
+  con <- DBI::dbConnect(RSQLite::SQLite(), DB_PATH)
+  DBI::dbExecute(con, "PRAGMA foreign_keys = ON;")
+  
+  source("database/schema/01_define_schema.R")
+}
+
+# -------------------------------
+# INGEST PIPELINE (USER CONTROLLED)
+# -------------------------------
+
+message("---- Running ingest pipeline ----")
+
+# --- NDEP ---
+if (RUN_INGEST$ndep) {
+  message("Running NDEP ingest")
+  source("scripts/ingest/ingest_ndep.R")
+} else {
+  message("Skipping NDEP ingest")
+}
+
+# --- FIELD ---
+if (RUN_INGEST$field) {
+  message("Running field ingest")
+  source("scripts/ingest/ingest_field.R")
+  ingest_field(con)
+} else {
+  message("Skipping field ingest")
+}
+
+# --- TEMPERATURE LOGGERS ---
+if (RUN_INGEST$logger) {
+  message("Running logger ingest")
+  source("scripts/ingest/ingest_temperature_loggers.R")
+  ingest_temperature_loggers(con)
+} else {
+  message("Skipping logger ingest")
+}
+
+# --- LAB ---
+if (RUN_INGEST$lab) {
+  message("Running lab ingest")
+  source("scripts/ingest/ingest_lab.R")
+  ingest_lab(con)
+} else {
+  message("Skipping lab ingest")
+}
+
+# --- FLUX ---
+if (RUN_INGEST$flux) {
+  message("Running flux ingest")
+  source("scripts/ingest/ingest_flux.R")
+  ingest_flux(con)
+} else {
+  message("Skipping flux ingest")
+}
+
+# -------------------------------
+# POST-PROCESSING (ALWAYS RUN)
+# -------------------------------
+
+message("---- Running post-processing ----")
+
+# Geometry (safe to rerun)
+update_location_geometry(con)
+
+# GIS Outputs
+create_gis_views(con)
+export_geopackage(con)
+
+# QC Validation
+validate_database(con)
+audit_sample_duplicates(con)
+
+message("✅ Pipeline complete")
+
+```
+
+***
+
+## Logger Ingestion
+
+- Parses Elitech Excel exports  
+- Reads "List" sheet  
+- Extracts time + temperature  
+- Validates timestamps  
+- Inserts into database  
+
+***
+
+## Challenges Solved
+
+- Non-standard Excel formats  
+- Mixed file types (CMN + EMO)  
+- Column name inconsistencies  
+- Timestamp parsing issues  
+
+***
+
+## Post-processing
+
+- Geometry updates  
+- GIS view creation  
+- GeoPackage export  
