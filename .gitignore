@@ -1,79 +1,68 @@
 # ==================================================
-# R environment
+# R ENVIRONMENT
 # ==================================================
 .RData
 .Rhistory
 .Rproj.user/
 
 # ==================================================
-# OS junk
+# OS / SYSTEM FILES
 # ==================================================
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # ==================================================
-# DATABASE (rebuildable)
+# DATABASE (REBUILDABLE)
 # ==================================================
 database/*.sqlite*
-website/database/*.sqlite*
+*.sqlite*
 
 # ==================================================
-# RAW DATA (never commit)
+# RAW DATA (NEVER COMMIT)
 # ==================================================
 data/raw/
+docs/data/raw/
 website/data_files/
+
+# Excel + temp artifacts
+*.xlsx
+*.xls
+~$*
 
 # ==================================================
 # PROCESSED / GENERATED DATA
 # ==================================================
 data/processed/
+docs/data/processed/
+
 output/
-website/output/
 results_files/
 qc_reports/
 
 # ==================================================
-# GIS / EXPORT PRODUCTS
+# WEBSITE OUTPUT SUPPORT FILES
+# ==================================================
+docs/site_libs/
+
+# ==================================================
+# GIS / LARGE FILES
 # ==================================================
 *.gpkg
 *.shp
 *.dbf
 *.shx
 *.geojson
+*.zip
 
 # ==================================================
-# PHREEQC
+# PHREEQC OUTPUTS
 # ==================================================
 phreeqc/runs/
 phreeqc/outputs/
-website/phreeqc/
 
 # ==================================================
-# LARGE MEDIA / ARCHIVES
+# OPTIONAL: TEMP DOC FILES
 # ==================================================
-Photo_Archive/
-website/Photo_Archive/
-Figures/
-website/Figures/
-
-# ==================================================
-# WEBSITE BUILD ARTIFACTS
-# ==================================================
-website/site_libs/
-website/index_files/
-
-# ==================================================
-# LOGS / TEMP
-# ==================================================
-*.log
+~$*
 *.tmp
-
-# ==================================================
-# DOC BUILD (optional)
-# ==================================================
-docs/
-
-# ==================================================
-# PROJECT EXPORT DUPLICATES
-# ==================================================
-Steamboat_project/

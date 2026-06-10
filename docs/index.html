@@ -11,12 +11,12 @@
 
 
 
-<title>Steamboat Environmental Data System</title>
+<title>Steamboat Hydrothermal Data Platform</title>
 
 <script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -29,8 +29,11 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 <link href="site_libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet" />
 <script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
@@ -63,6 +66,7 @@ if (window.hljs) {
 
 
 
+<link rel="stylesheet" href="styles.css" type="text/css" />
 
 
 
@@ -224,6 +228,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -231,6 +298,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -248,19 +325,19 @@ $(document).ready(function () {
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">Home</a>
+  <a href="index.html">Overview</a>
 </li>
 <li>
-  <a href="project.html">Project</a>
-</li>
-<li>
-  <a href="data.html">Data &amp; Schema</a>
-</li>
-<li>
-  <a href="results.html">Results</a>
+  <a href="project.html">Scientific Context</a>
 </li>
 <li>
   <a href="pipeline.html">Pipeline</a>
+</li>
+<li>
+  <a href="data.html">Data System</a>
+</li>
+<li>
+  <a href="results.html">Results</a>
 </li>
 <li>
   <a href="about.html">About</a>
@@ -277,34 +354,74 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Steamboat Environmental Data System</h1>
+<h1 class="title toc-ignore">Steamboat Hydrothermal Data Platform</h1>
 
 </div>
 
 
-<div id="steamboat-environmental-monitoring-system"
-class="section level1">
-<h1>🌎 Steamboat Environmental Monitoring System</h1>
-<p>A reproducible pipeline integrating <strong>geochemistry, field
-observations, and temperature logger data</strong> into a unified
-relational and GIS-ready system.</p>
+<div id="steamboat-hydrothermal-data-platform" class="section level1">
+<h1>🌎 Steamboat Hydrothermal Data Platform</h1>
+<p>A reproducible system for integrating <strong>hydrologic, thermal,
+and geochemical observations</strong> into a unified database for
+hydrothermal system analysis.</p>
 <hr />
-<div id="system-overview" class="section level2">
-<h2>🔁 System Overview</h2>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-ebc38333c52f676a78b6" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-ebc38333c52f676a78b6">{"x":{"diagram":"\ndigraph {\n  rankdir=LR;\n  node [shape=box style=filled fillcolor=lightblue]\n\n  NDEP -> Database\n  Field -> Database\n  Loggers -> Database\n  Database -> GIS\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-<hr />
+<div id="scientific-purpose" class="section level2">
+<h2>🔬 Scientific Purpose</h2>
+<p>This platform addresses a central question:</p>
+<blockquote>
+<p><strong>How does the hydrothermal system evolve through time and
+space?</strong></p>
+</blockquote>
+<p>To answer this, the system combines:</p>
+<ul>
+<li>groundwater hydraulics (water levels, gradients)<br />
+</li>
+<li>geochemical observations (field + laboratory)<br />
+</li>
+<li>continuous temperature monitoring<br />
+</li>
+<li>future isotope and thermodynamic modeling</li>
+</ul>
+<p>Together, these datasets allow interpretation of:</p>
+<ul>
+<li>groundwater flow patterns<br />
+</li>
+<li>hydrothermal upflow zones<br />
+</li>
+<li>fluid mixing and recharge<br />
+</li>
+<li>temporal system variability</li>
+</ul>
 <hr />
 </div>
-<div id="database-composition" class="section level2">
-<h2>🧱 Database Composition</h2>
-<p><img src="index_files/figure-html/unnamed-chunk-3-1.png" alt="" width="672" /></p>
+<div id="system-architecture" class="section level2">
+<h2>🧱 System Architecture</h2>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-25f78882fe9972ff49e8" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-25f78882fe9972ff49e8">{"x":{"diagram":"\ndigraph {\n  rankdir=LR;\n  node [shape=box style=filled fillcolor=lightblue]\n\n  RawData [label=\"Raw Data\"]\n  Database\n  Analysis\n  Export\n\n  RawData -> Database\n  Database -> Analysis\n  Analysis -> Export\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 <hr />
 </div>
-<div id="database-growth" class="section level2">
-<h2>📈 Database Growth</h2>
-<p><img src="index_files/figure-html/unnamed-chunk-4-1.png" alt="" width="672" /></p>
+<div id="what-makes-this-system-different" class="section level2">
+<h2>🧪 What Makes This System Different</h2>
+<p>Unlike traditional datasets, this platform:</p>
+<ul>
+<li>integrates continuous and discrete observations</li>
+<li>preserves full data provenance</li>
+<li>supports reproducible analysis workflows</li>
+<li>enables multi-domain interpretation (hydraulic + thermal +
+chemical)</li>
+</ul>
 <hr />
+</div>
+<div id="what-the-system-contains" class="section level2">
+<h2>📊 What the System Contains</h2>
+<p>The database currently includes:</p>
+<ul>
+<li>thousands of temperature observations (high-frequency)</li>
+<li>groundwater level measurements</li>
+<li>field and regulatory chemistry data</li>
+<li><h2 id="spatially-referenced-wells-and-sampling-locations">spatially
+referenced wells and sampling locations</h2></li>
+</ul>
 </div>
 <div id="explore" class="section level2">
 <h2>🧭 Explore</h2>
@@ -331,6 +448,8 @@ workflows.</p>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -363,6 +482,35 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

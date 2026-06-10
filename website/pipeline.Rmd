@@ -5,19 +5,35 @@ output: html_document
 
 ## Overview
 
-The system performs:
+The pipeline implements a structured workflow that transforms heterogeneous environmental observations into a unified, reproducible analytical system.
 
-1. Ingestion
-2. Validation
-3. Transformation
-4. Storage
-5. GIS export
+Rather than treating ingestion, validation, and analysis as separate tasks, the system enforces a strict sequence of operations that ensures all data are consistently processed and comparable across sources.
+
+The workflow consists of five primary stages:
+
+1. **Ingestion** — raw datasets are parsed and standardized  
+2. **Validation** — structural and logical consistency checks are applied  
+3. **Transformation** — data are normalized and relationships are defined  
+4. **Storage** — observations are inserted into a relational database  
+5. **Export** — derived products are prepared for GIS, modeling, and web use  
+
+> This staged design ensures that all outputs are reproducible and traceable to their original inputs.
 
 
 ## System Architecture
 
-The Steamboat data system integrates multiple environmental data streams into a unified, reproducible workflow.
+The system architecture is designed to integrate multiple observational domains into a single relational framework. Each component of the pipeline serves a specific role, but all are coordinated through a controlled sequence of transformations.
 
+At the highest level, the system converts raw environmental observations into validated, structured datasets that support analysis, spatial interpretation, and modeling.
+
+Key architectural principles include:
+
+- separation of raw data and derived products  
+- normalization of all inputs into a shared schema  
+- reproducible transformation through deterministic scripts  
+- modular design allowing independent execution of components  
+
+The diagram below illustrates how data move through the system, from raw inputs to final outputs.
 
 ```{r workflow-diagram,fig.cap="*Conceptual workflow and relational structure of the Steamboat geochemical database, illustrating the integration of regulatory, field, laboratory, and sensor data through controlled ingestion pipelines into a normalized relational schema.*", fig.width=12, fig.height=10, echo = FALSE}
 
@@ -226,177 +242,111 @@ ModelInputs -> Modeling
 ")
 ```
 
-***
+### Interpreting the Architecture
 
-Figure 1. Conceptual data architecture and workflow of the Steamboat hydrothermal monitoring system.
-The system integrates multiple heterogeneous data sources, including regulatory datasets (NDEP), field sampling records, laboratory geochemistry, temperature logger observations, groundwater measurements (NDWR), isotopic analyses, and surface water discharge (USGS). Raw datasets are ingested through structured pipelines into a normalized relational database centered on locations, sampling events, and samples. Derived products, such as hydraulic gradients, are computed from groundwater level observations and well metadata. All primary data streams and derived quantities are subjected to automated quality control and validation routines. Validated datasets support downstream outputs, including GIS-ready GeoPackages and web-accessible data products, as well as model inputs for hydrogeochemical simulation (e.g., PHREEQC). This framework enables integrated analysis of hydrologic, thermal, and geochemical processes within the hydrothermal system.
+The diagram illustrates how heterogeneous data streams are unified through a common relational structure.
 
+Raw inputs (e.g., NDEP datasets, field measurements, logger data) are first processed through dedicated ingestion pipelines. These pipelines handle parsing, validation, and normalization before inserting data into core relational tables.
 
-This architecture reflects:
+The central tables—**Locations, Sampling Events, Samples, and Observations**—form the backbone of the system. All data types are linked through shared spatial and temporal keys, enabling integration across domains.
 
-- integration of heterogeneous data sources  
-- modular ingestion pipelines  
-- a normalized relational database design  
-- downstream quality control and modeling workflows  
+Derived datasets, such as hydraulic gradients, are computed from these core tables, allowing higher-level interpretation of system behavior.
 
-Each component is independently executable but coordinated through a central pipeline.
+Quality control operates as a cross-cutting layer, evaluating all datasets without modifying the underlying data. This ensures transparency while preserving the integrity of observations.
 
-***
-## Data Run
+Finally, validated data are exported into multiple formats, including GIS layers, website outputs, and model inputs.
 
-**DEMO mode**
-- Database rebuilt from scratch
-- Deterministic
-- Used for teaching and reproducibility
+> This architecture allows the system to scale from raw observation to process-based interpretation.
+``
 
-**OPERATIONAL mode**
-- Database persists
-- Ingest happens only when explicitly invoked
-- Protects real field and lab data
+---
 
-Demonstration vs. Operational Databases
+## Execution Modes
 
-For reproducibility and teaching purposes, figures in this document are generated from a demonstration database rebuilt from raw inputs at render time. During active research, the same ingestion pipelines are run incrementally against a persistent operational database, allowing the ingest run log to accumulate and reflect real system evolution through time. In operational mode, ingest‑history visualizations are suppressed until data are ingested, reflecting the true state of the research database prior to field or laboratory uploads.
+The pipeline supports two modes of operation, designed to balance reproducibility with real-world data management.
 
-# Script Calls for Data Ingest
+### DEMO Mode
 
-```{r build-database, echo = TRUE, eval = FALSE}
+In demonstration mode, the database is rebuilt from scratch on each run. This ensures deterministic outputs and allows the full system to be reproduced from raw inputs.
 
-# -------------------------------
-# SETUP
-# -------------------------------
-dir.create("database", recursive = TRUE, showWarnings = FALSE)
+This mode is particularly useful for:
 
-con <- DBI::dbConnect(RSQLite::SQLite(), DB_PATH)
-DBI::dbExecute(con, "PRAGMA foreign_keys = ON;")
+- teaching and demonstration  
+- debugging ingestion pipelines  
+- validating end-to-end reproducibility  
 
-# -------------------------------
-# CORE INFRASTRUCTURE (ALWAYS ON)
-# -------------------------------
+### OPERATIONAL Mode
 
-# Schema
-source("database/schema/01_define_schema.R")
+In operational mode, the database persists between runs and is updated incrementally as new data are ingested.
 
-# Helpers
-source("scripts/ingest/helpers/parse_datetime.R")
-source("scripts/ingest/helpers/update_geometry.R")
+This mode reflects real-world use, where:
 
-# GIS + QC
-source("scripts/ingest/create_gis_views.R")
-source("scripts/ingest/export_geopackage.R")
-source("scripts/qc/validate_database.R")
-source("scripts/qc/audit_sample_duplicates.R")
+- field data are added over time  
+- laboratory results are incorporated as they become available  
+- system evolution is recorded continuously  
 
-# -------------------------------
-# DEMO MODE: FULL RESET
-# -------------------------------
-if (MODE == "DEMO") {
-  
-  message("DEMO mode: rebuilding database")
-  
-  DBI::dbDisconnect(con)
-  unlink(DB_PATH)
-  
-  con <- DBI::dbConnect(RSQLite::SQLite(), DB_PATH)
-  DBI::dbExecute(con, "PRAGMA foreign_keys = ON;")
-  
-  source("database/schema/01_define_schema.R")
-}
+> The distinction between these modes allows the same pipeline to support both reproducible research and active data collection workflows.
 
-# -------------------------------
-# INGEST PIPELINE (USER CONTROLLED)
-# -------------------------------
+---
 
-message("---- Running ingest pipeline ----")
+## Pipeline Implementation (Simplified)
 
-# --- NDEP ---
-if (RUN_INGEST$ndep) {
-  message("Running NDEP ingest")
-  source("scripts/ingest/ingest_ndep.R")
-} else {
-  message("Skipping NDEP ingest")
-}
+The pipeline is orchestrated through a central script (`run_pipeline.R`) that coordinates all stages of ingestion, processing, validation, and export.
 
-# --- FIELD ---
-if (RUN_INGEST$field) {
-  message("Running field ingest")
-  source("scripts/ingest/ingest_field.R")
-  ingest_field(con)
-} else {
-  message("Skipping field ingest")
-}
+Each ingestion module corresponds to a specific data source and can be enabled or disabled independently, allowing flexible execution depending on available datasets.
 
-# --- TEMPERATURE LOGGERS ---
-if (RUN_INGEST$logger) {
-  message("Running logger ingest")
-  source("scripts/ingest/ingest_temperature_loggers.R")
-  ingest_temperature_loggers(con)
-} else {
-  message("Skipping logger ingest")
-}
+---
 
-# --- LAB ---
-if (RUN_INGEST$lab) {
-  message("Running lab ingest")
-  source("scripts/ingest/ingest_lab.R")
-  ingest_lab(con)
-} else {
-  message("Skipping lab ingest")
-}
+## Example: Temperature Logger Ingestion
 
-# --- FLUX ---
-if (RUN_INGEST$flux) {
-  message("Running flux ingest")
-  source("scripts/ingest/ingest_flux.R")
-  ingest_flux(con)
-} else {
-  message("Skipping flux ingest")
-}
+Temperature loggers provide high-frequency observations that require specialized handling during ingestion.
 
-# -------------------------------
-# POST-PROCESSING (ALWAYS RUN)
-# -------------------------------
+The ingestion process:
 
-message("---- Running post-processing ----")
+- parses raw Excel exports  
+- extracts timestamped temperature records  
+- validates and standardizes time formats  
+- links observations to spatial locations  
+- inserts data into the relational schema  
 
-# Geometry (safe to rerun)
-update_location_geometry(con)
+This process addresses several challenges:
 
-# GIS Outputs
-create_gis_views(con)
-export_geopackage(con)
+- inconsistent file formats across deployments  
+- varying column structures  
+- timestamp formatting differences  
+- sensor-specific output variations  
 
-# QC Validation
-validate_database(con)
-audit_sample_duplicates(con)
+> Successfully standardizing these datasets enables continuous monitoring to be integrated with discrete observations.
 
-message("✅ Pipeline complete")
+---
 
-```
+## Challenges Addressed
 
-***
+The pipeline resolves several challenges common in environmental data systems:
 
-## Logger Ingestion
+- **heterogeneous file formats** (CSV, Excel, sensor exports)  
+- **inconsistent naming conventions** across data sources  
+- **temporal misalignment** between datasets  
+- **spatial inconsistencies** in coordinate systems  
+- **duplicate or conflicting records**  
 
-- Parses Elitech Excel exports  
-- Reads "List" sheet  
-- Extracts time + temperature  
-- Validates timestamps  
-- Inserts into database  
+By addressing these issues through controlled ingestion and validation, the system ensures that all datasets are compatible and comparable.
 
-***
+> This provides a stable foundation for downstream analysis and interpretation.
 
-## Challenges Solved
+---
 
-- Non-standard Excel formats  
-- Mixed file types (CMN + EMO)  
-- Column name inconsistencies  
-- Timestamp parsing issues  
+## Post-processing and Outputs
 
-***
+Following ingestion, the system performs a series of post-processing steps to prepare data for analysis and visualization.
 
-## Post-processing
+These include:
 
-- Geometry updates  
-- GIS view creation  
-- GeoPackage export  
+- updating spatial geometry for all observations  
+- constructing GIS-ready views  
+- generating GeoPackage outputs for spatial analysis  
+- executing quality control checks across all datasets  
+
+These steps ensure that the database is not only internally consistent, but also directly usable in external tools such as GIS platforms and modeling software.
+
+> Post-processing transforms structured data into interpretable products.

@@ -1,0 +1,628 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>Project Overview</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Steamboat Data Pipeline</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="project.html">Scientific Context</a>
+</li>
+<li>
+  <a href="pipeline.html">Pipeline</a>
+</li>
+<li>
+  <a href="data.html">Data System</a>
+</li>
+<li>
+  <a href="results.html">Results</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">Project Overview</h1>
+
+</div>
+
+
+<div id="context-and-motivation" class="section level2">
+<h2>🌋 Context and Motivation</h2>
+<p>The Steamboat Springs geothermal field represents a dynamic
+hydrothermal system shaped by decades of geothermal production, fluid
+extraction, and reinjection. These processes have altered the natural
+hydraulic and thermal structure of the system, creating a complex and
+evolving subsurface environment.</p>
+<p>After more than forty years of declining surface activity, the system
+experienced a dramatic reactivation in June 2025, when a geyser-like
+eruption exceeding 30 feet occurred from an abandoned well. This event
+represents a sudden and observable manifestation of deeper system
+changes, likely tied to shifts in pressure, fluid pathways, or
+reinjection dynamics.</p>
+<p>This observation highlights a fundamental scientific challenge:</p>
+<blockquote>
+<p><strong>How do we monitor and interpret rapidly evolving hydrothermal
+systems through time?</strong></p>
+</blockquote>
+<hr />
+</div>
+<div id="the-problem" class="section level2">
+<h2>⚠️ The Problem</h2>
+<p>Hydrothermal systems exhibit strong variability across both
+<strong>space and time</strong>, yet the datasets used to study them are
+often poorly suited to capture this complexity.</p>
+<p>Traditional observations are typically:</p>
+<ul>
+<li><p><strong>temporally sparse</strong> — periodic sampling misses
+short-term dynamics<br />
+</p></li>
+<li><p><strong>structurally inconsistent</strong> — regulatory, field,
+and sensor datasets differ in format</p></li>
+<li><p><strong>difficult to integrate</strong> — linking datasets across
+spatial and temporal scales requires significant preprocessing</p></li>
+</ul>
+<p>As a result, critical signals—particularly those associated with
+transient events, system transitions, or short-lived anomalies—are
+frequently unresolved.</p>
+<p>This mismatch between system behavior and observational resolution is
+a central limitation in hydrothermal monitoring.</p>
+<hr />
+</div>
+<div id="why-temperature-matters" class="section level2">
+<h2>🌡️ Why Temperature Matters</h2>
+<p>Temperature is one of the most responsive and informative indicators
+of subsurface processes in hydrothermal systems. Unlike many chemical
+parameters, temperature responds directly and continuously to changes in
+fluid movement and system pressure.</p>
+<p>Variations in temperature can indicate:</p>
+<ul>
+<li><p>changes in subsurface flow pathways</p></li>
+<li><p>mixing between thermal and non-thermal waters<br />
+</p></li>
+<li><p>pressure fluctuations and transient flow events</p></li>
+</ul>
+<p>In contrast to discrete geochemical sampling, temperature loggers
+provide:</p>
+<blockquote>
+<p>✅ <strong>continuous, high-frequency measurements that capture
+system variability in real time</strong></p>
+</blockquote>
+<p>This makes temperature data uniquely suited to detecting short-term
+system changes that would otherwise remain unobserved.</p>
+</div>
+<div id="example-continuous-thermal-signal" class="section level2">
+<h2>📈 Example: Continuous Thermal Signal</h2>
+<pre><code>## Temperature data will appear after pipeline export.</code></pre>
+<p><strong>Insight:</strong> Even over a short interval, temperature
+exhibits continuous variability that would be completely missed by
+discrete sampling. This illustrates the importance of high-frequency
+monitoring for resolving transient hydrothermal behavior. —</p>
+</div>
+<div id="project-approach" class="section level2">
+<h2>🧠 Project Approach</h2>
+<p>To address these limitations, this project develops a
+<strong>reproducible data system</strong> that integrates multiple
+observational domains into a unified framework.</p>
+<p>The system incorporates:</p>
+<ul>
+<li>regulatory geochemical datasets (NDEP)<br />
+</li>
+<li>field sampling campaigns<br />
+</li>
+<li>continuous temperature logger records</li>
+</ul>
+<p>Rather than treating these datasets independently, they are organized
+within a single <strong>relational database structure</strong>. This
+enables consistent relationships between:</p>
+<ul>
+<li>observations collected at different times<br />
+</li>
+<li>measurements originating from different sources<br />
+</li>
+<li>spatially distributed monitoring locations</li>
+</ul>
+<blockquote>
+<p>The result is a coherent representation of the hydrothermal system
+that can be analyzed systematically.</p>
+</blockquote>
+<hr />
+</div>
+<div id="what-this-system-enables" class="section level2">
+<h2>🔧 What This System Enables</h2>
+<p>Structuring the data in a consistent and reproducible way enables
+analytical capabilities that are not possible with isolated
+datasets.</p>
+<p>These include:</p>
+<ul>
+<li><p><strong>time-aligned comparisons</strong> between temperature and
+chemistry<br />
+</p></li>
+<li><p><strong>integration across data sources</strong>, linking field,
+regulatory, and sensor data</p></li>
+<li><p><strong>high-resolution monitoring</strong> of hydrothermal
+dynamics<br />
+</p></li>
+<li><p><strong>direct input into geochemical modeling
+frameworks</strong></p></li>
+</ul>
+<p>Beyond individual analyses, the system provides a foundation for
+interpreting system-wide behavior.</p>
+<blockquote>
+<p>Importantly, this enables the identification of relationships between
+hydraulic conditions, thermal patterns, and geochemical signatures.</p>
+</blockquote>
+<hr />
+</div>
+<div id="from-data-to-interpretation" class="section level2">
+<h2>🔬 From Data to Interpretation</h2>
+<p>A central goal of the project is to transform raw observations into
+interpretable representations of hydrothermal processes.</p>
+<p>This workflow can be conceptualized as:</p>
+<p>observations → validated data → derived products → interpretation</p>
+<p>Within this framework:</p>
+<ul>
+<li>raw data are standardized and validated<br />
+</li>
+<li>derived datasets are constructed (e.g., gradients, aligned time
+series)<br />
+</li>
+<li>outputs are used for interpretation and modeling</li>
+</ul>
+<p>Validated geochemical data are further prepared for <strong>PHREEQC
+modeling</strong>, enabling:</p>
+<ul>
+<li>forward speciation analysis<br />
+</li>
+<li>inverse modeling of fluid processes<br />
+</li>
+<li>evaluation of mineral saturation conditions</li>
+</ul>
+<blockquote>
+<p>This bridges the gap between measurement and process-based
+interpretation.</p>
+</blockquote>
+<hr />
+</div>
+<div id="project-goal" class="section level2">
+<h2>🎯 Project Goal</h2>
+<p>The goal of this project extends beyond data aggregation.</p>
+<blockquote>
+<p><strong>To create a reproducible framework for understanding how
+hydrothermal systems evolve through time.</strong></p>
+</blockquote>
+<p>This framework enables: - continuous system monitoring<br />
+- integration across observational scales<br />
+- hypothesis-driven analysis and modeling</p>
+<p>Rather than producing static datasets, the system supports an
+evolving understanding of hydrothermal behavior.</p>
+<hr />
+</div>
+<div id="broader-impact" class="section level2">
+<h2>🚀 Broader Impact</h2>
+<p>Although developed for Steamboat Springs, the approach is broadly
+applicable to other environmental and geoscientific systems.</p>
+<p>This framework can be adapted to:</p>
+<ul>
+<li>geothermal monitoring systems<br />
+</li>
+<li>groundwater and hydrogeologic studies<br />
+</li>
+<li>environmental observatories<br />
+</li>
+<li>long-term ecological monitoring</li>
+</ul>
+<p>The key contribution lies in demonstrating how heterogeneous
+environmental data can be transformed into a <strong>unified,
+reproducible analytical system</strong>.</p>
+<blockquote>
+<p>This approach supports not only data integration, but also scalable
+scientific interpretation across complex natural systems.</p>
+</blockquote>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

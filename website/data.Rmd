@@ -5,20 +5,29 @@ output: html_document
 
 # Data & Structure
 
-This system integrates multiple environmental datasets into a unified, structured database designed for reproducible scientific analysis.
+This system integrates heterogeneous environmental observations into a unified relational database designed to support reproducible scientific analysis.  
+
+Rather than storing datasets independently, all observations are structured within a shared schema that enforces spatial, temporal, and relational consistency. This enables direct comparison across data types, monitoring scales, and time.
+
+The following sections explore how the database behaves as an integrated system, highlighting patterns in data sources, temporal growth, structural
 
 ---
 
 ## 📥 Data Sources
 
-The database integrates heterogeneous inputs collected across multiple workflows:
+The database integrates multiple observational domains, each representing a different aspect of the hydrothermal system:
 
-- **Regulatory data (NDEP)** — long-term chemistry records  
-- **Field measurements** — site-based sampling campaigns  
-- **Laboratory analyses** — high-quality analytical chemistry (in progress)  
+- **Regulatory data (NDEP)** — long-term geochemical records  
+- **Field measurements** — site-specific sampling campaigns  
+- **Laboratory analyses** — high-quality analytical chemistry  
 - **Temperature loggers** — continuous thermal monitoring  
 
-Each source has different structure, frequency, and quality constraints, requiring controlled ingestion and validation.
+Each source differs in temporal resolution, structure, and analytical purpose.  
+
+Bringing these datasets into a common framework allows relationships to be established between measurements that were previously isolated.
+
+> This integration is essential for interpreting the hydrothermal system as a coupled hydraulic, thermal, and geochemical process.
+
 
 ---
 
@@ -84,146 +93,240 @@ Continuous data enable:
 
 ---
 
-## 📊 Data Behavior
+## 🔗 Integration of Data Sources
 
-### Source Integration
+The degree to which different datasets contribute to the system provides insight into both data availability and monitoring strategy.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(DBI)
-library(RSQLite)
+library(readr)
 library(ggplot2)
+library(dplyr)
 
-con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_demo.sqlite")
+source_path <- "docs/data/source_summary.csv"
 
-if (dbGetQuery(con, "SELECT COUNT(*) n FROM Lab_Analyses")$n == 0) {
-
-  cat("Laboratory data not yet available.")
-
+if (!file.exists(source_path)) {
+  
+  cat("Source breakdown available after pipeline export.")
+  
 } else {
+  
+  sources <- read_csv(source_path, show_col_types = FALSE)
+  
+  p <- ggplot(sources,
+              aes(x = reorder(source, n), y = n, fill = source)) +
+    geom_col() +
+    coord_flip() +
+    labs(
+      title = "Integration of Data Sources",
+      x = "",
+      y = "Records"
+    ) +
+    theme_minimal()
+  
+  print(p)
+}
 
-  source_df <- dbGetQuery(con, "
-SELECT
-  CASE
-    WHEN source_id = 1 THEN 'NDEP'
-    WHEN source_id = 2 THEN 'Field'
-    ELSE 'Other'
-  END AS data_source,
-  COUNT(*) AS n
-FROM Lab_Analyses
-GROUP BY data_source
-")
+```
+Interpretation:
+This distribution reflects the heterogeneous nature of environmental monitoring. Regulatory datasets typically dominate long-term records, while field and sensor data provide targeted and high-resolution observations.
+Key Insight:
+The strength of the system lies not in any single dataset, but in the ability to integrate multiple observational scales into a unified structure.
 
-# Ensure both categories exist
-all_sources <- data.frame(
-  data_source = c("NDEP", "Field")
-)
+---
 
-source_df <- merge(all_sources, source_df, all.x = TRUE)
-source_df$n[is.na(source_df$n)] <- 0
+## 📈 System Growth Through Time
 
-# Plot
-print(
-ggplot(source_df, aes(x = data_source, y = n, fill = data_source)) +
-  geom_col() +
-  labs(
-    title = "Integration of Chemistry Data Sources",
-    subtitle = "Field chemistry not yet ingested",
-    x = "Data Source",
-    y = "Number of Records"
-  ) +
-  scale_fill_manual(values = c("steelblue", "orange")) +
-  theme_minimal()
-)
+The database evolves through discrete ingestion events rather than continuous accumulation, reflecting how environmental data are collected and integrated.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(readr)
+library(dplyr)
+library(lubridate)
+library(ggplot2)
+library(plotly)
+
+path <- "docs/data/ingest_log.csv"
+
+if (!file.exists(path)) {
+  cat("Ingestion history will appear after pipeline runs.")
+  
+} else {
+  
+  ingest <- read_csv(path, show_col_types = FALSE) %>%
+    mutate(timestamp = ymd_hms(timestamp)) %>%
+    arrange(timestamp) %>%
+    mutate(cumulative = cumsum(measurements_inserted))
+  
+p <- ggplot(ingest,
+              aes(timestamp, cumulative, color = data_source)) +
+    geom_line(linewidth = 1.2) +
+    labs(
+      title = "Cumulative Database Growth",
+      x = "Time",
+      y = "Total Records"
+    ) +
+    theme_minimal()
+  
+  ggplotly(p)
 }
 ```
 
+Interpretation:
+Each increase corresponds to a specific ingestion event, such as a field campaign, regulatory update, or logger deployment.
+Key Insight:
+The stepwise growth pattern provides explicit provenance, allowing users to trace how and when data entered the system.
+
 ---
 
-### Ingestion Through Time
+## ⚖️ Data Granularity: Continuous vs Discrete Observations
 
-cat("**Note:** In DEMO mode, all ingestion events are replayed from scratch. In OPERATIONAL mode, this plot reflects real-time database growth.")
-
+A defining characteristic of the system is the coexistence of continuous and discrete data.
 
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
-ingest_log <- dbGetQuery(con, "
-SELECT
-  timestamp,
-  data_source,
-  measurements_inserted
-FROM Ingest_Run_Log
-ORDER BY timestamp;
-")
-
-library(lubridate)
-library(dplyr)
-
-ingest_log$timestamp <- ymd_hms(ingest_log$timestamp)
-
-ingest_log <- ingest_log |>
-  arrange(timestamp) |>
-  mutate(cumulative = cumsum(measurements_inserted))
-
-print(
-ggplot(ingest_log,
-       aes(x = timestamp,
-           y = cumulative,
-           color = data_source)) +
-  geom_line(linewidth = 1.2) +
-  geom_point(size = 2) +
-  geom_vline(aes(xintercept = timestamp),
-           linetype = "dashed",
-           alpha = 0.2) +
-  labs(
-    title = "Cumulative Database Growth",
-    subtitle = "Each step represents an ingestion event",
-    x = "Time",
-    y = "Total Records",
-    color = "Data Source"
-  ) +
-  theme_minimal()
-)
+if (file.exists("docs/data/table_counts.csv")) {
+  
+  table_counts <- read_csv("docs/data/table_counts.csv", show_col_types = FALSE)
+  
+  summary_df <- table_counts %>%
+    mutate(type = case_when(
+      grepl("Temperature", table) ~ "Continuous",
+      TRUE ~ "Discrete"
+    )) %>%
+    group_by(type) %>%
+    summarise(n = sum(n_rows))
+  
+  p <- ggplot(summary_df,
+              aes(x = type, y = n, fill = type)) +
+    geom_col() +
+    labs(
+      title = "Continuous vs Discrete Observations",
+      y = "Number of Records",
+      x = ""
+    ) +
+    theme_minimal()
+  
+  print(p)
+}
 ```
 
----
-
-These patterns reflect:
-
-- incremental database growth  
-- integration across multiple data sources  
-- reproducibility of ingestion workflows  
+Interpretation:
+Continuous temperature observations dominate the total number of records, while discrete datasets (chemistry and field measurements) provide analytical depth.
+Key Insight:
+This multi-scale structure enables the system to capture both high-frequency variability and chemically diagnostic signals.
 
 ---
 
-## 🔬 Geochemical Modeling
+## 🕒 Temporal Distribution of Observations
 
-Validated chemistry is transformed into **PHREEQC-ready inputs**, enabling:
+Understanding when data are collected is critical for interpreting system dynamics.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+if (file.exists("docs/data/temp_sample.csv")) {
+  
+  temp <- read_csv("docs/data/temp_sample.csv", show_col_types = FALSE) %>%
+    mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01")) %>%
+    filter(!is.na(timestamp))
+  
+  p <- ggplot(temp,
+              aes(timestamp)) +
+    geom_histogram(bins = 50, fill = "steelblue") +
+    labs(
+      title = "Temporal Distribution of Observations",
+      x = "Time",
+      y = "Frequency"
+    ) +
+    theme_minimal()
+  
+  print(p)
+}
+
+```
+
+Interpretation:
+Clustering reflects episodic data acquisition, including sensor deployments, field campaigns, and regulatory sampling.
+Key Insight:
+Temporal structure reveals not only system behavior, but also sampling strategy and data availability constraints.
+
+## 🗺️ Spatial Coverage (Sample Points)
+
+Spatial distribution determines how well the system is observed across the hydrothermal field.
+
+```{r echo=FALSE, message=FALSE, warning=FALSE}
+library(leaflet)
+
+path <- "docs/data/well_sample.csv"
+
+if (!file.exists(path)) {
+  
+  cat("Spatial data will appear after export.")
+  
+} else {
+  
+  wells <- read_csv(path, show_col_types = FALSE)
+  
+  leaflet(wells) |>
+    addTiles() |>
+    addCircleMarkers(
+      lng = ~longitude,
+      lat = ~latitude,
+      radius = 4,
+      color = "blue",
+      popup = ~paste("Well:", well_id)
+    )
+}
+```
+Interpretation:
+Observed clusters represent areas of active monitoring, while gaps indicate potential regions of uncertainty or under-sampling.
+Key Insight:
+Spatial structure directly influences the ability to interpret hydrothermal flow paths and system heterogeneity.
+
+---
+
+## 📊 System-Level Interpretation
+
+Taken together, these patterns describe a system that is:
+
+- incrementally constructed through controlled ingestion workflows  
+- composed of heterogeneous but integrated data sources  
+- dominated by high-frequency continuous observations  
+- structured across irregular temporal sampling intervals  
+- spatially distributed according to monitoring access and priorities  
+
+> The database is not simply a collection of datasets—it is a structured representation of system observation itself.
+
+---
+
+## 🔬 Geochemical Modeling Integration
+
+Validated chemistry is transformed into **PHREEQC-ready inputs**, enabling process-based interpretation of hydrothermal conditions.
+
+These transformations support:
 
 - forward speciation modeling  
-- inverse modeling of hydrothermal processes  
+- inverse geochemical modeling  
+- evaluation of mineral saturation states  
 
-Model outputs are written back into the system, preserving the relationship between:
-
-```
-raw observations → derived chemistry → interpreted processes
-```
+> This step links observational data to thermodynamic interpretation, extending the system beyond monitoring into predictive modeling.
 
 ---
 
-## 🔁 Reproducibility
+## 🔁 Reproducibility and Provenance
 
-All steps in the system are:
+All transformations within the system are:
 
 - scripted  
 - version-controlled  
 - reproducible  
 
-No manual edits are made to the database.
+No manual edits are made to database contents.
 
 Every dataset can be:
 
-- traced to a specific input  
-- reprocessed from raw data  
+- traced to its original input  
+- reconstructed from raw data  
 - validated through ingestion logs  
+
+> This ensures that all analyses performed using the system are transparent, auditable, and reproducible.
 
 ---
 
@@ -241,10 +344,10 @@ Images are stored externally, while metadata remain relational.
 
 ## ✅ Current State
 
-The system is actively evolving.
+The system is actively evolving:
 
-- Temperature logger data are fully integrated  
-- Field and sampling data workflows are operational  
-- Laboratory chemistry ingestion is ongoing  
+- continuous temperature monitoring is fully integrated  
+- field and sampling workflows are operational  
+- laboratory chemistry ingestion is expanding  
 
-&gt; In operational mode, ingestion is explicitly controlled, and the database evolves incrementally over time.
+> In operational mode, the database evolves incrementally, providing a live representation of the hydrothermal system through time.

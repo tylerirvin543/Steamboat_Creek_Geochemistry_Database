@@ -1,0 +1,103 @@
+---
+title: "Pipeline Run Report"
+output: html_document
+---
+
+# Overview
+
+This report summarizes the results of the data pipeline run.
+
+It includes:
+
+- database status
+- ingest summary
+- hydrologic analysis outputs
+- QA/QC checks
+
+---
+
+# Database Connection
+
+```{r}
+library(DBI)
+library(RSQLite)
+library(here)
+
+con <- dbConnect(SQLite(), here::here("database", "geochem_demo.sqlite"))
+```
+
+
+```{r}
+tables <- c(
+  "Locations",
+  "Wells",
+  "Water_Level_Observations",
+  "Temperature_Observations",
+  "Hydraulic_Gradients"
+)
+
+counts <- do.call(rbind, lapply(tables, function(t) {
+  n <- dbGetQuery(con, paste0("SELECT COUNT(*) AS n FROM ", t))$n
+  data.frame(table = t, rows = n)
+}))
+
+counts
+```
+
+
+```{r}
+grad <- dbGetQuery(con, "SELECT * FROM Hydraulic_Gradients")
+
+head(grad)
+```
+
+```{r}
+summary(grad$gradient)
+```
+
+```{r}
+library(ggplot2)
+
+ggplot(grad, aes(x = gradient)) +
+  geom_histogram(bins = 50) +
+  theme_minimal()
+```
+
+```{r}
+table(grad$gradient_class)
+```
+
+```{r}
+sum(is.na(grad$gradient))
+```
+
+```{r}
+subset(grad, abs(grad$gradient) > 0.05)[1:10, ]
+```
+
+```{r}
+summary(grad$distance_m)
+```
+
+```{r}
+temp <- dbGetQuery(con, "
+  SELECT temperature FROM Temperature_Observations
+")
+
+summary(temp$temperature)
+```
+
+```{r}
+library(sf)
+
+grad_sf <- st_read(
+  here::here("output", "geopackage", "hydro_data.gpkg"),
+  layer = "hydraulic_gradients"
+)
+
+plot(st_geometry(grad_sf))
+```
+
+```{r}
+dbDisconnect(con)
+```

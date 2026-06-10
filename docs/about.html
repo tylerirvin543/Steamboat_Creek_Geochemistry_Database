@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+
+
+
+<title>About</title>
+
+<script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
+<script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
+<script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
+<script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
+<style>h1 {font-size: 34px;}
+       h1.title {font-size: 38px;}
+       h2 {font-size: 30px;}
+       h3 {font-size: 24px;}
+       h4 {font-size: 18px;}
+       h5 {font-size: 16px;}
+       h6 {font-size: 12px;}
+       code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
+       pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
+<script src="site_libs/navigation-1.1/tabsets.js"></script>
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
+<script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+
+<style type="text/css">
+  code{white-space: pre-wrap;}
+  span.smallcaps{font-variant: small-caps;}
+  span.underline{text-decoration: underline;}
+  div.column{display: inline-block; vertical-align: top; width: 50%;}
+  div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+  ul.task-list{list-style: none;}
+    </style>
+
+<style type="text/css">code{white-space: pre;}</style>
+<script type="text/javascript">
+if (window.hljs) {
+  hljs.configure({languages: []});
+  hljs.initHighlightingOnLoad();
+  if (document.readyState && document.readyState === "complete") {
+    window.setTimeout(function() { hljs.initHighlighting(); }, 0);
+  }
+}
+</script>
+
+
+
+
+
+
+<link rel="stylesheet" href="styles.css" type="text/css" />
+
+
+
+<style type = "text/css">
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+img {
+  max-width:100%;
+}
+.tabbed-pane {
+  padding-top: 12px;
+}
+.html-widget {
+  margin-bottom: 20px;
+}
+button.code-folding-btn:focus {
+  outline: none;
+}
+summary {
+  display: list-item;
+}
+details > summary > p:only-child {
+  display: inline;
+}
+pre code {
+  padding: 0;
+}
+</style>
+
+
+<style type="text/css">
+.dropdown-submenu {
+  position: relative;
+}
+.dropdown-submenu>.dropdown-menu {
+  top: 0;
+  left: 100%;
+  margin-top: -6px;
+  margin-left: -1px;
+  border-radius: 0 6px 6px 6px;
+}
+.dropdown-submenu:hover>.dropdown-menu {
+  display: block;
+}
+.dropdown-submenu>a:after {
+  display: block;
+  content: " ";
+  float: right;
+  width: 0;
+  height: 0;
+  border-color: transparent;
+  border-style: solid;
+  border-width: 5px 0 5px 5px;
+  border-left-color: #cccccc;
+  margin-top: 5px;
+  margin-right: -10px;
+}
+.dropdown-submenu:hover>a:after {
+  border-left-color: #adb5bd;
+}
+.dropdown-submenu.pull-left {
+  float: none;
+}
+.dropdown-submenu.pull-left>.dropdown-menu {
+  left: -100%;
+  margin-left: 10px;
+  border-radius: 6px 0 6px 6px;
+}
+</style>
+
+<script type="text/javascript">
+// manage active state of menu based on current page
+$(document).ready(function () {
+  // active menu anchor
+  href = window.location.pathname
+  href = href.substr(href.lastIndexOf('/') + 1)
+  if (href === "")
+    href = "index.html";
+  var menuAnchor = $('a[href="' + href + '"]');
+
+  // mark the anchor link active (and if it's in a dropdown, also mark that active)
+  var dropdown = menuAnchor.closest('li.dropdown');
+  if (window.bootstrap) { // Bootstrap 4+
+    menuAnchor.addClass('active');
+    dropdown.find('> .dropdown-toggle').addClass('active');
+  } else { // Bootstrap 3
+    menuAnchor.parent().addClass('active');
+    dropdown.addClass('active');
+  }
+
+  // Navbar adjustments
+  var navHeight = $(".navbar").first().height() + 15;
+  var style = document.createElement('style');
+  var pt = "padding-top: " + navHeight + "px; ";
+  var mt = "margin-top: -" + navHeight + "px; ";
+  var css = "";
+  // offset scroll position for anchor links (for fixed navbar)
+  for (var i = 1; i <= 6; i++) {
+    css += ".section h" + i + "{ " + pt + mt + "}\n";
+  }
+  style.innerHTML = "body {" + pt + "padding-bottom: 40px; }\n" + css;
+  document.head.appendChild(style);
+});
+</script>
+
+<!-- tabsets -->
+
+<style type="text/css">
+.tabset-dropdown > .nav-tabs {
+  display: inline-table;
+  max-height: 500px;
+  min-height: 44px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.tabset-dropdown > .nav-tabs > li.active:before, .tabset-dropdown > .nav-tabs.nav-tabs-open:before {
+  content: "\e259";
+  font-family: 'Glyphicons Halflings';
+  display: inline-block;
+  padding: 10px;
+  border-right: 1px solid #ddd;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li.active:before {
+  content: "\e258";
+  font-family: 'Glyphicons Halflings';
+  border: none;
+}
+
+.tabset-dropdown > .nav-tabs > li.active {
+  display: block;
+}
+
+.tabset-dropdown > .nav-tabs > li > a,
+.tabset-dropdown > .nav-tabs > li > a:focus,
+.tabset-dropdown > .nav-tabs > li > a:hover {
+  border: none;
+  display: inline-block;
+  border-radius: 4px;
+  background-color: transparent;
+}
+
+.tabset-dropdown > .nav-tabs.nav-tabs-open > li {
+  display: block;
+  float: none;
+}
+
+.tabset-dropdown > .nav-tabs > li {
+  display: none;
+}
+</style>
+
+<!-- code folding -->
+
+
+
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
+
+</head>
+
+<body>
+
+
+<div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
+
+
+
+
+<div class="navbar navbar-default  navbar-fixed-top" role="navigation">
+  <div class="container">
+    <div class="navbar-header">
+      <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-bs-toggle="collapse" data-target="#navbar" data-bs-target="#navbar">
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+        <span class="icon-bar"></span>
+      </button>
+      <a class="navbar-brand" href="index.html">Steamboat Data Pipeline</a>
+    </div>
+    <div id="navbar" class="navbar-collapse collapse">
+      <ul class="nav navbar-nav">
+        <li>
+  <a href="index.html">Overview</a>
+</li>
+<li>
+  <a href="project.html">Scientific Context</a>
+</li>
+<li>
+  <a href="pipeline.html">Pipeline</a>
+</li>
+<li>
+  <a href="data.html">Data System</a>
+</li>
+<li>
+  <a href="results.html">Results</a>
+</li>
+<li>
+  <a href="about.html">About</a>
+</li>
+      </ul>
+      <ul class="nav navbar-nav navbar-right">
+        
+      </ul>
+    </div><!--/.nav-collapse -->
+  </div><!--/.container -->
+</div><!--/.navbar -->
+
+<div id="header">
+
+
+
+<h1 class="title toc-ignore">About</h1>
+
+</div>
+
+
+<div id="about-this-platform" class="section level1">
+<h1>About This Platform</h1>
+<p>This website presents a <strong>reproducible hydrothermal data
+system</strong> developed for Steamboat Springs, Nevada.</p>
+<p>The project integrates geochemical, hydrologic, and thermal datasets
+into a unified analytical framework for understanding hydrothermal
+system behavior through time.</p>
+<p><a href=""><img
+src="https://img.shields.io/badge/Reproducible-Yes-brightgreen"
+alt="Reproducible" /></a> <a href=""><img
+src="https://img.shields.io/badge/version-1.0-blue" alt="Version" /></a>
+<a href=""><img src="https://img.shields.io/badge/license-MIT-lightgrey"
+alt="License" /></a> <a href=""><img
+src="https://img.shields.io/badge/status-Active-orange"
+alt="Status" /></a></p>
+<p>🌐 <strong>Live Website</strong>:<br />
+<a
+href="https://tylerirvin543.github.io/Steamboat_Creek_Geochemistry_Database/"
+class="uri">https://tylerirvin543.github.io/Steamboat_Creek_Geochemistry_Database/</a></p>
+<hr />
+<div id="repository-and-source-code" class="section level2">
+<h2>🔗 Repository and Source Code</h2>
+<p>The full system, including all ingestion pipelines, analysis scripts,
+and schema definitions, is available publicly:</p>
+<p>🔗 <a
+href="https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database"
+class="uri">https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database</a></p>
+<p>The repository serves as the <strong>authoritative source of
+truth</strong>, where:</p>
+<ul>
+<li>all data transformations are defined<br />
+</li>
+<li>all workflows are version-controlled<br />
+</li>
+<li>all outputs can be reproduced from raw inputs</li>
+</ul>
+<hr />
+</div>
+<div id="author-and-affiliations" class="section level2">
+<h2>👤 Author and Affiliations</h2>
+<p><strong>Tyler Irvin</strong><br />
+Graduate Teaching Assistant<br />
+University of Nevada, Reno</p>
+<p>Affiliation:<br />
+<strong>Great Basin Center for Geothermal Energy (GBCGE)</strong></p>
+<hr />
+</div>
+<div id="institutional-context" class="section level2">
+<h2>🏫 Institutional Context</h2>
+<p>This work is developed within the <strong>Great Basin Center for
+Geothermal Energy (GBCGE)</strong> at the University of Nevada,
+Reno.</p>
+<p>The GBCGE focuses on:</p>
+<ul>
+<li>geothermal resource assessment<br />
+</li>
+<li>hydrothermal system characterization<br />
+</li>
+<li>applied geochemistry and hydrology<br />
+</li>
+<li>geothermal energy development</li>
+</ul>
+<p>This project contributes to that mission by building a
+<strong>data-driven analytical framework</strong> for hydrothermal
+monitoring.</p>
+<hr />
+</div>
+<div id="why-this-matters" class="section level2">
+<h2>🌍 Why This Matters</h2>
+<p>Hydrothermal systems are complex, dynamic, and often poorly
+constrained due to fragmented datasets and limited temporal
+resolution.</p>
+<p>This platform addresses that gap by:</p>
+<ul>
+<li>integrating heterogeneous datasets into a single system<br />
+</li>
+<li>enabling continuous monitoring through sensor data<br />
+</li>
+<li>linking observations directly to analysis and modeling
+workflows</li>
+</ul>
+<blockquote>
+<p>The goal is to move from disconnected observations toward
+<strong>coherent system understanding</strong>.</p>
+</blockquote>
+<hr />
+</div>
+<div id="project-philosophy" class="section level2">
+<h2>🧠 Project Philosophy</h2>
+<p>This project is designed around a simple principle:</p>
+<blockquote>
+<p><strong>Data should be structured so that interpretation emerges
+naturally from the system.</strong></p>
+</blockquote>
+<p>To achieve this, the platform enforces:</p>
+<ul>
+<li>separation of raw and derived data<br />
+</li>
+<li>reproducible transformation pipelines<br />
+</li>
+<li>integration across observational domains<br />
+</li>
+<li>transparency in all processing steps</li>
+</ul>
+<p>Rather than being a static dataset, the system behaves as a
+<strong>living analytical framework</strong> that evolves as new data
+are incorporated.</p>
+<hr />
+</div>
+<div id="reproducibility-and-idempotency" class="section level2">
+<h2>🔁 Reproducibility and Idempotency</h2>
+<p>A core design principle of this system is <strong>full
+reproducibility</strong>.</p>
+<p>All pipeline operations are:</p>
+<ul>
+<li>scripted<br />
+</li>
+<li>version-controlled<br />
+</li>
+<li>deterministic</li>
+</ul>
+<div id="reproducibility" class="section level3">
+<h3>Reproducibility</h3>
+<p>Any result produced by this system can be recreated by:</p>
+<p>running <code>run_pipeline.R</code> from raw data</p>
+<p>This ensures that all transformations are transparent and traceable
+back to original inputs.</p>
+</div>
+<div id="idempotent-design" class="section level3">
+<h3>Idempotent Design</h3>
+<p>The ingestion pipeline is <strong>idempotent</strong>, meaning:</p>
+<ul>
+<li>running the same ingestion multiple times does not duplicate
+data<br />
+</li>
+<li>records are uniquely identified (e.g., external_sample_id)<br />
+</li>
+<li>the database maintains consistency even under repeated
+execution</li>
+</ul>
+<blockquote>
+<p>This ensures the system remains stable as new data are added over
+time.</p>
+</blockquote>
+<hr />
+</div>
+</div>
+<div id="scientific-context-and-prior-work" class="section level2">
+<h2>📚 Scientific Context and Prior Work</h2>
+<p>This project builds on established methods in hydrothermal system
+analysis, particularly those applied at Steamboat Springs and similar
+geothermal systems.</p>
+<p>Key approaches include:</p>
+<ul>
+<li>chloride flux (Cl-flux) methods for estimating geothermal
+discharge<br />
+</li>
+<li>geochemical modeling using PHREEQC<br />
+</li>
+<li>integration of temperature and hydrologic time-series<br />
+</li>
+<li>spatial analysis of hydrothermal features</li>
+</ul>
+<p>Steamboat Springs has been the focus of extensive prior work,
+including studies of geothermal production impacts, hydrothermal
+alteration, and fluid chemistry evolution. These studies provide a
+critical foundation for interpreting modern observations.</p>
+<p>Representative work includes:</p>
+<ul>
+<li>White, D.E. (1968) — early conceptual models of hydrothermal
+systems<br />
+</li>
+<li>Fournier, R.O. (1981) — geochemical interpretation of geothermal
+waters<br />
+</li>
+<li>Sorey, M.L. et al. — studies of geothermal production and system
+response<br />
+</li>
+<li>Kennedy &amp; van Soest (2007) — helium and gas geochemistry in
+geothermal systems</li>
+</ul>
+<blockquote>
+<p>This system extends these approaches by integrating modern
+high-frequency datasets within a reproducible analytical framework.</p>
+</blockquote>
+<hr />
+</div>
+<div id="tools-and-technologies" class="section level2">
+<h2>🧰 Tools and Technologies</h2>
+<p>This platform integrates tools across multiple domains:</p>
+<div id="data-engineering" class="section level3">
+<h3>Data Engineering</h3>
+<ul>
+<li>R (tidyverse, DBI, dplyr, readr)<br />
+</li>
+<li>SQLite (relational database)</li>
+</ul>
+</div>
+<div id="analysis-and-visualization" class="section level3">
+<h3>Analysis and Visualization</h3>
+<ul>
+<li>ggplot2<br />
+</li>
+<li>plotly<br />
+</li>
+<li>leaflet</li>
+</ul>
+</div>
+<div id="spatial-analysis" class="section level3">
+<h3>Spatial Analysis</h3>
+<ul>
+<li>GeoPackage<br />
+</li>
+<li>ArcGIS / GIS workflows</li>
+</ul>
+</div>
+<div id="modeling" class="section level3">
+<h3>Modeling</h3>
+<ul>
+<li>PHREEQC (geochemical modeling)</li>
+</ul>
+<hr />
+</div>
+</div>
+<div id="credits-and-contributions" class="section level2">
+<h2>🤝 Credits and Contributions</h2>
+<p>This work draws on:</p>
+<ul>
+<li>academic instruction within UNR coursework<br />
+</li>
+<li>existing hydrothermal datasets (e.g., NDEP, NDWR)<br />
+</li>
+<li>open-source R ecosystem packages</li>
+</ul>
+<p>The project design reflects principles from:</p>
+<ul>
+<li>reproducible research workflows<br />
+</li>
+<li>environmental data engineering<br />
+</li>
+<li>hydrogeologic and geochemical analysis</li>
+</ul>
+<hr />
+</div>
+<div id="use-of-generative-ai" class="section level2">
+<h2>🤖 Use of Generative AI</h2>
+<p>Generative AI tools were used to assist in:</p>
+<ul>
+<li>code structuring and optimization<br />
+</li>
+<li>debugging and pipeline design<br />
+</li>
+<li>refinement of documentation and explanations</li>
+</ul>
+<p>All outputs were:</p>
+<ul>
+<li>reviewed and validated<br />
+</li>
+<li>adapted to match project-specific requirements<br />
+</li>
+<li>integrated into a reproducible workflow</li>
+</ul>
+<blockquote>
+<blockquote>
+<p>AI assistance supported engineering efficiency and documentation
+clarity, while all scientific decisions and interpretations remain
+author-driven.</p>
+</blockquote>
+</blockquote>
+<hr />
+</div>
+<div id="system-information" class="section level2">
+<h2>🗓️ System Information</h2>
+<ul>
+<li>Initial system development: 2025–2026<br />
+</li>
+<li>Current version: evolving research platform<br />
+</li>
+<li>Mode: DEMO (reproducible) / OPERATIONAL (incremental)</li>
+</ul>
+<div id="versioning" class="section level3">
+<h3>Versioning</h3>
+<ul>
+<li>Pipeline version: v1.0 (initial release)<br />
+</li>
+<li>Website build: automated via <code>run_pipeline.R</code><br />
+</li>
+<li>Outputs: regenerated on each pipeline run</li>
+</ul>
+<p>Each execution of the pipeline produces:</p>
+<ul>
+<li>updated database state<br />
+</li>
+<li>refreshed analysis outputs<br />
+</li>
+<li>rebuilt website</li>
+</ul>
+<blockquote>
+<p>This ensures that the website always reflects the current state of
+the system.</p>
+</blockquote>
+<hr />
+</div>
+</div>
+<div id="future-development" class="section level2">
+<h2>🚀 Future Development</h2>
+<p>Planned extensions include:</p>
+<ul>
+<li>isotope integration (δ¹⁸O, δD)<br />
+</li>
+<li>hydraulic gradient–thermal signal coupling<br />
+</li>
+<li>PHREEQC-based modeling outputs<br />
+</li>
+<li>flux-based discharge and heat flow estimation<br />
+</li>
+<li>detection of hydrothermal upflow zones</li>
+</ul>
+<blockquote>
+<p>The system is designed to expand from data integration into
+predictive hydrothermal modeling.</p>
+</blockquote>
+<hr />
+</div>
+<div id="summary" class="section level2">
+<h2>✅ Summary</h2>
+<p>This project demonstrates how environmental datasets can be
+transformed into a <strong>reproducible scientific system</strong>.</p>
+<p>It provides:</p>
+<ul>
+<li>integrated multi-source data<br />
+</li>
+<li>transparent and auditable workflows<br />
+</li>
+<li>a foundation for advanced hydrothermal analysis</li>
+</ul>
+<blockquote>
+<p>Ultimately, the system represents a shift from managing data to
+<strong>understanding systems</strong>.</p>
+</blockquote>
+</div>
+<div id="how-to-cite-this-project" class="section level2">
+<h2>📖 How to Cite This Project</h2>
+<p>If this system is used in research, please cite as:</p>
+<blockquote>
+<p>Irvin, T. (2026). <em>Steamboat Hydrothermal Data Platform: A
+Reproducible Environmental Data System</em>.<br />
+University of Nevada, Reno.<br />
+<a
+href="https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database"
+class="uri">https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database</a></p>
+</blockquote>
+<p><em>(DOI pending / future release planned)</em></p>
+</div>
+<div id="acknowledgments" class="section level2">
+<h2>🙏 Acknowledgments</h2>
+<p>This work builds on contributions from:</p>
+<ul>
+<li>University of Nevada, Reno faculty and coursework<br />
+</li>
+<li>Great Basin Center for Geothermal Energy (GBCGE)<br />
+</li>
+<li>publicly available hydrothermal datasets (NDEP, NDWR, USGS)<br />
+</li>
+<li>open-source software communities</li>
+</ul>
+<p>These resources collectively enabled the development of a
+reproducible hydrothermal data system.</p>
+</div>
+</div>
+
+
+
+</div>
+</div>
+
+</div>
+
+<script>
+
+// add bootstrap table styles to pandoc tables
+function bootstrapStylePandocTables() {
+  $('tr.odd').parent('tbody').parent('table').addClass('table table-condensed');
+}
+$(document).ready(function () {
+  bootstrapStylePandocTables();
+});
+
+
+</script>
+
+<!-- tabsets -->
+
+<script>
+$(document).ready(function () {
+  window.buildTabsets("TOC");
+});
+
+$(document).ready(function () {
+  $('.tabset-dropdown > .nav-tabs > li').click(function () {
+    $(this).parent().toggleClass('nav-tabs-open');
+  });
+});
+</script>
+
+<!-- code folding -->
+
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

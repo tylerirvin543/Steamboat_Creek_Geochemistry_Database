@@ -4,21 +4,25 @@ output_dir: "../docs"
 navbar:
   title: "Steamboat Data Pipeline"
   left:
-    - text: "Home"
+    - text: "Overview"
       href: index.html
-    - text: "Project"
+    - text: "Scientific Context"
       href: project.html
-    - text: "Data & Schema"
+    - text: "Pipeline"
+      href: pipeline.html
+    - text: "Data System"
       href: data.html
     - text: "Results"
       href: results.html
-    - text: "Pipeline"
-      href: pipeline.html
     - text: "About"
       href: about.html
 
 
 output:
   html_document:
-    theme: cosmo
+    theme: flatly
+    css: styles.css
+    highlight: textmate
     toc: true
+    toc_float: true
+

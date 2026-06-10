@@ -1,138 +1,79 @@
 ---
-title: "Steamboat Environmental Data System"
+title: "Steamboat Hydrothermal Data Platform"
 output: html_document
 ---
 
-# 🌎 Steamboat Environmental Monitoring System
+# 🌎 Steamboat Hydrothermal Data Platform
 
-A reproducible pipeline integrating **geochemistry, field observations, and temperature logger data** into a unified relational and GIS-ready system.
+A reproducible system for integrating **hydrologic, thermal, and geochemical observations** into a unified database for hydrothermal system analysis.
 
 ---
 
-## 🔁 System Overview
+## 🔬 Scientific Purpose
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+This platform addresses a central question:
+
+> **How does the hydrothermal system evolve through time and space?**
+
+To answer this, the system combines:
+
+- groundwater hydraulics (water levels, gradients)  
+- geochemical observations (field + laboratory)  
+- continuous temperature monitoring  
+- future isotope and thermodynamic modeling  
+
+Together, these datasets allow interpretation of:
+
+- groundwater flow patterns  
+- hydrothermal upflow zones  
+- fluid mixing and recharge  
+- temporal system variability  
+
+---
+
+## 🧱 System Architecture
+
+```{r echo=FALSE}
 library(DiagrammeR)
 
-DiagrammeR::grViz("
+grViz("
 digraph {
   rankdir=LR;
   node [shape=box style=filled fillcolor=lightblue]
 
-  NDEP -> Database
-  Field -> Database
-  Loggers -> Database
-  Database -> GIS
+  RawData [label='Raw Data']
+  Database
+  Analysis
+  Export
+
+  RawData -> Database
+  Database -> Analysis
+  Analysis -> Export
 }
 ")
 ```
 
 ---
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(readr)
-library(dplyr)
-library(lubridate)
-library(ggplot2)
+## 🧪 What Makes This System Different
 
-# Load data quietly (no visible section)
-data_path <- "docs/data/ingest_log.csv"
+Unlike traditional datasets, this platform:
 
-if (file.exists(data_path)) {
-
-  ingest_log <- read_csv(data_path, show_col_types = FALSE) |>
-    mutate(timestamp = ymd_hms(timestamp)) |>
-    arrange(timestamp)
-
-} else {
-
-  ingest_log <- NULL
-}
-```
+- integrates continuous and discrete observations
+- preserves full data provenance
+- supports reproducible analysis workflows
+- enables multi-domain interpretation (hydraulic + thermal + chemical)
 
 ---
 
-## 🧱 Database Composition
+## 📊 What the System Contains
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(ggplot2)
-library(readr)
-library(dplyr)
+The database currently includes:
 
-# optional: export this from pipeline later for GitHub Pages
-# for now we assume you will create a CSV like this in run_pipeline
-
-table_path <- "docs/data/table_counts.csv"
-
-if (file.exists(table_path)) {
-
-  table_counts <- read_csv(table_path, show_col_types = FALSE)
-
-  print(
-    ggplot(table_counts,
-           aes(x = reorder(table, n_rows),
-               y = n_rows)) +
-      geom_col(fill = "darkgreen") +
-      coord_flip() +
-      labs(
-        title = "Database Composition by Table",
-        x = "Table",
-        y = "Number of Records"
-      ) +
-      theme_minimal()
-  )
-
-} else {
-
-  plot.new()
-  text(0.5, 0.5, "Database breakdown will appear after export")
-
-}
-```
-
----
-
-## 📈 Database Growth
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-if (!is.null(ingest_log) && nrow(ingest_log) > 0) {
-
-  plot_data <- ingest_log |>
-    mutate(cumulative = cumsum(measurements_inserted))
-
-  print(
-    ggplot(plot_data,
-           aes(x = timestamp,
-               y = cumulative,
-               color = data_source)) +
-
-      geom_line(linewidth = 1.2) +
-      geom_point(size = 2.5) +
-
-      labs(
-        title = "Database Growth Over Time",
-        subtitle = "Cumulative records inserted through ingestion pipeline",
-        x = "",
-        y = "Total Records",
-        color = "Source"
-      ) +
-
-      theme_minimal() +
-
-      theme(
-        plot.title = element_text(face = "bold"),
-        legend.position = "bottom"
-      )
-  )
-
-} else {
-
-  plot.new()
-  text(0.5, 0.5, "No data available")
-
-}
-```
-
+- thousands of temperature observations (high-frequency)
+- groundwater level measurements
+- field and regulatory chemistry data
+- spatially referenced wells and sampling locations
 ---
 
 ## 🧭 Explore

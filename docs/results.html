@@ -11,12 +11,12 @@
 
 
 
-<title>Project Overview</title>
+<title>Results</title>
 
 <script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -29,8 +29,11 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
 <style type="text/css">
@@ -58,6 +61,7 @@ if (window.hljs) {
 
 
 
+<link rel="stylesheet" href="styles.css" type="text/css" />
 
 
 
@@ -219,6 +223,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -226,6 +293,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -243,19 +320,19 @@ $(document).ready(function () {
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">Home</a>
+  <a href="index.html">Overview</a>
 </li>
 <li>
-  <a href="project.html">Project</a>
-</li>
-<li>
-  <a href="data.html">Data &amp; Schema</a>
-</li>
-<li>
-  <a href="results.html">Results</a>
+  <a href="project.html">Scientific Context</a>
 </li>
 <li>
   <a href="pipeline.html">Pipeline</a>
+</li>
+<li>
+  <a href="data.html">Data System</a>
+</li>
+<li>
+  <a href="results.html">Results</a>
 </li>
 <li>
   <a href="about.html">About</a>
@@ -272,143 +349,115 @@ $(document).ready(function () {
 
 
 
-<h1 class="title toc-ignore">Project Overview</h1>
+<h1 class="title toc-ignore">Results</h1>
 
 </div>
 
 
-<div id="context-and-motivation" class="section level2">
-<h2>🌋 Context and Motivation</h2>
-<p>The Steamboat Springs geothermal field represents a dynamic
-hydrothermal system shaped by decades of geothermal production, fluid
-extraction, and reinjection.</p>
-<p>After more than forty years of declining surface activity, the system
-experienced a dramatic reactivation in June 2025, when a geyser-like
-eruption exceeding 30 feet occurred from an abandoned well.</p>
-<p>This event highlighted a fundamental challenge:</p>
+<div id="results" class="section level1">
+<h1>Results</h1>
+<p>This section presents observational insights derived from the
+integrated hydrothermal monitoring system.</p>
+<p>By combining continuous temperature measurements with spatial and
+temporal structure, the system reveals patterns that are not accessible
+through traditional discrete sampling alone.</p>
+<p>Rather than focusing on database structure, these results emphasize
+<strong>system behavior</strong>, <strong>variability</strong>, and
+<strong>emerging hydrothermal signals</strong>.</p>
+<hr />
+<div id="temperature-dynamics" class="section level2">
+<h2>🌡️ Temperature Dynamics</h2>
+<p>Continuous temperature monitoring provides direct insight into
+subsurface processes and system variability.</p>
+<pre><code>## Temperature data will appear after pipeline export.</code></pre>
+<p><strong>Interpretation:</strong> Temperature exhibits continuous
+variability across multiple monitoring locations, reflecting dynamic and
+evolving subsurface conditions.</p>
+<p><strong>Key Insight:</strong><br />
+These signals capture both short-term fluctuations and longer-term
+trends, providing a level of temporal resolution that is fundamentally
+inaccessible through discrete sampling approaches.</p>
+<hr />
+</div>
+<div id="temporal-patterns-in-monitoring" class="section level2">
+<h2>📊 Temporal Patterns in Monitoring</h2>
+<pre><code>## Temporal distribution will appear after export.</code></pre>
+<p><strong>Interpretation:</strong> Observations are temporally
+clustered, reflecting discrete monitoring deployments, field campaigns,
+and sensor operation periods.</p>
+<p><strong>Key Insight:</strong><br />
+Temporal clustering highlights how data collection strategies shape the
+dataset and influence the ability to resolve system dynamics.</p>
+<hr />
+</div>
+<div id="thermal-variability-across-monitoring-locations"
+class="section level2">
+<h2>📊 Thermal Variability Across Monitoring Locations</h2>
+<pre><code>## Logger variability will appear after export.</code></pre>
+<p><strong>Interpretation:</strong> Different monitoring locations
+exhibit distinct temperature ranges and variability patterns.</p>
+<p><strong>Key Insight:</strong><br />
+These differences reflect spatial heterogeneity in the hydrothermal
+system, potentially indicating variations in flow paths, heat sources,
+or fluid mixing.</p>
+<hr />
+</div>
+<div id="spatial-structure-of-monitoring-network"
+class="section level2">
+<h2>🗺️ Spatial Structure of Monitoring Network</h2>
+<pre><code>## Spatial data will appear after export.</code></pre>
+<p><strong>Interpretation:</strong> Monitoring locations are spatially
+clustered in accessible or actively studied areas of the hydrothermal
+field.</p>
+<p><strong>Key Insight:</strong><br />
+Spatial distribution constrains where system behavior can be observed,
+influencing interpretations of subsurface flow and thermal
+structure.</p>
+<hr />
+</div>
+<div id="emerging-system-behavior" class="section level2">
+<h2>🔬 Emerging System Behavior</h2>
+<p>Combining temporal, spatial, and thermal observations reveals several
+first-order characteristics of the hydrothermal system:</p>
+<ul>
+<li>temperature signals are highly dynamic and continuous<br />
+</li>
+<li>monitoring is spatially structured and unevenly distributed<br />
+</li>
+<li>observations are temporally clustered around data collection events
+- different locations exhibit distinct thermal regimes</li>
+</ul>
 <blockquote>
-<p><strong>how do we monitor and understand rapidly evolving geothermal
-systems through time?</strong></p>
+<p>Together, these patterns indicate a system that is both spatially
+heterogeneous and temporally variable, requiring integrated multi-scale
+observation to fully characterize.</p>
 </blockquote>
 <hr />
 </div>
-<div id="the-problem" class="section level2">
-<h2>⚠️ The Problem</h2>
-<p>Hydrothermal systems are highly variable across both <strong>space
-and time</strong>, but traditional datasets are:</p>
+<div id="future-analysis" class="section level2">
+<h2>🚀 Future Analysis</h2>
+<p>As additional datasets are integrated, the system will support more
+advanced interpretations, including:</p>
 <ul>
-<li>sparse in time (periodic sampling)</li>
-<li>heterogeneous in format (regulatory vs field vs sensor)</li>
-<li>difficult to integrate across scales</li>
-</ul>
-<p>As a result, critical signals — especially <strong>short-term
-variability and system transitions</strong> — are often missed.</p>
-<hr />
-</div>
-<div id="why-temperature-matters" class="section level2">
-<h2>🌡️ Why Temperature Matters</h2>
-<p>Temperature is one of the most responsive indicators of subsurface
-processes.</p>
-<p>Changes in temperature can reflect:</p>
-<ul>
-<li>variations in subsurface flow paths<br />
+<li>linking temperature anomalies with hydraulic gradients<br />
 </li>
-<li>mixing between thermal and non-thermal waters<br />
+<li>identifying hydrothermal upflow and recharge zones<br />
 </li>
-<li>pressure changes within the hydrothermal system</li>
+<li>integrating geochemical signatures with thermal signals<br />
+</li>
+<li>developing process-based hydrothermal models (PHREEQC)</li>
 </ul>
-<p>Unlike discrete chemistry sampling, temperature loggers provide:</p>
 <blockquote>
-<p>✅ <strong>continuous, high-resolution signals of system
-behavior</strong></p>
+<p>These analyses will extend the system from observational monitoring
+to predictive understanding of hydrothermal processes.</p>
 </blockquote>
-<hr />
 </div>
-<div id="project-approach" class="section level2">
-<h2>🧠 Project Approach</h2>
-<p>To address these challenges, this project builds a
-<strong>reproducible data system</strong> that integrates:</p>
-<ul>
-<li>regulatory chemistry datasets (NDEP)</li>
-<li>field sampling campaigns<br />
-</li>
-<li>continuous temperature logger records</li>
-</ul>
-<p>Rather than treating these datasets independently, they are unified
-into a single <strong>relational database structure</strong>.</p>
-<hr />
-</div>
-<div id="what-this-system-enables" class="section level2">
-<h2>🔧 What This System Enables</h2>
-<p>By structuring the data in a consistent and reproducible way, the
-system enables:</p>
-<ul>
-<li><strong>time-aligned comparisons</strong> between chemistry and
-temperature<br />
-</li>
-<li><strong>integration across data sources</strong> (regulatory, field,
-sensor)<br />
-</li>
-<li><strong>high-resolution monitoring</strong> of system dynamics<br />
-</li>
-<li><strong>direct input into geochemical modeling
-workflows</strong></li>
-</ul>
-<hr />
-</div>
-<div id="from-data-to-interpretation" class="section level2">
-<h2>🔬 From Data to Interpretation</h2>
-<p>A key goal of the project is to link:</p>
-<pre><code>observations → validated data → geochemical models → interpretation</code></pre>
-<p>Validated chemistry is transformed into <strong>PHREEQC-ready
-inputs</strong>, allowing:</p>
-<ul>
-<li>forward speciation analysis<br />
-</li>
-<li>inverse modeling of hydrothermal processes</li>
-</ul>
-<hr />
-</div>
-<div id="example-signal" class="section level2">
-<h2>📊 Example Signal</h2>
-<pre><code>## Temperature variability and temporal structure of signals will be explored in the Results section.</code></pre>
-<hr />
-</div>
-<div id="project-goal" class="section level2">
-<h2>✅ Project Goal</h2>
-<p>The ultimate goal is not just data storage, but:</p>
-<blockquote>
-<p><strong>to create a reproducible framework for understanding how
-hydrothermal systems evolve through time</strong></p>
-</blockquote>
-<p>This system provides the foundation for:</p>
-<ul>
-<li>continuous monitoring<br />
-</li>
-<li>integrated analysis<br />
-</li>
-<li>hypothesis-driven geochemical modeling</li>
-</ul>
-<hr />
-</div>
-<div id="broader-impact" class="section level2">
-<h2>🚀 Broader Impact</h2>
-<p>While developed for Steamboat Springs, this approach is directly
-transferable to:</p>
-<ul>
-<li>geothermal monitoring systems<br />
-</li>
-<li>environmental observatories<br />
-</li>
-<li>hydrogeologic studies<br />
-</li>
-<li>long-term ecological data analysis</li>
-</ul>
-<hr />
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -441,6 +490,35 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>

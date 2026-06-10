@@ -3,8 +3,6 @@
 #
 # Purpose:
 # Master orchestration script for the hydrothermal data system.
-# This script is designed to be the single entry point for executing the entiredata workflow,
-# from raw ingestion to final exports.
 #
 # Executes:
 #  - Database setup
@@ -21,14 +19,13 @@
 #  - Transparent logging for debugging
 #
 # ============================================================
-# 
+
 # ============================
 # LOAD LIBRARIES
 # ============================
 library(DBI)
 library(RSQLite)
 library(dplyr)
-library(rmarkdown)
 
 # ============================
 # CONFIGURATION
@@ -39,21 +36,8 @@ if (basename(getwd()) == "scripts") setwd("..")
 DB_DEMO <- "database/geochem_demo.sqlite"
 DB_PROD <- "database/geochem_operational.sqlite"
 
-# -----------------------------------------------
-# TOGGLE MODE: "DEMO" (rebuilds database) vs "OPERATIONAL" (preserves existing data)
-# -----------------------------------------------
-
 MODE <- "DEMO"   # DEMO | OPERATIONAL
 DB_PATH <- if (MODE == "DEMO") DB_DEMO else DB_PROD
-
-# -----------------------------------------------
-# TOGGLE (TRUE/FALSE) TO BUILD WEBSITE AFTER DATABASE CREATION
-# -----------------------------------------------
-BUILD_WEBSITE <- TRUE
-
-# -----------------------------------------------
-# TOGGLE (TRUE/FALSE) TO SELECT DATA TO INGEST
-# -----------------------------------------------
 
 RUN_INGEST <- list(
   ndep   = TRUE,
@@ -118,7 +102,6 @@ message("\n[SETUP] Loading advanced analysis helpers")
 source("scripts/analysis/build_gradient_products.R")
 source("scripts/analysis/build_temp_gradient_links.R")
 source("scripts/analysis/build_isotope_pairs.R")
-source("scripts/analysis/build_analysis_products.R")
 
 # optional
 source("scripts/ingest/helpers/interpolate_timeseries.R")
@@ -215,23 +198,18 @@ run_step(RUN_INGEST$usgs, "USGS", {
 })
 
 # ============================================================
-# PROCESSING STAGE (PHASE 1: CORE SQL VIEWS)
+# PROCESSING STAGE
 # ============================================================
 
 message("\n==============================")
-message(" PROCESSING STAGE (CORE)")
+message(" PROCESSING STAGE")
 message("==============================")
 
 message("\n[PROCESS] Updating geometry")
 update_location_geometry(con)
 
-# ------------------------------------------------------------
-# ✅ Build ONLY core, dependency-free views first
-# ------------------------------------------------------------
-message("\n[PROCESS] Creating base analysis views")
-
-create_analysis_views(con)   # safe: builds core + placeholders
-
+message("\n[PROCESS] Creating analysis views")
+create_analysis_views(con)
 
 # ============================================================
 # TIMESERIES ALIGNMENT (R-BASED)
@@ -262,35 +240,6 @@ build_sample_flux(con)
 message("[ALIGN] sample_flux completed in ",
         round(difftime(Sys.time(), start_time, units = "secs"), 1), " sec")
 
-
-# ============================================================
-# ✅ PROCESSING STAGE (PHASE 2: FLOW-DEPENDENT VIEWS)
-# ============================================================
-
-message("\n==============================")
-message(" PROCESSING STAGE (FLOW-DEPENDENT)")
-message("==============================")
-
-# ------------------------------------------------------------
-# ✅ NOW rebuild ONLY the view(s) that depend on alignment
-# ------------------------------------------------------------
-
-if (dbExistsTable(con, "sample_flow")) {
-  
-  message("[PROCESS] Creating vw_sample_with_flow (post-alignment)")
-  
-  dbExecute(con, "DROP VIEW IF EXISTS vw_sample_with_flow")
-  
-  dbExecute(con, "
-    CREATE VIEW vw_sample_with_flow AS
-    SELECT * FROM sample_flow
-  ")
-  
-  message("✅ vw_sample_with_flow ready")
-  
-} else {
-  stop("sample_flow missing — cannot build vw_sample_with_flow")
-}
 
 # ============================================================
 # HYDRAULIC GRADIENTS
@@ -382,10 +331,6 @@ run_analysis_step("Isotope Pairs", {
   build_isotope_pairs(con)
 })
 
-run_analysis_step("Integrated Analysis Products", {
-  build_analysis_products(con)
-})
-
 # ============================================================
 # QA / QC STAGE
 # ============================================================
@@ -423,7 +368,7 @@ export_geopackage(con, mode = MODE)
 
 message("\n[EXPORT] Writing website CSV outputs")
 
-dir.create("docs/data", recursive = TRUE, showWarnings = FALSE)
+dir.create("website/data", recursive = TRUE, showWarnings = FALSE)
 
 write.csv(
   dbGetQuery(con, "
@@ -459,114 +404,6 @@ write.csv(
   "docs/data/well_sample.csv",
   row.names = FALSE
 )
-
-tables <- dbListTables(con)
-
-table_counts <- lapply(tables, function(t) {
-  n <- tryCatch(
-    dbGetQuery(con, paste0("SELECT COUNT(*) n FROM ", t))$n,
-    error = function(e) NA
-  )
-  
-  data.frame(
-    table = t,
-    n_rows = n
-  )
-}) %>%
-  bind_rows()
-
-write.csv(
-  table_counts,
-  "docs/data/table_counts.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT data_source as source,
-           SUM(measurements_inserted) as n
-    FROM Ingest_Run_Log
-    GROUP BY data_source
-  "),
-  "docs/data/source_summary.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      DATE(timestamp, 'unixepoch') as date,
-      COUNT(*) as n
-    FROM Temperature_Observations
-    GROUP BY date
-  "),
-  "docs/data/temp_density.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      COUNT(DISTINCT sample_id) as samples,
-      COUNT(*) as analyses
-    FROM Lab_Analyses
-  "),
-  "docs/data/chem_summary.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      logger_id,
-      COUNT(*) as observations,
-      MIN(timestamp) as start_time,
-      MAX(timestamp) as end_time
-    FROM Temperature_Observations
-    GROUP BY logger_id
-  "),
-  "docs/data/logger_summary.csv",
-  row.names = FALSE
-)
-
-# ============================================================
-# WEBSITE BUILD STAGE
-# ============================================================
-
-message("\n==============================")
-message(" WEBSITE BUILD")
-message("==============================")
-
-build_website <- function() {
-  
-  if (!dir.exists("website")) {
-    stop("[WEBSITE] website directory not found")
-  }
-  
-  dir.create("docs", showWarnings = FALSE)
-  
-  message("[WEBSITE] Rendering site from 'website/' → 'docs/'")
-  
-  start_time <- Sys.time()
-  
-  tryCatch({
-    
-    rmarkdown::render_site("website")
-    
-    elapsed <- round(difftime(Sys.time(), start_time, units = "secs"), 1)
-    
-    message("✅ Website built successfully (", elapsed, " sec)")
-    
-  }, error = function(e) {
-    warning("[WEBSITE] Build failed: ", e$message)
-  })
-}
-
-if (BUILD_WEBSITE) {
-  build_website()
-} else {
-  message("[WEBSITE] Skipping build")
-}
 
 # ============================================================
 # CLEANUP

@@ -16,7 +16,7 @@
 <script src="site_libs/header-attrs-2.30/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<link href="site_libs/bootstrap-3.3.5/css/bootstrap.min.css" rel="stylesheet" />
+<link href="site_libs/bootstrap-3.3.5/css/flatly.min.css" rel="stylesheet" />
 <script src="site_libs/bootstrap-3.3.5/js/bootstrap.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/html5shiv.min.js"></script>
 <script src="site_libs/bootstrap-3.3.5/shim/respond.min.js"></script>
@@ -29,8 +29,11 @@
        h6 {font-size: 12px;}
        code {color: inherit; background-color: rgba(0, 0, 0, 0.04);}
        pre:not([class]) { background-color: white }</style>
+<script src="site_libs/jqueryui-1.13.2/jquery-ui.min.js"></script>
+<link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
+<script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
-<link href="site_libs/highlightjs-9.12.0/default.css" rel="stylesheet" />
+<link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
 
 <style type="text/css">
@@ -58,6 +61,7 @@ if (window.hljs) {
 
 
 
+<link rel="stylesheet" href="styles.css" type="text/css" />
 
 
 
@@ -219,6 +223,69 @@ $(document).ready(function () {
 
 
 
+<style type="text/css">
+
+#TOC {
+  margin: 25px 0px 20px 0px;
+}
+@media (max-width: 768px) {
+#TOC {
+  position: relative;
+  width: 100%;
+}
+}
+
+@media print {
+.toc-content {
+  /* see https://github.com/w3c/csswg-drafts/issues/4434 */
+  float: right;
+}
+}
+
+.toc-content {
+  padding-left: 30px;
+  padding-right: 40px;
+}
+
+div.main-container {
+  max-width: 1200px;
+}
+
+div.tocify {
+  width: 20%;
+  max-width: 260px;
+  max-height: 85%;
+}
+
+@media (min-width: 768px) and (max-width: 991px) {
+  div.tocify {
+    width: 25%;
+  }
+}
+
+@media (max-width: 767px) {
+  div.tocify {
+    width: 100%;
+    max-width: none;
+  }
+}
+
+.tocify ul, .tocify li {
+  line-height: 20px;
+}
+
+.tocify-subheader .tocify-item {
+  font-size: 0.90em;
+}
+
+.tocify .list-group-item {
+  border-radius: 0px;
+}
+
+
+</style>
+
+
 
 </head>
 
@@ -226,6 +293,16 @@ $(document).ready(function () {
 
 
 <div class="container-fluid main-container">
+
+
+<!-- setup 3col/9col grid for toc_float and main content  -->
+<div class="row">
+<div class="col-xs-12 col-sm-4 col-md-3">
+<div id="TOC" class="tocify">
+</div>
+</div>
+
+<div class="toc-content col-xs-12 col-sm-8 col-md-9">
 
 
 
@@ -243,19 +320,19 @@ $(document).ready(function () {
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
         <li>
-  <a href="index.html">Home</a>
+  <a href="index.html">Overview</a>
 </li>
 <li>
-  <a href="project.html">Project</a>
-</li>
-<li>
-  <a href="data.html">Data &amp; Schema</a>
-</li>
-<li>
-  <a href="results.html">Results</a>
+  <a href="project.html">Scientific Context</a>
 </li>
 <li>
   <a href="pipeline.html">Pipeline</a>
+</li>
+<li>
+  <a href="data.html">Data System</a>
+</li>
+<li>
+  <a href="results.html">Results</a>
 </li>
 <li>
   <a href="about.html">About</a>
@@ -279,29 +356,43 @@ $(document).ready(function () {
 
 <div id="data-structure" class="section level1">
 <h1>Data &amp; Structure</h1>
-<p>This system integrates multiple environmental datasets into a
-unified, structured database designed for reproducible scientific
-analysis.</p>
+<p>This system integrates heterogeneous environmental observations into
+a unified relational database designed to support reproducible
+scientific analysis.</p>
+<p>Rather than storing datasets independently, all observations are
+structured within a shared schema that enforces spatial, temporal, and
+relational consistency. This enables direct comparison across data
+types, monitoring scales, and time.</p>
+<p>The following sections explore how the database behaves as an
+integrated system, highlighting patterns in data sources, temporal
+growth, structural</p>
 <hr />
 <div id="data-sources" class="section level2">
 <h2>📥 Data Sources</h2>
-<p>The database integrates heterogeneous inputs collected across
-multiple workflows:</p>
+<p>The database integrates multiple observational domains, each
+representing a different aspect of the hydrothermal system:</p>
 <ul>
-<li><strong>Regulatory data (NDEP)</strong> — long-term chemistry
+<li><strong>Regulatory data (NDEP)</strong> — long-term geochemical
 records<br />
 </li>
-<li><strong>Field measurements</strong> — site-based sampling
+<li><strong>Field measurements</strong> — site-specific sampling
 campaigns<br />
 </li>
 <li><strong>Laboratory analyses</strong> — high-quality analytical
-chemistry (in progress)<br />
+chemistry<br />
 </li>
 <li><strong>Temperature loggers</strong> — continuous thermal
 monitoring</li>
 </ul>
-<p>Each source has different structure, frequency, and quality
-constraints, requiring controlled ingestion and validation.</p>
+<p>Each source differs in temporal resolution, structure, and analytical
+purpose.</p>
+<p>Bringing these datasets into a common framework allows relationships
+to be established between measurements that were previously
+isolated.</p>
+<blockquote>
+<p>This integration is essential for interpreting the hydrothermal
+system as a coupled hydraulic, thermal, and geochemical process.</p>
+</blockquote>
 <hr />
 </div>
 <div id="data-flow" class="section level2">
@@ -397,48 +488,110 @@ time-series data</li>
 <hr />
 </div>
 </div>
-<div id="data-behavior" class="section level2">
-<h2>📊 Data Behavior</h2>
-<div id="source-integration" class="section level3">
-<h3>Source Integration</h3>
-<p><img src="data_files/figure-html/unnamed-chunk-1-1.png" alt="" width="672" /></p>
+<div id="integration-of-data-sources" class="section level2">
+<h2>🔗 Integration of Data Sources</h2>
+<p>The degree to which different datasets contribute to the system
+provides insight into both data availability and monitoring
+strategy.</p>
+<pre><code>## Source breakdown available after pipeline export.</code></pre>
+<p>Interpretation: This distribution reflects the heterogeneous nature
+of environmental monitoring. Regulatory datasets typically dominate
+long-term records, while field and sensor data provide targeted and
+high-resolution observations. Key Insight: The strength of the system
+lies not in any single dataset, but in the ability to integrate multiple
+observational scales into a unified structure.</p>
 <hr />
 </div>
-<div id="ingestion-through-time" class="section level3">
-<h3>Ingestion Through Time</h3>
-<p>cat(“<strong>Note:</strong> In DEMO mode, all ingestion events are
-replayed from scratch. In OPERATIONAL mode, this plot reflects real-time
-database growth.”)</p>
-<p><img src="data_files/figure-html/unnamed-chunk-2-1.png" alt="" width="672" /></p>
+<div id="system-growth-through-time" class="section level2">
+<h2>📈 System Growth Through Time</h2>
+<p>The database evolves through discrete ingestion events rather than
+continuous accumulation, reflecting how environmental data are collected
+and integrated.</p>
+<pre><code>## Ingestion history will appear after pipeline runs.</code></pre>
+<p>Interpretation: Each increase corresponds to a specific ingestion
+event, such as a field campaign, regulatory update, or logger
+deployment. Key Insight: The stepwise growth pattern provides explicit
+provenance, allowing users to trace how and when data entered the
+system.</p>
 <hr />
-<p>These patterns reflect:</p>
+</div>
+<div id="data-granularity-continuous-vs-discrete-observations"
+class="section level2">
+<h2>⚖️ Data Granularity: Continuous vs Discrete Observations</h2>
+<p>A defining characteristic of the system is the coexistence of
+continuous and discrete data.</p>
+<p>Interpretation: Continuous temperature observations dominate the
+total number of records, while discrete datasets (chemistry and field
+measurements) provide analytical depth. Key Insight: This multi-scale
+structure enables the system to capture both high-frequency variability
+and chemically diagnostic signals.</p>
+<hr />
+</div>
+<div id="temporal-distribution-of-observations" class="section level2">
+<h2>🕒 Temporal Distribution of Observations</h2>
+<p>Understanding when data are collected is critical for interpreting
+system dynamics.</p>
+<p>Interpretation: Clustering reflects episodic data acquisition,
+including sensor deployments, field campaigns, and regulatory sampling.
+Key Insight: Temporal structure reveals not only system behavior, but
+also sampling strategy and data availability constraints.</p>
+</div>
+<div id="spatial-coverage-sample-points" class="section level2">
+<h2>🗺️ Spatial Coverage (Sample Points)</h2>
+<p>Spatial distribution determines how well the system is observed
+across the hydrothermal field.</p>
+<pre><code>## Spatial data will appear after export.</code></pre>
+<p>Interpretation: Observed clusters represent areas of active
+monitoring, while gaps indicate potential regions of uncertainty or
+under-sampling. Key Insight: Spatial structure directly influences the
+ability to interpret hydrothermal flow paths and system
+heterogeneity.</p>
+<hr />
+</div>
+<div id="system-level-interpretation" class="section level2">
+<h2>📊 System-Level Interpretation</h2>
+<p>Taken together, these patterns describe a system that is:</p>
 <ul>
-<li>incremental database growth<br />
+<li>incrementally constructed through controlled ingestion
+workflows<br />
 </li>
-<li>integration across multiple data sources<br />
+<li>composed of heterogeneous but integrated data sources<br />
 </li>
-<li>reproducibility of ingestion workflows</li>
+<li>dominated by high-frequency continuous observations<br />
+</li>
+<li>structured across irregular temporal sampling intervals<br />
+</li>
+<li>spatially distributed according to monitoring access and
+priorities</li>
 </ul>
+<blockquote>
+<p>The database is not simply a collection of datasets—it is a
+structured representation of system observation itself.</p>
+</blockquote>
 <hr />
 </div>
-</div>
-<div id="geochemical-modeling" class="section level2">
-<h2>🔬 Geochemical Modeling</h2>
+<div id="geochemical-modeling-integration" class="section level2">
+<h2>🔬 Geochemical Modeling Integration</h2>
 <p>Validated chemistry is transformed into <strong>PHREEQC-ready
-inputs</strong>, enabling:</p>
+inputs</strong>, enabling process-based interpretation of hydrothermal
+conditions.</p>
+<p>These transformations support:</p>
 <ul>
 <li>forward speciation modeling<br />
 </li>
-<li>inverse modeling of hydrothermal processes</li>
+<li>inverse geochemical modeling<br />
+</li>
+<li>evaluation of mineral saturation states</li>
 </ul>
-<p>Model outputs are written back into the system, preserving the
-relationship between:</p>
-<pre><code>raw observations → derived chemistry → interpreted processes</code></pre>
+<blockquote>
+<p>This step links observational data to thermodynamic interpretation,
+extending the system beyond monitoring into predictive modeling.</p>
+</blockquote>
 <hr />
 </div>
-<div id="reproducibility" class="section level2">
-<h2>🔁 Reproducibility</h2>
-<p>All steps in the system are:</p>
+<div id="reproducibility-and-provenance" class="section level2">
+<h2>🔁 Reproducibility and Provenance</h2>
+<p>All transformations within the system are:</p>
 <ul>
 <li>scripted<br />
 </li>
@@ -446,15 +599,19 @@ relationship between:</p>
 </li>
 <li>reproducible</li>
 </ul>
-<p>No manual edits are made to the database.</p>
+<p>No manual edits are made to database contents.</p>
 <p>Every dataset can be:</p>
 <ul>
-<li>traced to a specific input<br />
+<li>traced to its original input<br />
 </li>
-<li>reprocessed from raw data<br />
+<li>reconstructed from raw data<br />
 </li>
 <li>validated through ingestion logs</li>
 </ul>
+<blockquote>
+<p>This ensures that all analyses performed using the system are
+transparent, auditable, and reproducible.</p>
+</blockquote>
 <hr />
 </div>
 <div id="image-data" class="section level2">
@@ -473,21 +630,25 @@ linked to:</p>
 </div>
 <div id="current-state" class="section level2">
 <h2>✅ Current State</h2>
-<p>The system is actively evolving.</p>
+<p>The system is actively evolving:</p>
 <ul>
-<li>Temperature logger data are fully integrated<br />
+<li>continuous temperature monitoring is fully integrated<br />
 </li>
-<li>Field and sampling data workflows are operational<br />
+<li>field and sampling workflows are operational<br />
 </li>
-<li>Laboratory chemistry ingestion is ongoing</li>
+<li>laboratory chemistry ingestion is expanding</li>
 </ul>
-<p>&gt; In operational mode, ingestion is explicitly controlled, and the
-database evolves incrementally over time.</p>
+<blockquote>
+<p>In operational mode, the database evolves incrementally, providing a
+live representation of the hydrothermal system through time.</p>
+</blockquote>
 </div>
 </div>
 
 
 
+</div>
+</div>
 
 </div>
 
@@ -520,6 +681,35 @@ $(document).ready(function () {
 
 <!-- code folding -->
 
+<script>
+$(document).ready(function ()  {
+
+    // temporarily add toc-ignore selector to headers for the consistency with Pandoc
+    $('.unlisted.unnumbered').addClass('toc-ignore')
+
+    // move toc-ignore selectors from section div to header
+    $('div.section.toc-ignore')
+        .removeClass('toc-ignore')
+        .children('h1,h2,h3,h4,h5').addClass('toc-ignore');
+
+    // establish options
+    var options = {
+      selectors: "h1,h2,h3",
+      theme: "bootstrap3",
+      context: '.toc-content',
+      hashGenerator: function (text) {
+        return text.replace(/[.\\/?&!#<>]/g, '').replace(/\s/g, '_');
+      },
+      ignoreSelector: ".toc-ignore",
+      scrollTo: 0
+    };
+    options.showAndHide = true;
+    options.smoothScroll = true;
+
+    // tocify
+    var toc = $("#TOC").tocify(options).data("toc-tocify");
+});
+</script>
 
 <!-- dynamically load mathjax for compatibility with self-contained -->
 <script>
