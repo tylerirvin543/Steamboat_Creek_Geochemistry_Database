@@ -202,6 +202,36 @@ ingest_field <- function(con) {
       paste(head(bad_coords$external_station_code, 5), collapse = "\n")
     )
   }
+  
+  # validate coordinate ranges ( longitude < -180 | longitude > 180)
+  # validate coordinate ranges ( latitude < -90 | latitude > 90)
+  bad_ranges <- locations_xl |>
+    filter(
+      latitude < -90 | latitude > 90 |
+        longitude < -180 | longitude > 180
+    )
+  
+  if (nrow(bad_ranges) > 0) {
+    stop(
+      "Out-of-range coordinates detected in locations.xlsx:\n",
+      paste(head(bad_ranges$external_station_code, 5), collapse = "\n"),
+      "\n\nLatitude must be [-90, 90], Longitude [-180, 180]."
+    )
+  }
+  
+  # detect possible lat/lon swap
+  swapped <- locations_xl |>
+    filter(
+      latitude > 90 & abs(longitude) <= 90
+    )
+  
+  if (nrow(swapped) > 0) {
+    warning(
+      "Possible lat/lon swapped values detected:\n",
+      paste(head(swapped$external_station_code, 5), collapse = "\n")
+    )
+  }
+      
   # Validate CRS against allowed set
   # (prevents silent projection errors downstream)
   valid_crs <- c("EPSG:4326")
@@ -214,6 +244,10 @@ ingest_field <- function(con) {
       paste(invalid, collapse = ", "),
       ". Use EPSG codes (e.g., EPSG:4326)."
     )
+  }
+  
+  if (nrow(bad_ranges) > 0) {
+    message("Bad coordinate rows detected: ", nrow(bad_ranges))
   }
   
   

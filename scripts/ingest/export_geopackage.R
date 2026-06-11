@@ -46,12 +46,28 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
       return()
     }
     
-    if (!"geom_wkt" %in% names(df)) {
-      warning("[EXPORT] Skipping ", layer_name, " (no geom_wkt)")
+    if (!"geom_wkt" %in% names(df) &&
+        all(c("latitude", "longitude") %in% names(df))) {
+      
+      sf_obj <- st_as_sf(df, coords = c("longitude", "latitude"), crs = 4326)
+      
+    } else if ("geom_wkt" %in% names(df)) {
+      
+      sf_obj <- st_as_sf(df, wkt = "geom_wkt", crs = 4326)
+      
+    } else {
+      warning("[EXPORT] Skipping ", layer_name, " (no geometry)")
       return()
     }
     
-    sf_obj <- st_as_sf(df, wkt = "geom_wkt", crs = 4326)
+    if (!"location_id" %in% names(df)) {
+      message("[EXPORT] ℹ ", layer_name, " has no location_id (non-location layer)")
+    }
+    
+    
+    if (any(!sf::st_is_valid(sf_obj))) {
+      warning("[EXPORT] ", layer_name, " contains invalid geometry")
+    }
     
     st_write(
       sf_obj,
@@ -64,33 +80,41 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     message("[EXPORT] ✅ ", layer_name, " (", nrow(sf_obj), " rows)")
   }
   
+  
   # ============================================================
   # STANDARD LAYERS
   # ============================================================
   
   layers <- list(
+    
+    # -------------------------
+    # CORE SPATIAL FRAMEWORK
+    # -------------------------
     locations = "SELECT * FROM vw_locations_gis",
     wells = "SELECT * FROM vw_wells_gis",
     
-    hydraulic_head_clean = "SELECT * FROM vw_hydraulic_head_clean",
+    # -------------------------
+    # HYDROLOGIC ANALYSIS
+    # -------------------------
+    hydraulic_head = "SELECT * FROM vw_hydraulic_head_clean",
     water_level_latest = "SELECT * FROM vw_water_level_latest",
     
+    # -------------------------
+    # THERMAL SYSTEM
+    # -------------------------
     temperature_timeseries = "SELECT * FROM vw_temperature_timeseries",
     
-    sample_locations = "SELECT * FROM vw_samples_locations",
-    samples = "SELECT * FROM vw_samples_gis",
+    # -------------------------
+    # GEOCHEMISTRY (CURATED)
+    # -------------------------
     major_ions = "SELECT * FROM vw_major_ions",
-    temp_gradient = "SELECT * FROM vw_temp_gradient",
     isotopes = "SELECT * FROM vw_isotopes_gis",
-    isotope_pairs = "SELECT * FROM vw_isotope_pairs",
-    gradient_vectors = "SELECT * FROM Gradient_Vectors_Scaled",
     
-    flux = "SELECT * FROM vw_flux_summary",
-    flux_vs_usgs = "SELECT * FROM vw_flux_vs_usgs",
-    sample_flux = "SELECT * FROM vw_sample_hydrochem_flux",
-    
-    temp_flow = "SELECT * FROM temp_flow_combined",
-    samples_flow = "SELECT * FROM sample_flow"
+    # -------------------------
+    # INTEGRATED PRODUCTS
+    # -------------------------
+    sample_flow = "SELECT * FROM vw_sample_hydrochem_flux",
+    temp_flow = "SELECT * FROM temp_flow"
   )
   
   # ============================================================
@@ -108,6 +132,49 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
       warning("[EXPORT] Failed: ", layer_name, " → ", e$message)
     })
   }
+  
+  # ============================================================
+  # QC LAYER
+  # ============================================================
+  
+  message("\n[EXPORT] Processing: qc_issues")
+  
+  tryCatch({
+    
+    qc_df <- dbGetQuery(con, "
+    SELECT q.*, l.latitude, l.longitude
+    FROM QC_Issues q
+    LEFT JOIN Locations l
+      ON q.location_id = l.location_id
+    WHERE l.latitude IS NOT NULL
+
+  ")
+    
+    if (nrow(qc_df) > 0) {
+      
+      qc_sf <- st_as_sf(
+        qc_df,
+        coords = c("longitude", "latitude"),
+        crs = 4326
+      )
+      
+      st_write(
+        qc_sf,
+        gpkg_path,
+        layer = "qc_issues",
+        delete_layer = TRUE,
+        quiet = TRUE
+      )
+      
+      message("[EXPORT] ✅ qc_issues (", nrow(qc_sf), " rows)")
+      
+    } else {
+      message("[EXPORT] No QC spatial issues to export")
+    }
+    
+  }, error = function(e) {
+    warning("[EXPORT] QC export failed → ", e$message)
+  })
   
   # ============================================================
   # HYDRAULIC GRADIENTS
@@ -130,7 +197,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # -------------------------------
   
   grad_df <- grad_df %>%
-    filter(distance_m <= 1500, abs(gradient) >= 0.001)
+    filter(distance_m <= 1500, abs(gradient) >= 0.0001)
   
   message("  → After filtering: ", nrow(grad_df))
   
@@ -196,6 +263,17 @@ FROM Wells
     grad_df,
     geometry = st_sfc(geom_list, crs = 32611)
   )
+  
+  grad_sf <- st_transform(grad_sf, 4326)
+  
+  grad_sf <- grad_sf %>%
+    mutate(
+      gradient_class = case_when(
+        abs(gradient) < 0.001 ~ "low",
+        abs(gradient) < 0.01  ~ "moderate",
+        TRUE ~ "high"
+      )
+    )
   # ============================================================
   # OPTIONAL: EXTRACT COORDINATES
   # ============================================================
@@ -227,6 +305,17 @@ FROM Wells
     delete_layer = TRUE,
     quiet = TRUE
   )
+  
+  message("\n[EXPORT SUMMARY]")
+  message("GeoPackage path: ", gpkg_path)
+  
+  layer_count <- length(layers) + 1  # gradients
+  
+  if (exists("qc_sf") && nrow(qc_sf) > 0) {
+    layer_count <- layer_count + 1
+  }
+  
+  message("Layers exported: ", layer_count)
   
   message("[EXPORT] ✅ hydraulic_gradients (", nrow(grad_sf), " rows)")
   

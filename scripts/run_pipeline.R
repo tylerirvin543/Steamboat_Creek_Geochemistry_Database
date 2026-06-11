@@ -103,6 +103,7 @@ source("scripts/ingest/export_geopackage.R")
 source("scripts/qc/validate_database.R")
 source("scripts/qc/qc_data_integrity_checks.R")
 source("scripts/qc/audit_sample_duplicates.R")
+source("scripts/qc/create_qc_views.R")
 
 message("\n[SETUP] Loading time-series alignment helpers")
 
@@ -394,14 +395,86 @@ message("\n==============================")
 message(" QA / QC STAGE")
 message("==============================")
 
-message("\n[QC] Running integrity checks")
-run_qc_checks(con)
-
 message("\n[QC] Validating database relationships")
 validate_database(con)
 
+message("\n[QC] Running integrity checks")
+run_qc_checks(con)
+
+message("\n[QC] Building QC views")
+create_qc_views(con)
+
 message("\n[QC] Auditing duplicate samples")
 audit_sample_duplicates(con)
+
+dbExecute(con, "
+CREATE INDEX IF NOT EXISTS idx_qc_created_at
+ON QC_Issues(created_at)
+")
+
+dbExecute(con, "
+CREATE INDEX IF NOT EXISTS idx_qc_time_type
+ON QC_Issues(created_at, issue_type)
+")
+
+# ============================================================
+# QC REPORT GENERATION STAGE
+# ============================================================
+
+message("\n==============================")
+message(" REPORT GENERATION")
+message("==============================")
+
+# ------------------------------------------------------------
+# ✅ Define root-relative output (pipeline is in scripts/)
+# ------------------------------------------------------------
+report_dir <- file.path("..", "output", "reports", MODE)
+dir.create(report_dir, recursive = TRUE, showWarnings = FALSE)
+
+# ------------------------------------------------------------
+# ✅ Create timestamp for versioning
+# ------------------------------------------------------------
+timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
+
+# ------------------------------------------------------------
+# ✅ Build versioned filename
+# ------------------------------------------------------------
+report_output <- file.path(
+  report_dir,
+  paste0("pipeline_report_", MODE, "_", timestamp, ".html")
+)
+
+message("[REPORT] Rendering pipeline report")
+
+# ------------------------------------------------------------
+# ✅ Render report
+# ------------------------------------------------------------
+tryCatch({
+  
+  rmarkdown::render(
+    input = file.path("..", "reports", "pipeline_report.Rmd"),  # ✅ go up to root → reports/
+    output_file = report_output,
+    params = list(
+      db_path = DB_PATH,
+      run_time = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),
+      mode = MODE
+    ),
+    envir = new.env(parent = globalenv()),   # ✅ clean environment
+    quiet = TRUE
+  )
+  
+  # ----------------------------------------------------------
+  # ✅ Also create "latest" symlink / copy
+  # ----------------------------------------------------------
+  latest_path <- file.path(report_dir, "pipeline_report_latest.html")
+  file.copy(report_output, latest_path, overwrite = TRUE)
+  
+  message("✅ Report generated: ", normalizePath(report_output))
+  
+}, error = function(e) {
+  warning("[REPORT] Failed to render report: ", e$message)
+})
+
 
 # ============================================================
 # EXPORT STAGE
@@ -526,6 +599,14 @@ write.csv(
     GROUP BY logger_id
   "),
   "docs/data/logger_summary.csv",
+  row.names = FALSE
+)
+
+dir.create("output/qc", recursive = TRUE, showWarnings = FALSE)
+
+write.csv(
+  dbReadTable(con, "QC_Issues"),
+  "output/qc/qc_issues_full.csv",
   row.names = FALSE
 )
 

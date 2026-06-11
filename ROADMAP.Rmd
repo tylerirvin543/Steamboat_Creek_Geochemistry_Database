@@ -5,29 +5,29 @@ output: html_document
 
 # Project Vision
 
-This project builds a fully reproducible, query-driven hydrothermal system platform for Steamboat Springs.
+A fully reproducible, query-driven hydrothermal system platform for Steamboat Springs.
 
 The system integrates:
 
 - field sampling
-- NDEP regulatory chemistry
-- NDWR hydrologic data (wells + water levels)
-- continuous temperature sensors
-- laboratory analyses
+- regulatory chemistry (NDEP)
+- hydrologic data (NDWR wells + water levels)
+- temperature loggers
+- lab analyses
 - isotope datasets (future)
-- geochemical modeling outputs (PHREEQC)
+- geochemical modeling (PHREEQC)
 
-All data are stored in a single relational database and accessed through derived views and analysis workflows.
+All data are unified in a single relational database and accessed through deterministic views and analysis workflows.
 
 ---
 
-# Core Design Philosophy
+# Core Design Principles
 
 ## Single Source of Truth
 
-All raw data are stored in one SQLite database:
+All data reside in:
 
-database/geochem_operational.sqlite
+`database/geochem_operational.sqlite`
 
 This database contains:
 
@@ -39,790 +39,286 @@ This database contains:
 
 ## Layered Architecture
 
-The system is structured into three layers:
+Raw Tables → Derived Views → Analysis → QC → Export → Reporting
 
-RAW TABLES
-- original ingested data
-- never modified after ingestion
-
-DERIVED VIEWS
-- computed and cleaned datasets
-- reusable across analysis and GIS
-
-ANALYSIS AND EXPORT
-- R scripts perform computation
-- RMarkdown produces reports
-- GeoPackage exports deliver GIS-ready layers
+- Raw tables are immutable  
+- Views define analysis-ready data  
+- Scripts perform computation  
+- QC evaluates data quality  
+- Outputs are exported for GIS and web  
 
 ---
 
-## Separation of Responsibilities
+## Deterministic System
 
-Database:
-- stores all raw and derived data
-
-Ingest scripts:
-- load and standardize external datasets
-
-Views:
-- define analysis-ready datasets
-
-R scripts:
-- perform calculations (gradients, mixing, etc.)
-
-RMarkdown:
-- visualization and interpretation
-
-GeoPackage:
-- GIS-ready outputs
-
-PHREEQC (future):
-- geochemical modeling layer
+- All views are rebuilt each run (`DROP + CREATE`)
+- Pipeline execution is reproducible
+- No hidden or stateful transformations
 
 ---
 
 ## Modular Expansion
 
-New data types are added through:
+New data types require:
 
-- new tables for raw data
-- new views for derived results
-- new scripts for analysis
+- tables (storage)
+- views (integration)
+- scripts (analysis)
 
 ---
 
-# Current System Status
+# System Components
 
-## Core Tables (Implemented)
+## Core Data Tables ✅
 
 - Locations
 - Wells
-- Water_Level_Observations
-- Sampling_Events
-- Samples
+- Samples / Sampling_Events
 - Field_Measurements
 - Lab_Analyses
-- Temperature_Observations
-- Temperature_Loggers
-- External_Location_Map
-- Data_Sources
-- Ingest_Run_Log
+- Temperature_Loggers / Observations
+- Water_Level_Observations
 
 ---
 
-## Data Sources Integrated
+## Integrated Data Sources ✅
 
-- Field sampling campaigns
+- field campaigns
 - NDEP chemistry
-- Temperature loggers
-- NDWR wells and water levels
+- NDWR hydrology
+- temperature loggers
 
 ---
 
-# Hydrologic System (NDWR Wells)
+# Analytical Systems
 
-## Structure
+## Hydrologic System ✅
 
-Wells table defines physical wells  
-Water_Level_Observations stores time-series measurements  
-Locations provides spatial reference  
+Capabilities:
 
----
+- hydraulic head computation
+- cleaned time-series selection
+- daily and latest water level views
+- hydraulic gradients (vector field)
 
-## Analysis Views (Core Hydro Layer)
+Outputs:
 
-vw_hydraulic_head
-- computes hydraulic head from depth-to-water
-- includes measurement method flags
-- primary dataset for flow analysis
-
-vw_water_level_latest
-- most recent measurement per well
-- used for mapping water table surface
-
-vw_water_level_daily_best
-- one measurement per well per day
-- prioritizes manual measurements over sensors
-
-vw_hydraulic_head_clean
-- filtered dataset using only high-quality measurements
-- used for gradient analysis and modeling
-
-vw_wells_gis
-- GIS-ready well dataset
-- includes depth classification
+- `Hydraulic_Gradients`
+- `vw_hydraulic_head_clean`
+- GIS gradient layer
 
 ---
 
-## Capabilities Now Available
+## Thermal System ✅
 
-- hydraulic head calculation
-- cleaned time-series
-- map-ready groundwater surfaces
-- well characterization
-
----
-
-# Temperature System
-
-## Structure
-
-Temperature_Observations references logger_id  
-Temperature_Loggers links to Locations  
+- logger ingestion complete
+- time-series aligned
+- spatial linkage via `location_id`
 
 ---
 
-## Status
+## Geochemistry System ✅ (foundational)
 
-- ingest working
-- time-series accessible
-- spatial integration complete
+Capabilities:
 
----
+- unified chemistry ingestion
+- major ion extraction
+- QC detection of missing/invalid values
 
-# Geochemistry System
+Key views (current + planned):
 
-## Current Status
-
-- NDEP chemistry integrated
-- Lab structure implemented
-
----
-
-## Planned Views
-
-- vw_major_ions
-- vw_charge_balance
-- vw_chemistry_summary
+- `vw_major_ions`
+- `vw_sample_master`
+- `vw_chemistry_summary` (planned)
 
 ---
 
-## Purpose
+## QC System ✅ (Major Milestone)
 
-- unify chemistry across sources
-- allow time and space queries
-- provide modeling-ready inputs
+QC is now a **core analytical layer**.
 
----
+### Table: `QC_Issues`
 
-# Isotope System (Planned)
+Stores:
 
-Future integration of:
+- issue_type
+- severity
+- record_id
+- table_name
+- created_at / qc_run_time
 
-- δ18O
-- δD
-- other tracers
+### Capabilities
 
-Planned outputs include:
+- non-destructive validation
+- reproducible logging
+- cross-dataset integrity checks
 
-- mixing models
-- recharge source identification
-- hydrothermal classification
+### Current Issue Types
 
----
+- missing field parameters
+- missing major ions
+- invalid lab values
+- orphaned records
+- gradient outliers
+- logger mismatches
 
-# GIS Outputs
+### Outputs
 
-## GeoPackage
-
-output/geopackage/hydro_data.gpkg
-
----
-
-## Layers Included
-
-Base layers:
-- locations
-- wells
-- logger_locations
-
-Raw data layers:
-- hydraulic_head
-- temperature_timeseries
-
-Analysis layers:
-- water_level_latest
-- water_level_daily_best
-- hydraulic_head_clean
-
-Optional layers:
-- lab_analyses
+- database tables (`QC_Issues`, `QC_Summary`)
+- CSV exports
+- pipeline report integration
 
 ---
 
-## Design Principle
+## Reporting System ✅
 
-The GeoPackage is:
+Automated RMarkdown report:
 
-- analysis-ready
-- GIS-friendly
-- not the authoritative data source
-
----
-
-# Analysis Workflow
-
-## Structure
-
-Database views provide input  
-R scripts compute results  
-RMarkdown produces outputs  
+- system health scoring
+- QC summaries
+- completeness metrics
+- priority issue identification
 
 ---
 
-## Components
+## GIS Output ✅
 
-Views:
-- reusable datasets
+GeoPackage:
 
-R scripts:
-- located in scripts/analysis
-- perform calculations
+`output/geopackage/hydro_data.gpkg`
 
-RMarkdown:
-- located in analysis/
-- produces figures and reports
+Design:
 
----
-
-## Key Rule
-
-RMarkdown should not contain heavy computation.  
-All computation should occur in views or scripts.
+- analysis-ready layers only
+- no raw tables
+- includes hydrologic, thermal, and chemistry products
 
 ---
 
-# Flux Measurements (Planned)
+# System Status (06/09/2026)
 
-Planned table:
+✅ Fully operational pipeline:
 
-Flux_Measurements with:
 
-- location_id
-- timestamp
-- flux_value
+ingest → database → views → analysis → QC → export → report
 
----
+Capabilities now include:
 
-## Purpose
-
-- surface discharge estimation
-- hydrothermal flux quantification
+- deterministic execution
+- gradient vector computation
+- QC logging and reporting
+- GIS export
+- integrated hydrothermal datasets
 
 ---
 
-# Modeling Layer
+# Current Findings (from QC)
 
-PHREEQC integration will support:
+System is functioning correctly; major data issues identified:
 
-- speciation
-- saturation indices
-- geothermometry
-- inverse modeling
+- ~71% missing chemistry
+- ~99% missing field parameters
+- ~99% no active logger overlap
+- lab detection limit inconsistencies
 
----
-
-Planned table:
-
-Model_Results with:
-
-- sample_id
-- model_type
-- output fields
-
----
-
-# System Structure Summary
-
-Locations link to:
-
-- Wells
-- Loggers
-- Sampling events
-
-Data flows into:
-
-- Hydrologic data
-- Temperature data
-- Chemistry data
-
-These are combined through:
-
-- analysis views
-
-Then used in:
-
-- R analysis
-- GeoPackage export
-- modeling workflows
+➡️ Interpretation stage has begun.
 
 ---
 
 # Development Roadmap
 
-Phase 1 (Complete):
-- schema
-- NDEP ingest
-- temperature system
-
-Phase 2 (Complete):
-- NDWR wells
-- water level integration
-- location crosswalk
-
-Phase 3 (Current):
+## Phase 1–3 ✅ (Complete)
+- schema design
+- ingest pipelines
 - analysis views
-- GeoPackage expansion
-- R analysis scripts
+- gradients
+- QC framework
+- GIS export
 
-Phase 4:
-- hydraulic gradients
-- flow direction analysis
-- hydro + temperature integration
+---
 
-Phase 5:
-- chemistry integration
-- isotope workflows
-- mixing analysis
+## Phase 4 (Current): System Validation & Integration
 
-Phase 6:
-- PHREEQC automation
-- spatial interpolation
+Focus:
+
+- resolve QC findings
+- validate data relationships
+- redesign GeoPackage as analysis product
+
+---
+
+## Phase 5: Hydrothermal Interpretation
+
+- integrate gradients, temperature, chemistry
+- identify flow regimes
+- map upflow/downflow zones
+
+---
+
+## Phase 6: Geochemical + Isotope Analysis
+
+- mixing models
+- recharge identification
+- isotope integration
+
+---
+
+## Phase 7: Modeling (PHREEQC)
+
+- speciation
+- saturation indices
+- inverse modeling
+
+---
+
+## Phase 8: Advanced Analytics
+
+- interpolation
 - anomaly detection
-- system interpretation
+- automated reporting
+- time-series trend analysis
+
+---
+
+# Strategic Direction
+
+The system has transitioned from:
+
+
+Data Collection → Data System → Analytical Engine
+
+Next phase:
+
+
+Analytical Engine → Scientific Interpretation
+
+---
+
+# Long-Term Objective
+
+Enable queries such as:
+
+> “What is the hydraulic, thermal, and chemical state of the system through space and time?”
 
 ---
 
 # Guiding Principles
 
-- maintain one database
-- preserve raw data integrity
-- use views for interpretation
-- use scripts for computation
-- use RMarkdown for reporting
-- export clean GIS products
-- ensure full reproducibility
+- preserve raw data integrity  
+- use views for interpretation  
+- use scripts for computation  
+- use QC as an analytical layer  
+- export only analysis-ready outputs  
+- maintain full reproducibility  
 
 ---
 
-# Final Objective
+# Final Note
 
-Enable queries such as:
+This system is now a **production-quality hydroinformatics platform**.
 
-“What is the hydraulic, thermal, and chemical state of any location through time?”
+Future work focuses on:
 
-and support:
-
-- hydrogeologic interpretation
-- geothermal system analysis
-- reproducible scientific outputs
-
----
-
-# Notes
-
-This roadmap evolves as:
-
-- new datasets are added
-- new views are created
-- analysis methods expand
-- modeling workflows mature
-
----
-
-# latest update 06/05/2026
-Achievements in Current Session
-
-
-Implemented end-to-end ingestion pipeline
-
-NDEP chemistry
-NDWR wells and water levels
-field sampling
-temperature loggers
-
-
-
-Refactored sample identity model
-
-switched uniqueness to external_sample_id
-removed invalid spatial/time deduplication
-
-
-
-Stabilized chemistry → sample linkage
-
-ensured 1:1 mapping via SOURCESAMPLEID
-
-
-
-Built deterministic view layer
-
-all analysis views now rebuilt every run (DROP + CREATE)
-resolved stale view issues
-
-
-
-Refactored hydraulic gradient computation
-
-spatial pairing in projected coordinates
-coord_key consistency enforced
-geometry generation stabilized
-
-
-
-Implemented QA/QC framework
-
-structured checks across all domains
-summary table + CSV outputs
-non-breaking validation design
-
-
-
-Built GeoPackage export system
-
-multi-layer GIS export
-resolved all view/export schema mismatches
-ensured spatial + attribute consistency
-
-Analysis Views (Current)
-The following views are now fully implemented and stable:
-
-vw_hydraulic_head
-vw_hydraulic_head_clean
-vw_water_level_latest
-vw_water_level_daily_best
-vw_wells_gis
-vw_locations_gis
-
-Design Update
-All views are:
-rebuilt every pipeline run
-explicitly define required columns
-act as contracts for downstream use
-
-Hydraulic Gradient System (New)
-Status: ✅ Implemented
-Hydraulic gradients are now computed and stored as a derived dataset.
-Features
-
-spatial pairing of wells using projected coordinates
-distance-based filtering
-gradient magnitude and direction calculation
-vector geometry output (for GIS)
-
-Output
-
-Hydraulic_Gradients table
-vw_hydraulic_gradients view
-GeoPackage export layer
-
-QA/QC System (New)
-Status: ✅ Implemented
-A comprehensive QC framework now validates:
-
-sample completeness
-field parameter coverage
-chemistry integrity
-sensor data quality
-hydrologic consistency
-
-Output
-
-QC_Summary table (pipeline-generated)
-CSV reports in qc_reports/
-
-Design Principle
-QC is:
-
-non-destructive
-reproducible
-independent of ingest
-
-# ============================================================
-# Latest Update — 06/05/2026
-# Major System Milestone Achieved ✅
-# ============================================================
-
-## 🚀 Achievements in Current Session
-
-This session completed the transition from a data ingestion project to a fully operational hydroinformatics system.
-
----
-
-### ✅ End-to-End Pipeline Stabilized
-
-The system now successfully executes:
-
-- ingestion → database → views → analysis → QC → GIS export
-
-All components are:
-
-- deterministic
-- reproducible
-- internally consistent
-
----
-
-### ✅ Hydraulic Gradient System (Complete)
-
-Status: ✅ Fully implemented
-
-Capabilities:
-
-- spatial pairing of wells using projected coordinates (UTM)
-- distance-based filtering to prevent combinatorial explosion
-- gradient magnitude calculation (Δh / distance)
-- flow direction (azimuth in degrees)
-- classification into low / moderate / high gradients
-
-Key Outputs:
-
-- `Hydraulic_Gradients` (materialized table)
-- `vw_hydraulic_gradients` (view)
-- GeoPackage line layer
-
-Design Improvements:
-
-- stable coordinate system (EPSG:32611)
-- efficient filtering prior to geometry generation
-- scalable to large datasets (>600k pairs handled)
-
----
-
-### ✅ Geometry & GIS Export System (Major Breakthrough)
-
-Status: ✅ Fully operational
-
-Resolved complex issues:
-
-- WKB vs EWKB incompatibility
-- SQLite geometry storage limitations
-- `sf` parsing failures
-- GeoPackage write constraints for large datasets
-
-Final Design Pattern:
-
-- geometry stored in database (non-authoritative)
-- geometry reconstructed or validated during export
-- GeoPackage outputs always valid and GIS-ready
-
-Enhancements:
-
-- gradient layer filtering (distance + magnitude)
-- export row cap (100k features) for performance
-- coordinate extraction from vector geometry
-
----
-
-### ✅ QA/QC Framework (Operational)
-
-Status: ✅ Implemented
-
-Checks include:
-
-- missing spatial coordinates
-- orphaned records
-- gradient outliers
-- temperature anomalies
-- invalid chemistry values
-- duplicate samples
-
-Outputs:
-
-- database summary table (`QC_Summary`)
-- CSV reports in `output/qc/`
-
-Design philosophy:
-
-- non-destructive
-- transparent
-- reproducible
-
----
-
-### ✅ Chemistry System Expansion
-
-Status: ✅ Stable
-
-New capabilities:
-
-- unified chemistry via `vw_sample_master`
-- major ions extraction (`vw_major_ions`)
-- isotope GIS layer (`vw_isotopes_gis`)
-
-Supports:
-
-- spatial visualization
-- future mixing analysis
-- geochemical modeling
-
----
-
-### ✅ Deterministic View Layer (Critical Upgrade)
-
-All views now:
-
-- are rebuilt every run (`DROP + CREATE`)
-- act as schema contracts
-- guarantee reproducibility
-
-Eliminates:
-
-- stale views
-- schema drift
-- inconsistent downstream analysis
-
----
-
-### ✅ GeoPackage Export (Production Ready)
-
-Location:
-output/geopackage/hydro_data.gpkg
-
-Now includes:
-
-Core:
-- locations
-- wells
-
-Hydrologic:
-- hydraulic_head_clean
-- water_level_latest
-- hydraulic_gradients
-
-Thermal:
-- temperature_timeseries
-
-Chemistry:
-- samples
-- major_ions
-- isotopes
-- sample_flux
-
-Integrated:
-- temp_flow
-- samples_flow
-
-Design:
-
-- GIS-ready
-- filtered and interpretable
-- distinct from raw data storage
-
----
-
-# 🔮 Next Development Phases
-
----
-
-## Phase 4 (Now Starting): System Integration & Flow Interpretation
-
-Focus:
-
-- gradient vector visualization
-- spatial interpolation of hydraulic head
-- delineation of flow systems
-- linkage between groundwater flow and surface discharge
-
-Planned Work:
-
-- flow direction field mapping
-- gradient magnitude surfaces
-- spatial clustering of flow regimes
-
----
-
-## Phase 5: Hydrothermal Interpretation (Chemistry + Isotopes)
-
-Focus:
-
-- δ18O / δD analysis
-- mixing models
-- recharge source identification
-
-Planned:
-
-- meteoric water line comparisons
-- mixing endmember models
-- isotope–temperature coupling
-
----
-
-## Phase 6: Thermal–Hydrologic Coupling
-
-Focus:
-
-- integration of temperature + gradients
-- identification of upflow/downflow zones
-- detection of thermal anomalies
-
----
-
-## Phase 7: Geochemical Modeling (PHREEQC)
-
-Planned capabilities:
-
-- speciation modeling
-- saturation indices
-- geothermometry
-- inverse modeling
-
-Future outputs:
-
-- `Model_Results` table
-- GIS-ready geochemical layers
-
----
-
-## Phase 8: Advanced Analysis & Automation
-
-- spatial interpolation (kriging, IDW)
-- anomaly detection (thermal + chemical + hydraulic)
-- time-series trend analysis
-- automated report generation
-
----
-
-# 🎯 Current System State
-
-You now have a fully operational platform capable of answering:
-
-> “What is the hydraulic, thermal, and chemical state of the system in space and time?”
-
----
-
-# 💡 Strategic Insight
-
-This project has successfully transitioned from:
-
-Data Collection → Data System → Analytical Engine
-
-The system is now ready for:
-
-- scientific interpretation
-- publication-quality outputs
-- decision-support applications
-
----
-
-# 🟢 Status Summary
-
-| Component | Status |
-|----------|-------|
-| Ingestion | ✅ Complete |
-| Database Design | ✅ Stable |
-| Views Layer | ✅ Deterministic |
-| Gradients | ✅ Implemented |
-| QC | ✅ Operational |
-| GIS Export | ✅ Production-ready |
-| Interpretation | 🚀 Beginning |
-
----
-
-# 🚀 Final Note
-
-This is now a **real, extensible hydrogeologic platform**.
-
-Future work will focus on:
-interpretation, not infrastructure.
+- resolving data limitations
+- improving integration across systems
+- generating scientific insight

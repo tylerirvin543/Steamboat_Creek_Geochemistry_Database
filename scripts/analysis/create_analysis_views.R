@@ -290,8 +290,9 @@ WHERE parameter_code = '60'
   
   message("✅ Derived analysis ready")
   
+  
   # -------------------------------------------------
-  # 6. GIS OUTPUTS
+  # 7. GIS OUTPUTS
   # -------------------------------------------------
   message("\n[GIS]")
   
