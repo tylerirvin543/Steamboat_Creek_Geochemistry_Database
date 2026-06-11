@@ -23,7 +23,7 @@ library(ggplot2)
 library(dplyr)
 library(plotly)
 
-temp_path <- "docs/data/temp_sample.csv"
+temp_path <- "../docs/data/temp_sample.csv"
 
 if (!file.exists(temp_path)) {
   
@@ -74,7 +74,7 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 
-path <- "docs/data/temp_sample.csv"
+path <- "../docs/data/temp_sample.csv"
 
 if (!file.exists(path)) {
   
@@ -112,7 +112,7 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 
-path <- "docs/data/temp_sample.csv"
+path <- "../docs/data/temp_sample.csv"
 
 if (!file.exists(path)) {
   
@@ -149,7 +149,7 @@ These differences reflect spatial heterogeneity in the hydrothermal system, pote
 library(leaflet)
 library(readr)
 
-path <- "docs/data/well_sample.csv"
+path <- "../docs/data/well_sample.csv"
 
 if (!file.exists(path)) {
   

@@ -102,7 +102,7 @@ library(readr)
 library(ggplot2)
 library(dplyr)
 
-source_path <- "docs/data/source_summary.csv"
+source_path <- "../docs/data/source_summary.csv"
 
 if (!file.exists(source_path)) {
   
@@ -145,7 +145,7 @@ library(lubridate)
 library(ggplot2)
 library(plotly)
 
-path <- "docs/data/ingest_log.csv"
+path <- "../docs/data/ingest_log.csv"
 
 if (!file.exists(path)) {
   cat("Ingestion history will appear after pipeline runs.")
@@ -185,7 +185,7 @@ A defining characteristic of the system is the coexistence of continuous and dis
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 if (file.exists("docs/data/table_counts.csv")) {
   
-  table_counts <- read_csv("docs/data/table_counts.csv", show_col_types = FALSE)
+  table_counts <- read_csv("../docs/data/table_counts.csv", show_col_types = FALSE)
   
   summary_df <- table_counts %>%
     mutate(type = case_when(
@@ -223,7 +223,7 @@ Understanding when data are collected is critical for interpreting system dynami
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 if (file.exists("docs/data/temp_sample.csv")) {
   
-  temp <- read_csv("docs/data/temp_sample.csv", show_col_types = FALSE) %>%
+  temp <- read_csv("../docs/data/temp_sample.csv", show_col_types = FALSE) %>%
     mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01")) %>%
     filter(!is.na(timestamp))
   
@@ -254,7 +254,7 @@ Spatial distribution determines how well the system is observed across the hydro
 ```{r echo=FALSE, message=FALSE, warning=FALSE}
 library(leaflet)
 
-path <- "docs/data/well_sample.csv"
+path <- "../docs/data/well_sample.csv"
 
 if (!file.exists(path)) {
   
