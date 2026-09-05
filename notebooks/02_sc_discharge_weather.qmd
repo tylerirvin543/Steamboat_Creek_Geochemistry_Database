@@ -1,0 +1,165 @@
+---
+title: "Specific Conductance vs. Discharge and Weather"
+subtitle: "A growing, re-runnable comparison of Steamboat Creek SC against USGS discharge and regional precipitation"
+date: today
+format:
+  html:
+    code-fold: show
+    toc: true
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose
+
+This notebook is deliberately separate from
+`01_conductivity_temporal_structure.qmd` (which characterizes SC's
+internal temporal structure) and is meant to **grow** as more discharge
+and weather data accumulate: re-running it against the live database is
+how the comparison grows, rather than this being a one-off static figure.
+It brings together three sources that, until now, had never been joined
+in this project:
+
+- `vw_sc_discharge_daily` — daily-mean specific conductance per logger
+  (real, from the active `SBRR`/`SBGG` deployment).
+- `vw_usgs_discharge` — continuous USGS discharge (currently **not yet
+  populated** with live data — see status note below).
+- `vw_weather_metric` — NOAA precipitation/temperature, unit-normalized
+  (real, from the NOAA station exports in `data/raw/noaa/`).
+
+::: {.callout-warning}
+The NOAA stations ingested so far (Reno Airport, Galena, a Rhodes-Road-area
+COOP gauge) are **regional**, not on-site at Steamboat Hills — treat any
+precipitation comparison here as regional context, not a local
+water-balance input, until an on-site rain gauge exists.
+:::
+
+```{r setup}
+#| message: false
+library(knitr)
+opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+```
+
+```{r connect}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(ggplot2)
+library(lubridate)
+
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("database", "geochem_demo.sqlite")
+con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
+```
+
+## Load the three sources
+
+```{r load}
+sc_daily <- dbGetQuery(con, "SELECT * FROM vw_sc_discharge_daily") |>
+  mutate(date = as.Date(date))
+
+discharge_daily <- dbGetQuery(con, "
+  SELECT date(datetime) AS date, station_id, AVG(discharge_m3_s) AS discharge_m3_s
+  FROM vw_usgs_discharge
+  GROUP BY date(datetime), station_id
+") |>
+  mutate(date = as.Date(date))
+
+precip_daily <- dbGetQuery(con, "
+  SELECT date, station_id, value_metric AS precip_mm
+  FROM vw_weather_metric
+  WHERE parameter = 'PRCP'
+") |>
+  mutate(date = as.Date(date))
+
+dbDisconnect(con)
+
+message(nrow(sc_daily), " SC-daily rows, ", nrow(discharge_daily),
+        " discharge-daily rows, ", nrow(precip_daily), " precip-daily rows loaded.")
+```
+
+::: {.callout-note}
+As of this run, `discharge_daily` has **`r nrow(discharge_daily)`** rows —
+`ingest_usgs.R` has not yet been pointed at a real downloaded discharge
+series for this database. The plot/correlation below runs the same either
+way and will populate automatically once that ingest happens; nothing
+here is hard-coded to "no discharge exists".
+:::
+
+## SC and precipitation over time
+
+```{r sc-precip-plot}
+#| fig-cap: "Daily-mean specific conductance (by logger) and regional daily precipitation"
+precip_total <- precip_daily |>
+  group_by(date) |>
+  summarise(precip_mm = sum(precip_mm, na.rm = TRUE), .groups = "drop")
+
+ggplot() +
+  geom_col(data = precip_total, aes(x = date, y = precip_mm * 3), fill = "steelblue", alpha = 0.4) +
+  geom_line(data = sc_daily, aes(x = date, y = sc_25c_mean, color = external_station_code)) +
+  labs(
+    x = NULL, y = "Specific conductance @ 25C (uS/cm)\n(blue bars = regional precip mm, scaled x3 for visibility)",
+    color = "Logger"
+  ) +
+  theme_minimal()
+```
+
+## Overlap check and lagged correlation
+
+A same-day correlation is the wrong question for a dilution/response
+signal — precipitation response in a creek's SC is not necessarily
+instantaneous. This computes the cross-correlation between total daily
+regional precipitation and each logger's daily-mean SC across a range of
+lags, but only if there's enough temporally-overlapping record to make
+that a meaningful exercise rather than noise on a handful of days.
+
+```{r overlap-check}
+overlap_days <- sc_daily |>
+  distinct(date) |>
+  inner_join(precip_total, by = "date") |>
+  nrow()
+
+message("Days with both SC and regional precipitation data: ", overlap_days)
+
+min_overlap_for_ccf <- 14
+```
+
+```{r ccf, eval=overlap_days >= min_overlap_for_ccf}
+#| fig-cap: "Cross-correlation: daily precipitation vs. daily-mean SC, by logger"
+joined <- sc_daily |>
+  select(date, external_station_code, sc_25c_mean) |>
+  inner_join(precip_total, by = "date") |>
+  arrange(date)
+
+for (site in unique(joined$external_station_code)) {
+  site_df <- joined |> filter(external_station_code == site)
+  ccf(site_df$precip_mm, site_df$sc_25c_mean, na.action = na.pass,
+      main = paste("Precip -> SC cross-correlation —", site))
+}
+```
+
+```{r ccf-skip, eval=overlap_days < min_overlap_for_ccf}
+message(
+  "Only ", overlap_days, " overlapping day(s) between SC and regional ",
+  "precipitation records (need >= ", min_overlap_for_ccf, ") -- skipping ",
+  "the cross-correlation as not yet meaningful. This will resolve itself ",
+  "as more concurrent record accumulates; no code change needed."
+)
+```
+
+## Status and next steps
+
+- SC-vs-discharge is architecturally ready (`vw_sc_discharge_daily` joins
+  cleanly to `vw_usgs_discharge` on date) but has **no live discharge
+  data yet** to actually compare against — run `ingest_usgs.R` against a
+  real downloaded discharge series to populate this.
+- SC-vs-precipitation has real data on both sides but limited temporal
+  overlap so far; the cross-correlation above will strengthen as the
+  logger deployment continues and/or an on-site rain gauge is added.
+- Temperature-logger-vs-SC correlation (springs/wells vs. creek
+  conductivity, at physically distinct sites) is intentionally **not**
+  in this notebook — see `notebooks/03_temperature_sc_correlation.qmd`.

@@ -1,0 +1,154 @@
+---
+title: "Photo-Location Workflow"
+subtitle: "How field photos become registered Locations and (optionally) field observations, and what stays uncertain along the way"
+date: today
+format:
+  html:
+    code-fold: show
+    toc: true
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose
+
+`scripts/ingest/ingest_image_locations.R` turns a folder of field photos
+into registered `Locations` rows using EXIF GPS metadata, via `exiftool`.
+This notebook is the documentation that script's header comments always
+pointed to but didn't yet exist: **why** each step works the way it does,
+what's assumed, and — per an explicit design goal — where uncertainty is
+recorded rather than silently discarded.
+
+## Two deliberately separate steps
+
+```{mermaid}
+flowchart LR
+  A["Photo dropped in\ndata/raw/images/image_drop/"] --> B["Step 1 (automatic)\nexiftool extracts GPS lat/lon/alt\n+ capture time + GPS accuracy"]
+  B --> C["Photo_Location_Candidates\n(raw, append-only, keyed by filename)"]
+  C --> D{"Row present in\nimage_location_map.csv?"}
+  D -- "no" --> E["Sits in Candidates only --\nno Locations row yet"]
+  D -- "yes, new code" --> F["Register new Location\n(coordinate_source = 'photo_gps')"]
+  D -- "yes, existing code" --> G["Compare to registered coords --\nlog to Photo_Location_QC,\nNEVER overwrite"]
+  D -- "+ observation_note" --> H["Log Field_Observations row\n(qualitative note, optional sample link)"]
+```
+
+**Step 1 is automatic and never touches `Locations`.** A photo's GPS tag
+is a fact about the photo, not a judgment about which named site it
+shows — extracting it requires no human input, so it always runs.
+
+**Step 2 requires a human decision, recorded in
+`data/raw/images/image_location_map.csv`, and is the only thing that ever
+creates or compares against a `Locations` row.** A photo cannot know
+whether it depicts a spring, a seep, or a well, and cannot know that
+"this GPS fix" and "SBF_0001" are the same thing — those are always
+supplied by whoever fills in the mapping CSV, never inferred.
+
+## Why an existing site's coordinates are never overwritten
+
+If a mapped filename's `external_station_code` already exists in
+`Locations`, the photo's GPS coordinate is **compared**, not written —
+logged to `Photo_Location_QC` with a haversine distance to the registered
+coordinate, and a warning raised if that distance exceeds 50 m.
+
+That threshold is a deliberately loose "something is probably wrong"
+trigger, not a precision claim. Typical smartphone GPS horizontal error
+is commonly cited around 5-15 m under open sky, and can be considerably
+worse under tree canopy or near canyon walls — both common at this site.
+50 m is well outside that normal noise floor, so a flag at that distance
+is very unlikely to be a false alarm from ordinary GPS jitter.
+
+::: {.callout-note collapse="true"}
+### Worked example: the SBF_0001 / IMG_4571 case (2026-09-05)
+
+Before this workflow existed, a photo (`IMG_4571.HEIC`) intended to
+register a new site (`SBF_0002`) turned out to have GPS coordinates
+identical, to many decimal places, to the *already-registered*
+`SBF_0001` — almost certainly the same photo used to originally register
+that site, not a distinct location. That was caught by a manual check at
+the time. `Photo_Location_QC`'s comparison step (with the 50 m threshold
+above) is exactly what would have caught this automatically, the moment
+someone tried to map that filename to a *different* code than the one it
+actually matches.
+:::
+
+## Coordinate uncertainty is recorded, not discarded
+
+A phone-photo GPS fix and a professionally surveyed point are not
+equally precise, but until this addition, `Locations` had no way to say
+which was which. Two columns now carry that information for **every**
+location, not just photo-derived ones, so any future consumer (e.g. the
+planned potentiometric-surface interpolation, or a simple nearest-station
+join) can check it:
+
+- `coordinate_source` — e.g. `'photo_gps'`, or `NULL` for legacy/unknown-
+  provenance rows (not backfilled to `'surveyed'` — silence here means
+  "we don't actually know," which is more honest than guessing).
+- `coordinate_uncertainty_m` — for `photo_gps` rows, the EXIF
+  `GPSHPositioningError` tag when the device recorded one; otherwise a
+  documented default of
+  **`r knitr::inline_expr("DEFAULT_PHOTO_GPS_UNCERTAINTY_M")`** — 15 m —
+  chosen as a conservative mid-point of the typical smartphone accuracy
+  range cited above, not a measured value for any specific photo.
+
+```{r constant-check}
+#| echo: false
+#| message: false
+# Confirms the documented default above actually matches the constant
+# used in ingest_image_locations.R, so this notebook can't silently drift
+# out of sync with the code.
+source(file.path("..", "scripts", "ingest", "ingest_image_locations.R"))
+cat("DEFAULT_PHOTO_GPS_UNCERTAINTY_M =", DEFAULT_PHOTO_GPS_UNCERTAINTY_M, "meters\n")
+```
+
+**This is intentionally descriptive only, for now.** Recording
+uncertainty is the first step; actually *using* it — e.g. weighting an
+IDW interpolation by `1 / coordinate_uncertainty_m^2`, or excluding
+low-confidence points above some threshold from a potentiometric surface
+— is real additional design work that belongs with that interpolation
+build itself (still design-only, per the plan in the 2026-09-05 project
+memory), not invented ad hoc here. Writing the connection down here means
+it isn't lost by the time that build happens.
+
+## Sampling/observation linkage
+
+A photo is often taken *because* something was sampled or observed, not
+just to document a location. `image_location_map.csv` supports two
+optional columns for this:
+
+- `observation_note` — free text; when present and non-blank, a
+  `Field_Observations` row is logged (qualitative, timestamped note tied
+  to the resolved `location_id`).
+- `linked_external_sample_id` — when present, resolves to a `sample_id`
+  in `Samples` (via `external_sample_id`), so the note is tied to a
+  specific sampling event, not just a place.
+
+`Field_Observations` is deliberately separate from `Field_Measurements`,
+which requires a numeric `value` — a note like "spring flowing, no
+sample taken" or "new fumarole vent, sulfur smell" has nowhere sensible
+to go in a numeric-measurement table.
+
+## Current status
+
+```{r status}
+#| message: false
+library(DBI); library(RSQLite); library(dplyr)
+db_path <- file.path("..", "database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_demo.sqlite")
+con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
+
+cat("Photos with extracted GPS:", dbGetQuery(con, "SELECT COUNT(*) n FROM Photo_Location_Candidates")$n, "\n")
+cat("Locations registered from photo GPS:",
+    dbGetQuery(con, "SELECT COUNT(*) n FROM Locations WHERE coordinate_source = 'photo_gps'")$n, "\n")
+cat("Photo-vs-registered QC comparisons logged:", dbGetQuery(con, "SELECT COUNT(*) n FROM Photo_Location_QC")$n, "\n")
+cat("Field observations logged:", dbGetQuery(con, "SELECT COUNT(*) n FROM Field_Observations")$n, "\n")
+
+dbDisconnect(con)
+```
+
+As of this run, no real photos have been dropped into `image_drop/` yet —
+all counts above are expected to be zero until that happens. Re-run this
+notebook after a real batch of field photos and a filled-in
+`image_location_map.csv` to see it populate.

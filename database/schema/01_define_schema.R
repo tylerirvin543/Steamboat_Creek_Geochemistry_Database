@@ -103,6 +103,31 @@ CREATE TABLE IF NOT EXISTS Locations (
 );
 ")
 
+# ------------------------------------------------------------
+# MIGRATION: Locations.coord_key
+#
+# coord_key is defined in the CREATE TABLE above, but CREATE TABLE IF
+# NOT EXISTS never adds columns to an already-existing table -- any
+# operational database created before this column was added to the
+# schema silently never got it, even though every view/ingest script
+# that references Locations.coord_key (create_gis_views.R,
+# create_analysis_views.R, ingest_field.R, ingest_ndwr.R, ...) assumes
+# it exists. This block is a no-op once the column is present, and
+# backfills it from lat/lon (matching the convention used everywhere
+# else in the codebase: paste0(latitude, "_", longitude)) for any
+# database that predates this fix.
+# ------------------------------------------------------------
+loc_cols <- dbListFields(con, "Locations")
+if (!"coord_key" %in% loc_cols) {
+  message("[MIGRATION] Locations.coord_key missing -- adding and backfilling from lat/lon.")
+  dbExecute(con, "ALTER TABLE Locations ADD COLUMN coord_key TEXT")
+  dbExecute(con, "
+    UPDATE Locations
+    SET coord_key = latitude || '_' || longitude
+    WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+  ")
+}
+
 dbExecute(con, "
 CREATE TABLE IF NOT EXISTS Sampling_Events (
   event_id INTEGER PRIMARY KEY,

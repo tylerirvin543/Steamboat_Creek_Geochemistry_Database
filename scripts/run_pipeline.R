@@ -64,7 +64,7 @@ RUN_INGEST <- list(
   lab    = TRUE,
   isotope  = TRUE,
   flux   = FALSE,
-  usgs   = TRUE
+  usgs   = TRUE, usgs_historic_chem = FALSE, noaa_weather = TRUE, image_locations = TRUE, ndep_prr = FALSE
 )
 
 # ============================
@@ -92,6 +92,8 @@ message("\n[SETUP] Loading schema + helpers")
 
 source("database/schema/01_define_schema.R")
 source("database/schema/02_conductivity_schema.R")
+source("database/schema/03_weather_schema.R")
+source("database/schema/04_photo_location_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -145,6 +147,8 @@ if (MODE == "DEMO") {
   
   source("database/schema/01_define_schema.R")
 source("database/schema/02_conductivity_schema.R")
+source("database/schema/03_weather_schema.R")
+source("database/schema/04_photo_location_schema.R")
 }
 
 # ============================================================
@@ -223,6 +227,31 @@ run_step(RUN_INGEST$flux, "FLUX", {
 run_step(RUN_INGEST$usgs, "USGS", {
   source("scripts/ingest/ingest_usgs.R")
   ingest_usgs(con)
+})
+
+run_step(RUN_INGEST$usgs_historic_chem, "USGS HISTORIC CHEMISTRY", {
+  source("scripts/ingest/ingest_usgs_historic_chemistry.R")
+  ingest_usgs_historic_chemistry(con)
+})
+
+run_step(RUN_INGEST$noaa_weather, "NOAA WEATHER", {
+  source("scripts/ingest/ingest_noaa_weather.R")
+  ingest_noaa_weather(con)
+})
+
+run_step(RUN_INGEST$image_locations, "IMAGE LOCATIONS (EXIF GPS)", {
+  source("scripts/ingest/ingest_image_locations.R")
+  ingest_image_locations(con)
+})
+
+run_step(RUN_INGEST$ndep_prr, "NDEP PUBLIC RECORDS REQUEST (PILOT)", {
+  # NOTE: this only stages rows into Staging_NDEP_WQ. Promoting staged
+  # rows into Samples/Lab_Analyses (once a station has a confirmed
+  # location in data/raw/ndep/PRR/staged_ndep_location_map.csv) is a
+  # deliberately separate, manual step -- see
+  # scripts/ingest/promote_staged_ndep.R -- not run automatically here.
+  source("scripts/ingest/ingest_ndep_prr.R")
+  ingest_ndep_prr(con)
 })
 
 # ============================================================

@@ -182,6 +182,12 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   
   message("\n[EXPORT] Processing: hydraulic_gradients")
   
+  if (!("Hydraulic_Gradients" %in% dbListTables(con))) {
+    message("[EXPORT] Hydraulic_Gradients table does not exist yet (run the gradient-calculation stage of run_pipeline.R first) -- skipping.")
+    message("\n✅ GeoPackage export complete: ", gpkg_path)
+    return()
+  }
+
   grad_df <- dbGetQuery(con, "SELECT * FROM Hydraulic_Gradients")
   
   if (nrow(grad_df) == 0) {

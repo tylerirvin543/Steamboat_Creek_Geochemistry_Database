@@ -1,0 +1,160 @@
+---
+title: "Temperature (springs/wells) vs. Specific Conductance (creek) Correlation"
+subtitle: "Exploratory, pairwise lagged cross-correlation across spatially distinct monitoring sites"
+date: today
+format:
+  html:
+    code-fold: show
+    toc: true
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose and scope
+
+This notebook correlates two **independently-collected** time series —
+temperature at spring/well loggers and specific conductance at the two
+creek conductivity loggers — to look for a relationship between thermal
+and conductivity signals at spatially distinct points. This is
+deliberately **not** a structural join into one table (unlike
+`02_sc_discharge_weather.qmd`'s SC/discharge/precipitation view) — it's a
+correlation analysis between two datasets that were never designed to be
+merged.
+
+::: {.callout-warning}
+This is exploratory by construction: every temperature-logger site is
+compared against every conductivity-logger site, which means several
+pairwise comparisons are being run at once. No individual correlation
+below should be read as "significant" without correcting for that — the
+purpose here is to see which pairs look worth a closer, targeted look,
+not to draw a conclusion from this notebook alone. One pair (`SBRR`) has
+**both** a temperature logger and a conductivity logger at the same
+physical location, which is the most directly interpretable comparison
+in this set — treat cross-site pairs more cautiously than that one.
+
+Also note: both temperature and specific conductance show a diurnal
+cycle (see `01_conductivity_temporal_structure.qmd`). A raw
+cross-correlation can pick up shared diurnal timing rather than a real
+hydrologic link between the two signals — this is not addressed by
+detrending below, so a strong correlation at short lags should be
+interpreted with that in mind.
+:::
+
+```{r setup}
+#| message: false
+library(knitr)
+opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+```
+
+```{r connect}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(ggplot2)
+library(tidyr)
+
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("database", "geochem_demo.sqlite")
+con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
+```
+
+## Load daily-mean series
+
+```{r load}
+temp_daily <- dbGetQuery(con, "
+  SELECT
+    l.external_station_code AS site,
+    date(datetime(t.timestamp, 'unixepoch')) AS date,
+    AVG(t.temperature) AS temp_c_mean
+  FROM Temperature_Observations t
+  JOIN Temperature_Loggers tl ON t.logger_id = tl.logger_id
+  LEFT JOIN Locations l ON tl.location_id = l.location_id
+  WHERE l.external_station_code IS NOT NULL
+  GROUP BY l.external_station_code, date(datetime(t.timestamp, 'unixepoch'))
+")
+
+sc_daily <- dbGetQuery(con, "SELECT date, external_station_code AS site, sc_25c_mean FROM vw_sc_discharge_daily")
+
+dbDisconnect(con)
+
+temp_daily$date <- as.Date(temp_daily$date)
+sc_daily$date <- as.Date(sc_daily$date)
+
+temp_sites <- sort(unique(temp_daily$site))
+sc_sites <- sort(unique(sc_daily$site))
+
+message(length(temp_sites), " temperature site(s): ", paste(temp_sites, collapse = ", "))
+message(length(sc_sites), " conductivity site(s): ", paste(sc_sites, collapse = ", "))
+```
+
+## Pairwise lagged cross-correlation
+
+```{r pairwise-ccf}
+#| fig-cap: "Cross-correlation, temperature site vs. conductivity site (only pairs with >= 14 overlapping days shown)"
+min_overlap_days <- 14
+pair_summary <- list()
+
+for (t_site in temp_sites) {
+  for (s_site in sc_sites) {
+
+    joined <- temp_daily |>
+      filter(site == t_site) |>
+      select(date, temp_c_mean) |>
+      inner_join(sc_daily |> filter(site == s_site) |> select(date, sc_25c_mean), by = "date") |>
+      arrange(date)
+
+    if (nrow(joined) < min_overlap_days) {
+      pair_summary[[length(pair_summary) + 1]] <- data.frame(
+        temp_site = t_site, sc_site = s_site, n_overlap_days = nrow(joined),
+        max_abs_ccf = NA_real_, lag_at_max = NA_integer_
+      )
+      next
+    }
+
+    cc <- ccf(joined$temp_c_mean, joined$sc_25c_mean, plot = FALSE, na.action = na.pass)
+    i_max <- which.max(abs(cc$acf))
+
+    plot(cc, main = paste0(t_site, " (temp) vs ", s_site, " (SC), n=", nrow(joined), " days",
+                            if (t_site == s_site) " [co-located]" else ""))
+
+    pair_summary[[length(pair_summary) + 1]] <- data.frame(
+      temp_site = t_site, sc_site = s_site, n_overlap_days = nrow(joined),
+      max_abs_ccf = round(cc$acf[i_max], 3), lag_at_max = cc$lag[i_max]
+    )
+  }
+}
+
+pair_summary <- do.call(rbind, pair_summary)
+```
+
+## Summary table
+
+```{r summary-table}
+pair_summary |>
+  arrange(desc(abs(max_abs_ccf)))
+```
+
+Read `lag_at_max` as days: a positive lag means temperature leads
+(predicts) specific conductance by that many days; negative means SC
+leads temperature. `max_abs_ccf` close to 0 or `NA` (insufficient
+overlap) means no usable relationship was found for that pair yet.
+
+## Status and next steps
+
+- This ran on `r nrow(temp_daily)` temperature-daily rows across
+  `r length(temp_sites)` site(s) and `r nrow(sc_daily)` SC-daily rows
+  across `r length(sc_sites)` site(s) — re-run as the logger deployment
+  continues to accumulate more overlapping record.
+- The `SBRR` pair (temperature logger + conductivity logger co-located)
+  is the one result here worth following up on directly if it shows a
+  notable correlation — everything else is a genuinely exploratory,
+  multiple-comparisons screen.
+- If a pair does look promising on repeated runs, the sensible next step
+  is a proper detrended/deseasonalized correlation (e.g. on STL
+  remainder components from `01_conductivity_temporal_structure.qmd`)
+  rather than the raw series used here, to rule out shared diurnal timing
+  as the explanation.

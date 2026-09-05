@@ -221,6 +221,30 @@ via external_sample_id
 *Flux measurements* (planned) discharge / flow measurements from springs
 and streams
 
+*USGS historic chemistry* (added 2026-09-05) WQP long-format exports;
+stored alongside live USGS discharge in the same `USGS_Timeseries`
+table, keyed by parameter code, so both are directly comparable
+
+*NOAA weather* (added 2026-09-05) precipitation/temperature exports;
+multiple source formats supported via format auto-detection, not
+filename convention
+
+*Field photos* (added 2026-09-05) EXIF GPS extraction via `exiftool`,
+paired with a human-confirmed filename-to-site mapping before any
+`Locations` row is created or compared
+
+*NDEP Public Records Request documents* (added 2026-09-05, pilot)
+PDF lab reports, parsed and staged for review -- distinct from the
+open-data NDEP Water Quality Portal source above. Staged rows are
+promoted into core chemistry tables only after a human confirms a
+location for that station in
+`data/raw/ndep/PRR/staged_ndep_location_map.csv`, via the separate
+manual step `scripts/ingest/promote_staged_ndep.R` -- as of this
+writing, 4 of 13 staged stations (Boyd Dom, Jeppson Dom, Rogers Well,
+Soccer Field) have been promoted this way, matched by exact name
+against NBMG's statewide "Geothermal_Wells" ArcGIS Open Data layer
+rather than guessed or digitized-from-topo-map coordinates
+
 ## How Users Interact with Raw Data
 
 Users do not manually insert data into the database. Instead, they:
@@ -579,6 +603,43 @@ The result is not just a database, but a **scalable hydrothermal
 modeling workflow** that can be extended to other geothermal systems and
 environmental datasets.
 
+**Concretely, versus a spreadsheet-per-campaign approach:**
+
+- Raw files are never mutated -- every ingest script reads from
+  `data/raw/` and only ever *appends* new rows, so re-running an ingest
+  after dropping in a new file is always safe (see "New data-drop
+  locations" below for exactly where each source goes).
+- Every source's provenance is queryable, not just remembered -- the
+  `Data_Sources` table and `source_id` foreign keys mean any row in the
+  database can be traced back to *which* source produced it (e.g. NDEP
+  open-data portal vs. a Public Records Request PDF are two distinct,
+  always-distinguishable sources, even though both ultimately populate
+  chemistry tables).
+- Every GIS/report output is regenerable from the database, not
+  hand-maintained -- `output/geopackage/hydro_data.gpkg` and the
+  pipeline report are produced fresh from current data every run, so
+  they can never silently drift out of sync with what's actually in
+  the database.
+- Ingest is incremental and idempotent by design (deduplication keyed
+  on natural identifiers -- `(logger_id, timestamp)`,
+  `(station_id, date, parameter)`, file content hashes, etc.) --
+  running the same ingest twice, or with old files still present,
+  never double-counts or corrupts existing data.
+
+## New data-drop locations
+
+As of 2026-09-05, the raw-data folders below also accept these newer
+source types (each with its own idempotent ingest script, wired into
+`run_pipeline.R`'s `RUN_INGEST` flags):
+
+| Source | Drop location | Ingest script |
+|---|---|---|
+| USGS historic grab-sample chemistry (WQP export) | `data/raw/usgs/fullphyschem_station_download/*.csv` | `ingest_usgs_historic_chemistry.R` |
+| NOAA weather (precipitation/temperature) -- any of the formats seen so far | `data/raw/noaa/*.csv` | `ingest_noaa_weather.R` |
+| Field photos (for EXIF GPS location extraction) | `data/raw/images/image_drop/*` (+ a human-maintained `data/raw/images/image_location_map.csv`) | `ingest_image_locations.R` |
+| NDEP Public Records Request documents | `data/raw/ndep/PRR/PPR_<date>/*.pdf` (new request = new dated sibling folder, never overwrite) | `ingest_ndep_prr.R` (pilot; stages to `Staging_NDEP_WQ` for review, does not write directly to core tables) |
+
+
 # Hydraulic Gradient System
 
 ## Status: ✅ Implemented
@@ -604,6 +665,53 @@ Hydraulic gradients are computed between wells using:
 - groundwater flow direction mapping  
 - identification of hydraulic highs/lows  
 - detection of hydrothermal upflow zones
+
+
+## Known limitation (as of 2026-09-05)
+
+The current implementation only connects **pairs of wells sampled at
+the same timestamp** with a straight line and `Δhead / distance` -- it
+does not do any spatial interpolation. With 3+ wells this produces a
+tangle of pairwise vectors anchored to whichever wells happened to be
+sampled together, not to a spatially consistent surface -- which is
+why past ArcGIS exports of this layer alone were hard to interpret as
+a coherent flow field. Treat this layer as a quick per-pair sanity
+check, not a substitute for a potentiometric surface (below).
+
+Separately, a schema-drift bug (`Locations.coord_key` missing from
+some already-created operational databases even though it's in the
+schema definition) was silently breaking several *other* GIS layers
+(`locations`, `vw_temperature_timeseries`, `vw_major_ions`,
+`vw_isotopes_gis`) -- `export_geopackage.R`'s per-layer `tryCatch`
+meant this failed quietly rather than crashing the export, so those
+layers may have been silently missing from earlier GeoPackage exports
+too. This has been fixed with an additive migration in
+`01_define_schema.R` (backfills `coord_key` from lat/lon on any
+database missing it); re-export the GeoPackage to pick up the
+previously-missing layers.
+
+## Planned: potentiometric surfaces
+
+A real potentiometric surface needs spatial interpolation over a grid,
+not pairwise lines. Planned design (not yet implemented):
+
+- **Inputs:** well hydraulic head time series (`vw_hydraulic_head_clean`,
+  already available), a boundary condition from creek elevation
+  (not yet in the database -- needs a DEM extract or surveyed points),
+  and ideally a DEM for context/masking (also not yet present).
+- **Method:** grid-based interpolation (IDW via `gstat`, or a
+  thin-plate spline) over a regular point grid, computed per sampling
+  timestamp rather than one static surface, since head *change* over
+  time is part of the scientific question.
+- **Storage:** a new `Potentiometric_Surface_Grid` table (x, y,
+  timestamp, interpolated_head, method, uncertainty) rather than a
+  raster file, so it stays queryable/versioned like everything else in
+  this database; exported to the GeoPackage as an additional layer
+  alongside (not replacing) `hydraulic_gradients`.
+- **Contaminant-transport link:** once a head surface exists, the same
+  interpolation machinery can produce a chloride surface to support
+  qualitative transport-direction mapping -- a distinct follow-up step,
+  not attempted alongside the head surface itself.
 
 ------------------------------------------------------------------------
 

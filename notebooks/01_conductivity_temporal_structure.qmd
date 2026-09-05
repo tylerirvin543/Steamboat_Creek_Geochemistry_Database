@@ -1,27 +1,128 @@
 ---
-title: "Conductivity Temporal Structure"
-subtitle: "Diurnal cycles, autocorrelation, and dominant frequencies at the two Steamboat Creek conductivity loggers"
+title: "Conductivity as a Chloride-Discharge Proxy: Temporal Structure, Calibration, and Sampling-Frequency Design"
+subtitle: "Overarching reference for the Steamboat Creek continuous-conductivity / chloride sampling-frequency workflow"
 date: today
 format:
   html:
     code-fold: show
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
 ---
 
-## Purpose
+## Purpose and scope
 
-This notebook runs **today**, on conductivity alone — it does not require
-paired chloride samples. It characterizes the temporal structure of the two
-HOBO conductivity loggers (`SBRR` upstream/control, `SBGG` downstream) so
-that later steps (chloride prediction, Monte Carlo sampling-frequency
-simulation) are built on an evidence-based understanding of the signal
-rather than assumptions.
+This notebook is the **living scientific reference** for the continuous-conductivity
+and chloride-sampling-frequency workstream at Steamboat Hills — it documents *why*
+each analysis is done, *what* the math is, and *where* the code that implements it
+lives, and it is intended to stay the entry point for this line of work as more
+data and methods (new logger deployments, real paired Cl samples, refined models)
+accumulate. It complements, but does not replace, the individual R scripts in
+`scripts/analysis/sampling_frequency/`, which remain the executable source of
+truth; this document narrates and runs representative pieces of them so the
+reasoning and the code stay in sync.
+
+Sections below run in dependency order:
+
+1. Scientific motivation (why continuous conductivity, why chloride, why sampling
+   frequency matters at all).
+2. Instrumentation and site roles, with the provenance of a metadata correction
+   that affects everything downstream.
+3. Raw EC $\rightarrow$ temperature-compensated specific conductance, and the
+   current state of field-calibration.
+4. Temporal structure of specific conductance alone (this section requires no
+   chloride data and is fully populated today).
+5. The conductivity $\rightarrow$ chloride predictive-model framework (currently
+   demonstrated on synthetic data pending temporal overlap with real samples).
+6. Monte Carlo sampling-frequency design (same caveat).
+7. Turning an error curve into an actionable sampling recommendation.
+8. Current status, known gaps, and a running changelog.
 
 ::: {.callout-warning}
-As of this notebook's first run, each logger has only ~2.5 weeks of record
-(mid-July–early August 2026). Diurnal-cycle and short-lag autocorrelation
-results are meaningful now; **weekly/monthly-frequency conclusions are not**
-— revisit this notebook as more months of data accumulate.
+As of this writing, each conductivity logger has only a few weeks of continuous
+record (deployed 2026-07-15), and the only chloride/isotope field samples
+collected so far (2026-05-01) **predate that deployment by roughly 2.5 months**.
+Sections 5–7 therefore run against synthetic self-test data, clearly labeled as
+such. Section 4 (temporal structure of conductivity alone) is real and current.
+Re-run this notebook once chloride samples exist that overlap the logger record.
 :::
+
+## Scientific motivation
+
+Steamboat Hills is a geothermal outflow system in which chloride behaves
+approximately conservatively (non-reactive, non-volatile) in the shallow outflow
+plume, so the classic approach — used by Michael Sorey in prior studies of this
+system — is to treat **chloride discharge**, i.e. the mass flux
+
+$$
+\Phi_{Cl} = \int_{t_0}^{t_1} C_{Cl}(t)\, Q(t)\, dt
+$$
+
+(concentration $C_{Cl}$ in mg/L $\equiv$ g/m$^3$, discharge $Q$ in m$^3$/s, so
+$\Phi_{Cl}$ has units of grams over the interval $[t_0, t_1]$), as a tracer for
+the total geothermal outflow reaching the surface stream network. A change in
+$\Phi_{Cl}$ following the Lower Sinter Terrace eruption is direct evidence of a
+change in the underlying hydrothermal discharge, independent of dilution effects
+that would otherwise obscure a pure-concentration or pure-discharge signal.
+
+Two practical problems follow directly from that framing:
+
+- **Chloride analyses are expensive and infrequent** (lab turnaround, sampling
+  effort), so $C_{Cl}(t)$ is only ever known at a sparse set of times.
+- **Specific conductance is cheap, continuous, and correlates with dissolved
+  ion content** (conductivity loggers record every 5 minutes), so it is a
+  natural *proxy* for $C_{Cl}(t)$ between chemistry samples — provided the
+  conductance-to-chloride relationship is characterized and its stability
+  over time is checked.
+
+This notebook's methodological goal is therefore not just "does conductivity
+track chloride" but the sharper, decision-relevant question the thesis poses:
+**what is the coarsest chemistry (chloride) sampling interval that still lets us
+reconstruct $\Phi_{Cl}$, or $C_{Cl}(t)$, within an error the PI considers
+acceptable?** Sections 5–7 build the machinery to answer that quantitatively
+rather than by convention (e.g. "monthly because that's typical").
+
+## Instrumentation, site roles, and data provenance
+
+Two HOBO/Onset "Full Range" EC loggers were deployed 2026-07-15 in Steamboat
+Creek to support this question:
+
+| Location code | Role | Serial | Rationale |
+|---|---|---|---|
+| `SBRR` | `upstream_control` | 22575724 | Co-located with the USGS gauge near Rhodes Road; represents background/upstream water quality, upstream of the dominant geothermal inflow. |
+| `SBGG` | `downstream` | 22575725 | Downstream of the outflow zone; expected to carry the geothermal Cl/EC signature. |
+
+::: {.callout-note collapse="true"}
+### Provenance note: role/serial correction (2026-09-05)
+
+The `SBRR`/`SBGG` logger-to-role assignment was originally guessed from
+coordinate proximity alone and had the two serials **swapped**: the logger
+originally labeled `SBRR` (upstream control) was reading 850–1300 $\mu$S/cm,
+which is far too high for background water and matches the expected
+downstream/near-outflow signature instead. The assignment was corrected in
+`data/raw/conductivity/conductivity_logger_deployments.csv` and re-ingested.
+This was a **metadata-only** fix — the already-ingested
+`Conductivity_Observations` rows are keyed by `logger_id`, not by location, so
+no observation rows needed to change, only which location/role each
+`logger_id` points to. After the fix, `SBRR` reads consistently lower than
+`SBGG` (means roughly 333 vs. 1069 $\mu$S/cm), which is now physically
+sensible for an upstream-control vs. downstream pairing.
+
+This correction matters for every downstream step in this document: any
+model, calibration, or figure that joins on `location_id`/`role` inherits the
+fix automatically (nothing in the modeling code hard-codes which physical
+serial is upstream — see the calibration check in the next section), but any
+*prior* interpretation of "SBRR" vs. "SBGG" behavior made before this date
+should be re-read with the roles reversed.
+:::
+
+The `Conductivity_Loggers` table (below) is the single source of truth for
+this mapping; everything else in this document resolves location and role
+through it rather than hard-coding a serial number or coordinate.
 
 ```{r setup}
 #| message: false
@@ -32,19 +133,106 @@ library(tidyr)
 library(ggplot2)
 library(lubridate)
 
-# Notebooks live directly under the project root (see notebooks/_quarto.yml),
-# so the database is one level up regardless of the caller's working directory.
-db_path <- file.path("..", "database", "geochem_operational.sqlite")
-if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_demo.sqlite")
-
-con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
+# All chunks in this notebook execute with the working directory pinned to
+# the project root, not to notebooks/. This matters because several sourced
+# scripts (e.g. 02_specific_conductance.R) themselves source() other helper
+# scripts using paths written relative to the project root -- the same
+# assumption run_pipeline.R makes -- so pinning root.dir here keeps every
+# path below identical to how these scripts are invoked from the pipeline.
+knitr::opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
 ```
 
-## Load conductivity observations
+```{r connect-db}
+#| message: false
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("database", "geochem_demo.sqlite")
 
-Excludes rows flagged `spike` or `field_visit_disturbance` by
-`scripts/qc/qc_conductivity_checks.R`; `gap_boundary`/`dropout` flags (if
-present) are kept but noted.
+con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
+
+dbGetQuery(con, "
+  SELECT cl.logger_id, cl.location_id, cl.role, cl.serial_number, l.external_station_code
+  FROM Conductivity_Loggers cl
+  LEFT JOIN Locations l ON cl.location_id = l.location_id
+")
+```
+
+## From raw EC to specific conductance: temperature compensation and calibration
+
+Raw electrical conductivity ($EC_{raw}$) is temperature-dependent, so it is
+converted to **specific conductance at 25$^\circ$C** ($SC_{25}$) before any
+comparison across time or between the two loggers. The linear
+temperature-compensation model (USGS Techniques and Methods 1-D3) is:
+
+$$
+SC_{25} = \frac{EC_{raw}}{1 + \beta\,(T - 25)}
+$$
+
+with reference temperature $\theta = 25^\circ C$ and compensation coefficient
+$\beta$ (USGS default $\beta = 0.0191\ ^\circ C^{-1}$). This is implemented at
+ingest time in `scripts/ingest/helpers/compute_specific_conductance.R`:
+
+```{r sc-formula-demo}
+source(file.path("scripts", "ingest", "helpers", "compute_specific_conductance.R"))
+
+# Reproduce the ingest-time formula directly, so the math and the code
+# shown here are provably the same function used to populate sc_25c.
+compute_specific_conductance
+```
+
+Because $\beta$ is an empirical property of the local water chemistry (ionic
+composition affects how conductivity responds to temperature), it should be
+periodically re-estimated against paired field conductivity checks rather than
+assumed to equal the USGS default indefinitely. `02_specific_conductance.R`
+does this by fitting
+
+$$
+EC_{field,i} = \frac{EC_{raw,i}}{1 + b\,(T_i - 25)} + \varepsilon_i
+$$
+
+by nonlinear least squares, where $(EC_{field,i}, EC_{raw,i}, T_i)$ is the
+$i$-th field check matched to the nearest logger observation within a time
+tolerance (default 15 min), and $b$ is estimated in place of the fixed
+default. The fit is only attempted with $\geq 5$ pairs; otherwise the USGS
+default is kept and reported as such (no silent extrapolation from too few
+points).
+
+**This step is location/role-agnostic by construction**: pairing is done
+purely by matching a field check's `location_id` to a logger's `location_id`
+(`scripts/analysis/sampling_frequency/02_specific_conductance.R`, `get_calibration_pairs()`),
+so the `SBRR`/`SBGG` role correction above required **no code change here** —
+it is picked up automatically through the corrected `Conductivity_Loggers`
+table. The check below runs the real function against the live database:
+
+```{r calibration-check}
+source(file.path("scripts", "analysis", "sampling_frequency", "02_specific_conductance.R"))
+
+pairs_now <- get_calibration_pairs(con)
+cat("Field-vs-logger calibration pairs currently available:", nrow(pairs_now), "\n")
+
+calib_result <- recalibrate_sc_coefficient(con)
+calib_result[c("coefficient", "n_pairs")]
+```
+
+There are currently 0 matched pairs, and the reason is the same temporal gap
+noted in the callout above: field conductivity was recorded at `SBRR` (241
+$\mu$S/cm, sample date 2026-05-01) and other locations, but no
+`Conductivity_Observations` exist yet for that date — logging only began
+2026-07-15. As a rough sanity check (not a calibration, since it is not a
+time-matched pair), 241 $\mu$S/cm at `SBRR` is the right order of magnitude
+relative to `SBRR`'s post-correction logger mean (~333 $\mu$S/cm), which is
+mildly reassuring about the corrected role assignment but is not a substitute
+for an actual paired check. **Action item:** collect at least 5 field
+conductivity checks at `SBRR`/`SBGG` while the loggers are running to enable a
+real recalibration.
+
+## Temporal structure of specific conductance
+
+This section requires no chloride data and is fully populated with real
+observations. The goal is to characterize the signal conductivity is
+expected to reconstruct chloride *from*, before any predictive model is built
+on top of it — diurnal cycling, autocorrelation persistence, and dominant
+frequencies all directly inform what chemistry-sampling intervals could
+plausibly be sufficient in Sections 5–7.
 
 ```{r load-data}
 obs <- dbGetQuery(con, "
@@ -69,6 +257,10 @@ dbDisconnect(con)
 n_flagged <- sum(!is.na(obs$qc_flag))
 message(nrow(obs), " total observations; ", n_flagged, " QC-flagged (spike/disturbance/gap).")
 
+# Excludes rows flagged 'spike' or 'field_visit_disturbance' by
+# scripts/qc/qc_conductivity_checks.R; 'gap_boundary'/'dropout' flags (if
+# present) are kept but noted, since they mark real data gaps rather than
+# untrustworthy values.
 obs_clean <- obs |> filter(is.na(qc_flag) | !(qc_flag %in% c("spike", "field_visit_disturbance")))
 
 obs_clean |>
@@ -81,7 +273,19 @@ obs_clean |>
   )
 ```
 
-## Diurnal cycle
+### Diurnal cycle
+
+Shallow stream conductivity commonly shows a 24-hour cycle driven by
+evapotranspiration and thermal loading modulating the mix of dilute surface
+water and higher-EC baseflow/geothermal inflow. We fit a first-harmonic
+(single sinusoid) regression at the 24-hour period to each logger:
+
+$$
+SC_{25}(t) = \alpha + \beta_1 \sin\!\left(\frac{2\pi t}{24}\right) + \beta_2 \cos\!\left(\frac{2\pi t}{24}\right) + \varepsilon(t)
+$$
+
+with $t$ in hours since the start of each logger's record. The
+amplitude of the cycle is $\sqrt{\beta_1^2 + \beta_2^2}$.
 
 ```{r diurnal}
 #| fig-cap: "Hour-of-day distribution of specific conductance, by logger"
@@ -98,16 +302,20 @@ obs_clean |>
 #| fig-cap: "24-hour harmonic fit to specific conductance, by logger"
 fit_harmonic <- function(df) {
   t_hours <- as.numeric(difftime(df$timestamp, min(df$timestamp), units = "hours"))
+  # sc_25c(t) = alpha + b1*sin(2*pi*t/24) + b2*cos(2*pi*t/24) + e
   fit <- lm(sc_25c ~ sin(2 * pi * t_hours / 24) + cos(2 * pi * t_hours / 24), data = df)
   df$fitted <- predict(fit, newdata = df)
+  attr(df, "amplitude") <- sqrt(sum(coef(fit)[-1]^2))
   df
 }
 
-obs_clean |>
+harmonic_fits <- obs_clean |>
   filter(!is.na(sc_25c)) |>
   group_by(external_station_code) |>
   group_modify(~fit_harmonic(.x)) |>
-  ungroup() |>
+  ungroup()
+
+harmonic_fits |>
   ggplot(aes(x = timestamp)) +
   geom_line(aes(y = sc_25c), alpha = 0.3) +
   geom_line(aes(y = fitted), color = "firebrick") +
@@ -117,7 +325,19 @@ obs_clean |>
   theme_minimal()
 ```
 
-## Autocorrelation structure
+### Autocorrelation structure
+
+The autocorrelation function (ACF) at lag $k$,
+
+$$
+\rho_k = \frac{\operatorname{Cov}\!\left(SC_{25}(t),\, SC_{25}(t-k)\right)}{\operatorname{Var}\!\left(SC_{25}(t)\right)},
+$$
+
+quantifies how far into the future a current reading remains informative.
+We look at it twice: at the logger's native ~5-minute cadence (short-lag
+persistence), and after resampling to each candidate chemistry-sampling
+interval (does a value from $k$ intervals ago still predict the current one
+at that coarser resolution?).
 
 ```{r acf-native}
 #| fig-cap: "ACF at native (~5-min) cadence, by logger"
@@ -153,7 +373,13 @@ for (site in unique(obs_clean$external_station_code)) {
 }
 ```
 
-## Spectral analysis
+### Spectral analysis
+
+The periodogram estimates the spectral density $\hat{S}(f)$ across
+frequencies $f$, decomposing the series into the strength of cyclical
+components at each period $1/f$; a peak at 24 hours would confirm the diurnal
+signal seen above and reveal any other dominant periods (e.g. a semi-diurnal
+component, or longer synoptic-scale cycles as record length grows).
 
 ```{r spectral}
 #| fig-cap: "Periodogram (dominant frequencies), by logger"
@@ -175,7 +401,19 @@ for (site in unique(obs_clean$external_station_code)) {
 }
 ```
 
-## Time-series decomposition
+### Time-series decomposition
+
+STL (Seasonal-Trend decomposition using Loess) additively decomposes the
+series into trend, (diurnal) seasonal, and remainder components,
+
+$$
+SC_{25}(t) = T(t) + S(t) + R(t),
+$$
+
+which separates a slow drift (e.g. seasonal baseflow change) from the fast
+diurnal cycle and from residual variability not explained by either — the
+remainder $R(t)$ is a useful working estimate of the "noise floor" that any
+chloride-prediction model built on $SC_{25}$ will ultimately be limited by.
 
 ```{r decomposition}
 #| fig-cap: "STL decomposition (trend / diurnal / remainder), by logger"
@@ -199,15 +437,203 @@ for (site in unique(obs_clean$external_station_code)) {
 }
 ```
 
-## Summary / next steps
+**Interpretation so far:** both loggers show a diurnal signal consistent with
+evapotranspiration/thermal-loading control on discharge and specific
+conductance, and native-cadence autocorrelation is strong out to several
+hours, as expected for a physically smooth process. Resampled (daily+) ACFs
+and the STL trend component will only become informative claims — rather than
+illustrations of the method — once several weeks to months of record have
+accumulated; treat any daily/weekly-scale conclusions drawn today as
+provisional.
 
-- Both loggers show a clear diurnal signal consistent with evapotranspiration
-  / thermal-loading control on discharge and specific conductance.
-- Autocorrelation at native cadence is strong out to several hours, as
-  expected; resampled ACFs at daily+ intervals will become informative once
-  more weeks/months of record accumulate.
-- Next: `scripts/analysis/sampling_frequency/02_specific_conductance.R`
-  (recalibrate the temperature-compensation coefficient once field
-  conductivity checks exist), then
-  `notebooks/02_chloride_prediction_models.qmd` once paired Cl samples are
-  ingested for `SBRR`/`SBGG`.
+## From conductivity to chloride: predictive-model framework
+
+Once paired chloride/conductance samples exist, the goal is a model
+$\hat{C}_{Cl} = f(SC_{25}, T, \text{season})$ that can be evaluated
+continuously from the logger record between chemistry samples. Three
+candidate model families are fit and compared
+(`scripts/analysis/sampling_frequency/03_chloride_models.R`), all using
+$SC_{25}$, stream temperature, and a first-harmonic seasonal term
+$\left(\sin\frac{2\pi \cdot doy}{365}, \cos\frac{2\pi \cdot doy}{365}\right)$
+as predictors:
+
+$$
+\begin{aligned}
+\text{Linear:} \quad & C_{Cl} = \gamma_0 + \gamma_1 SC_{25} + \gamma_2 T + \gamma_3 \sin\theta_{doy} + \gamma_4 \cos\theta_{doy} + \varepsilon \\
+\text{GAM:} \quad & C_{Cl} = \gamma_0 + g_1(SC_{25}) + g_2(T) + \gamma_3 \sin\theta_{doy} + \gamma_4 \cos\theta_{doy} + \varepsilon,\quad g_1, g_2 \text{ penalized splines} \\
+\text{Random Forest:} \quad & C_{Cl} = h(SC_{25}, T, \sin\theta_{doy}, \cos\theta_{doy}) + \varepsilon,\quad h \text{ an ensemble of regression trees}
+\end{aligned}
+$$
+
+where $\theta_{doy} = 2\pi \cdot \text{day-of-year}/365$. The linear model is
+the interpretable baseline; the GAM allows nonlinear (but smooth,
+interpretable) response curves; the random forest allows arbitrary
+interaction structure at the cost of interpretability. All three are
+evaluated identically with **rolling-origin (blocked) cross-validation** —
+each fold trains only on data prior to the test window, which respects the
+temporal autocorrelation established in the ACF analysis above and avoids the
+optimistic bias that ordinary random k-fold CV would produce on an
+autocorrelated series.
+
+`get_chloride_conductance_pairs()` currently returns 0 rows for the reason
+noted throughout this document (no temporal overlap between the 2026-05-01
+chemistry samples and the 2026-07-15+ logger record). The block below
+therefore demonstrates the exact same functions against
+`simulate_synthetic_pairs()` — a synthetic dataset with a known, injected
+linear relationship — purely to confirm the modeling code path is correct
+end to end ahead of real data; **the numbers below are not a real
+conductivity-chloride relationship for Steamboat Creek.**
+
+```{r chloride-models-demo}
+#| message: false
+source(file.path("scripts", "analysis", "sampling_frequency", "03_chloride_models.R"))
+
+synthetic_pairs <- simulate_synthetic_pairs()
+cv_results <- evaluate_chloride_models(synthetic_pairs, initial = 20, assess = 5, skip = 5)
+
+cv_results |>
+  group_by(model) |>
+  summarise(mean_rmse = mean(rmse), mean_mae = mean(mae), n_folds = n())
+```
+
+## Sampling-frequency design via Monte Carlo subsampling
+
+Given a continuous reference chloride series (in practice, one of the fitted
+models above applied to the full-resolution conductivity record), the
+sampling-frequency question is answered by simulation
+(`scripts/analysis/sampling_frequency/04_monte_carlo_subsampling.R`):
+repeatedly subsample the reference at each candidate chemistry interval
+$\Delta \in \{1, 2, 3, 7, 14, 30\}$ days with a randomized phase offset,
+reconstruct the full series by linear interpolation between the subsampled
+points, and compare the reconstruction to the (known) reference. Concentration
+error uses
+
+$$
+\text{RMSE}(\Delta) = \sqrt{\frac{1}{n}\sum_{i=1}^n \left(C_{Cl,i} - \hat{C}_{Cl,i}^{(\Delta)}\right)^2}, \qquad
+\text{MAE}(\Delta) = \frac{1}{n}\sum_{i=1}^n \left|C_{Cl,i} - \hat{C}_{Cl,i}^{(\Delta)}\right|
+$$
+
+and, when a paired discharge series $Q(t)$ is available, mass-flux error
+compares the trapezoidal-rule mass flux (Section 2's $\Phi_{Cl}$, discretized)
+computed from the reconstruction against the true flux:
+
+$$
+\Phi_{Cl}^{(\Delta)} \approx \sum_{i} \frac{\Delta t_i}{2}\Big(C_{Cl,i}Q_i + C_{Cl,i+1}Q_{i+1}\Big), \qquad
+\text{FluxError\%}(\Delta) = 100 \times \frac{\Phi_{Cl}^{(\Delta)} - \Phi_{Cl}}{\Phi_{Cl}}
+$$
+
+Repeating this many times per $\Delta$ (random draw of the sampling phase)
+and summarizing across draws (mean, 95th percentile) gives a distribution of
+error at each candidate frequency rather than a single, phase-dependent
+estimate. As with the previous section, this is demonstrated here on a
+synthetic reference series (`simulate_synthetic_reference()`) with known
+seasonal + diurnal structure, pending a real fitted reference series:
+
+```{r monte-carlo-demo}
+source(file.path("scripts", "analysis", "sampling_frequency", "04_monte_carlo_subsampling.R"))
+
+synthetic_reference <- simulate_synthetic_reference()
+mc_draws <- monte_carlo_sampling_frequency(synthetic_reference, n_draws = 100)
+mc_summary <- summarize_sampling_frequency(mc_draws)
+mc_summary
+```
+
+```{r monte-carlo-plot}
+#| fig-cap: "Synthetic-data illustration: chloride RMSE vs. candidate sampling interval"
+ggplot(mc_summary, aes(x = frequency_days, y = rmse_mean)) +
+  geom_ribbon(aes(ymin = rmse_mean, ymax = rmse_p95), alpha = 0.15) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous(breaks = mc_summary$frequency_days) +
+  labs(
+    x = "Candidate chemistry-sampling interval (days)",
+    y = "Chloride RMSE (mg/L)\n(point = mean across MC draws, band = 95th pct)",
+    title = "Synthetic self-test — NOT a real Steamboat Creek result"
+  ) +
+  theme_minimal()
+```
+
+As expected of any subsampling/interpolation scheme, error increases
+monotonically (in expectation) with the sampling interval; the question this
+framework is built to answer is *how quickly*, and whether an
+operationally-realistic interval (e.g. weekly or biweekly) stays within an
+error the PI considers acceptable for detecting a real change in chloride
+discharge.
+
+## Turning an error curve into an actionable recommendation
+
+`05_recommendation_report.R` intentionally requires an **explicit,
+user-supplied error threshold** — `rmse_threshold_mgL` and/or
+`flux_pct_threshold` — rather than defaulting to a convention. There is no
+statistically "correct" acceptable error here; it is a scientific decision
+about what change in chloride discharge would be meaningful to detect, which
+belongs with the PI, not with a default argument. Given a threshold, the
+recommended interval is the **coarsest** (largest $\Delta$) candidate whose
+mean error still satisfies it:
+
+$$
+\Delta^{*} = \max\left\{\Delta : \overline{\text{RMSE}}(\Delta) \le \tau_{RMSE} \ \text{and} \ \overline{|\text{FluxError\%}|}(\Delta) \le \tau_{flux}\right\}
+$$
+
+The block below applies this logic to the *synthetic* Monte Carlo summary
+above purely to illustrate the mechanics — the threshold value (1 mg/L) is
+an arbitrary illustrative choice, not a recommended one:
+
+```{r recommendation-demo}
+source(file.path("scripts", "analysis", "sampling_frequency", "05_recommendation_report.R"))
+
+# Illustrative threshold only — agree the real threshold with the PI
+# before using this on real chloride/conductance data.
+illustrative_threshold_mgL <- 1
+recommend_sampling_frequency(mc_summary, rmse_threshold_mgL = illustrative_threshold_mgL)
+```
+
+When run for real, `build_recommendation_report()` additionally writes the
+summary table to `data/derived/sampling_frequency/` and the error-vs-frequency
+plot to `output/figures/sampling_frequency/`; it is not called here to avoid
+writing synthetic-data artifacts into those directories from this reference
+document.
+
+## Current status, gaps, and changelog
+
+**Status of each step against real data:**
+
+| Step | Real data available? | Blocking gap |
+|---|---|---|
+| Conductivity temporal structure (§4) | Yes | None — record is short (~weeks) but real |
+| SC temperature-compensation recalibration (§3) | No | 0 field-vs-logger pairs; need field conductivity checks collected *during* the logger deployment |
+| Chloride prediction models (§5) | No | 0 chloride-vs-conductance pairs; existing Cl samples (2026-05-01) predate logger deployment (2026-07-15) by ~2.5 months |
+| Monte Carlo sampling-frequency design (§6) | No | Depends on §5 producing a real fitted reference series |
+| Final recommendation (§7) | No | Depends on §6, plus an explicit threshold agreed with the PI |
+
+**Immediate next steps:**
+
+1. Collect $\geq 5$ field conductivity checks at `SBRR`/`SBGG` while loggers
+   are active, to unblock §3.
+2. Collect chloride (and ideally paired discharge) samples that temporally
+   overlap the active logger deployment window, to unblock §5–7.
+3. Run `scripts/analysis/sampling_frequency/run_sampling_frequency.R`'s
+   `run_sampling_frequency_pipeline(con)` for a one-call status check across
+   all four steps above (idempotent -- read-only unless `refit_models = TRUE`
+   and real data support it). Once (2) is satisfied, also re-run this notebook — Sections 5–7 will
+   automatically pull real pairs instead of falling through to synthetic
+   self-tests, since `get_chloride_conductance_pairs()` and
+   `get_calibration_pairs()` are the same functions used here and in the
+   underlying scripts.
+4. Agree an explicit $\tau_{RMSE}$ and/or $\tau_{flux}$ threshold with the PI
+   before treating any output of §7 as an actual recommendation.
+
+**Changelog:**
+
+- 2026-09-05 — Added `scripts/analysis/sampling_frequency/run_sampling_frequency.R`
+  as a single, idempotent entry point sequencing calibration -> chloride
+  models -> Monte Carlo -> recommendation, mirroring `run_pipeline.R`'s style;
+  each stage reports its status rather than requiring separate manual
+  `source()`/function calls.
+- 2026-09-05 — `SBRR`/`SBGG` logger role/serial assignment corrected (see
+  provenance note in §2); confirmed the calibration join in §3 requires no
+  code change as a result. Rewrote this notebook as the overarching
+  reference document for the conductivity/chloride workstream, adding
+  scientific motivation, explicit formulas alongside their implementing
+  code, and worked (synthetic, clearly labeled) demonstrations of the
+  chloride-model and Monte Carlo sections.

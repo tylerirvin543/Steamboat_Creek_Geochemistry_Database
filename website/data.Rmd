@@ -20,7 +20,8 @@ The database integrates multiple observational domains, each representing a diff
 - **Regulatory data (NDEP)** — long-term geochemical records  
 - **Field measurements** — site-specific sampling campaigns  
 - **Laboratory analyses** — high-quality analytical chemistry  
-- **Temperature loggers** — continuous thermal monitoring  
+- **Temperature loggers** — continuous thermal monitoring
+- **Continuous conductivity loggers, USGS discharge & historic chemistry, NOAA weather, and field-photo EXIF GPS** (added 2026-09) — see `AGENTS.md`/`README.md` for the current per-source drop-folder and ingest-script mapping
 
 Each source differs in temporal resolution, structure, and analytical purpose.  
 
@@ -341,6 +342,47 @@ Photographic observations are stored as structured metadata and linked to:
 Images are stored externally, while metadata remain relational.
 
 ---
+
+## 📄 NDEP Public Records Request (PRR) Staging & Promotion
+
+Chemistry extracted from NDEP PRR PDF lab reports never becomes "real"
+data automatically -- it always passes through two deliberately separate
+steps:
+
+1. **`ingest_ndep_prr.R`** parses a supported PDF layout (currently the
+   SGS lab-report format) and writes every result to `Staging_NDEP_WQ`
+   only. Nothing here touches `Locations`, `Samples`, or `Lab_Analyses`.
+2. **`promote_staged_ndep.R`** (a separate, manually-invoked step) reads
+   a human-maintained mapping,
+   `data/raw/ndep/PRR/staged_ndep_location_map.csv`
+   (`station_name -> external_station_code, site_type, latitude,
+   longitude, coordinate_source, coordinate_uncertainty_m, notes`), and
+   only promotes a station's staged rows into `Samples`/`Lab_Analyses`
+   once that mapping gives it real coordinates.
+
+**Where coordinates come from:** NBMG's statewide "Geothermal_Wells"
+dataset (ArcGIS Open Data,
+`data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0`),
+matched by **exact well name** -- preferred over PLSS-derived
+(quarter-section-precision) or digitized-from-topo-map estimates, both of
+which carry too much uncertainty to register with confidence. Matched
+stations get `coordinate_source = 'nbmg_geothermal_wells'` and a
+documented `coordinate_uncertainty_m` (100 m by default, since NBMG
+doesn't publish its own uncertainty for these records) rather than being
+treated as precise.
+
+As of this writing, 4 of 13 staged station names (Boyd Dom, Jeppson Dom,
+Rogers Well, Soccer Field) have an unambiguous exact-name match and have
+been promoted; the rest remain intentionally unresolved -- either because
+multiple, mutually-inconsistent NBMG records exist for the same name
+(e.g. "Herz Deep": two different NBMG sources disagree on its coordinate
+by over a kilometer), or because no match exists at all (e.g. the
+"Outlet" stations, likely Ormat's own creek monitoring points rather than
+registered water wells). Their chemistry stays staged, not promoted,
+until a confident coordinate is found.
+
+---
+
 
 ## ✅ Current State
 

@@ -50,7 +50,9 @@ create_analysis_views <- function(con) {
     "vw_hydraulic_head_clean",
     "vw_temp_gradient",
     "vw_isotope_pairs",
-    "vw_temperature_timeseries"
+    "vw_temperature_timeseries",
+    "vw_weather_metric",
+    "vw_sc_discharge_daily"
   )
   
   for (v in views_to_drop) {
@@ -232,6 +234,68 @@ WHERE parameter_code = '60'
   ")
   
   message("✅ USGS base ready")
+
+  # -------------------------------------------------
+  # 3b. WEATHER (UNIT-NORMALIZED)
+  # -------------------------------------------------
+  # Weather_Observations stores values AS REPORTED (mixed degF/degC,
+  # in/mm across the different NOAA export formats -- see
+  # database/schema/03_weather_schema.R). This view does the unit
+  # conversion once, in SQL, so downstream analyses (e.g. the SC vs.
+  # discharge vs. precipitation notebook) never have to special-case
+  # units per station.
+  message("\n[WEATHER]")
+
+  dbExecute(con, "
+  CREATE VIEW vw_weather_metric AS
+  SELECT
+    station_id,
+    date,
+    parameter,
+    CASE
+      WHEN unit = 'degF' THEN (value - 32) * 5.0 / 9.0
+      WHEN unit = 'in'   THEN value * 25.4
+      ELSE value
+    END AS value_metric,
+    CASE
+      WHEN unit = 'degF' THEN 'degC'
+      WHEN unit = 'in'   THEN 'mm'
+      ELSE unit
+    END AS unit_metric,
+    unit AS unit_original,
+    value AS value_original,
+    quality_flag,
+    source_file
+  FROM Weather_Observations
+  ")
+
+  message("✅ Weather view ready")
+
+  # Daily-mean specific conductance per logger role, for comparison
+  # against USGS discharge (vw_usgs_discharge, aggregated to daily in
+  # R) and weather (vw_weather_metric) in
+  # notebooks/02_sc_discharge_weather.qmd. Kept as its own small view
+  # rather than a single mega-join across three different key spaces
+  # (logger_id / USGS station_id / weather station_id) -- the
+  # per-source daily views are combined by date in R instead, which
+  # is far easier to reason about and to extend to more sources.
+  dbExecute(con, "
+  CREATE VIEW vw_sc_discharge_daily AS
+  SELECT
+    date(co.timestamp) AS date,
+    cl.role,
+    l.external_station_code,
+    AVG(co.sc_25c) AS sc_25c_mean,
+    COUNT(*) AS n_obs
+  FROM Conductivity_Observations co
+  JOIN Conductivity_Loggers cl ON co.logger_id = cl.logger_id
+  LEFT JOIN Locations l ON cl.location_id = l.location_id
+  WHERE co.qc_flag IS NULL OR co.qc_flag NOT IN ('spike', 'field_visit_disturbance')
+  GROUP BY date(co.timestamp), cl.role, l.external_station_code
+  ")
+
+  message("✅ SC daily view ready")
+
   
   # -------------------------------------------------
   # 4. FIELD / FLUX SUMMARY

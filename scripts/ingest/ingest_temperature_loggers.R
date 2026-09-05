@@ -219,10 +219,20 @@ bad_sites <- deploy |>
   pull()
 
 if (length(bad_sites) > 0) {
-  stop(
-    "Unknown external_station_code:\n  - ",
-    paste(bad_sites, collapse = "\n  - ")
+  # Unregistered sites (e.g. a new field logger deployed before its
+  # location has been added to `Locations`, such as via the photo-GPS
+  # workflow in ingest_image_locations.R) should not block ingestion for
+  # every *other* logger. Warn loudly and drop just these rows from
+  # `deploy` -- their metadata upsert and observation files are skipped
+  # further down (the file loop's "Serial number not found" check), and
+  # they'll be picked up automatically once the site is registered and
+  # this script is re-run (fully idempotent either way).
+  warning(
+    "Unknown external_station_code (skipping these loggers this run):\n  - ",
+    paste(bad_sites, collapse = "\n  - "),
+    call. = FALSE
   )
+  deploy <- deploy |> filter(is.na(external_station_code) | !(external_station_code %in% bad_sites))
 }
 bad_missing_location <- deploy |>
   filter(
@@ -231,10 +241,12 @@ bad_missing_location <- deploy |>
   )
 
 if (nrow(bad_missing_location) > 0) {
-  stop(
-    "Non-standby loggers must have external_station_code:\n  - ",
-    paste(bad_missing_location$serial_number, collapse = "\n  - ")
+  warning(
+    "Non-standby loggers must have external_station_code (skipping these loggers this run):\n  - ",
+    paste(bad_missing_location$serial_number, collapse = "\n  - "),
+    call. = FALSE
   )
+  deploy <- deploy |> filter(!(serial_number %in% bad_missing_location$serial_number))
 }
 
 message("Resolved location IDs.")
@@ -339,7 +351,12 @@ for (f in xlsx_files) {
   dep <- deploy |> filter(serial_number == serial)
   
   if (nrow(dep) != 1) {
-    stop("Serial number not found or duplicated: ", serial)
+    # Serial may have been dropped from `deploy` upstream (unresolved
+    # location, per the warning above) -- skip just this file rather
+    # than aborting the whole ingest run.
+    message("  Skipping ", basename(f), ": serial ", serial,
+            " not found or duplicated in deployment metadata.")
+    next
   }
   
   # Resolve logger_id
@@ -350,14 +367,32 @@ for (f in xlsx_files) {
   )$logger_id
   
   if (length(logger_id) != 1) {
-    stop("Logger not found or duplicated: ", serial)
+    message("  Skipping ", basename(f), ": logger ", serial,
+            " not found or duplicated in Temperature_Loggers.")
+    next
   }
   
     
     # ---------------------------------
     # TRY EXCEL FIRST (ALWAYS)
     # ---------------------------------
-  sheets <- excel_sheets(f)
+  # Some exports carry a .xls extension but are actually OOXML (.xlsx)
+  # zip archives internally (an Elitech export quirk seen in files
+  # dated 2026-08-22) -- readxl picks its backend from the extension,
+  # so a real .xlsx body under a .xls name fails with a libxls parse
+  # error. Detect the "PK" zip signature and read from a renamed temp
+  # copy instead of erroring.
+  read_path <- f
+  if (tolower(tools::file_ext(f)) == "xls") {
+    sig <- readBin(f, "raw", n = 2)
+    if (length(sig) == 2 && rawToChar(sig) == "PK") {
+      read_path <- tempfile(fileext = ".xlsx")
+      file.copy(f, read_path, overwrite = TRUE)
+      message("  Detected .xlsx content under a .xls filename -- reading via temp copy.")
+    }
+  }
+
+  sheets <- excel_sheets(read_path)
   message("Sheets found: ", paste(sheets, collapse = ", "))
   
   # ✅ Force "List" sheet if it exists
@@ -367,7 +402,7 @@ for (f in xlsx_files) {
     sheet_name <- sheets[1]
   }
   
-  data <- read_excel(f, sheet = sheet_name)
+  data <- read_excel(read_path, sheet = sheet_name)
   
   message("Reading sheet: ", sheet_name)
   
