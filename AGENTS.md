@@ -84,40 +84,47 @@ support a thesis question: **what is the minimum chemistry (chloride)
 sampling frequency needed to accurately estimate Cl flux from continuous
 conductivity?** This extends (does not replace) the existing SQLite schema.
 
-**Locations / loggers:**
-- `SBRR` (existing location, `location_id` per DB) — Logger 1, serial
-  `22575725`, role `upstream_control`, working assumption that it is
-  co-located with the USGS gauge near Rhodes Road. **Not yet confirmed
-  with field notes** — verify before relying on this in analysis.
-  Also flagged: `SBRR`'s stored longitude (`-199.7437`) is out of valid
-  range (should almost certainly be `-119.7437`) — a `QC_Issues`-worthy
-  bug in `Locations`, not yet corrected (see `database/schema/`
-  `02_conductivity_schema.R` comments).
+**Locations / loggers (corrected 2026-09-05):**
+- `SBRR` (existing location, `location_id` per DB; longitude typo
+  `-199.7437` fixed to `-119.7437` directly in `geochem_operational.sqlite`)
+  -- serial `22575724`, role `upstream_control`, co-located with the USGS
+  gauge near Rhodes Road. Mean EC ~= 333 uS/cm.
 - `SBGG` (new location, seeded in `database/schema/02_conductivity_schema.R`,
-  `39.40584, -119.74213`) — Logger 2, serial `22575724`, role `downstream`.
-  No chemistry there yet. Should eventually be reconciled into
-  `data/raw/field/locations.xlsx` for full provenance via `ingest_field.R`.
-- Logger↔location↔role mapping lives in
+  `39.40584, -119.74213`) -- serial `22575725`, role `downstream`. Mean EC
+  ~= 1069 uS/cm. No chemistry there yet.
+- **The two loggers' location/role assignment was originally swapped**
+  (guessed from coordinate proximity) and has since been corrected: the
+  originally-`SBRR`-assigned logger's EC (~850-1300 uS/cm) was far too high
+  for an upstream control and matched the expected downstream/near-outflow
+  signature, so serials were swapped between `SBRR`/`SBGG` in
+  `data/raw/conductivity/conductivity_logger_deployments.csv` and
+  re-ingested (metadata-only upsert -- the 21,901 already-ingested
+  `Conductivity_Observations` rows didn't need to change, since they're
+  keyed by `logger_id`, not location). SBRR now correctly reads lower than
+  SBGG.
+- Logger<->location<->role mapping lives in
   `data/raw/conductivity/conductivity_logger_deployments.csv` (mirrors
   `data/raw/loggers/temperature_logger_deployments.csv`'s format).
 
 **Schema additions** (`database/schema/02_conductivity_schema.R`, sourced
 right after `01_define_schema.R`): `Conductivity_Loggers` and
 `Conductivity_Observations` (raw EC, temperature, derived `sc_25c`
-specific conductance @ 25°C via
+specific conductance @ 25C via
 `scripts/ingest/helpers/compute_specific_conductance.R`, `logger_event`,
 `qc_flag`). Mirrors the `Temperature_Loggers`/`Temperature_Observations`
 pattern.
 
-**Chemistry pairing status (important, checked directly in the DB):** as of
-this write-up, chloride (`Lab_Analyses.analyte = 'Cl'`) has **no records
-overlapping the logger deployment window**. `SBRR`/`SBBV` each have exactly
-one `FIELD` sample (2026-05-01, pre-dating logger deployment) with no
-`Lab_Analyses` rows yet — isotope/lab chemistry for those sites reportedly
-sits un-ingested in `data/raw/`. The sampling-frequency statistical workflow
-(below) is built and self-tested against synthetic data now; it will
-produce real results once this field season's paired Cl samples are
-ingested at `SBRR`/`SBGG`.
+**Chemistry pairing status (checked directly in the DB, updated 2026-09-05):**
+real lab chemistry (Cl and other major ions) and isotopes for `SBRR`/`SBBV`
+have now been ingested from `data/raw/lab/` and `data/raw/isotopes/` (one
+FIELD sample each, 2026-05-01). `SBGG` still has no chemistry. However,
+these samples **predate the conductivity logger deployment (2026-07-15) by
+~2.5 months**, so `get_chloride_conductance_pairs()` in
+`03_chloride_models.R` still returns 0 real pairs -- real Cl values now
+exist, but don't temporally overlap the logger record yet. The
+sampling-frequency statistical workflow (below) is built and self-tested
+against synthetic data; it will produce real results once chloride samples
+are collected during (or after) the active logger deployment window.
 
 **Statistical workflow** (`scripts/analysis/sampling_frequency/`, plus
 `notebooks/` for Quarto write-ups, `models/` for versioned `.rds` artifacts
