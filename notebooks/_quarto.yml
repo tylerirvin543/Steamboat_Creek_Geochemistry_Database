@@ -1,0 +1,17 @@
+project:
+  type: default
+  output-dir: ../output/reports/notebooks
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    embed-resources: true
+    code-fold: show
+    fig-width: 8
+    fig-height: 5
+
+execute:
+  freeze: auto
+  warning: true

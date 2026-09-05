@@ -59,6 +59,7 @@ RUN_INGEST <- list(
   ndep   = TRUE,
   field  = TRUE,
   logger = TRUE,
+  conductivity = TRUE,
   ndwr   = TRUE,
   lab    = TRUE,
   isotope  = TRUE,
@@ -90,9 +91,11 @@ dbExecute(con, "PRAGMA foreign_keys = ON;")
 message("\n[SETUP] Loading schema + helpers")
 
 source("database/schema/01_define_schema.R")
+source("database/schema/02_conductivity_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
+source("scripts/ingest/helpers/compute_specific_conductance.R")
 
 source("scripts/analysis/create_analysis_views.R")
 source("scripts/analysis/calc_gradients.R")
@@ -102,6 +105,7 @@ source("scripts/ingest/export_geopackage.R")
 
 source("scripts/qc/validate_database.R")
 source("scripts/qc/qc_data_integrity_checks.R")
+source("scripts/qc/qc_conductivity_checks.R")
 source("scripts/qc/audit_sample_duplicates.R")
 source("scripts/qc/create_qc_views.R")
 
@@ -140,6 +144,7 @@ if (MODE == "DEMO") {
   dbExecute(con, "PRAGMA foreign_keys = ON;")
   
   source("database/schema/01_define_schema.R")
+source("database/schema/02_conductivity_schema.R")
 }
 
 # ============================================================
@@ -177,6 +182,11 @@ run_step(RUN_INGEST$field, "FIELD", {
 run_step(RUN_INGEST$logger, "TEMPERATURE LOGGERS", {
   source("scripts/ingest/ingest_temperature_loggers.R")
   ingest_temperature_loggers(con)
+})
+
+run_step(RUN_INGEST$conductivity, "CONDUCTIVITY LOGGERS", {
+  source("scripts/ingest/ingest_conductivity.R")
+  ingest_conductivity(con)
 })
 
 run_step(RUN_INGEST$ndwr, "NDWR WELLS + WATER LEVELS", {
@@ -400,6 +410,9 @@ validate_database(con)
 
 message("\n[QC] Running integrity checks")
 run_qc_checks(con)
+
+message("\n[QC] Running conductivity-specific checks")
+run_conductivity_qc_checks(con)
 
 message("\n[QC] Building QC views")
 create_qc_views(con)

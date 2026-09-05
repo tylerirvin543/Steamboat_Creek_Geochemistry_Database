@@ -23,6 +23,7 @@ database/*.sqlite*
 # ==================================================
 data/raw/
 docs/data/raw/
+website/data/raw/
 website/data_files/
 
 # Excel + temp artifacts
@@ -35,6 +36,7 @@ website/data_files/
 # ==================================================
 data/processed/
 docs/data/processed/
+website/data/processed/
 
 output/
 results_files/
@@ -55,6 +57,20 @@ qc_reports/
 # ==================================================
 phreeqc/runs/
 phreeqc/outputs/
+
+# ==================================================
+# MODEL ARTIFACTS (REBUILDABLE; keep MODEL_REGISTRY.csv)
+# ==================================================
+models/**/*.rds
+!models/MODEL_REGISTRY.csv
+
+# ==================================================
+# RENDERED NOTEBOOKS
+# ==================================================
+notebooks/_freeze/
+notebooks/*.html
+notebooks/*_cache/
+notebooks/*_files/
 
 # ==================================================
 # OPTIONAL: TEMP DOC FILES

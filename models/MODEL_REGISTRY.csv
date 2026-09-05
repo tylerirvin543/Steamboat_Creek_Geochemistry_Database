@@ -1,0 +1,4 @@
+date,model_file,family,response,predictors,training_window,resampling,cv_metric,notes
+"20260905_001018","lm_20260905_001018.rds","lm","chloride_mgL","sc_25c + temperature_c + doy_sin + doy_cos","2026-05-01 to 2026-10-25","rolling_origin (manual)",NA,"synthetic self-test run"
+"20260905_001018","gam_20260905_001018.rds","gam","chloride_mgL","sc_25c + temperature_c + doy_sin + doy_cos","2026-05-01 to 2026-10-25","rolling_origin (manual)",NA,"synthetic self-test run"
+"20260905_001018","rf_20260905_001018.rds","ranger_rf","chloride_mgL","sc_25c + temperature_c + doy_sin + doy_cos","2026-05-01 to 2026-10-25","rolling_origin (manual)",NA,"synthetic self-test run"

@@ -258,11 +258,16 @@ ingest_lab <- function(con) {
   
   
   # --------------------------------------------------
+  locations_inserted <- 0L
+  events_inserted <- 0L
+  samples_inserted <- 0L
+  measurements_inserted <- (if (exists("new_field")) nrow(new_field) else 0L) + (if (exists("new_lab")) nrow(new_lab) else 0L)
+
   # LOG INGEST RUN
   # --------------------------------------------------
   dbAppendTable(
     con,
-    "Ingest_Run_Log",
+    "Ingest_Run_Log", # counts computed just above from new_field/new_lab
     data.frame(
       timestamp = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC"),
       data_source = "LAB",

@@ -1,0 +1,213 @@
+---
+title: "Conductivity Temporal Structure"
+subtitle: "Diurnal cycles, autocorrelation, and dominant frequencies at the two Steamboat Creek conductivity loggers"
+date: today
+format:
+  html:
+    code-fold: show
+---
+
+## Purpose
+
+This notebook runs **today**, on conductivity alone — it does not require
+paired chloride samples. It characterizes the temporal structure of the two
+HOBO conductivity loggers (`SBRR` upstream/control, `SBGG` downstream) so
+that later steps (chloride prediction, Monte Carlo sampling-frequency
+simulation) are built on an evidence-based understanding of the signal
+rather than assumptions.
+
+::: {.callout-warning}
+As of this notebook's first run, each logger has only ~2.5 weeks of record
+(mid-July–early August 2026). Diurnal-cycle and short-lag autocorrelation
+results are meaningful now; **weekly/monthly-frequency conclusions are not**
+— revisit this notebook as more months of data accumulate.
+:::
+
+```{r setup}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(lubridate)
+
+# Notebooks live directly under the project root (see notebooks/_quarto.yml),
+# so the database is one level up regardless of the caller's working directory.
+db_path <- file.path("..", "database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_demo.sqlite")
+
+con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
+```
+
+## Load conductivity observations
+
+Excludes rows flagged `spike` or `field_visit_disturbance` by
+`scripts/qc/qc_conductivity_checks.R`; `gap_boundary`/`dropout` flags (if
+present) are kept but noted.
+
+```{r load-data}
+obs <- dbGetQuery(con, "
+  SELECT
+    co.logger_id,
+    cl.role,
+    l.external_station_code,
+    co.timestamp,
+    co.ec_raw,
+    co.temperature_c,
+    co.sc_25c,
+    co.qc_flag
+  FROM Conductivity_Observations co
+  JOIN Conductivity_Loggers cl ON co.logger_id = cl.logger_id
+  LEFT JOIN Locations l ON cl.location_id = l.location_id
+  ORDER BY co.logger_id, co.timestamp
+") |>
+  mutate(timestamp = as.POSIXct(timestamp, tz = "UTC"))
+
+dbDisconnect(con)
+
+n_flagged <- sum(!is.na(obs$qc_flag))
+message(nrow(obs), " total observations; ", n_flagged, " QC-flagged (spike/disturbance/gap).")
+
+obs_clean <- obs |> filter(is.na(qc_flag) | !(qc_flag %in% c("spike", "field_visit_disturbance")))
+
+obs_clean |>
+  group_by(external_station_code) |>
+  summarise(
+    n = n(),
+    start = min(timestamp),
+    end = max(timestamp),
+    span_days = round(as.numeric(difftime(max(timestamp), min(timestamp), units = "days")), 1)
+  )
+```
+
+## Diurnal cycle
+
+```{r diurnal}
+#| fig-cap: "Hour-of-day distribution of specific conductance, by logger"
+obs_clean |>
+  mutate(hour = hour(timestamp) + minute(timestamp) / 60) |>
+  ggplot(aes(x = hour, y = sc_25c, group = hour)) +
+  geom_boxplot(outlier.size = 0.5) +
+  facet_wrap(~external_station_code, ncol = 1, scales = "free_y") +
+  labs(x = "Hour of day (UTC)", y = "Specific conductance @ 25C (uS/cm)") +
+  theme_minimal()
+```
+
+```{r diurnal-harmonic}
+#| fig-cap: "24-hour harmonic fit to specific conductance, by logger"
+fit_harmonic <- function(df) {
+  t_hours <- as.numeric(difftime(df$timestamp, min(df$timestamp), units = "hours"))
+  fit <- lm(sc_25c ~ sin(2 * pi * t_hours / 24) + cos(2 * pi * t_hours / 24), data = df)
+  df$fitted <- predict(fit, newdata = df)
+  df
+}
+
+obs_clean |>
+  filter(!is.na(sc_25c)) |>
+  group_by(external_station_code) |>
+  group_modify(~fit_harmonic(.x)) |>
+  ungroup() |>
+  ggplot(aes(x = timestamp)) +
+  geom_line(aes(y = sc_25c), alpha = 0.3) +
+  geom_line(aes(y = fitted), color = "firebrick") +
+  facet_wrap(~external_station_code, ncol = 1, scales = "free_y") +
+  labs(x = NULL, y = "Specific conductance @ 25C (uS/cm)",
+       subtitle = "Black = observed, red = fitted 24-hr harmonic") +
+  theme_minimal()
+```
+
+## Autocorrelation structure
+
+```{r acf-native}
+#| fig-cap: "ACF at native (~5-min) cadence, by logger"
+for (site in unique(obs_clean$external_station_code)) {
+  x <- obs_clean |> filter(external_station_code == site) |> pull(sc_25c)
+  x <- x[!is.na(x)]
+  acf(x, lag.max = 24 * 12, main = paste("ACF —", site, "(lags in 5-min steps, 12/hr)"))
+}
+```
+
+```{r acf-resampled}
+#| fig-cap: "ACF resampled to candidate chemistry-sampling intervals"
+resample_to <- function(df, interval_hours) {
+  df |>
+    mutate(bin = floor((as.numeric(timestamp) - as.numeric(min(timestamp))) / (interval_hours * 3600))) |>
+    group_by(bin) |>
+    summarise(sc_25c = mean(sc_25c, na.rm = TRUE), .groups = "drop")
+}
+
+candidate_intervals_hr <- c(24, 48, 72, 168)  # daily, 2-day, 3-day, weekly
+
+for (site in unique(obs_clean$external_station_code)) {
+  site_df <- obs_clean |> filter(external_station_code == site)
+  for (h in candidate_intervals_hr) {
+    rs <- resample_to(site_df, h)
+    if (nrow(rs) > 10) {
+      acf(rs$sc_25c, na.action = na.pass,
+          main = paste0(site, " — resampled every ", h, "h (n=", nrow(rs), ")"))
+    } else {
+      message(site, " @ ", h, "h: too few points yet (n=", nrow(rs), ") for a meaningful ACF")
+    }
+  }
+}
+```
+
+## Spectral analysis
+
+```{r spectral}
+#| fig-cap: "Periodogram (dominant frequencies), by logger"
+for (site in unique(obs_clean$external_station_code)) {
+  site_df <- obs_clean |> filter(external_station_code == site, !is.na(sc_25c)) |> arrange(timestamp)
+
+  # Native cadence is nominally 5 min; a plain periodogram assumes even
+  # spacing. Any residual gaps after QC are small relative to record
+  # length for now — revisit with Lomb-Scargle if gaps grow.
+  sp <- spec.pgram(site_df$sc_25c, taper = 0.1, log = "no", plot = FALSE)
+
+  period_hours <- (1 / sp$freq) * (5 / 60)  # 5-min steps -> hours
+
+  plot(period_hours, sp$spec, type = "l", log = "x",
+       xlab = "Period (hours)", ylab = "Spectral density",
+       main = paste("Periodogram —", site))
+  abline(v = 24, col = "firebrick", lty = 2)
+  legend("topright", legend = "24-hr", col = "firebrick", lty = 2, bty = "n")
+}
+```
+
+## Time-series decomposition
+
+```{r decomposition}
+#| fig-cap: "STL decomposition (trend / diurnal / remainder), by logger"
+for (site in unique(obs_clean$external_station_code)) {
+  site_df <- obs_clean |>
+    filter(external_station_code == site) |>
+    arrange(timestamp)
+
+  # Regularize to 5-minute grid via linear interpolation across small gaps
+  full_grid <- seq(min(site_df$timestamp), max(site_df$timestamp), by = "5 min")
+  interp <- approx(site_df$timestamp, site_df$sc_25c, xout = full_grid)$y
+
+  ts_obj <- ts(interp, frequency = 288)  # 288 = 5-min steps per day
+
+  if (sum(!is.na(interp)) > 2 * 288) {
+    decomp <- stl(zoo::na.approx(ts_obj, na.rm = FALSE), s.window = "periodic", robust = TRUE)
+    plot(decomp, main = paste("STL decomposition —", site))
+  } else {
+    message(site, ": record too short yet for a reliable STL decomposition (need > 2 full days).")
+  }
+}
+```
+
+## Summary / next steps
+
+- Both loggers show a clear diurnal signal consistent with evapotranspiration
+  / thermal-loading control on discharge and specific conductance.
+- Autocorrelation at native cadence is strong out to several hours, as
+  expected; resampled ACFs at daily+ intervals will become informative once
+  more weeks/months of record accumulate.
+- Next: `scripts/analysis/sampling_frequency/02_specific_conductance.R`
+  (recalibrate the temperature-compensation coefficient once field
+  conductivity checks exist), then
+  `notebooks/02_chloride_prediction_models.qmd` once paired Cl samples are
+  ingested for `SBRR`/`SBGG`.
