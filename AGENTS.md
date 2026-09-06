@@ -2045,6 +2045,46 @@ Investigated the single remaining `PHREEQC_Run_Failures` row from Session
   boron-Cl or boron-based tracer ratios ever become analytically
   important for this project's mixing-model work.
 
+## Session 18 updates (2026-09-06, continued): PHREEQC reference notebook, two bugs found while rendering it
+
+- **New notebook**: `notebooks/06_phreeqc_geochemical_modeling.qmd` --
+  the living reference for the whole PHREEQC workstream, mirroring
+  `01_conductivity_temporal_structure.qmd`'s role for the Cl-sampling-
+  frequency work. Covers scientific motivation, architecture, the
+  8->233 eligible-sample story, charge-balance/alkalinity bug fixes,
+  real speciation/SI, the Na/K-vs-silica geothermometer divergence, and
+  the still-synthetic-only mixing/inverse/gas-phase modes. Verified with
+  a real `quarto render` against the operational database, not just
+  written and assumed to work.
+- **Bug found while rendering**: `build_phreeqc_solutions()` (and other
+  `scripts/phreeqc/*.R` functions) `source()` other project files using
+  paths relative to the project root. Quarto's project-level
+  `execute-dir` default runs `.qmd` files with their own directory
+  (`notebooks/`) as the working directory, so those internal `source()`
+  calls broke. A plain `setwd()` in the setup chunk wasn't enough either
+  -- knitr's `in_dir()` restores the working directory in between every
+  chunk, silently reverting it. Fixed with
+  `knitr::opts_knit$set(root.dir = ...)`, which is knitr's actual
+  supported mechanism for this, matching `run_pipeline.R`'s own
+  root-relative-paths convention.
+- **Real bug found and fixed in `12_run_phreeqc_gas_phase.R`**: its
+  `SELECTED_OUTPUT` block used `"-gas true"`, which is not a real
+  PHREEQC keyword -- PHREEQC prefix-matched it against `-gases` (which
+  takes gas component *names*, not a boolean) and warned `"Did not find
+  phase, true"`, silently punching zero real gas-component columns.
+  This had gone unnoticed through all of Session 14's building and
+  testing because the aggregate `-pressure`/`"total mol"` columns
+  `parse_phreeqc_gas_output()` already fell back to happened to be
+  *exactly* correct for the single-gas-component demo case -- only
+  showed up as a stray warning when rendering the new notebook surfaced
+  the raw PHREEQC log text. Fixed to the real `"-gases <names>"`
+  keyword, and extended the parser to use the resulting real
+  per-component `g_<name>` columns to compute a genuine partial
+  pressure per gas (`moles_i / total_moles * total_pressure`) -- now
+  correct for a real multi-gas mixture, not just the single-component
+  case the aggregate fallback happened to get right by coincidence.
+- Committed and pushed (`cadbd9d`).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
