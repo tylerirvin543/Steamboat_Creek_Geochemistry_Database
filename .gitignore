@@ -39,7 +39,13 @@ docs/data/processed/
 website/data/processed/
 
 output/
-results_files/
+# NOTE (2026-09-06): a bare "results_files/" rule used to live here and
+# was accidentally matching docs/results_files/ and website/results_files/
+# too (gitignore patterns with no leading slash match at any depth) --
+# that's the knitr figure-output folder results.Rmd's plots render into,
+# so its PNGs (e.g. the temperature-boxplot chart) were silently never
+# committed and appeared broken on the live GitHub Pages site. Removed;
+# no other "results_files" directory exists anywhere in this repo.
 qc_reports/
 
 # ==================================================

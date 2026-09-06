@@ -5,7 +5,7 @@ output: html_document
 
 ## About This Platform
 
-This site documents a reproducible hydrothermal data system built for the Steamboat Springs geothermal field south of Reno, Nevada, integrating groundwater hydraulics, continuous thermal and conductivity monitoring, and field and regulatory geochemistry into one analytical framework. It is developed by **Tyler Irvin**, a graduate teaching assistant at the University of Nevada, Reno, working through the **Great Basin Center for Geothermal Energy (GBCGE)**, whose broader mission &mdash; geothermal resource assessment, hydrothermal system characterization, and applied geochemistry and hydrology &mdash; this project's data infrastructure is built to serve directly.
+This site documents a reproducible hydrothermal data system built for the Steamboat Springs geothermal field south of Reno, Nevada, integrating groundwater hydraulics, continuous thermal and conductivity monitoring, and field and regulatory geochemistry into one analytical framework. It is developed by **Tyler Irvin**, a graduate teaching assistant at the University of Nevada, Reno, working through the **Great Basin Center for Geothermal Energy (GBCGE)**, whose broader mission (geothermal resource assessment, hydrothermal system characterization, and applied geochemistry and hydrology) this project's data infrastructure is built to serve directly.
 
 [![Reproducible](https://img.shields.io/badge/Reproducible-Yes-brightgreen)]()
 [![Version](https://img.shields.io/badge/version-1.0-blue)]()
@@ -16,7 +16,7 @@ The full codebase (every ingestion script, schema definition, and analysis pipel
 
 ## Design Philosophy
 
-The system is built around one governing idea: data should be structured so that interpretation emerges from the system itself, rather than depending on someone remembering which spreadsheet has the current version of a number. In practice, that means raw inputs and derived products are always kept separate, every transformation is scripted and version-controlled rather than performed by hand, and every ingestion step is idempotent &mdash; re-running it on the same files, or on files that have already been partially processed, never duplicates or corrupts what is already in the database. That reproducibility is what lets the system behave less like a static dataset and more like a living framework that keeps its footing as new field seasons, lab batches, and sensor downloads arrive.
+The system is built around one governing idea: data should be structured so that interpretation emerges from the system itself, rather than depending on someone remembering which spreadsheet has the current version of a number. In practice, that means raw inputs and derived products are always kept separate, every transformation is scripted and version-controlled rather than performed by hand, and every ingestion step is idempotent: re-running it on the same files, or on files that have already been partially processed, never duplicates or corrupts what is already in the database. That reproducibility is what lets the system behave less like a static dataset and more like a living framework that keeps its footing as new field seasons, lab batches, and sensor downloads arrive.
 
 ## Tools Behind the System
 

@@ -93,7 +93,7 @@ if (file.exists(well_path)) {
 }
 ```
 
-Taken together, these first-order patterns &mdash; persistent, location-specific thermal regimes; short-term variability layered on top of them; and a monitoring network that is spatially uneven by necessity, concentrated where access and prior study made it possible &mdash; describe a system that genuinely requires integrated, multi-scale observation to characterize well. No single well, and no single data type, tells the whole story on its own.
+Taken together, these first-order patterns (persistent, location-specific thermal regimes; short-term variability layered on top of them; and a monitoring network that is spatially uneven by necessity, concentrated where access and prior study made it possible) describe a system that genuinely requires integrated, multi-scale observation to characterize well. No single well, and no single data type, tells the whole story on its own.
 
 ## A First Answer: Reactivation, Not a New Source
 
@@ -115,11 +115,11 @@ Three pieces of modeling sit directly downstream of the data assembled here, and
 </div>
 
 <div class="callout-box future">
-**Calibrating conductivity against chloride.** The conductivity logger deployed in Steamboat Creek is only useful as a chloride-discharge proxy once its relationship to real chloride measurements is calibrated against paired samples collected during its deployment window. That calibration, and the Monte Carlo analysis built around it to identify the coarsest chemistry sampling interval that still keeps flux estimates accurate, are both implemented and self-tested against synthetic data already &mdash; they are simply waiting on chloride samples that temporally overlap the logger's live deployment period to produce a real, rather than simulated, recommendation.
+**Calibrating conductivity against chloride.** The conductivity logger deployed in Steamboat Creek is only useful as a chloride-discharge proxy once its relationship to real chloride measurements is calibrated against paired samples collected during its deployment window. That calibration, and the Monte Carlo analysis built around it to identify the coarsest chemistry sampling interval that still keeps flux estimates accurate, are both implemented and self-tested against synthetic data already; they are simply waiting on chloride samples that temporally overlap the logger's live deployment period to produce a real, rather than simulated, recommendation.
 </div>
 
 <div class="callout-box future">
-**A potentiometric surface and contaminant-transport picture.** Water levels and chemistry are both already tied to precise well coordinates in the database, which is exactly the input ArcGIS needs to interpolate a potentiometric surface across the field and trace how a chemical signature &mdash; a chloride plume, say &mdash; might be migrating through the subsurface between wells. That interpolation and transport-mapping step hasn't been built yet, but the data pipeline was designed from the start with this specific export in mind, and it is the natural next spatial-analysis milestone once well coordinates and roles are more fully resolved.
+**A potentiometric surface and contaminant-transport picture.** Water levels and chemistry are both already tied to precise well coordinates in the database, which is exactly the input ArcGIS needs to interpolate a potentiometric surface across the field and trace how a chemical signature (a chloride plume, say) might be migrating through the subsurface between wells. That interpolation and transport-mapping step hasn't been built yet, but the data pipeline was designed from the start with this specific export in mind, and it is the natural next spatial-analysis milestone once well coordinates and roles are more fully resolved.
 </div>
 
 None of these three are blocked on new instrumentation or new fieldwork so much as on continuing to run the pipeline that already exists: more chloride samples collected during the conductivity logger's deployment, more wells with confirmed roles and coordinates, and a dedicated pass to wire the existing PHREEQC starter script into the automated build. The infrastructure to take each of these the rest of the way is already in place.

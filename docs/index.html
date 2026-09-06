@@ -422,7 +422,7 @@ re-mapped springs and wells, decades of chloride and temperature records
 held by state agencies, a real-time conductivity sensor standing in for
 chloride discharge in Steamboat Creek, and a growing archive of well
 construction records and production/injection routing. This project’s
-purpose is to bring all of that together — cleanly, reproducibly, and in
+purpose is to bring all of that together: cleanly, reproducibly, and in
 a form that supports both day-to-day exploration and rigorous
 statistical and spatial modeling.</p>
 <p>Three objectives anchor the work. First, <strong>characterize how the
@@ -432,7 +432,7 @@ today’s spring and well chemistry, temperatures, and chloride discharge
 against Michael Sorey’s historical baseline. Second, <strong>build a
 live proxy for chloride discharge</strong> using in-stream conductivity,
 and determine how infrequently chloride itself actually needs to be
-sampled to keep that proxy trustworthy — a direct, practical question
+sampled to keep that proxy trustworthy, a direct, practical question
 about monitoring design, not just chemistry. Third, <strong>map the
 subsurface hydrologic and chemical state</strong> of the field using
 well chemistry and water levels, in a form ready to hand to ArcGIS for
@@ -475,14 +475,15 @@ spreadsheets in the field, temperature and conductivity loggers dump
 proprietary export files, and USGS and NOAA publish their own time
 series in their own formats. A spreadsheet-per-source approach makes it
 easy to lose track of which version of which file is current, and nearly
-impossible to ask a question that spans sources — “does the conductivity
-signal in the creek track the chemistry we measured at the springs two
-weeks earlier?” — without manual, error-prone reassembly every time.
-This project instead pushes every source through its own small,
-dedicated ingestion script into a single normalized SQLite database, so
-that a well’s location, its water levels, its chemistry, and its role in
-Ormat’s production network are all facts about the <em>same</em> row,
-joinable in one query rather than three lookups across three files.</p>
+impossible to ask a question that spans sources, like “does the
+conductivity signal in the creek track the chemistry we measured at the
+springs two weeks earlier?”, without manual, error-prone reassembly
+every time. This project instead pushes every source through its own
+small, dedicated ingestion script into a single normalized SQLite
+database, so that a well’s location, its water levels, its chemistry,
+and its role in Ormat’s production network are all facts about the
+<em>same</em> row, joinable in one query rather than three lookups
+across three files.</p>
 <p>That structure also buys reproducibility almost for free. Nothing is
 ever hand-edited inside the database; every transformation lives in a
 script that can be re-run from the raw files, every source carries a
@@ -504,10 +505,12 @@ brand-new generation of high-frequency sensors.</p>
 <p><img src="../docs/figures/data_availability_timeline.png" alt="" width="100%" /></p>
 <p>Notice the gap: the historical chemistry and specific-conductance
 record thins out after the early 2000s, and then a cluster of continuous
-instruments — temperature loggers, a conductivity logger in Steamboat
-Creek, and live USGS discharge — all start up together in 2025-2026.
-That gap, and the deliberate effort to bridge it, is a running theme
-across the rest of this site.</p>
+instruments (temperature loggers, a conductivity logger in Steamboat
+Creek, and <a
+href="https://waterdata.usgs.gov/monitoring-location/USGS-10349300/#dataTypeId=continuous-00065-0&amp;period=P7D&amp;showFieldMeasurements=true">live
+USGS discharge</a>) all start up together in 2025-2026. That gap, and
+the deliberate effort to bridge it, is a running theme across the rest
+of this site.</p>
 </div>
 <div id="find-your-way-around" class="section level2 hasAnchor">
 <h2 class="hasAnchor">Find Your Way Around<a

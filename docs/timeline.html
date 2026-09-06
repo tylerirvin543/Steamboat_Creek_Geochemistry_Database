@@ -11,7 +11,7 @@
 
 
 
-<title>timeline.knit</title>
+<title>Timeline</title>
 
 <script src="site_libs/header-attrs-2.31/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -377,14 +377,11 @@ div.tocify {
 
 
 
+<h1 class="title toc-ignore">Timeline</h1>
 
 </div>
 
 
-<hr />
-<p>title: “Timeline”</p>
-<p>output: html_document</p>
-<hr />
 <div id="from-first-signs-to-standing-monitoring-network"
 class="section level2 hasAnchor">
 <h2 class="hasAnchor">From First Signs to Standing Monitoring Network<a
@@ -441,14 +438,14 @@ June 6, 2025
 <h4>
 Early Site Documentation and Drone Survey
 </h4>
-<p><img src="assets/thumbs/geyser_fissure_south_view_5.jpg" class="timeline-img"></p>
+<img src="assets/thumbs/geyser_fissure_south_view_5.jpg" class="timeline-img">
 <p>
 The active vent three days after the eruption, still uncapped and
 jetting from the well pipe next to Ormat facility buildings. Fresh
 orange and yellow sinter mineralization fans out across the surrounding
 pad, with yellow caution tape marking the exclusion zone.
 </p>
-<p><img src="assets/thumbs/geyser_southwest_view_1_annotated_tloggers.jpg" class="timeline-img"></p>
+<img src="assets/thumbs/geyser_southwest_view_1_annotated_tloggers.jpg" class="timeline-img">
 <p>
 The same vent, annotated to mark the planned placement of upflow and
 outflow temperature loggers relative to the eruption fissure. This is
@@ -457,8 +454,7 @@ project builds on directly.
 </p>
 <video controls preload="metadata" class="timeline-video" poster="assets/thumbs/geyser_fissure_south_view_5.jpg">
 <source src="assets/video_compressed/drone_survey_20250606.mp4" type="video/mp4">
-<p>Your browser does not support embedded video.</p>
-</video>
+Your browser does not support embedded video. </video>
 <p>
 Aerial drone survey of the eruption site taken the same day (the file’s
 embedded metadata timestamp reads August 22, 2025, which reflects when
@@ -494,7 +490,7 @@ June 14, 2025
 <h4>
 Steaming Ground Beyond the Main Vent
 </h4>
-<p><img src="assets/thumbs/steaming_ground_2.jpg" class="timeline-img"></p>
+<img src="assets/thumbs/steaming_ground_2.jpg" class="timeline-img">
 <p>
 Sulfur-stained, steaming ground along a fence line near the site,
 distinct from the now-capped main vent: exactly the kind of lateral
@@ -511,7 +507,7 @@ December 12, 2025
 <h4>
 Persistent Steaming Ground, GPS-Located
 </h4>
-<p><img src="assets/thumbs/PXL_20251212_180405968.jpg" class="timeline-img"></p>
+<img src="assets/thumbs/PXL_20251212_180405968.jpg" class="timeline-img">
 <p>
 Mineral-encrusted ground and a small steaming vent, six months after the
 eruption, at 39.3823° N, 119.7389° W. This is the only asset on this
@@ -528,21 +524,15 @@ January 22, 2026
 <h4>
 Wellhead Follow-up and Active Steaming Fissure
 </h4>
-<p><img src="assets/thumbs/20260122_0102.jpg" class="timeline-img"></p>
+<img src="assets/thumbs/20260122_0102.jpg" class="timeline-img">
 <p>
 The same wellhead, capped since mid-2025 and now fitted with a valve,
 measured against a tape for scale during a routine follow-up visit
 roughly seven months after the eruption; not a new capping event, just a
-later inspection of the same structure.
-</p>
-<video controls preload="metadata" class="timeline-video">
-<source src="assets/video_compressed/20260122_steaming_fissure.mp4" type="video/mp4">
-<p>Your browser does not support embedded video.</p>
-</video>
-<p>
-The steaming fissure with bubbling mud pots and intermittent spouting,
-recorded the same day, direct evidence that the outflow feature was
-still actively venting more than half a year after the initial eruption.
+later inspection of the same structure. A companion visit the same day
+documented the nearby steaming fissure still actively bubbling and
+spouting intermittently, more than half a year after the initial
+eruption.
 </p>
 </div>
 </div>
@@ -602,17 +592,15 @@ seven files on this page (five photos, two videos) have been run through
 it directly: it correctly read the one real GPS fix present, and quietly
 skipped the six files with no location tag at all rather than erroring,
 which is exactly the behavior a mixed photo/video drop folder needs.
-Most drone and phone videos checked so far, including both videos above,
-simply carry no embedded location metadata, so a video becomes a mapped
-point only once someone assigns it a coordinate or an existing station
-code by hand in <code>image_location_map.csv</code>, the same review
-step every photo already goes through before it can create or check a
-<code>Locations</code> row. This page’s timeline and the database’s
-spatial layer are built from that same underlying mechanism, just
-applied to documentation photos and videos instead of routine
+Most drone and phone videos checked so far, including the drone survey
+above, simply carry no embedded location metadata, so a video becomes a
+mapped point only once someone assigns it a coordinate or an existing
+station code by hand in <code>image_location_map.csv</code>, the same
+review step every photo already goes through before it can create or
+check a <code>Locations</code> row. This page’s timeline and the
+database’s spatial layer are built from that same underlying mechanism,
+just applied to documentation photos and videos instead of routine
 field-visit photos.</p>
-</div>
-</div>
 </div>
 </div>
 </div>

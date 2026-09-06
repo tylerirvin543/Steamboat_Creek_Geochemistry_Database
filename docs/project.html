@@ -439,7 +439,7 @@ temperature and electrical conductivity are the most directly
 informative about what a hydrothermal system is doing right now.
 Temperature responds quickly to changes in flow pathways, to mixing
 between hot deep water and cooler shallow water, and to pressure changes
-that shift where fluid is moving — and because temperature loggers can
+that shift where fluid is moving; and because temperature loggers can
 record it every few minutes indefinitely, it captures exactly the kind
 of short-term variability that a quarterly chemistry sample would simply
 never see. Conductivity plays a related but distinct role: in Steamboat
@@ -452,8 +452,8 @@ discharge gives a mass flux that, combined with a reference
 concentration for the deep thermal water, converts directly into an
 estimate of geothermal outflow. Conductivity can be logged every few
 minutes for the cost of one instrument; chloride requires a lab. The
-practical question this project is chasing — and one of its three core
-objectives — is exactly how infrequently chloride actually needs to be
+practical question this project is chasing, and one of its three core
+objectives, is exactly how infrequently chloride actually needs to be
 sampled to keep a conductivity-based estimate of that outflow
 trustworthy.</p>
 <div class="figure">
@@ -471,10 +471,10 @@ class="section level2 hasAnchor">
 href="#from-isolated-readings-to-a-system-level-picture"
 class="anchor-section" aria-label="Anchor link to header"></a></h2>
 <p>The approach this project takes is to stop treating each data type as
-its own island and instead fold everything — groundwater levels, field
+its own island and instead fold everything (groundwater levels, field
 and laboratory chemistry, continuous temperature and conductivity, and
 now, increasingly, the physical construction records of the wells
-themselves — into one relational database, where every observation
+themselves) into one relational database, where every observation
 carries an explicit link to where and when it was collected and by what
 method. That structure is what makes it possible to ask genuinely
 cross-domain questions: whether a hydraulic gradient between two wells
@@ -495,7 +495,7 @@ and water levels and chemistry attached to precise well coordinates
 become exactly the input ArcGIS needs to interpolate a potentiometric
 surface and trace where a chemical signature is migrating underground.
 Each of those next steps depends on the data first being trustworthy and
-consistently structured — which is the whole reason this system exists
+consistently structured, which is the whole reason this system exists
 before any of that modeling work begins.</p>
 </div>
 <div id="the-goal-stated-plainly" class="section level2 hasAnchor">
@@ -510,9 +510,9 @@ without duplicating or corrupting what came before, so the system’s
 picture of the Steamboat Hills field keeps sharpening as more springs
 are re-sampled, more wells are logged, and more conductivity data
 accumulates against the growing chemistry record. Although this platform
-was built specifically for Steamboat Hills, the same architecture —
-ingest once, validate consistently, integrate across sources, model on
-top — applies just as well to any environmental system where the hard
+was built specifically for Steamboat Hills, the same architecture
+(ingest once, validate consistently, integrate across sources, model on
+top) applies just as well to any environmental system where the hard
 part is not any single measurement, but making dozens of different kinds
 of measurement talk to each other.</p>
 </div>
