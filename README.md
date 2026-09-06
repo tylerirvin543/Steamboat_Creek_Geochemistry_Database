@@ -45,7 +45,7 @@ Tyler Irvin
 - [Temperature System](#temperature-system)
   - [Status: ✅ Implemented](#status-white_check_mark-implemented-1)
   - [Use](#use)
-- [PHREEQC Integration (Next Phase)](#phreeqc-integration-next-phase)
+- [PHREEQC Geochemical Modeling](#phreeqc-geochemical-modeling)
   - [Goal](#goal)
   - [Planned Outputs](#planned-outputs)
   - [Design](#design)
@@ -863,41 +863,79 @@ not pairwise lines. Planned design (not yet implemented):
 
 ------------------------------------------------------------------------
 
-# PHREEQC Integration (Next Phase)
+# PHREEQC Geochemical Modeling
 
-## Status (2026-09-05)
+## Status (2026-09-06)
 
-A starter script, `scripts/phreeqc/09_build_phreeqc_tables.R`, exists but
-is **not yet wired into `run_pipeline.R`** and has not been audited or
-re-verified this session -- everything below is the design intent, not
-a confirmed current state. This is the next major integration priority
-for this project once the well/facility network and sampling-frequency
-workstreams above stabilize. `phreeqc/templates/` and `phreeqc/runs/`
-hold model templates and prior run I/O respectively.
+Wired into `run_pipeline.R` as an opt-in analysis stage
+(`RUN_ANALYSIS$phreeqc`, default `FALSE` since it calls a slow external
+executable per sample) and verified against real chemistry in the
+operational database. `scripts/phreeqc/utils_phreeqc.R` builds PHREEQC
+SOLUTION blocks, runs the standalone PHREEQC 3 executable via
+`system2()`, and parses results back into the database; the modeling
+code itself is split across `08_build_phreeqc_tables.R` (derives
+`PHREEQC_Solutions` from `Lab_Analyses`/`Field_Measurements`/
+`Isotope_Analyses`), `09_run_phreeqc.R` (speciation, saturation
+indices, temperature-sweep and activity-based geothermometry),
+`10_run_phreeqc_mixing.R` (two-end-member Cl mixing fractions + PHREEQC
+MIX blocks), `11_run_phreeqc_inverse.R` (PHREEQC `INVERSE_MODELING`
+mixing + mineral mass-transfer), and `12_run_phreeqc_gas_phase.R`
+(CO2/H2S `GAS_PHASE` degassing equilibria). `scripts/phreeqc/
+run_phreeqc_analysis.R` is the single entry point for all five modes.
+PHREEQC 3 must be installed separately (not bundled in this repo);
+`PHREEQC_EXE`/`PHREEQC_DB` environment variables override the default
+search path (`C:/Program Files/USGS/phreeqc/...`).
 
+**Speciation/SI is producing real results today**: as of this session,
+8 real samples (across fumarole/seep/spring/transect/well site types)
+have complete-enough chemistry (temperature, pH, Na, Cl at minimum) to
+run, using the LLNL database (auto-selected for temperatures above
+100C). The remaining ~812 samples in the database are missing one or
+more of those four fields and are logged with a specific reason via
+`get_phreeqc_eligible()` rather than silently skipped. A real, minor
+bug was found and fixed this session: `database/schema/
+lab_analyte_map.R`'s `phreeqc_name` for SO4 and Si were the *species*
+names ("SO4", "SiO2") rather than the PHREEQC *element* names ("S",
+"Si") that SOLUTION blocks actually require -- this silently dropped
+sulfate and silica from every PHREEQC run with a `WARNING: Could not
+find element in database` that was easy to miss. Separately (not a
+bug): none of the 8 currently-eligible samples have a lab-measured
+Alkalinity value yet, so carbonate mineral saturation indices
+(Calcite/Aragonite/Dolomite) come back undefined for all of them until
+alkalinity titrations are added to the lab dataset.
 
-## Goal
-
-Convert observations into thermodynamic models.
-
-------------------------------------------------------------------------
+**Mixing, inverse modeling, and gas-phase equilibria are built and
+self-tested against synthetic end-members** (`demo_mixing_model()`,
+`demo_inverse_model()`, `demo_gas_phase()`, or all three via
+`demo_phreeqc_analysis()`) -- real chloride chemistry doesn't yet
+overlap the conductivity logger record closely enough (see the
+sampling-frequency workstream above) to pick confident real thermal/
+meteoric end-members, so these three modes stay manual-invocation-only
+(never auto-run by `run_pipeline.R`) and require the caller to name
+real `sample_id`s explicitly -- they are never inferred automatically.
+The inverse-modeling self-test surfaces (and documents rather than
+hides) a known PHREEQC numerical edge case: a synthetic 2-end-member +
+phase scenario runs to completion (exit code 0) but finds 0 feasible
+models due to a ~1e-9 residual on an unused methane redox couple --
+this is a PHREEQC quirk, not a flaw in this project's input generation.
 
 ## Planned Outputs
 
-- speciation  
-- saturation indices  
-- geothermometers  
-- inverse models
-
-------------------------------------------------------------------------
+- speciation (done, real data)
+- saturation indices (done, real data, pending Alkalinity for full carbonate coverage)
+- geothermometers (done: quartz/chalcedony SI-based, activity-based Na/K, temperature-sweep multicomponent)
+- mixing models (done, self-tested on synthetic data, pending real end-members)
+- inverse models (done, self-tested on synthetic data, pending real end-members)
+- gas-phase / degassing equilibria (done, self-tested on synthetic data)
 
 ## Design
 
-PHREEQC will:
-
-consume views → produce model tables → feed analysis
-
-------------------------------------------------------------------------
+`PHREEQC_Solutions` (derived input rows) -> PHREEQC (external exe) ->
+`PHREEQC_Results` / `PHREEQC_Temp_Sweep` / `PHREEQC_Mixing_Results` /
+`PHREEQC_Inverse_Results` / `PHREEQC_Gas_Phase_Results` (long-format
+result tables) -> `interpret_phreeqc_results()` (automated
+human-readable text) and the QC stage (`PHREEQC_Run_Failures` surfaces
+any sample that didn't converge with any thermodynamic database tried).
 
 # Isotope System (Next Phase)
 

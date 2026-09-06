@@ -110,6 +110,7 @@ log_qc_issue <- function(df, table_name, issue_type, severity, message) {
   qc_field_missing_core <- data.frame()
   qc_major_ions <- data.frame()
   qc_phreeqc <- data.frame()
+  qc_phreeqc_failures <- data.frame()
   qc_logger_no_obs <- data.frame()
   qc_logger_impossible <- data.frame()
   qc_logger_gaps <- data.frame()
@@ -383,6 +384,17 @@ log_qc_issue <- function(df, table_name, issue_type, severity, message) {
       "Incomplete solution or poor charge balance"
     )
   }
+
+  if (dbExistsTable(con, "PHREEQC_Run_Failures")) {
+    qc_phreeqc_failures <- dbGetQuery(con, "SELECT * FROM PHREEQC_Run_Failures")
+    log_qc_issue(
+      qc_phreeqc_failures,
+      "PHREEQC_Run_Failures",
+      "phreeqc_convergence_failure",
+      "WARN",
+      "Sample did not converge with any PHREEQC thermodynamic database"
+    )
+  }
   
   
   # ==================================================
@@ -406,6 +418,7 @@ GROUP BY issue_type, severity
     missing_field_params = nrow(qc_field_missing_core),
     missing_major_ions = nrow(qc_major_ions),
     phreeqc_flagged = nrow(qc_phreeqc),
+    phreeqc_run_failures = nrow(qc_phreeqc_failures),
     loggers_without_obs = nrow(qc_logger_no_obs),
     logger_outliers = nrow(qc_logger_impossible)
   )

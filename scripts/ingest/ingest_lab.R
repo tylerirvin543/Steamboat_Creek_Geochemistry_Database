@@ -98,9 +98,21 @@ ingest_lab <- function(con) {
     analyte_names <- as.character(unlist(df[header_row, ]))
     unit_values <- as.character(unlist(df[units_row, ]))
     
+    # 2026-09-06: preserve the ORIGINAL header text (trimmed, but not yet
+    # make.names()'d) as the real join key against lab_analyte_map$raw_name
+    # -- confirmed real bug: make.names() turns "Alkalinity Total" into
+    # "Alkalinity.Total" (space -> dot), which then NEVER matches
+    # lab_analyte_map's raw_name "Alkalinity Total", so every FIELD
+    # Alkalinity value was silently dropped by the later
+    # `filter(!is.na(analyte))` after the lab_analyte_map join -- not a
+    # missing-data gap as previously assumed, a parsing bug. Any other
+    # multi-word raw_name (e.g. "NO3 (as N)") has the identical problem.
+    analyte_names_orig <- trimws(analyte_names)
+    
     bad <- is.na(analyte_names) | analyte_names == ""
     analyte_names[bad] <- paste0("X", which(bad))
     analyte_names <- make.names(analyte_names, unique = TRUE)
+    analyte_names_orig[bad] <- analyte_names[bad]
     
     names(df) <- analyte_names
     df <- df[-c(1:units_row), ]
@@ -112,6 +124,9 @@ ingest_lab <- function(con) {
     
     unit_lookup <- unit_values
     names(unit_lookup) <- analyte_names
+    
+    orig_name_lookup <- analyte_names_orig
+    names(orig_name_lookup) <- analyte_names
     
     df %>%
       pivot_longer(
@@ -130,6 +145,14 @@ ingest_lab <- function(con) {
         units = dplyr::case_when(
           analyte %in% names(unit_lookup) ~ as.character(unit_lookup[analyte]),
           TRUE ~ NA_character_
+        ),
+        # restore original header text (pre-make.names) as the analyte
+        # name used everywhere downstream, including the lab_analyte_map
+        # join in the caller
+        analyte = dplyr::if_else(
+          analyte %in% names(orig_name_lookup),
+          as.character(orig_name_lookup[analyte]),
+          analyte
         )
       ) %>%
       filter(!is.na(value))
@@ -221,6 +244,7 @@ ingest_lab <- function(con) {
     # --------------------------------------------------
     if (nrow(lab_chem) > 0) {
       
+      
       lab_chem <- lab_chem %>%
         left_join(lab_analyte_map,
                   by = c("analyte" = "raw_name")) %>%
@@ -230,7 +254,8 @@ ingest_lab <- function(con) {
           analyte = analyte.y,
           value,
           units = as.character(units.x),
-          qualifier
+          qualifier,
+          conversion_factor
         ) %>%
         
         filter(!is.na(analyte)) %>%
@@ -239,10 +264,17 @@ ingest_lab <- function(con) {
           value = ifelse(!is.na(units) & units == "ug/L",
                          value / 1000,
                          value),
+          # 2026-09-06: applies lab_analyte_map.R's per-raw_name
+          # conversion_factor (e.g. mg/L as CaCO3eq -> mg/L as HCO3 for
+          # "Alkalinity Total", factor 1.2189) -- mirrors the identical
+          # fix in scripts/ingest/helpers/parse_ndep_chemistry.R.
+          value = value * dplyr::coalesce(conversion_factor, 1),
           units = "mg/L",
           source_id = source_id,
           fraction = "dissolved"
-        )
+        ) %>%
+        select(-conversion_factor)
+      
       
       # ✅ CREATE new_lab properly
       new_lab <- lab_chem %>%

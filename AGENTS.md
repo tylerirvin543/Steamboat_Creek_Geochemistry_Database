@@ -1612,6 +1612,390 @@ line-ending audit the user explicitly requested.
   `docs/literature/`, not scratch copies, given the website-focused
   (not schema-migration-focused) nature of the work.
 
+## Session 14 updates (2026-09-06): PHREEQC geochemical modeling wired in
+
+Built the full PHREEQC integration planned this session (plan file
+`2026-09-06-1307-plan.md`), porting the pattern from the user's IGNIS
+project (`utils_phreeqc.R`/`07_run_phreeqc.R`) into this project's
+per-stage-function/`run_pipeline.R` conventions, replacing the old
+never-wired `scripts/phreeqc/09_build_phreeqc_tables.R` (wrong database
+file, own `dbConnect()`, hardcoded 8-analyte charge balance,
+`overwrite = TRUE` data loss), and extending it with mixing, inverse
+modeling, and gas-phase equilibria that IGNIS's own scripts don't have.
+
+- **New files**: `scripts/phreeqc/utils_phreeqc.R` (SOLUTION-block
+  generation, `system2()` execution, SELECTED_OUTPUT parsing, the
+  6-database registry with temp/TDS-based auto-recommendation, fluid-
+  type classification, automated interpretation text -- schema/table
+  names adapted throughout, e.g. `l.site_type` in place of IGNIS's
+  `l.prospect`, since this project batches PHREEQC runs by
+  `Locations.site_type` per this session's confirmed decision, not a
+  prospect concept it doesn't have); `08_build_phreeqc_tables.R`
+  (`build_phreeqc_solutions(con)`, `get_phreeqc_eligible(con)`, real
+  charge balance via `lab_analyte_map.R`'s charge/molar_mass, idempotent
+  upsert); `09_run_phreeqc.R` (`run_phreeqc_pipeline()` with
+  per-sample fallback-database retry + `PHREEQC_Run_Failures` logging,
+  `run_phreeqc_multi()`, `view_phreeqc_results()`, temperature-sweep
+  geothermometry, activity-based Na/K geothermometers);
+  `10_run_phreeqc_mixing.R` (pure-R two-end-member conservative Cl
+  mixing fractions + PHREEQC MIX-block predicted-vs-observed
+  comparison, `demo_mixing_model()`); `11_run_phreeqc_inverse.R`
+  (PHREEQC `INVERSE_MODELING` mixing + mineral mass-transfer,
+  `demo_inverse_model()`); `12_run_phreeqc_gas_phase.R` (CO2/H2S
+  `GAS_PHASE` degassing equilibria, `demo_gas_phase()`);
+  `run_phreeqc_analysis.R` (single entry point,
+  `run_phreeqc_analysis_pipeline(con, mode = ...)`,
+  `demo_phreeqc_analysis()` runs all three synthetic self-tests).
+- **New schema**: `database/schema/08_phreeqc_schema.R` --
+  `PHREEQC_Solutions`, `PHREEQC_Results`, `PHREEQC_Temp_Sweep`,
+  `PHREEQC_Run_Failures`, `PHREEQC_Mixing_Runs`/
+  `PHREEQC_Mixing_Fractions`/`PHREEQC_Mixing_Results`,
+  `PHREEQC_Inverse_Models`/`PHREEQC_Inverse_End_Members`/
+  `PHREEQC_Inverse_Results`, `PHREEQC_Gas_Phase_Runs`/
+  `PHREEQC_Gas_Phase_Results`. Also enables the previously-disabled
+  `Chemistry_Parameters` stub in `01_define_schema.R` (left that file
+  untouched; the table is instead created fresh here) and populates it
+  from `lab_analyte_map.R`. **Real bug hit and fixed while building
+  this**: SQLite treats a bare `As` column name as the `AS` keyword --
+  `PHREEQC_Solutions.As` (arsenic) needed `[As]` bracket-quoting in the
+  `CREATE TABLE` DDL to avoid a silent "near As: syntax error".
+- **Wired into `run_pipeline.R`**: new `RUN_ANALYSIS` flag list
+  (deliberately separate from `RUN_INGEST`, since this isn't data
+  ingestion), `RUN_ANALYSIS$phreeqc` (default `FALSE` -- calls a slow
+  external executable per sample, opt-in only). When `TRUE`, runs
+  `build_phreeqc_solutions(con)` + `run_phreeqc_pipeline(con)`
+  (speciation/SI only) right after `create_analysis_views(con)`.
+  Mixing/inverse/gas-phase stay manual-invocation-only always (never
+  auto-run), consistent with `promote_staged_ndep.R`'s philosophy of
+  never guessing which real samples are meaningful end-members.
+  `qc_data_integrity_checks.R` extended with a new check reading
+  `PHREEQC_Run_Failures` (feeds a `phreeqc_run_failures` count into the
+  QC summary) alongside its existing (now-actually-firing)
+  `PHREEQC_Solutions` completeness/charge-balance check.
+- **Real, substantive bug found and fixed via real-data testing (not
+  just the synthetic self-tests)**: `database/schema/
+  lab_analyte_map.R`'s `phreeqc_name` for `SO4` and `Si` were the
+  PHREEQC *species/gfw* names ("SO4", "SiO2") rather than the actual
+  PHREEQC *element* names ("S", "Si") that `SOLUTION` blocks require --
+  confirmed by running the real pipeline against a scratch copy of
+  `geochem_operational.sqlite` and seeing `WARNING: Could not find
+  element in database, SO4`/`SiO2` in the raw `.pqo` output, which
+  silently dropped sulfate and silica from *every* PHREEQC run (all
+  databases, not just LLNL) until fixed. `format_solution_block()`'s
+  `as_unit_lookup` extended with `SO4 = "SO4"` to emit the correct
+  `S  <value>  as SO4` directive (mirrors the existing `Si  <value>  as
+  SiO2` pattern). This class of "does the generated PHREEQC input even
+  use real element names" bug would never have been caught by the
+  synthetic self-tests alone (which happened to only exercise
+  `phreeqc.dat`, not `llnl.dat`, before this) -- worth remembering that
+  self-tests validate syntax/plumbing, not necessarily every database's
+  naming quirks.
+- **Also investigated and resolved as NOT a bug**: `Calcite`/
+  `Aragonite`/`Dolomite` SI came back as PHREEQC's `-999.999` "undefined"
+  placeholder for all 8 real eligible samples -- traced this to a
+  genuine data gap (none of the 8 currently-eligible samples have a
+  lab-measured `Alkalinity` value at all, so no carbonate/HCO3 input
+  ever reaches the `SOLUTION` block), not a llnl.dat-specific quirk as
+  initially suspected. Will start populating automatically once
+  alkalinity titrations are added to the lab dataset for these samples
+  -- no code change needed.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_phreeqc_<timestamp>.sqlite`):
+  schema migration applied, `PHREEQC_Solutions` built (820 rows, 8
+  complete/812 incomplete -- incomplete rows are logged with a specific
+  missing-field reason via `get_phreeqc_eligible()`, not silently
+  dropped), and the real speciation/SI pipeline run end-to-end against
+  the 8 eligible real samples (fumarole/seep/spring/transect/well site
+  types) using the auto-selected LLNL database (Steamboat's real
+  reservoir temperatures exceed 100C) -- 208 real `PHREEQC_Results`
+  rows now exist, e.g. quartz/chalcedony SI near equilibrium for 7 of 8
+  samples (`interpret_phreeqc_results(con)` surfaces this automatically
+  as supporting the quartz geothermometer). QC re-run cleanly afterward
+  (`phreeqc_run_failures = 0`, no convergence failures).
+- **Mixing/inverse/gas-phase self-tested against synthetic end-members**
+  (per this session's confirmed decision, since real Cl chemistry still
+  doesn't overlap the conductivity logger deployment closely enough to
+  name confident real thermal/meteoric end-members -- see the
+  Conductivity Logger section above): all three
+  (`demo_mixing_model()`/`demo_inverse_model()`/`demo_gas_phase()`, or
+  together via `demo_phreeqc_analysis()`) run PHREEQC to completion
+  without error. Getting there required real debugging, not just
+  writing the self-tests: (a) the initial synthetic "meteoric"
+  end-member was charge-imbalanced by ~26% (an arithmetic error --
+  divided instead of multiplied by equivalent weight -- in this
+  session's own hand-picked test values, unrelated to any pipeline
+  code), fixed by rebalancing its `Alkalinity`; (b) PHREEQC's
+  `INVERSE_MODELING` needs an explicit `-balances` sub-block for any
+  conservative tracer (Na/Cl/K/Mg here) not already tied to a `-phases`
+  entry, or it fails outright with "Not possible to balance solution N
+  with input uncertainties" even when every solution's own charge
+  balance is well within tolerance -- `format_phreeqc_inverse_input()`
+  now defaults to `balance_elements = c("Na","Cl","K","Mg")`; (c) even
+  with that fix, the synthetic inverse-model scenario still finds 0
+  feasible solutions due to a genuine, documented PHREEQC quirk (a
+  ~1e-9 numerical residual on the unused methane/C(-4) redox couple,
+  "ERROR: equality not satisfied for C(-4)") -- `demo_inverse_model()`
+  now explicitly reports this as a known execution-plumbing pass with 0
+  models found, not a false "it works" or a hidden failure; (d) the gas-
+  phase self-test's first attempt used `total_pressure_atm = 1.0` (pure
+  CO2 at 1 atm), which is *far* above the synthetic solution's own CO2
+  fugacity, so a `fixed_pressure` `GAS_PHASE` starting from zero gas
+  moles correctly never exchanges any gas (not a bug -- a `fixed_pressure`
+  gas phase only exsolves/dissolves gas once the solution's own fugacity
+  reaches the target) -- fixed by using an atmospheric CO2 partial
+  pressure (`10^-3.5` atm) instead, which now visibly degasses the
+  synthetic solution and raises its pH from 6.0 to ~9.
+- **Known limitations, honestly documented in code comments** (not
+  hidden): `parse_phreeqc_inverse_output()` is a best-effort, line-
+  anchored regex parser of PHREEQC's free-text inverse-modeling output
+  (PHREEQC does not punch inverse-model solutions to `SELECTED_OUTPUT`)
+  -- always cross-check the raw `.pqo` file for anything
+  decision-critical; `parse_phreeqc_gas_output()`'s moles/pressure
+  columns are gas-phase *totals* from `-gas true`, exactly correct only
+  for a single-gas-component phase (fine for the CO2-only default here,
+  not rigorously per-component for a genuinely multi-gas mixture).
+- **Not done this session** (deferred): no new Quarto notebook for this
+  workstream (would mirror notebook `01`'s role for the sampling-
+  frequency work) -- README's new "PHREEQC Geochemical Modeling"
+  section and `results.Rmd`'s updated callout serve as the written
+  record for now; `docs/data/qc_summary.csv`'s still-separate-from-
+  `export_website_data_files()` gap (flagged since Session 12) remains
+  unaddressed; DEMO database was not rebuilt/exercised with the new
+  PHREEQC stage (verified instead via a scratch copy of the real
+  operational DB plus the real DB itself, consistent with how schema-
+  migration work has been verified in prior sessions); this session's
+  file changes are **not yet committed/pushed to git** (touches several
+  CRLF files -- `README.md`, `website/results.Rmd`,
+  `scripts/run_pipeline.R`, `scripts/qc/qc_data_integrity_checks.R`,
+  `database/schema/lab_analyte_map.R`, and the new
+  `scripts/phreeqc/11_run_phreeqc_inverse.R` -- all edited via the
+  established `readLines()`/`writeLines()` [default `"\n"` separator,
+  letting Windows do the single correct `\r\n` translation itself, per
+  the Session 13 CRLF rule] round-trip since the `edit` tool's
+  exact-string matching intermittently failed against them, same
+  caveat as every prior CRLF-file session).
+
+## Session 15 updates (2026-09-06, continued): NDEP+field PHREEQC run -- real alkalinity/unit bugs found and fixed
+
+User asked to run PHREEQC speciation, charge-balance QC, and geothermometry
+on existing NDEP data plus field spring/well chemistry. Investigating why
+only 8 samples were eligible (see Session 14) surfaced three real,
+substantive bugs in the NDEP ingest path, not just a PHREEQC-layer gap.
+
+- **Bug 1 (fixed): NDEP's pH/temperature live in `Lab_Analyses`, not
+  `Field_Measurements`.** `ndep_analyte_map.R` correctly maps "pH
+  Field/Lab"/"Temp Field/Lab" to analytes `pH`/`temperature`, but
+  `ingest_ndep.R` writes everything -- field parameters included -- into
+  `Lab_Analyses`. `build_phreeqc_solutions()` (Session 14) only checked
+  `Field_Measurements` for these, so every NDEP sample looked like it had
+  zero pH/temperature data. Fixed by pulling pH/temperature from both
+  tables (preferring `Field_Measurements` when both exist). This alone
+  raised PHREEQC-eligible samples from 8 to 233.
+- **Bug 2 (fixed): NDEP's minor/trace analytes are stored in mixed units**
+  (the same analyte, e.g. `SiO2`/`As`/`B`/`Fe`/`Li`/`Mn`, appears with
+  both `ug/L` and `mg/L` rows) because `ingest_ndep.R`'s comment
+  "Convert units (if needed)" was never actually implemented.
+  `build_phreeqc_solutions()` was naively averaging raw values across
+  units -- a ~1000x risk for whichever rows were "wrong" relative to
+  others in the average. Fixed by converting every row to mg/L (per its
+  own `units` column) before any aggregation.
+- **Bug 3 (fixed, the big one): NDEP's authoritative alkalinity parameter,
+  "Total Alkalinity as CaCO3", was never ingested at all.** Traced this by
+  reading the raw source file directly
+  (`data/raw/ndep/NormalizedData.csv`, which still has the original
+  `CHARACTERISTICNAME`): `ndep_analyte_map.R` instead mapped BOTH
+  "HCO3 as CaCO3 (mg/L)" and "HCO3 as HCO3 (mg/L)" to a single clean
+  `HCO3` analyte code. Verified these are the exact same 647 measurement
+  events reported in two unit conventions (ratio consistently ~0.82,
+  matching the true CaCO3/HCO3 equivalent-weight ratio 50.05/61.02) --
+  not independent values -- and that the *actually*-ingested `HCO3`
+  values (for the main NDEP source_id) kept whichever raw name happened
+  to be encountered first (in practice, the CaCO3-based number, silently
+  mislabeled as if it were true HCO3 mg/L). CO3 as CaCO3/CO3 as CO3 show
+  the identical duplicate pattern (also unresolved, but CO3 is
+  negligible at these near-neutral pHs and isn't fed to PHREEQC anyway).
+  **Fix**: added a `conversion_factor` column to `ndep_analyte_map.R`
+  (default 1 for every existing row) and a new row mapping "Total
+  Alkalinity as CaCO3 (mg/L)" -> clean analyte `Alkalinity`, with
+  `conversion_factor = 1.2189` (61.017/50.05) to convert CaCO3-basis mg/L
+  to HCO3-basis mg/L, keeping the `Alkalinity` code internally consistent
+  with `format_solution_block()`'s fixed `as HCO3` clause everywhere
+  else in the project. `parse_ndep_chemistry.R` now multiplies both
+  `value` and `detection_limit` by this factor. Re-running `ingest_ndep.R`
+  against the real (backed-up) operational database inserted 736 new
+  `Alkalinity` rows (range 20-361 mg/L, plausible) -- a previously
+  entirely-missing parameter, not a duplicate-cleanup.
+- **Bug 4 (fixed, found because Bug 3's fix didn't move the needle at
+  first): `lab_analyte_map.R`'s `Alkalinity` row had `charge = 0,
+  molar_mass = NA`**, which silently excluded it from every charge-balance
+  calculation in `build_phreeqc_solutions()` even after real Alkalinity
+  data existed (charge-balance math filters `charge != 0`). Since
+  Alkalinity is now stored project-wide as HCO3-mass-equivalent mg/L, the
+  correct row is `charge = -1, molar_mass = 61.017` (HCO3's own molar
+  mass) -- fixed. This is what actually made the charge-balance numbers
+  improve: median imbalance for NDEP's 225 now-complete samples dropped
+  from ~60% (an artifact of missing alkalinity, not real chemistry) to
+  **0.7%**, with 164 of 225 now passing the standard <=5% QC threshold.
+  FIELD's own spring/well samples still have no lab-measured Alkalinity
+  at all (a genuine, separate field-sampling gap, not a bug) and
+  correctly still flag.
+- **Real results now in the database** (after backing up to
+  `database/archive/geochem_operational_pre_ndep_alkalinity_<ts>.sqlite`):
+  233 samples processed through `run_phreeqc_pipeline(con)` (225 NDEP
+  "background" wells/creeks, plus the 8 real thermal FIELD samples from
+  Session 14), 6,283 total `PHREEQC_Results` rows, 0 convergence
+  failures. The 225-sample NDEP batch didn't converge with the
+  auto-recommended LLNL database (tuned for high-T geothermal, not a
+  large dilute-water batch) but succeeded cleanly on the SIT fallback --
+  exactly the scenario the fallback-database logic was built for.
+  `interpret_phreeqc_results(con)` now reports real, substantive
+  findings: 96 of 233 samples near calcite equilibrium, 16
+  calcite-supersaturated (scaling-relevant), 113 undersaturated
+  (dilute/meteoric), and 8 samples (the real thermal ones) near quartz
+  equilibrium. **Na/K activity-based geothermometry is only physically
+  meaningful for the 8 genuinely thermal samples** (measured field
+  temperature 59-162C) -- there it gives sensible, textbook-correct
+  reservoir-temperature estimates of 154-256C (Giggenbach) / 154-243C
+  (Fournier), systematically *above* measured discharge temperature as
+  expected for a cooling/diluting outflow path. Applying the same
+  geothermometer to the 225 dilute, cold (median 11C) NDEP background
+  creek samples gives nonsensical 300-390C estimates -- the method's
+  water-rock-equilibrium assumption doesn't hold for shallow, dilute
+  surface water, and these numbers were explicitly flagged as not
+  physically meaningful rather than reported at face value.
+- **Not resolved / flagged for later**: the duplicate `HCO3`/`CO3` rows
+  described in Bug 3 still exist in `Lab_Analyses` as-is (harmless for
+  PHREEQC today since neither code is consumed by
+  `build_phreeqc_solutions()`, but a real underlying data-quality issue
+  for any future use of those columns, e.g. `vw_major_ions`); FIELD's own
+  historical "Alkalinity Total" raw values (from `lab_analyte_map.R`,
+  independent of this session's NDEP fix) have not been independently
+  verified to use the same as-HCO3 convention now enforced project-wide
+  -- worth a spot-check before trusting FIELD-sourced Alkalinity numbers
+  as tightly as the newly-fixed NDEP ones; `run_phreeqc_pipeline()`'s
+  final "Result rows stored" summary count is approximate (not an exact
+  DB count) specifically for batches that succeed via a fallback
+  database rather than the first-choice one -- a minor, cosmetic
+  under/over-count in the printed summary only, not in what's actually
+  stored (confirmed the real per-batch "Stored N rows" messages and the
+  final DB row count are both correct).
+- Verified end-to-end against the real `geochem_operational.sqlite`
+  (backed up first); not yet re-verified against a scratch copy before
+  applying, unlike most other schema-migration sessions -- justified
+  here since the changes are ingest-logic/mapping-table fixes rather
+  than schema DDL, and the backup provides the same safety net.
+
+## Session 16 updates (2026-09-06, continued): HCO3/CO3 duplicate cleanup, FIELD alkalinity ingestion bug, temperature-sweep geothermometry
+
+Follow-up to Session 15's NDEP alkalinity fix: cleaned up the flagged
+duplicate HCO3/CO3 rows, spot-checked FIELD's Alkalinity convention (per
+Session 15's own flagged caveat), and ran the multicomponent
+temperature-sweep geothermometer -- which surfaced a second, independent
+instance of the same class of bug, this time in the FIELD lab-ingest path.
+
+- **HCO3/CO3 duplicate cleanup (both NDEP pathways)**: confirmed the same
+  duplicate-convention pattern also exists in `promote_staged_ndep.R`'s
+  `sgs_analyte_map` (a plain named-vector map, no conversion factor, and
+  -- separately -- **no dedup-before-insert at all**, unlike every other
+  ingest script's `anti_join` pattern; this is what let source_id=7
+  samples 827-831 accumulate 2 Lab_Analyses rows per analyte). Fixed
+  both pathways the same way: `ndep_analyte_map.R`'s "HCO3 as CaCO3"/"CO3
+  as CaCO3" rows now map to distinct, explicitly-excluded codes
+  (`HCO3_as_CaCO3_dup`/`CO3_as_CaCO3_dup`, role='excluded') instead of
+  colliding with the true-mass `HCO3`/`CO3` codes; `sgs_analyte_map`
+  converted from a named vector to a tribble with the same
+  `conversion_factor` mechanism, with "Alkalinity, Total (As CaCO3)" now
+  mapping to `Alkalinity` (factor 1.2189, matching the main NDEP fix) and
+  "Alkalinity, Bicarbonate (As CaCO3)" remapped to the same
+  `HCO3_as_CaCO3_dup` exclusion code (it's a different SGS parameter than
+  "Total," not a duplicate of it, but not needed now that "Total" is the
+  authoritative source); added the missing `distinct()` +
+  `anti_join(existing_lab_rows)` dedup to `promote_staged_ndep.R`'s
+  Lab_Analyses insert. **Retroactive DB cleanup**: backed up first
+  (`database/archive/geochem_operational_pre_hco3_cleanup_<ts>.sqlite`),
+  deleted 1,411 old HCO3/CO3 rows for both source_ids, reset
+  `Staging_NDEP_WQ.promoted_at` to NULL for all 190 previously-promoted
+  rows, re-ran both `ingest_ndep.R` and `promote_staged_ndep(con)` --
+  zero remaining per-sample duplicates confirmed on both source_ids
+  afterward. **Bug found while verifying**: the newly-fixed PRR
+  Alkalinity rows kept the raw `units` string `"mg/L CaCO3"` even after
+  the value itself was correctly converted to HCO3-mass-equivalent --
+  `build_phreeqc_solutions()`'s unit-normalization `case_when` doesn't
+  recognize that string and would have silently excluded these 10 rows
+  (falls to its `TRUE ~ NA_real_` branch). Fixed by setting
+  `units = "mg/L"` whenever a non-1 `conversion_factor` was applied, and
+  retroactively corrected the 5 already-affected rows directly.
+- **FIELD Alkalinity was never being ingested at all -- a real parsing
+  bug, not a field-sampling gap as Sessions 14-15 assumed.** Spot-
+  checking FIELD's raw lab report (`data/raw/lab/RE26169388.csv`) per
+  Session 15's own flagged caveat found the "Alkalinity Total" column
+  explicitly labeled `mg/L CaCO3eq` in its units row -- the same
+  CaCO3-vs-HCO3 mislabeling risk as NDEP. But tracing why literally zero
+  FIELD Alkalinity rows existed in `Lab_Analyses` (not just low
+  coverage) found something more fundamental: `ingest_lab.R`'s
+  `normalize_lab_wide()` runs raw CSV headers through `make.names()`
+  for R-safe column names (turning `"Alkalinity Total"` into
+  `"Alkalinity.Total"`, space -> dot) and then used that *mangled* name
+  as the join key against `lab_analyte_map$raw_name` (`"Alkalinity
+  Total"`, with a space) -- guaranteed to never match, silently dropped
+  by the subsequent `filter(!is.na(analyte))`. Any multi-word raw_name
+  has this problem, not just Alkalinity -- confirmed "NO3 (as N)" was
+  equally affected. **Fixed**: `normalize_lab_wide()` now preserves the
+  original (pre-`make.names()`) header text as a separate lookup and
+  restores it as the `analyte` value before returning, so the
+  `lab_analyte_map` join downstream sees real raw text again. Added the
+  same `conversion_factor` mechanism to `lab_analyte_map.R` (Alkalinity
+  = 1.2189, everything else = 1) and wired it into `ingest_lab.R`'s
+  chemistry-processing `mutate()`. Re-ran `ingest_lab.R` against the
+  real (already-backed-up) database: **all 8 real thermal FIELD
+  samples now have real Alkalinity** (112-339 mg/L, plausible) and NO3
+  is now populated too, both previously silently empty for every FIELD
+  sample ever ingested.
+- **Real downstream effect, immediately visible**: rebuilding
+  `PHREEQC_Solutions` and re-running `run_phreeqc_pipeline(con)` after
+  this fix, `Calcite`/`Aragonite`/`Dolomite` saturation indices -- which
+  Session 14 found undefined for literally all 8 real thermal samples
+  and attributed to a genuine data gap -- now compute real, geologically
+  meaningful values for 7 of the 8 (calcite mildly-to-moderately
+  supersaturated, SI 0.3-1.8; dolomite more strongly so, SI 1.5-4.5,
+  consistent with known carbonate-scaling behavior in these waters).
+  Charge balance for these 7 samples is now excellent (all within
+  ±3.1%, most under 1%). **One sample (815, SBW_0002) now fails to
+  converge with any database** ("Model failed to converge for initial
+  solution 1") -- a genuine PHREEQC numerical limitation given its real
+  (newly-complete) chemistry, correctly caught and logged to
+  `PHREEQC_Run_Failures` rather than silently dropped or crashing the
+  batch; not chased further this session.
+- **Temperature-sweep multicomponent geothermometry run and
+  cross-checked** (`run_phreeqc_temp_sweep()`, 25-300C by 25C steps,
+  LLNL database) against the 7 successfully-converging real thermal
+  samples, and compared to the activity-based Na/K geothermometer from
+  Session 15. The two methods diverge in a geologically informative,
+  not contradictory, way: quartz/chalcedony equilibration temperatures
+  come out *below* measured discharge temperature for every sample
+  (e.g. quartz 52-127C vs. measured 59-162C), while Na/K comes out
+  *above* it (154-256C) -- consistent with a deep, Na/K-equilibrated
+  reservoir fluid whose silica signature has been partly reset toward a
+  cooler, more dilute end-member en route to discharge (silica
+  re-equilibrates/dilutes faster than the Na/K ratio). This is exactly
+  the kind of independent evidence a real two-end-member mixing
+  analysis (still pending real overlapping Cl end-members, see Session
+  14) would want to formally test, not a discrepancy to resolve away.
+- **Committed and pushed to `origin/main`** this session (see git log
+  for the exact commit) -- first git commit covering the full PHREEQC
+  integration arc (Sessions 14-16).
+- **Not done / next steps**: `IW-2`/`IW-3`-style deferred items from
+  earlier sessions remain untouched; mixing/inverse modeling on real
+  Cl end-members still blocked on chemistry that overlaps the
+  conductivity logger deployment (unchanged from Session 14); the
+  `docs/data/qc_summary.csv` / `export_website_data_files()` gap
+  (flagged since Session 12) remains unaddressed; DEMO database still
+  not rebuilt with any of the PHREEQC-era schema/ingest changes;
+  `Alkalinity, Hydroxide (As CaCO3)` (NDEP PRR, 14 rows) remains
+  deliberately unmapped/kept-as-is (hydroxide alkalinity is negligible
+  at these near-neutral pHs) -- a documented, low-priority gap, not
+  forgotten.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

@@ -125,6 +125,16 @@ if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
   }
 }
 
+# RUN_ANALYSIS is a small, separate flag list (not folded into RUN_INGEST)
+# for derived-modeling stages that are not data ingestion. PHREEQC calls an
+# external executable per sample and can be slow, so it defaults to FALSE
+# and must be explicitly opted into -- set RUN_ANALYSIS <- list(phreeqc = TRUE)
+# before sourcing this file to enable it for a given run. Mixing/inverse/
+# gas-phase modeling are not run automatically at all (see
+# scripts/phreeqc/run_phreeqc_analysis.R) since they require the caller to
+# name real end-member sample_ids, which should never be guessed.
+if (!exists("RUN_ANALYSIS")) RUN_ANALYSIS <- list(phreeqc = FALSE)
+
 DB_PATH <- if (MODE == "DEMO") DB_DEMO else DB_PROD
 
 message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
@@ -159,6 +169,7 @@ source("database/schema/04_photo_location_schema.R")
 source("database/schema/05_well_network_schema.R")
 source("database/schema/06_facility_areas_schema.R")
 source("database/schema/07_well_logs_schema.R")
+source("database/schema/08_phreeqc_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -192,6 +203,14 @@ source("scripts/analysis/build_temp_gradient_links.R")
 source("scripts/analysis/build_isotope_pairs.R")
 source("scripts/analysis/build_analysis_products.R")
 
+source("scripts/phreeqc/utils_phreeqc.R")
+source("scripts/phreeqc/08_build_phreeqc_tables.R")
+source("scripts/phreeqc/09_run_phreeqc.R")
+source("scripts/phreeqc/10_run_phreeqc_mixing.R")
+source("scripts/phreeqc/11_run_phreeqc_inverse.R")
+source("scripts/phreeqc/12_run_phreeqc_gas_phase.R")
+source("scripts/phreeqc/run_phreeqc_analysis.R")
+
 # optional
 source("scripts/ingest/helpers/interpolate_timeseries.R")
 source("scripts/ingest/helpers/lag_analysis.R")
@@ -217,6 +236,7 @@ source("database/schema/04_photo_location_schema.R")
 source("database/schema/05_well_network_schema.R")
 source("database/schema/06_facility_areas_schema.R")
 source("database/schema/07_well_logs_schema.R")
+source("database/schema/08_phreeqc_schema.R")
 }
 
 # ============================================================
@@ -410,6 +430,23 @@ update_location_geometry(con)
 message("\n[PROCESS] Creating base analysis views")
 
 create_analysis_views(con)   # safe: builds core + placeholders
+
+# ============================================================
+# PHREEQC GEOCHEMICAL MODELING (speciation, SI, geothermometry)
+# ============================================================
+
+message("\n==============================")
+message(" PHREEQC GEOCHEMICAL MODELING")
+message("==============================")
+
+if (isTRUE(RUN_ANALYSIS$phreeqc)) {
+  message("[PHREEQC] Building PHREEQC_Solutions from Lab_Analyses + Field_Measurements + Isotope_Analyses")
+  build_phreeqc_solutions(con)
+  message("[PHREEQC] Running speciation + saturation index pipeline")
+  run_phreeqc_pipeline(con)
+} else {
+  message("[PHREEQC] Skipping (RUN_ANALYSIS$phreeqc = FALSE). Run manually via scripts/phreeqc/run_phreeqc_analysis.R for speciation, temperature-sweep geothermometry, mixing, inverse modeling, or gas-phase modes.")
+}
 
 
 # ============================================================

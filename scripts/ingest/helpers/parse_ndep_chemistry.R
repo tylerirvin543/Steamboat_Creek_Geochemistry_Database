@@ -49,7 +49,15 @@ parse_ndep_chemistry <- function(norm_df, analyte_map, sample_lookup, source_id)
         qualifier == "<" & !is.na(REPORTINGLIMIT) ~ REPORTINGLIMIT,
         qualifier == "<"                          ~ value,
         TRUE                                     ~ REPORTINGLIMIT
-      )
+      ),
+      # 2026-09-06: applies ndep_analyte_map.R's per-raw_name
+      # conversion_factor (e.g. mg/L as CaCO3 -> mg/L as HCO3 for "Total
+      # Alkalinity as CaCO3", factor 1.2189) so a clean analyte code
+      # stays in one consistent unit convention regardless of which raw
+      # NDEP characteristic supplied it. Defaults to 1 (no-op) for every
+      # analyte that does not need conversion.
+      value = value * dplyr::coalesce(conversion_factor, 1),
+      detection_limit = detection_limit * dplyr::coalesce(conversion_factor, 1)
     ) |>
     # --- link to samples ONCE ---
     left_join(
