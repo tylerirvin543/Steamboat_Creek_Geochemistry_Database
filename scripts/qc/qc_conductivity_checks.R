@@ -171,16 +171,31 @@ run_conductivity_qc_checks <- function(con,
     filter(is_spike)
 
   # ---- Cross-reference against known field visits ----
-  # Sampling_Events.date is stored as text but may be either an ISO date
-  # string or an Excel serial day count (observed in this database for
-  # older/historical events) — handle both.
+  # ---- Cross-reference against known field visits ----
+  # Sampling_Events.date is stored as text but has been observed in at
+  # least three different formats depending on where the event came
+  # from: an Excel serial day count (older/historical events), an ISO
+  # date string, and "MM/DD/YYYY H:MM" US-style timestamps (added
+  # 2026-09-05 by promote_staged_ndep.R, which stores NDEP PRR
+  # chemistry's collection_time verbatim). as.Date() on a character
+  # vector requires ONE format to work for every element at once, so a
+  # vectorized call errors outright the moment the vector mixes
+  # formats -- each value is parsed individually instead, trying each
+  # known format in turn.
   parse_event_date <- function(x) {
-    numeric_x <- suppressWarnings(as.numeric(x))
-    is_serial <- !is.na(numeric_x) & !grepl("-", x, fixed = TRUE)
-    out <- as.Date(rep(NA_character_, length(x)))
-    out[is_serial] <- as.Date(numeric_x[is_serial], origin = "1899-12-30")
-    out[!is_serial] <- suppressWarnings(as.Date(x[!is_serial]))
-    out
+    parse_one <- function(v) {
+      if (is.na(v)) return(NA_character_)
+      numeric_v <- suppressWarnings(as.numeric(v))
+      if (!is.na(numeric_v) && !grepl("-", v, fixed = TRUE) && !grepl("/", v, fixed = TRUE)) {
+        return(as.character(as.Date(numeric_v, origin = "1899-12-30")))
+      }
+      for (fmt in c("%Y-%m-%d", "%m/%d/%Y %H:%M", "%m/%d/%Y")) {
+        d <- tryCatch(as.Date(v, format = fmt), error = function(e) NA)
+        if (!is.na(d)) return(as.character(d))
+      }
+      NA_character_
+    }
+    as.Date(vapply(x, parse_one, character(1)))
   }
 
   events <- dbGetQuery(con, "SELECT date FROM Sampling_Events") |>

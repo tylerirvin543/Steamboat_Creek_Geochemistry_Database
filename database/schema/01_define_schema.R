@@ -35,6 +35,61 @@ CREATE TABLE IF NOT EXISTS Data_Sources (
   notes TEXT
 );
 ")
+
+# ------------------------------------------------------------
+# MIGRATION: Data_Sources uniqueness on name
+#
+# Every ingest script registers its source with
+# 'INSERT OR IGNORE INTO Data_Sources (name, ...)', which is only
+# idempotent if a UNIQUE constraint/index exists for SQLite to
+# ignore-on-conflict against. Data_Sources.name was never declared
+# UNIQUE, so every pipeline run silently inserted a fresh duplicate
+# row per source (confirmed 2026-09-05: 14 duplicate 'Nevada DEP
+# Water Quality Portal' rows, 6 duplicate 'Elitech LogEt 8', etc.).
+# This migration is additive and safe to run on a database that
+# already has duplicates: it first collapses each name to its
+# lowest source_id (repointing any Lab_Analyses/etc. rows that
+# reference a soon-to-be-removed duplicate id), then creates the
+# UNIQUE index so INSERT OR IGNORE actually works from here on.
+# No-op on a fresh database (nothing to dedupe, index just gets
+# created).
+# ------------------------------------------------------------
+has_unique_index <- nrow(dbGetQuery(con, "
+  SELECT name FROM sqlite_master
+  WHERE type = 'index' AND tbl_name = 'Data_Sources' AND name = 'idx_data_sources_name_unique'
+")) > 0
+
+if (!has_unique_index) {
+  dup_map <- dbGetQuery(con, "
+    SELECT name, MIN(source_id) AS keep_id
+    FROM Data_Sources
+    GROUP BY name
+    HAVING COUNT(*) > 1
+  ")
+
+  if (nrow(dup_map) > 0) {
+    message("[MIGRATION] Collapsing ", nrow(dup_map), " duplicate Data_Sources name(s) before adding UNIQUE index")
+    for (i in seq_len(nrow(dup_map))) {
+      keep_id <- dup_map$keep_id[i]
+      dup_ids <- dbGetQuery(con, "SELECT source_id FROM Data_Sources WHERE name = ? AND source_id != ?",
+                             params = list(dup_map$name[i], keep_id))$source_id
+      if (length(dup_ids) > 0) {
+        placeholders <- paste(rep("?", length(dup_ids)), collapse = ",")
+        for (tbl in c("Lab_Analyses", "Field_Measurements")) {
+          if (dbExistsTable(con, tbl) && "source_id" %in% dbListFields(con, tbl)) {
+            dbExecute(con, paste0("UPDATE ", tbl, " SET source_id = ? WHERE source_id IN (", placeholders, ")"),
+                      params = c(list(keep_id), as.list(dup_ids)))
+          }
+        }
+        dbExecute(con, paste0("DELETE FROM Data_Sources WHERE source_id IN (", placeholders, ")"),
+                  params = as.list(dup_ids))
+      }
+    }
+  }
+
+  dbExecute(con, "CREATE UNIQUE INDEX IF NOT EXISTS idx_data_sources_name_unique ON Data_Sources(name)")
+  message("[MIGRATION] Data_Sources.name is now UNIQUE-indexed")
+}
 #######
 #Grey out for first run of ndep only
 #######

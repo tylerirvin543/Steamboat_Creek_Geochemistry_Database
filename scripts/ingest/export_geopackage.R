@@ -121,10 +121,14 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # EXPORT STANDARD LAYERS
   # ============================================================
   
+  requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow")
+
   for (layer_name in names(layers)) {
     
     message("\n[EXPORT] Processing: ", layer_name)
     
+    needed_table <- requires_table[[layer_name]]
+    if (!is.null(needed_table) && !dbExistsTable(con, needed_table)) { message("[EXPORT] Skipping ", layer_name, " (underlying table missing)"); next }
     tryCatch({
       df <- dbGetQuery(con, layers[[layer_name]])
       safe_write_layer(df, layer_name)

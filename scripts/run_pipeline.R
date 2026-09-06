@@ -39,33 +39,92 @@ if (basename(getwd()) == "scripts") setwd("..")
 DB_DEMO <- "database/geochem_demo.sqlite"
 DB_PROD <- "database/geochem_operational.sqlite"
 
-# -----------------------------------------------
-# TOGGLE MODE: "DEMO" (rebuilds database) vs "OPERATIONAL" (preserves existing data)
-# -----------------------------------------------
+# ============================================================
+# PIPELINE ENTRY POINT / QUICK START
+# ============================================================
+# Sourcing this script interactively (e.g. from the RStudio console)
+# asks three quick questions -- which database to target, which
+# ingestion profile to run, and whether to rebuild the website --
+# then runs unattended. Non-interactive runs (Rscript, CI) skip the
+# prompts and default to a safe DEMO rebuild with all working
+# sources enabled.
+#
+# Every ingest step behind these choices is designed to be safe to
+# re-run: sources that already exist are skipped or left untouched
+# (file-level tracking tables, coordinate/natural-key anti_joins, or
+# a UNIQUE-indexed Data_Sources.name -- see each
+# scripts/ingest/ingest_*.R for its specific mechanism), so running
+# with the same choices twice in a row should insert nothing new the
+# second time.
+#
+# To skip the prompts entirely and run with fixed choices (e.g. from
+# another script, or to override just one thing), set MODE,
+# RUN_INGEST, and/or BUILD_WEBSITE directly before sourcing this
+# file -- any of the three already set will be left alone below.
+# ============================================================
 
-MODE <- "DEMO"   # DEMO | OPERATIONAL
+pipeline_menu <- function() {
+  mode_choice <- utils::menu(
+    c("DEMO -- rebuild a throwaway demo database from scratch (safe, always starts empty)",
+      "OPERATIONAL -- update the real project database, preserving existing data"),
+    title = "\nWhich database should this run target?"
+  )
+  mode <- if (mode_choice == 2) "OPERATIONAL" else "DEMO"  # 0 (cancelled) or 1 -> safe default
+
+  profile_choice <- utils::menu(
+    c("All available sources (recommended)",
+      "Core chemistry only (NDEP, field, lab, isotopes -- skip loggers/USGS/weather/photos)",
+      "Skip ingestion entirely -- just rebuild views, QC, and exports from what is already in the database"),
+    title = "\nWhich data sources should be ingested?"
+  )
+  if (profile_choice == 0) profile_choice <- 1  # cancelled -> safe default
+
+  website_choice <- utils::menu(
+    c("No (faster -- rebuild separately later with rmarkdown::render_site if needed)",
+      "Yes, rebuild the website too"),
+    title = "\nRebuild the documentation website after this run?"
+  )
+
+  list(mode = mode, profile = profile_choice, build_website = identical(website_choice, 2L))
+}
+
+# Named by profile_choice above. flux (Cl-discharge transects) is off
+# in every preset: data/raw/discharge/stream_discharge.xlsx has two
+# columns both literally named "transect_id" per sheet, a
+# source-spreadsheet defect that needs a human decision on which one
+# is authoritative before it can run -- see ingest_flux.R.
+profile_presets <- list(
+  `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
+             lab = TRUE, isotope = TRUE, flux = FALSE, usgs = TRUE, usgs_historic_chem = TRUE,
+             noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE),
+  `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
+             lab = TRUE, isotope = TRUE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
+             noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE),
+  `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
+             lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
+             noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE)
+)
+
+if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
+  if (interactive()) {
+    .pipeline_choices <- pipeline_menu()
+    if (!exists("MODE")) MODE <- .pipeline_choices$mode
+    if (!exists("RUN_INGEST")) RUN_INGEST <- profile_presets[[as.character(.pipeline_choices$profile)]]
+    if (!exists("BUILD_WEBSITE")) BUILD_WEBSITE <- .pipeline_choices$build_website
+  } else {
+    message("[QUICK START] Non-interactive session -- defaulting to MODE=", "DEMO", ", all working sources, no website build.")
+    if (!exists("MODE")) MODE <- "DEMO"
+    if (!exists("RUN_INGEST")) RUN_INGEST <- profile_presets[["1"]]
+    if (!exists("BUILD_WEBSITE")) BUILD_WEBSITE <- FALSE
+  }
+}
+
 DB_PATH <- if (MODE == "DEMO") DB_DEMO else DB_PROD
 
-# -----------------------------------------------
-# TOGGLE (TRUE/FALSE) TO BUILD WEBSITE AFTER DATABASE CREATION
-# -----------------------------------------------
-BUILD_WEBSITE <- TRUE
-
-# -----------------------------------------------
-# TOGGLE (TRUE/FALSE) TO SELECT DATA TO INGEST
-# -----------------------------------------------
-
-RUN_INGEST <- list(
-  ndep   = TRUE,
-  field  = TRUE,
-  logger = TRUE,
-  conductivity = TRUE,
-  ndwr   = TRUE,
-  lab    = TRUE,
-  isotope  = TRUE,
-  flux   = FALSE,
-  usgs   = TRUE, usgs_historic_chem = FALSE, noaa_weather = TRUE, image_locations = TRUE, ndep_prr = FALSE
-)
+message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
 
 # ============================
 # CONNECT DATABASE
@@ -252,6 +311,28 @@ run_step(RUN_INGEST$ndep_prr, "NDEP PUBLIC RECORDS REQUEST (PILOT)", {
   # scripts/ingest/promote_staged_ndep.R -- not run automatically here.
   source("scripts/ingest/ingest_ndep_prr.R")
   ingest_ndep_prr(con)
+})
+
+run_step(RUN_INGEST$promote_ndep_staged, "PROMOTE STAGED NDEP CHEMISTRY", {
+  # Promotes any Staging_NDEP_WQ row whose station now has a resolved
+  # lat/lon in staged_ndep_location_map.csv (e.g. Eich Well) into
+  # Samples/Lab_Analyses. Idempotent: only rows with promoted_at IS
+  # NULL are touched, and re-running with no newly-resolved stations
+  # promotes nothing further. See scripts/ingest/promote_staged_ndep.R.
+  source("scripts/ingest/promote_staged_ndep.R")
+  promote_staged_ndep(con)
+})
+
+run_step(RUN_INGEST$monitor_well_locations, "LITERATURE-SOURCED MONITOR WELL LOCATIONS", {
+  # Registers wells identified from literature (currently: Klein et
+  # al. 2007's Fig. 1 monitor-well network) that carry no chemistry of
+  # their own, so promote_staged_ndep()'s pipeline doesn't apply to
+  # them. Idempotent: keyed on Locations.external_station_code
+  # (UNIQUE), existing rows are left untouched. See
+  # scripts/ingest/register_monitor_well_locations.R and
+  # data/raw/ndwr/klein2007_monitor_well_locations.csv.
+  source("scripts/ingest/register_monitor_well_locations.R")
+  register_monitor_well_locations(con)
 })
 
 # ============================================================
@@ -470,7 +551,7 @@ message("==============================")
 # ------------------------------------------------------------
 # ✅ Define root-relative output (pipeline is in scripts/)
 # ------------------------------------------------------------
-report_dir <- file.path("..", "output", "reports", MODE)
+report_dir <- file.path("output", "reports", MODE)
 dir.create(report_dir, recursive = TRUE, showWarnings = FALSE)
 
 # ------------------------------------------------------------
@@ -481,10 +562,13 @@ timestamp <- format(Sys.time(), "%Y%m%d_%H%M%S")
 # ------------------------------------------------------------
 # ✅ Build versioned filename
 # ------------------------------------------------------------
-report_output <- file.path(
-  report_dir,
-  paste0("pipeline_report_", MODE, "_", timestamp, ".html")
-)
+report_filename <- paste0("pipeline_report_", MODE, "_", timestamp, ".html")
+# rmarkdown::render() intermittently reports the output directory as
+# missing when output_file itself contains a directory path, even
+# right after dir.create() succeeds -- pass output_dir + a bare
+# filename separately instead. report_output (full path) is kept
+# for the later file.copy() to pipeline_report_latest.html.
+report_output <- file.path(report_dir, report_filename)
 
 message("[REPORT] Rendering pipeline report")
 
@@ -494,8 +578,9 @@ message("[REPORT] Rendering pipeline report")
 tryCatch({
   
   rmarkdown::render(
-    input = file.path("..", "reports", "pipeline_report.Rmd"),  # ✅ go up to root → reports/
-    output_file = report_output,
+    input = file.path("scripts", "pipeline_report.Rmd"),  # relative to project root, where the whole script runs from after the top-of-file wd fixup -- was "../reports/pipeline_report.Rmd", which (a) escaped the project root entirely (blocked by the sandbox) and (b) pointed at a nonexistent top-level reports/ dir
+    output_file = report_filename,
+    output_dir = normalizePath(report_dir),
     params = list(
       db_path = DB_PATH,
       run_time = format(Sys.time(), "%Y-%m-%d %H:%M:%S"),

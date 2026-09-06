@@ -1,6 +1,10 @@
 ---
 title: "Pipeline Run Report"
 output: html_document
+params:
+  db_path: "database/geochem_demo.sqlite"
+  run_time: "unknown"
+  mode: "DEMO"
 ---
 
 # Overview
@@ -23,7 +27,8 @@ library(DBI)
 library(RSQLite)
 library(here)
 
-con <- dbConnect(SQLite(), here::here("database", "geochem_demo.sqlite"))
+db_path <- if (!is.null(params$db_path)) params$db_path else file.path("database", "geochem_demo.sqlite")
+con <- dbConnect(SQLite(), here::here(db_path))
 ```
 
 

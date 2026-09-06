@@ -280,7 +280,7 @@ ingest_field <- function(con) {
   }
   
   existing_locations <- dbReadTable(con, "Locations") %>%
-    select(coord_key)
+    select(external_station_code, coord_key)
   
   
   locations_inserted <- 0L
@@ -289,8 +289,24 @@ ingest_field <- function(con) {
     mutate(notes = if ("notes" %in% names(locations_xl)) notes else NA_character_)
   
   
+  # Guard against duplicate external_station_code rows *within* the
+  # incoming locations sheet itself (e.g. a station re-entered with a
+  # slightly corrected lat/lon, which would give it a different
+  # coord_key and so slip past the coord_key-based anti_join below,
+  # then violate Locations.external_station_code's UNIQUE constraint
+  # on insert). Keeps the first occurrence, matching the
+  # distinct(..., .keep_all = TRUE) idiom already used above for
+  # measurement rows.
+  n_before_dedup <- nrow(locations_xl)
+  locations_xl <- locations_xl %>%
+    distinct(external_station_code, .keep_all = TRUE)
+  if (nrow(locations_xl) < n_before_dedup) {
+    message("[ingest_field] Dropped ", n_before_dedup - nrow(locations_xl),
+            " duplicate external_station_code row(s) from the incoming locations sheet.")
+  }
+
   new_locations <- locations_xl %>%
-    anti_join(existing_locations, by = "coord_key") |>
+    anti_join(existing_locations, by = "external_station_code") |>
     transmute(
       external_station_code,
       name = external_station_code,

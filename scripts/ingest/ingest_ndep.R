@@ -311,6 +311,24 @@ lab_df <- parse_ndep_chemistry(
   source_id
 )
 
+
+# --------------------------------------------------
+# DEDUPLICATE AGAINST EXISTING Lab_Analyses ROWS
+# --------------------------------------------------
+# Unlike Locations/Sampling_Events/Samples above, this insert had no
+# guard at all before 2026-09-05 -- every pipeline run re-appended the
+# full lab_df, which is how the operational database ended up with
+# NDEP chemistry duplicated many times over. Matches the
+# anti_join(..., by = c("sample_id", "analyte", "source_id")) pattern
+# already used in ingest_lab.R / ingest_isotopes.R.
+existing_lab <- dbGetQuery(con, "
+  SELECT sample_id, analyte, source_id FROM Lab_Analyses WHERE source_id = ?
+", params = list(source_id))
+
+lab_df <- lab_df |>
+  distinct(sample_id, analyte, source_id, .keep_all = TRUE) |>
+  anti_join(existing_lab, by = c("sample_id", "analyte", "source_id"))
+
 dbAppendTable(
   con,
   "Lab_Analyses",

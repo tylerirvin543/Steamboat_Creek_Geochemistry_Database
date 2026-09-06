@@ -1,0 +1,3 @@
+logger_name,manufacturer,model,serial_number,external_station_code,role,deployment_start,deployment_end,status,notes
+Conductivity Logger 1,Onset/HOBO,U24-002-C,22575725,SBGG,downstream,7/15/2026,,active,Corrected 2026-09-05: originally assigned to SBRR by coordinate-proximity guess; measured EC (~850-1300 uS/cm) is far too high for the upstream control and matches the expected downstream/near-outflow signature -- swapped to SBGG.
+Conductivity Logger 2,Onset/HOBO,U24-002-C,22575724,SBRR,upstream_control,7/15/2026,,active,Corrected 2026-09-05: originally assigned to SBGG by coordinate-proximity guess; measured EC (~250-450 uS/cm) matches the expected upstream/control signature -- swapped to SBRR (co-located with USGS gauge near Rhodes Road).
