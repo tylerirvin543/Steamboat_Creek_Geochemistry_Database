@@ -399,19 +399,51 @@ format_solution_block <- function(row, solution_number = 1) {
   # need an "as X" suffix; everything else is a bare element/species name.
   as_unit_lookup <- c(Alkalinity = "HCO3", Si = "SiO2", NO3 = "NO3", SO4 = "SO4")
 
-  # Skip boron if B >> Alkalinity (mirrors IGNIS's guard against PHREEQC's
-  # "non-carbonate alkalinity > total" error).
+  # Skip boron when its estimated non-carbonate-alkalinity contribution
+  # would exceed the specified total Alkalinity, which is exactly what
+  # PHREEQC's own "Is non-carbonate alkalinity greater than total
+  # alkalinity?" convergence error flags. This replaces a cruder mg/L
+  # ratio heuristic (B > 0.5 * Alkalinity, ported from IGNIS) that missed
+  # a real convergence failure confirmed 2026-09-06 (sample 815/SBW_0002,
+  # LLNL/SIT/Pitzer/phreeqc/wateq4f all failed identically -- a genuine
+  # chemistry issue, not a database quirk): at pH 9, close to boric
+  # acid's pKa (~9.24), a large fraction of even a modest B(OH)3 load
+  # ionizes to alkalinity-contributing B(OH)4-, and the sample's B (37.1
+  # mg/L, well under the old 0.5x-of-Alkalinity threshold) alone
+  # accounted for essentially the entire ~26% alkalinity-convergence gap
+  # PHREEQC reported. This isn't really "wrong" input -- a real
+  # lab-titrated Total Alkalinity already reflects whatever borate was
+  # present at the sample's native pH, so separately specifying total B
+  # as its own element risks PHREEQC double-counting that charge --
+  # exclusion (not a value change) is the correct fix for the samples
+  # where this matters, hence still an exclusion rather than a
+  # reconciling adjustment.
+  #
+  # The ionization-fraction estimate below (Henderson-Hasselbalch,
+  # pKa = 9.24 at 25C) is a screening approximation only -- PHREEQC
+  # itself computes the real speciation at the sample's actual
+  # temperature/ionic strength from its own database's equilibrium
+  # constants; this heuristic only decides whether to attempt including
+  # B at all.
   b_val <- row[["B"]]
   alk_val <- row[["Alkalinity"]]
+  ph_val <- row[["pH"]]
   skip_boron <- FALSE
-  if (!is.null(b_val) && !is.na(b_val) && !is.null(alk_val) && !is.na(alk_val)) {
-    if (b_val > alk_val * 0.5) {
+  if (!is.null(b_val) && !is.na(b_val) && !is.null(alk_val) && !is.na(alk_val) &&
+      !is.null(ph_val) && !is.na(ph_val) && alk_val > 0) {
+    b_molar <- b_val / 10.811                       # mmol/L
+    frac_ionized <- 1 / (1 + 10^(9.24 - ph_val))     # borate fraction at this pH
+    b_eq_contribution <- b_molar * frac_ionized      # meq/L, charge -1 per borate
+    alk_eq <- alk_val / 61.017                       # meq/L (as HCO3)
+    b_frac_of_alk <- b_eq_contribution / alk_eq
+    if (b_frac_of_alk > 0.15) {
       skip_boron <- TRUE
       lines <- c(lines, sprintf(
-        "    # NOTE: B (%.1f mg/L) excluded -- exceeds alkalinity constraint (Alkalinity=%.1f)",
-        b_val, alk_val))
+        "    # NOTE: B (%.1f mg/L) excluded -- estimated borate contribution at pH %.1f is %.0f%% of specified Alkalinity (%.1f mg/L), risking non-carbonate-alkalinity convergence failure",
+        b_val, ph_val, b_frac_of_alk * 100, alk_val))
     }
   }
+
 
   for (i in seq_len(nrow(amap))) {
     analyte <- amap$analyte[i]

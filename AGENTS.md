@@ -1996,6 +1996,55 @@ instance of the same class of bug, this time in the FIELD lab-ingest path.
   at these near-neutral pHs) -- a documented, low-priority gap, not
   forgotten.
 
+## Session 17 updates (2026-09-06, continued): SBW_0002 convergence failure diagnosed and fixed
+
+Investigated the single remaining `PHREEQC_Run_Failures` row from Session
+16 (sample 815, SBW_0002) per user request.
+
+- **Root cause confirmed, not a database quirk**: read the raw PHREEQC
+  `.pqo` error text directly -- `"Alkalinity has not converged... Is
+  non-carbonate alkalinity greater than total alkalinity?"`. Sample 815's
+  pH (9.0) sits close to boric acid's pKa (~9.24), so a large fraction of
+  its Boron (37.1 mg/L -- not even unusually high in absolute terms)
+  ionizes to alkalinity-contributing borate, pushing PHREEQC's internally
+  computed total alkalinity ~26% above the specified value. Confirmed
+  this is a genuine chemistry issue, not a solver/database quirk, by
+  testing all 5 registered databases (LLNL, SIT, Pitzer, phreeqc.dat,
+  WATEQ4F) with the sample's full chemistry -- all 5 failed identically;
+  dropping Boron alone (all else unchanged) converged cleanly on every one.
+- **Real bug found in the existing boron-exclusion guard**:
+  `format_solution_block()` already had a guard for exactly this failure
+  mode (ported from IGNIS), but it used a crude `B (mg/L) > 0.5 *
+  Alkalinity (mg/L)` ratio -- for sample 815 that's 37.1 vs 160.9, nowhere
+  close to triggering, which is exactly why it slipped through in Session
+  16. Replaced with a physically-grounded check: estimate borate's
+  charge-equivalent contribution at the sample's actual pH via
+  Henderson-Hasselbalch (pKa=9.24, a 25C screening approximation --
+  PHREEQC itself computes the real speciation at the sample's true T/mu),
+  and exclude boron when that estimated contribution exceeds 15% of the
+  specified total Alkalinity. Verified against all 81 complete real
+  samples carrying both B and Alkalinity: only sample 815 crosses the new
+  threshold (23.8%); the next-highest sample sits at 7.0%, comfortably
+  clear -- confirms the new guard is a real improvement, not just a
+  differently-wrong threshold, and doesn't regress any other sample.
+- **Applied and verified against the real `geochem_operational.sqlite`**
+  (no separate backup needed -- purely a code fix, re-running
+  `run_phreeqc_pipeline(con, sample_ids = 815)` after the fix converged
+  cleanly and stored 26 real result rows, including previously-missing
+  carbonate SI: Calcite 0.85, Aragonite 0.71, Dolomite 1.61, consistent
+  with the mild-to-moderate supersaturation pattern already seen in the
+  other 7 real thermal samples). `PHREEQC_Run_Failures` is now empty
+  database-wide (0 rows, down from 1).
+- **Not investigated / out of scope**: whether the lab-titrated "Total
+  Alkalinity" value itself already implicitly includes some borate
+  contribution from the sample's native pH at the time of titration
+  (which would make separately specifying total B and total Alkalinity
+  together a mild double-count in principle for boron-rich samples in
+  general, not just the one that happened to fail) -- the exclusion
+  approach sidesteps this without resolving it; worth keeping in mind if
+  boron-Cl or boron-based tracer ratios ever become analytically
+  important for this project's mixing-model work.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
