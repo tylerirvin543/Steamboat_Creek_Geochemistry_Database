@@ -1,0 +1,561 @@
+---
+title: "PHREEQC Geochemical Modeling: Speciation, Saturation Indices, Geothermometry, and Mixing"
+subtitle: "Overarching reference for the Steamboat Hills PHREEQC workstream"
+date: today
+format:
+  html:
+    code-fold: show
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose and scope
+
+This notebook is the **living scientific reference** for PHREEQC geochemical
+modeling at Steamboat Hills — it documents *why* each analysis is done, *what*
+the underlying chemistry/thermodynamics are, and *where* the code that
+implements it lives (`scripts/phreeqc/`), and it is intended to stay the entry
+point for this workstream as more chemistry (real Cl end-members overlapping
+the conductivity logger deployment, alkalinity titrations, well-log
+identities) accumulates. It complements, but does not replace, the individual
+R scripts; this document narrates and runs representative pieces of them so
+the reasoning and the code stay in sync — following the same convention as
+`01_conductivity_temporal_structure.qmd` for the Cl-sampling-frequency
+workstream.
+
+Sections below run in dependency order:
+
+1. Scientific motivation — why PHREEQC, and what each analysis mode answers.
+2. Architecture — SOLUTION-block generation, the thermodynamic-database
+   registry, and how the external PHREEQC executable is invoked.
+3. Building `PHREEQC_Solutions` from validated chemistry, and why coverage
+   went from 8 to 233 samples.
+4. Charge-balance QC — and the alkalinity data-quality story behind it.
+5. Speciation and saturation indices (real data, runs today).
+6. Geothermometry — activity-based Na/K and multicomponent temperature-sweep,
+   cross-checked against each other.
+7. Mixing, inverse modeling, and gas-phase equilibria (self-tested on
+   synthetic end-members; real results pending overlapping Cl chemistry).
+8. Known limitations, fixed bugs, and a running changelog.
+
+::: {.callout-warning}
+As of this writing, real two-end-member mixing and inverse modeling
+(Section 7) cannot yet be run on real Steamboat samples: the only Cl/isotope
+field samples collected so far (2026-05-01) predate the conductivity logger
+deployment (2026-07-15) by roughly 2.5 months, and the downstream/outflow
+proxy site (`SBGG`) has no chemistry at all yet. Section 7 therefore runs
+against synthetic self-test data, clearly labeled as such. Sections 3–6 are
+real and current as of 2026-09-06.
+:::
+
+## Scientific motivation
+
+Three questions this project needs answered, in increasing order of how much
+real data they currently have behind them:
+
+1. **What is the current chemical/thermal state of each sampled water, and is
+   it internally consistent?** — PHREEQC's aqueous speciation and
+   charge-balance calculation answer this directly: given measured
+   concentrations, pH, and temperature, what species (free ions, ion pairs,
+   complexes) is the dissolved mass actually distributed across, and does the
+   analysis close electrically within an acceptable tolerance? A poor charge
+   balance is a red flag for the *analysis*, not the water.
+2. **Is a thermal water in equilibrium with the minerals it's discharging
+   through, and what does that imply about scaling risk and reservoir
+   temperature?** — Saturation indices ($SI = \log_{10}(IAP/K_{sp})$, zero at
+   equilibrium, positive supersaturated/scaling-prone, negative
+   undersaturated) for calcite, quartz, and related phases answer this.
+   Silica geothermometry in particular is the classic tool for estimating
+   deep reservoir temperature from a *cooled, discharged* fluid, because
+   silica dissolution/precipitation kinetics are slow enough that a
+   discharge sample can retain a partial memory of higher-temperature
+   equilibrium at depth.
+3. **Where is the discharge chemistry coming from — how much is deep thermal
+   upflow versus meteoric dilution, and does any mineral reaction happen
+   along the way?** — This is the mixing/inverse-modeling question this
+   thesis's Cl-discharge framing (`01_conductivity_temporal_structure.qmd`)
+   is ultimately building toward: PHREEQC's `MIX` and `INVERSE_MODELING`
+   keywords test two-end-member mixing hypotheses directly, with or without
+   an accompanying mineral reaction. This is the piece still waiting on real
+   overlapping chemistry (see the warning above).
+
+## Architecture
+
+```{mermaid}
+flowchart LR
+    A[Lab_Analyses + Field_Measurements + Isotope_Analyses] --> B["build_phreeqc_solutions(con)<br/>08_build_phreeqc_tables.R"]
+    B --> C[(PHREEQC_Solutions)]
+    C --> D["run_phreeqc_pipeline(con)<br/>09_run_phreeqc.R"]
+    D -->|"system2()"| E[[PHREEQC 3 executable]]
+    E --> D
+    D --> F[(PHREEQC_Results)]
+    D --> G[(PHREEQC_Run_Failures)]
+    C --> H["run_phreeqc_temp_sweep(con)<br/>09_run_phreeqc.R"]
+    H --> I[(PHREEQC_Temp_Sweep)]
+    C --> J["run_mixing_fraction_analysis() /<br/>run_phreeqc_mixing()<br/>10_run_phreeqc_mixing.R"]
+    C --> K["run_phreeqc_inverse()<br/>11_run_phreeqc_inverse.R"]
+    C --> L["run_phreeqc_gas_phase()<br/>12_run_phreeqc_gas_phase.R"]
+    F --> M["interpret_phreeqc_results()<br/>automated human-readable text"]
+```
+
+| Script | Role |
+|---|---|
+| `scripts/phreeqc/utils_phreeqc.R` | SOLUTION-block generation, `system2()` execution of the standalone PHREEQC 3 executable, SELECTED_OUTPUT parsing, the 6-database thermodynamic registry with auto-recommendation, fluid-type classification, automated interpretation text |
+| `scripts/phreeqc/08_build_phreeqc_tables.R` | `build_phreeqc_solutions(con)`, `get_phreeqc_eligible(con)` |
+| `scripts/phreeqc/09_run_phreeqc.R` | `run_phreeqc_pipeline()`, `run_phreeqc_multi()`, `run_phreeqc_temp_sweep()`, `calculate_activity_geothermometers()` |
+| `scripts/phreeqc/10_run_phreeqc_mixing.R` | Two-end-member conservative mixing fractions + PHREEQC `MIX` blocks |
+| `scripts/phreeqc/11_run_phreeqc_inverse.R` | PHREEQC `INVERSE_MODELING` (mixing + mineral mass transfer) |
+| `scripts/phreeqc/12_run_phreeqc_gas_phase.R` | PHREEQC `GAS_PHASE` (CO2/H2S degassing equilibria) |
+| `scripts/phreeqc/run_phreeqc_analysis.R` | Single entry point sequencing all five modes |
+| `database/schema/08_phreeqc_schema.R` | `PHREEQC_Solutions`, `PHREEQC_Results`, `PHREEQC_Temp_Sweep`, `PHREEQC_Run_Failures`, and the mixing/inverse/gas-phase table families |
+
+PHREEQC itself is an external executable (USGS PHREEQC 3), not an R package —
+this project shells out to it via `system2()` rather than using an R binding,
+matching the pattern of the IGNIS project this workstream was ported from.
+`PHREEQC_EXE`/`PHREEQC_DB` environment variables override the default search
+path (`C:/Program Files/USGS/phreeqc/...`).
+
+Database selection is automatic by default (`phreeqc_db = "auto"`):
+temperatures above 100°C route to the LLNL database (validated
+high-temperature thermodynamic data to 300°C, standard for geothermal
+work), high-TDS waters route to Pitzer or SIT, and everything else uses the
+general-purpose default `phreeqc.dat`. If a batch fails to converge, the
+pipeline automatically retries with fallback databases, then retries each
+sample individually — a single problem sample never silently drops every
+other sample in its batch. Convergence failures that persist across every
+database tried are logged to `PHREEQC_Run_Failures`, not silently dropped.
+
+```{r setup}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(ggplot2)
+
+# Several scripts/phreeqc/*.R functions (build_phreeqc_solutions() in
+# particular, via database/schema/lab_analyte_map.R) source() other project
+# files using paths relative to the project root, not this notebook's own
+# directory -- Quarto's project-level execute-dir default renders .qmd files
+# with their own directory (notebooks/) as the working directory, which
+# breaks those internal source() calls. A plain setwd() here isn't enough:
+# knitr's in_dir() wraps every chunk and restores the working directory
+# in between them, so the change would silently revert before the next
+# chunk runs -- opts_knit$set(root.dir = ...) is knitr's own supported way
+# to persist a working-directory override across all chunks, matching
+# scripts/run_pipeline.R's own root-relative-paths convention.
+if (basename(getwd()) == "notebooks") {
+  knitr::opts_knit$set(root.dir = normalizePath(".."))
+  setwd("..")
+}
+
+con <- dbConnect(SQLite(), file.path("database", "geochem_operational.sqlite"))
+dbExecute(con, "PRAGMA foreign_keys = ON;")
+
+for (f in c("utils_phreeqc.R", "08_build_phreeqc_tables.R", "09_run_phreeqc.R",
+            "10_run_phreeqc_mixing.R", "11_run_phreeqc_inverse.R",
+            "12_run_phreeqc_gas_phase.R", "run_phreeqc_analysis.R")) {
+  source(file.path("scripts", "phreeqc", f))
+}
+
+phreeqc_available <- tryCatch({ check_phreeqc(); TRUE }, error = function(e) FALSE)
+```
+
+`phreeqc_available` is `r phreeqc_available` on the machine this notebook was
+last rendered on — every live PHREEQC execution below is skipped gracefully
+(not silently faked) if the executable isn't found.
+
+## Building `PHREEQC_Solutions`
+
+`build_phreeqc_solutions(con)` derives one row per sample from
+`Lab_Analyses`, `Field_Measurements`, and `Isotope_Analyses` — temperature,
+pH, and each major/minor ion, plus a real charge balance computed from
+`lab_analyte_map.R`'s per-analyte charge and molar mass (not a hardcoded,
+partial equivalent-weight table). A sample is *eligible* for a full PHREEQC
+run if it has temperature, pH, Na, and Cl at minimum; everything else is
+*rejected* with a specific, human-readable reason via `get_phreeqc_eligible()`
+— never silently dropped.
+
+```{r build-solutions}
+sol <- build_phreeqc_solutions(con)
+eligibility <- get_phreeqc_eligible(con)
+cat(sprintf("PHREEQC_Solutions: %d rows total, %d eligible for a full run, %d rejected\n",
+            nrow(sol), nrow(eligibility$eligible), nrow(eligibility$rejected)))
+```
+
+```{r eligibility-by-source}
+loc_info <- dbGetQuery(con, "
+  SELECT s.sample_id, s.data_source, l.name AS location_name, l.site_type
+  FROM Samples s JOIN Locations l ON s.location_id = l.location_id
+")
+sol |>
+  left_join(loc_info, by = "sample_id") |>
+  count(data_source, site_type, completeness_flag) |>
+  arrange(data_source, site_type)
+```
+
+::: {.callout-note collapse="true"}
+### Why eligible coverage jumped from 8 to 233 samples (2026-09-06)
+
+The first working version of this pipeline found only 8 eligible samples
+database-wide — all from `FIELD` (springs/wells/fumarole/transect). NDEP's
+~755 background samples and ~10 NDEP PRR wells all looked like they had zero
+pH/temperature data. Investigating why (because the user specifically asked
+to run this on existing NDEP data) surfaced three real ingest bugs, not a
+genuine data gap:
+
+1. **NDEP's pH and temperature are stored in `Lab_Analyses`, not
+   `Field_Measurements`** — `build_phreeqc_solutions()` originally only
+   checked the latter. Fixed to pull from both, preferring
+   `Field_Measurements` when both exist.
+2. **NDEP's minor/trace analytes are stored in mixed units** (the same
+   analyte, e.g. `SiO2`/`As`/`B`/`Fe`/`Li`/`Mn`, appears with both `ug/L` and
+   `mg/L` rows for different samples) with no ingest-time normalization —
+   previously averaged naively, a ~1000x risk for whichever rows were
+   "wrong" relative to others in the average. Fixed to convert every row to
+   mg/L, per its own `units` column, before any aggregation.
+3. **NDEP's authoritative alkalinity parameter, "Total Alkalinity as
+   CaCO3", was never ingested at all.** `ndep_analyte_map.R` instead mapped
+   two *unit-convention duplicates* of the same measurement ("HCO3 as
+   CaCO3"/"HCO3 as HCO3", confirmed via the raw source file to be the exact
+   same 647 events, ratio consistently 0.82 — matching the true
+   CaCO3/HCO3 equivalent-weight ratio) to a single `HCO3` analyte code,
+   with no conversion factor. Added the missing "Total Alkalinity"
+   mapping (with the correct CaCO3 -> HCO3 mass conversion,
+   $61.017/50.05 = 1.2189$), and remapped the duplicate-convention rows to
+   distinct, explicitly-excluded codes so they can never collide again.
+
+A fourth, separate bug in `lab_analyte_map.R` — the `Alkalinity` row had
+`charge = 0, molar_mass = NA`, silently excluding it from every
+charge-balance calculation even after real data existed — meant the fix
+above didn't move the charge-balance numbers at all until this was also
+corrected (see the next section).
+
+**A fifth, independent instance of the same class of bug** was found in
+`ingest_lab.R` (FIELD's own lab-report parser): `normalize_lab_wide()` ran
+raw CSV headers through `make.names()` for R-safe column names, which turns
+`"Alkalinity Total"` into `"Alkalinity.Total"` (space $\to$ dot) — and then
+used that *mangled* name as the join key against `lab_analyte_map$raw_name`
+(`"Alkalinity Total"`, with a space), guaranteed to never match. Every FIELD
+sample's Alkalinity (and NO3, the only other multi-word raw name) had been
+silently dropped since this pipeline's very first field-lab ingest, not
+missing due to a genuine sampling gap as earlier sessions assumed. Fixed to
+preserve the original header text as the actual join key.
+
+See `AGENTS.md` (Sessions 15–16) for the full narrative, including the raw
+per-row evidence for each fix.
+:::
+
+## Charge-balance QC
+
+```{r charge-balance}
+complete_sol <- sol |>
+  left_join(loc_info, by = "sample_id") |>
+  filter(completeness_flag == "complete", !is.na(charge_balance))
+
+complete_sol |>
+  mutate(qc_flag = ifelse(abs(charge_balance) > 5, "FLAG (>5%)", "OK (<=5%)")) |>
+  count(data_source, qc_flag)
+```
+
+```{r charge-balance-hist}
+#| fig-width: 7
+#| fig-height: 4
+ggplot(complete_sol, aes(x = charge_balance)) +
+  geom_histogram(bins = 40) +
+  geom_vline(xintercept = c(-5, 5), linetype = "dashed") +
+  labs(x = "Charge balance error, 100*(cations-anions)/(cations+anions)  [%]",
+       y = "Count", title = "Charge balance across all PHREEQC-complete samples")
+```
+
+The dashed lines mark the conventional ±5% acceptability threshold. Before
+the alkalinity fixes above, essentially every complete sample failed this
+check with a median imbalance around 60% — a pure artifact of excluding
+alkalinity (typically the dominant anion in these near-neutral waters) from
+the anion sum entirely, not a real geochemical signal. After the fixes, the
+median imbalance for NDEP's complete samples is close to zero and most pass
+the standard threshold; FIELD's own samples are now fully alkalinity-complete
+too (see the callout above).
+
+## Speciation and saturation indices
+
+```{r run-speciation}
+#| eval: !expr phreeqc_available
+speciation_result <- run_phreeqc_pipeline(con)
+```
+
+```{r speciation-summary}
+#| eval: !expr phreeqc_available
+si_wide <- dbGetQuery(con, "
+  SELECT pr.sample_id, l.name AS location_name, l.site_type, pr.parameter, pr.value, pr.db_file
+  FROM PHREEQC_Results pr
+  JOIN Samples s ON pr.sample_id = s.sample_id
+  JOIN Locations l ON s.location_id = l.location_id
+  WHERE pr.parameter LIKE 'SI_%'
+") |>
+  filter(value > -100) |>
+  tidyr::pivot_wider(names_from = parameter, values_from = value,
+                      id_cols = c(sample_id, location_name, site_type, db_file))
+
+si_wide |> filter(site_type != "background") |> arrange(sample_id)
+```
+
+```{r interpretation}
+#| eval: !expr phreeqc_available
+#| results: asis
+cat(interpret_phreeqc_results(con))
+```
+
+The automated interpretation above is generated directly from
+`PHREEQC_Results` by `interpret_phreeqc_results()` — it is not hand-written
+prose, so it stays current every time this notebook (or the pipeline) is
+re-run. As of 2026-09-06 it correctly identifies calcite-supersaturated
+samples (scaling-relevant) among both the NDEP background set and the real
+thermal FIELD samples, and flags the 8 genuinely thermal samples as
+approaching quartz equilibrium — see the geothermometry section below for
+why that flag needs a caveat.
+
+::: {.callout-important collapse="true"}
+### Na/K geothermometry is only physically meaningful for genuinely thermal samples
+
+`interpret_phreeqc_results()`'s SI-based read is database-agnostic and
+correct for every sample it covers. But applying **activity-based Na/K
+geothermometry** (next section) to NDEP's ~225 dilute, cold (median ~11°C)
+background creek/well samples gives geothermometer estimates of 300–390°C —
+not a real finding, a violation of the method's core assumption
+(water-rock equilibrium, which doesn't hold for shallow, dilute, fast-flowing
+surface water). Only the 8 real FIELD thermal samples (measured temperature
+59–162°C) are appropriate inputs for Na/K geothermometry; this notebook
+restricts that analysis to them explicitly rather than reporting the
+background numbers at face value.
+:::
+
+## Geothermometry
+
+Two independent geothermometers are computed on the real thermal FIELD
+samples: **activity-based Na/K** (Giggenbach 1988; Fournier 1979), computed
+directly from PHREEQC's speciated ion activities rather than raw
+concentrations — important because these are moderately saline waters where
+activity and concentration diverge — and a **multicomponent
+mineral-equilibration temperature sweep** (Reed & Spycher 1984 approach):
+run each SOLUTION across a temperature ramp (25–300°C by 25°C) and find where
+each mineral's saturation index crosses zero.
+
+```{r geothermometry-ids}
+thermal_ids <- loc_info |>
+  filter(data_source == "FIELD", site_type %in% c("well", "spring", "seep", "fumarole", "transect")) |>
+  semi_join(sol |> filter(completeness_flag == "complete"), by = "sample_id") |>
+  pull(sample_id)
+thermal_ids
+```
+
+```{r nak-geothermometer}
+#| eval: !expr phreeqc_available
+geo_nak <- calculate_activity_geothermometers(con) |>
+  filter(sample_id %in% thermal_ids) |>
+  select(sample_id, location_name, T_NaK_gigg_activity, T_NaK_four_activity)
+geo_nak
+```
+
+```{r temp-sweep}
+#| eval: !expr phreeqc_available
+sweep_res <- run_phreeqc_temp_sweep(con, sample_ids = thermal_ids,
+                                     temp_range = c(25, 300), temp_step = 25,
+                                     phreeqc_db = "llnl")
+```
+
+```{r geothermometer-comparison}
+#| eval: !expr phreeqc_available
+quartz_chal <- sweep_res$eq_temps |>
+  filter(mineral %in% c("Quartz", "Chalcedony")) |>
+  select(sample_id, mineral, eq_temperature_C) |>
+  tidyr::pivot_wider(names_from = mineral, values_from = eq_temperature_C, names_prefix = "T_")
+
+comparison <- sol |>
+  filter(sample_id %in% thermal_ids) |>
+  select(sample_id, T_measured = temperature) |>
+  left_join(quartz_chal, by = "sample_id") |>
+  left_join(geo_nak, by = "sample_id") |>
+  mutate(across(where(is.numeric), ~round(., 0)))
+comparison
+```
+
+```{r geothermometer-plot}
+#| eval: !expr phreeqc_available
+#| fig-width: 7
+#| fig-height: 5
+comparison |>
+  tidyr::pivot_longer(cols = c(T_measured, T_Quartz, T_Chalcedony, T_NaK_gigg_activity),
+                       names_to = "series", values_to = "temperature_C") |>
+  ggplot(aes(x = factor(sample_id), y = temperature_C, color = series, group = series)) +
+  geom_point(size = 2.5) +
+  geom_line(aes(group = series)) +
+  labs(x = "sample_id", y = "Temperature (\u00B0C)",
+       title = "Measured vs. geothermometer-estimated temperature, real thermal samples",
+       color = NULL) +
+  theme(legend.position = "bottom")
+```
+
+**Reading this comparison**: quartz/chalcedony equilibration temperatures
+come out systematically *below* measured discharge temperature for every
+sample, while Na/K comes out systematically *above* it. This divergence is
+geologically informative, not contradictory: Na/K equilibrates deep and
+slowly, retaining a "memory" of a hotter reservoir that persists through
+cooling en route to the surface, while silica solubility can re-equilibrate
+faster (or the fluid can dilute with a lower-silica meteoric component)
+before discharge. A real two-end-member mixing/inverse model (Section 7)
+would be the natural next step to formally test this hypothesis once real
+overlapping end-member chemistry exists — this divergence is exactly the
+kind of independent evidence that motivates doing so, not a discrepancy that
+needs to be resolved away.
+
+::: {.callout-note collapse="true"}
+### A genuine PHREEQC convergence failure, diagnosed and fixed (2026-09-06)
+
+One real thermal sample (`SBW_0002`) initially failed to converge with
+*every* registered thermodynamic database, all failing identically with
+`"Alkalinity has not converged... Is non-carbonate alkalinity greater than
+total alkalinity?"`. Its pH (9.0) sits close to boric acid's pKa (~9.24), so
+a large fraction of its Boron (37.1 mg/L — not even unusually high in
+absolute terms) ionizes to alkalinity-contributing borate, pushing
+PHREEQC's internally-computed total alkalinity ~26% above the lab-measured
+value. `format_solution_block()` already had a boron-exclusion guard for
+exactly this failure mode, but it used a crude `B (mg/L) > 0.5 * Alkalinity
+(mg/L)` ratio that missed this case (37.1 vs. a threshold of 160.9). Replaced
+with a physically-grounded check — estimate borate's charge-equivalent
+contribution at the sample's actual pH via Henderson-Hasselbalch
+(pKa = 9.24, a 25°C screening approximation) and exclude boron when that
+estimate exceeds 15% of specified total Alkalinity — verified against all 81
+complete real samples carrying both B and Alkalinity: only this one sample
+crosses the new threshold (23.8%; next-highest is 7.0%). `PHREEQC_Run_Failures`
+is empty database-wide as of this fix.
+:::
+
+## Mixing, inverse modeling, and gas-phase equilibria
+
+These three modes are built and pass synthetic self-tests, but — per the
+warning at the top of this notebook — real chemistry doesn't yet overlap the
+conductivity logger deployment closely enough to name confident real thermal
+and meteoric end-members. They are deliberately **not** run automatically by
+`run_pipeline.R`; each requires the caller to name real `sample_id`s
+explicitly (never inferred), matching this project's standing rule against
+guessing which samples are meaningful end-members.
+
+```{r self-tests}
+#| eval: !expr phreeqc_available
+demo_results <- demo_phreeqc_analysis()
+```
+
+### Two-end-member mixing (`10_run_phreeqc_mixing.R`)
+
+`compute_mixing_fractions()` solves the conservative linear-mixing equation
+for chloride (or any other tracer) directly:
+
+$$
+f_{\text{thermal}} = \frac{C_{\text{sample}} - C_{\text{meteoric}}}{C_{\text{thermal}} - C_{\text{meteoric}}}
+$$
+
+`run_phreeqc_mixing()` then builds a PHREEQC `MIX` block combining the two
+end-member `SOLUTION`s at that fraction and compares PHREEQC's predicted full
+speciation/SI (which accounts for real, non-conservative effects like a
+saturation-index shift on mixing/cooling) against the target sample's
+observed chemistry — a genuine fit-quality check on the two-end-member
+hypothesis, not just an arithmetic fraction.
+
+```{r mixing-demo-result}
+demo_results$mixing[c("true_fraction", "recovered_fraction", "pass")]
+```
+
+**Usage once real end-members are available**:
+
+```r
+run_phreeqc_analysis_pipeline(con, mode = "mixing",
+  thermal_sample_id = <real sample_id>, meteoric_sample_id = <real sample_id>,
+  tracer = "Cl")
+```
+
+### Inverse modeling (`11_run_phreeqc_inverse.R`)
+
+PHREEQC's `INVERSE_MODELING` is the more rigorous complement to `MIX`
+blocks: it solves *simultaneously* for end-member mixing fractions **and**
+mineral mass transfer (e.g. calcite dissolution/precipitation along the
+flow path) within specified elemental uncertainty limits, so it can test
+whether mixing *plus* some reaction fits a target sample better than
+conservative mixing alone.
+
+```{r inverse-demo-result}
+demo_results$inverse[c("syntax_ok")]
+```
+
+::: {.callout-note collapse="true"}
+### A documented PHREEQC numerical edge case in the synthetic self-test
+
+The synthetic 2-end-member + phase scenario runs to completion (exit code 0,
+after adding an explicit `-balances` sub-block for the conservative tracers
+Na/Cl/K/Mg — without it, PHREEQC fails outright with "Not possible to
+balance solution N with input uncertainties" even when every input
+solution's own charge balance is fine) but finds 0 feasible mixing+phase
+solutions, due to a ~1e-9 numerical residual on an unused methane/C(-4)
+redox couple ("equality not satisfied for C(-4)"). This is a known PHREEQC
+quirk, not a flaw in this project's input generation — reported honestly as
+a syntax/execution smoke test, not a numerical-accuracy proof.
+:::
+
+### Gas-phase equilibria (`12_run_phreeqc_gas_phase.R`)
+
+Models CO2/H2S degassing along the ascent-to-discharge path via PHREEQC's
+`GAS_PHASE` keyword — relevant because boiling/degassing measurably shifts
+pH and carbonate speciation between deep upflow and surface discharge, a
+real potential confound for the conductivity-as-Cl-proxy workstream (specific
+conductance responds to total ionic strength, not just Cl).
+
+```{r gas-phase-demo-result}
+demo_results$gas_phase[c("syntax_ok")]
+```
+
+A `fixed_pressure` gas phase starting from zero gas moles only exchanges gas
+once the solution's own fugacity reaches the target pressure — the self-test
+uses an atmospheric CO2 partial pressure ($10^{-3.5}$ atm) rather than 1 atm
+pure CO2 for exactly this reason, and visibly raises the synthetic solution's
+pH from 6.0 to ~9 on degassing.
+
+## Known limitations and status (2026-09-06)
+
+- **Real mixing/inverse modeling is blocked on field data, not code**: the
+  single biggest next step for this workstream is chloride sampling that
+  overlaps the conductivity logger deployment window closely enough to name
+  confident real thermal and meteoric end-members.
+- **`parse_phreeqc_inverse_output()`** is a best-effort, line-anchored regex
+  parser of PHREEQC's free-text inverse-modeling output (PHREEQC does not
+  punch inverse-model solutions to `SELECTED_OUTPUT`) — always cross-check
+  the raw `.pqo` file for anything decision-critical.
+- **`parse_phreeqc_gas_output()`**'s moles/pressure columns are gas-phase
+  *totals*, exactly correct only for a single-gas-component phase.
+- **FIELD's historical Alkalinity values are correctly ingested as of this
+  session**, but the underlying convention (`mg/L CaCO3eq`, confirmed
+  directly from the raw lab report's units row) has only been spot-checked
+  for the one lab report reviewed so far — worth re-confirming if a
+  differently-formatted lab report is ever added.
+- **`run_phreeqc_pipeline()`'s printed "Result rows stored" summary** is
+  approximate (not an exact DB count) specifically for batches that succeed
+  via a fallback database rather than the first-choice one — cosmetic only,
+  the real per-batch "Stored N rows" messages and the final DB row count are
+  both correct.
+
+### Changelog
+
+| Date | Change |
+|---|---|
+| 2026-09-06 | Notebook created. PHREEQC integration wired into `run_pipeline.R`; SO4/Si element-name bug and Alkalinity charge/molar_mass bug fixed in `lab_analyte_map.R`. |
+| 2026-09-06 | NDEP pH/temperature-location bug, mixed-unit-averaging bug, and missing "Total Alkalinity" ingest bug found and fixed; PHREEQC-eligible samples went from 8 to 233. |
+| 2026-09-06 | Duplicate HCO3/CO3 rows cleaned up in both NDEP ingest pathways; FIELD's own `make.names()`-mangled-join-key bug found and fixed, backfilling Alkalinity (and NO3) for all 8 real thermal samples for the first time. |
+| 2026-09-06 | `SBW_0002` PHREEQC convergence failure diagnosed (boron/alkalinity interaction at pH 9) and the boron-exclusion guard replaced with a physically-grounded, pH-aware check. `PHREEQC_Run_Failures` empty database-wide. |
+
+```{r cleanup}
+#| include: false
+dbDisconnect(con)
+```

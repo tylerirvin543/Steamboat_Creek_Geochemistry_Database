@@ -38,7 +38,18 @@ format_phreeqc_gas_phase_input <- function(row, gas_components = c("CO2(g)", "H2
     "    -pH           true",
     "    -temperature  true",
     sprintf("    -saturation_indices  %s", paste(si_minerals, collapse = "  ")),
-    "    -gas          true",
+    # 2026-09-06: "-gas true" is not a real SELECTED_OUTPUT keyword --
+    # PHREEQC prefix-matched it against "-gases" (which takes gas
+    # component *names*, not a boolean) and warned "Did not find phase,
+    # true", silently punching zero gas columns. The aggregate
+    # -pressure/"total mol" columns parse_phreeqc_gas_output() already
+    # falls back to happened to still work for a single-gas-component
+    # phase, which is why this went unnoticed until rendering
+    # notebooks/06_phreeqc_geochemical_modeling.qmd surfaced the raw
+    # PHREEQC warning text. Fixed to the real keyword + real gas names,
+    # which additionally gives real per-component m_<gas>/pressure_<gas>
+    # columns for a genuinely multi-gas mixture.
+    sprintf("    -gases        %s", paste(gas_components, collapse = " ")),
     ""
   )
 
@@ -61,14 +72,17 @@ format_phreeqc_gas_phase_input <- function(row, gas_components = c("CO2(g)", "H2
   lines
 }
 
-#' Parse `-gas true` SELECTED_OUTPUT columns. PHREEQC's `-gas` selector
-#' reports aggregate gas-phase properties (total pressure, total moles,
-#' volume), not one column per component -- fine for the single-gas-
-#' component case used here (moles_gas/partial_pressure_atm are exact
-#' when gas_components has length 1, since "total" and "partial" then
-#' coincide; for a genuinely multi-component gas phase, treat the
-#' resulting values as gas-phase totals, not true per-component
-#' partial pressures/moles, without further PHREEQC punch options).
+#' Parse `-gases <names>` SELECTED_OUTPUT columns (fixed 2026-09-06: the
+#' prior "-gas true" directive was not a real PHREEQC keyword and
+#' silently punched zero real gas-component columns -- see
+#' format_phreeqc_gas_phase_input()). PHREEQC's real "-gases" selector
+#' punches one moles-of-gas column per named component ("g_<name>"),
+#' plus the aggregate total pressure/total moles/volume columns this
+#' function used as its only source before. Real per-component moles let
+#' this compute a genuine per-component partial pressure
+#' (partial_pressure_i = total_pressure * moles_i / total_moles) for a
+#' true multi-gas mixture; falls back to the aggregate columns alone if
+#' a component's own "g_<name>" column isn't found for any reason.
 parse_phreeqc_gas_output <- function(selected_output_file, sample_id, gas_components) {
   if (!file.exists(selected_output_file)) stop("SELECTED_OUTPUT file not found: ", selected_output_file)
 
@@ -82,14 +96,26 @@ parse_phreeqc_gas_output <- function(selected_output_file, sample_id, gas_compon
   press_col <- grep("^pressure$", names(raw), value = TRUE, ignore.case = TRUE)
   moles_col <- grep("^total_mol$", names(raw), value = TRUE, ignore.case = TRUE)
 
+  total_pressure <- if (length(press_col) > 0) suppressWarnings(as.numeric(last_row[[press_col[1]]])) else NA_real_
+  total_moles <- if (length(moles_col) > 0) suppressWarnings(as.numeric(last_row[[moles_col[1]]])) else NA_real_
+  resulting_pH <- if (length(ph_col) > 0) suppressWarnings(as.numeric(last_row[[ph_col[1]]])) else NA_real_
+
   result <- list()
   for (g in gas_components) {
+    g_clean <- gsub("[^A-Za-z0-9]", "_", g)
+    g_col <- grep(paste0("^g_", g_clean, "_?$"), names(raw), value = TRUE, ignore.case = TRUE)
+    moles_i <- if (length(g_col) > 0) suppressWarnings(as.numeric(last_row[[g_col[1]]])) else NA_real_
+    partial_pressure_i <- if (!is.na(moles_i) && !is.na(total_moles) && total_moles > 0 && !is.na(total_pressure)) {
+      total_pressure * moles_i / total_moles
+    } else {
+      total_pressure  # fallback: aggregate total, only exact for a single gas component
+    }
     result[[length(result) + 1]] <- data.frame(
       sample_id = sample_id,
       gas_component = g,
-      moles_gas = if (length(moles_col) > 0) suppressWarnings(as.numeric(last_row[[moles_col[1]]])) else NA_real_,
-      partial_pressure_atm = if (length(press_col) > 0) suppressWarnings(as.numeric(last_row[[press_col[1]]])) else NA_real_,
-      resulting_pH = if (length(ph_col) > 0) suppressWarnings(as.numeric(last_row[[ph_col[1]]])) else NA_real_,
+      moles_gas = if (!is.na(moles_i)) moles_i else total_moles,
+      partial_pressure_atm = partial_pressure_i,
+      resulting_pH = resulting_pH,
       stringsAsFactors = FALSE
     )
   }
