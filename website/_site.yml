@@ -1,39 +1,39 @@
-name: "steamboat-project"
-output_dir: "../docs"
-
-navbar:
-  title: "Steamboat Hydrothermal Data Platform"
-  left:
-    - text: "Overview"
-      href: index.html
-    - text: "Scientific Context"
-      href: project.html
-    - text: "Timeline"
-      href: timeline.html
-    - text: "Pipeline"
-      href: pipeline.html
-    - text: "Data System"
-      href: data.html
-    - text: "Results"
-      href: results.html
-    - text: "References"
-      href: references.html
-    - text: "About"
-      href: about.html
-  right:
-    - icon: fa-github
-      href: https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database
-
-output:
-  html_document:
-    theme: flatly
-    css: styles.css
-    highlight: textmate
-    toc: true
-    toc_float:
-      collapsed: true
-      smooth_scroll: true
-    number_sections: false
-    df_print: kable
-    code_folding: hide
-    anchor_sections: true
+name: "steamboat-project"
+output_dir: "../docs"
+
+navbar:
+  title: "Steamboat Hydrothermal Data Platform"
+  left:
+    - text: "Overview"
+      href: index.html
+    - text: "Scientific Context"
+      href: project.html
+    - text: "Timeline"
+      href: timeline.html
+    - text: "Pipeline"
+      href: pipeline.html
+    - text: "Data System"
+      href: data.html
+    - text: "Results"
+      href: results.html
+    - text: "References"
+      href: references.html
+    - text: "About"
+      href: about.html
+  right:
+    - icon: fa-github
+      href: https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database
+
+output:
+  html_document:
+    theme: flatly
+    css: styles.css
+    highlight: textmate
+    toc: true
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: false
+    df_print: kable
+    code_folding: hide
+    anchor_sections: true

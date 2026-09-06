@@ -9,13 +9,13 @@
 "Field_Observations",0
 "Gradient_Vectors_Scaled",458409
 "Hydraulic_Gradients",670130
-"Ingest_Run_Log",86
+"Ingest_Run_Log",97
 "Isotope_Analyses",16
 "Lab_Analyses",10449
 "Locations",160
 "Logger_Files_Processed",20
 "Logger_Station_Map",0
-"Photo_Location_Candidates",0
+"Photo_Location_Candidates",1
 "Photo_Location_QC",0
 "Photos",0
 "Port_Injection_Links",15
