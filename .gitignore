@@ -80,3 +80,14 @@ notebooks/*_files/
 
 # tesseract OCR cache (redirected into project to work around sandbox restriction -- see parse_well_log_pdf.R)
 .tesseract_cache/
+
+# ==================================================
+# LITERATURE PDFs (NEVER COMMIT)
+# ==================================================
+# Matches the citation-not-rehosting policy stated on website/references.Rmd:
+# this repo cites sources, it doesn't re-host their copyrighted PDFs. Also
+# just very large (400+ MB, including full-resolution 1960s-era USGS plate
+# scans) -- keep these local-only. build_website()'s docs/literature
+# backup/restore guard (see scripts/run_pipeline.R) protects this folder
+# across renders regardless of whether it's tracked in git.
+docs/literature/

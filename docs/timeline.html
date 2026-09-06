@@ -11,7 +11,7 @@
 
 
 
-<title>Scientific Context</title>
+<title>timeline.knit</title>
 
 <script src="site_libs/header-attrs-2.31/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -377,144 +377,246 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Scientific Context</h1>
 
 </div>
 
 
-<div id="a-system-that-just-reminded-everyone-its-alive"
+<hr />
+<p>title: “Timeline”</p>
+<p>output: html_document</p>
+<hr />
+<div id="from-first-signs-to-standing-monitoring-network"
 class="section level2 hasAnchor">
-<h2 class="hasAnchor">A System That Just Reminded Everyone It’s Alive<a
-href="#a-system-that-just-reminded-everyone-its-alive"
+<h2 class="hasAnchor">From First Signs to Standing Monitoring Network<a
+href="#from-first-signs-to-standing-monitoring-network"
 class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The Steamboat Springs geothermal field has been producing power for
-four decades, and for most of that time its surface expression (the
-springs, seeps, and steaming ground that give the area its name) had
-been quietly declining as production and reinjection reshaped the
-plumbing underground; that decline continues a much longer historical
-arc first documented by USGS geologists White, Thompson, and Sandberg in
-the 1960s, when Steamboat Springs already ranked among the largest
-geyser fields in the United States before twentieth-century development
-suppressed most of that activity. That story changed abruptly in June
-2025, when a geyser-like eruption over 30 feet tall burst from an
-abandoned well at the Lower Sinter Terrace, an event documented in
-detail by Lindsey et al. (2026), whose monitoring team traced the
-buildup back to renewed steaming-ground activity first noticed in 2022.
-An eruption like that is not a random event; it is the visible tip of a
-much larger, mostly invisible change in subsurface pressure and fluid
-pathways, the same production/injection plumbing whose recent evolution
-is modeled by Dhakal et al. (2025), building on the groundwater
-monitoring framework Klein, Johnson, and Spielman established in 2007.
-The obvious question it raises, and the one this project exists to help
-answer, is how the system’s outflow has actually changed, and whether
-the monitoring network in place is good enough to tell the difference
-between routine variability and something new. A first, poster-stage
-answer already points toward reactivation of the existing conduit
-network rather than a new source; see the <a
-href="results.html">Results</a> page for that finding, presented at the
-2026 Geothermal Rising Conference as a direct continuation of Lindsey et
-al.’s work.</p>
-<p>That question turns out to be harder to answer than it sounds,
-because the tools traditionally used to watch a hydrothermal system are
-mismatched to how fast the system can actually move. Regulatory and
-field chemistry sampling happens a few times a year at best, which is
-more than enough to miss a transient pressure pulse, a short-lived
-mixing event, or the kind of gradual drift that only becomes obvious
-once you have three years of data instead of three months. Different
-agencies and field crews also record things in different formats and at
-different resolutions, so simply lining up a well’s chemistry against
-its water level against a nearby creek’s conductivity has historically
-required a fair amount of manual reassembly before any comparison could
-even begin. The gap between how quickly the system can change and how
-coarsely it is normally observed is the central problem this project is
-built to narrow.</p>
+<p>The events below are placed using each photo’s own embedded capture
+timestamp (and, where present, its embedded GPS fix), not a remembered
+or estimated date, so this timeline can be extended reliably as new
+field photos and videos come in. It runs from the first documented signs
+of renewed activity through the point where this project’s own
+continuous monitoring network took over. Lindsey et al. (2026) is the
+fullest published account of the earlier part of this story and is cited
+throughout; see the <a href="references.html">References</a> page for
+the full citation.</p>
+<div class="timeline">
+<div class="timeline-item">
+<div class="timeline-date">
+2022
 </div>
-<div id="why-temperature-and-conductivity-do-the-heavy-lifting"
-class="section level2 hasAnchor">
-<h2 class="hasAnchor">Why Temperature and Conductivity Do the Heavy
-Lifting<a href="#why-temperature-and-conductivity-do-the-heavy-lifting"
-class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Of the properties that are practical to measure continuously,
-temperature and electrical conductivity are the most directly
-informative about what a hydrothermal system is doing right now.
-Temperature responds quickly to changes in flow pathways, to mixing
-between hot deep water and cooler shallow water, and to pressure changes
-that shift where fluid is moving — and because temperature loggers can
-record it every few minutes indefinitely, it captures exactly the kind
-of short-term variability that a quarterly chemistry sample would simply
-never see. Conductivity plays a related but distinct role: in Steamboat
-Creek, it stands in for chloride concentration, which is itself the
-tracer Michael Sorey’s classic studies used to estimate how much
-geothermal water is discharging from the system as a whole. Chloride
-behaves conservatively (it neither precipitates nor reacts appreciably
-on its way downstream), so multiplying its concentration by the creek’s
-discharge gives a mass flux that, combined with a reference
-concentration for the deep thermal water, converts directly into an
-estimate of geothermal outflow. Conductivity can be logged every few
-minutes for the cost of one instrument; chloride requires a lab. The
-practical question this project is chasing — and one of its three core
-objectives — is exactly how infrequently chloride actually needs to be
-sampled to keep a conductivity-based estimate of that outflow
-trustworthy.</p>
-<div class="figure">
-<img src="project_files/figure-html/continuous-signal-1.png" alt="A short window of raw temperature-logger data, illustrating the kind of short-term variability that would be invisible to periodic discrete sampling." width="100%" />
-<p class="caption">
-A short window of raw temperature-logger data, illustrating the kind of
-short-term variability that would be invisible to periodic discrete
-sampling.
+<div class="timeline-content">
+<h4>
+Renewed Steaming Ground First Noted
+</h4>
+<p>
+Per Lindsey et al. (2026), steaming ground at the Lower Sinter Terrace
+began expanding and water reappeared along surface fractures, reversing
+decades of quiet decline in the field’s surface expression. Activity
+increased steadily over the following three years.
 </p>
 </div>
 </div>
-<div id="from-isolated-readings-to-a-system-level-picture"
-class="section level2 hasAnchor">
-<h2 class="hasAnchor">From Isolated Readings to a System-Level Picture<a
-href="#from-isolated-readings-to-a-system-level-picture"
-class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The approach this project takes is to stop treating each data type as
-its own island and instead fold everything — groundwater levels, field
-and laboratory chemistry, continuous temperature and conductivity, and
-now, increasingly, the physical construction records of the wells
-themselves — into one relational database, where every observation
-carries an explicit link to where and when it was collected and by what
-method. That structure is what makes it possible to ask genuinely
-cross-domain questions: whether a hydraulic gradient between two wells
-lines up with a chemical difference between them, whether a spike in
-creek conductivity coincides with a nearby field visit rather than a
-real signal, or whether the same well’s chemistry from a 1970s survey
-and a 2026 field sample tell a consistent story about how the outflow
-has evolved. None of those comparisons are possible when the underlying
-data live in disconnected spreadsheets; they become simple queries once
-the data live in a shared schema.</p>
-<p>That same structure is also what prepares the ground for the modeling
-this project is building toward. Validated chemistry, once it is sitting
-in normalized tables rather than scattered lab reports, becomes a direct
-input to PHREEQC for speciation and mixing calculations; a time-aligned
-record of conductivity and the chloride samples that overlap with it
-becomes the training data for a calibrated Cl-conductivity relationship;
-and water levels and chemistry attached to precise well coordinates
-become exactly the input ArcGIS needs to interpolate a potentiometric
-surface and trace where a chemical signature is migrating underground.
-Each of those next steps depends on the data first being trustworthy and
-consistently structured — which is the whole reason this system exists
-before any of that modeling work begins.</p>
+<div class="timeline-item">
+<div class="timeline-date">
+June 3, 2025
 </div>
-<div id="the-goal-stated-plainly" class="section level2 hasAnchor">
-<h2 class="hasAnchor">The Goal, Stated Plainly<a
-href="#the-goal-stated-plainly" class="anchor-section"
-aria-label="Anchor link to header"></a></h2>
-<p>Beyond any single analysis, the aim of this project is to build a
-framework that keeps working as new data arrive, rather than a static
-report that goes stale the moment the next field season starts. Every
-script that touches the database can be re-run safely on new data
-without duplicating or corrupting what came before, so the system’s
-picture of the Steamboat Hills field keeps sharpening as more springs
-are re-sampled, more wells are logged, and more conductivity data
-accumulates against the growing chemistry record. Although this platform
-was built specifically for Steamboat Hills, the same architecture —
-ingest once, validate consistently, integrate across sources, model on
-top — applies just as well to any environmental system where the hard
-part is not any single measurement, but making dozens of different kinds
-of measurement talk to each other.</p>
+<div class="timeline-content">
+<h4>
+The Lower Sinter Terrace Eruption
+</h4>
+<p>
+An uncapped, shallow (roughly 15-20 m) abandoned well erupted without
+warning, shooting boiling water nearly 30 m into the air. It was the
+first geyser-like activity documented at Steamboat in decades (Lindsey
+et al., 2026). The response effort that produced this project’s own
+monitoring network began immediately afterward.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+June 6, 2025
+</div>
+<div class="timeline-content">
+<h4>
+Early Site Documentation and Drone Survey
+</h4>
+<p><img src="assets/thumbs/geyser_fissure_south_view_5.jpg" class="timeline-img"></p>
+<p>
+The active vent three days after the eruption, still uncapped and
+jetting from the well pipe next to Ormat facility buildings. Fresh
+orange and yellow sinter mineralization fans out across the surrounding
+pad, with yellow caution tape marking the exclusion zone.
+</p>
+<p><img src="assets/thumbs/geyser_southwest_view_1_annotated_tloggers.jpg" class="timeline-img"></p>
+<p>
+The same vent, annotated to mark the planned placement of upflow and
+outflow temperature loggers relative to the eruption fissure. This is
+the beginning of the continuous temperature-monitoring effort this
+project builds on directly.
+</p>
+<video controls preload="metadata" class="timeline-video" poster="assets/thumbs/geyser_fissure_south_view_5.jpg">
+<source src="assets/video_compressed/drone_survey_20250606.mp4" type="video/mp4">
+<p>Your browser does not support embedded video.</p>
+</video>
+<p>
+Aerial drone survey of the eruption site taken the same day (the file’s
+embedded metadata timestamp reads August 22, 2025, which reflects when
+the clip was downloaded/exported from the drone, not when it was flown).
+Lindsey et al. (2026) describe thermal drone surveys as one of the core
+tools in the post-eruption monitoring program this footage belongs to.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+Shortly after June 6, 2025
+</div>
+<div class="timeline-content">
+<h4>
+The Pipe Is Capped, Discharge Redistributes
+</h4>
+<p>
+Per Lindsey et al. (2026), the erupting pipe was capped in the days or
+weeks following the eruption (an exact date is not given in the
+published account). Capping did not stop the discharge; it shifted
+laterally, with new small springs and persistent spitting vents forming
+along adjacent fractures and sinter surfaces nearby. That
+redistribution, not a second eruption, is what the next photo documents.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+June 14, 2025
+</div>
+<div class="timeline-content">
+<h4>
+Steaming Ground Beyond the Main Vent
+</h4>
+<p><img src="assets/thumbs/steaming_ground_2.jpg" class="timeline-img"></p>
+<p>
+Sulfur-stained, steaming ground along a fence line near the site,
+distinct from the now-capped main vent: exactly the kind of lateral
+redistribution of discharge Lindsey et al. (2026) describe following
+capping, rather than activity confined to a single point.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+December 12, 2025
+</div>
+<div class="timeline-content">
+<h4>
+Persistent Steaming Ground, GPS-Located
+</h4>
+<p><img src="assets/thumbs/PXL_20251212_180405968.jpg" class="timeline-img"></p>
+<p>
+Mineral-encrusted ground and a small steaming vent, six months after the
+eruption, at 39.3823° N, 119.7389° W. This is the only asset on this
+page with an embedded GPS fix, extracted automatically via the same EXIF
+pipeline used for this project’s registered field locations.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+January 22, 2026
+</div>
+<div class="timeline-content">
+<h4>
+Wellhead Follow-up and Active Steaming Fissure
+</h4>
+<p><img src="assets/thumbs/20260122_0102.jpg" class="timeline-img"></p>
+<p>
+The same wellhead, capped since mid-2025 and now fitted with a valve,
+measured against a tape for scale during a routine follow-up visit
+roughly seven months after the eruption; not a new capping event, just a
+later inspection of the same structure.
+</p>
+<video controls preload="metadata" class="timeline-video">
+<source src="assets/video_compressed/20260122_steaming_fissure.mp4" type="video/mp4">
+<p>Your browser does not support embedded video.</p>
+</video>
+<p>
+The steaming fissure with bubbling mud pots and intermittent spouting,
+recorded the same day, direct evidence that the outflow feature was
+still actively venting more than half a year after the initial eruption.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+February 2026
+</div>
+<div class="timeline-content">
+<h4>
+Lindsey et al. Published
+</h4>
+<p>
+Cary R. Lindsey, Owen Callahan, Rachel Micander, Nicole Hart-Wagoner,
+and Griffin Burke-Ruhl presented <em>Recent Geyser-Like Eruption and
+Renewed Hydrothermal Activity in the Steamboat Geothermal Area,
+Nevada</em> at the 51st Stanford Geothermal Workshop (SGP-TR-230), the
+first full published account of the eruption and the monitoring program
+that followed it. This project continues that program’s chemistry,
+temperature, and mapping threads with its own database and analysis
+pipeline.
+</p>
+</div>
+</div>
+<div class="timeline-item">
+<div class="timeline-date">
+2026 (ongoing)
+</div>
+<div class="timeline-content">
+<h4>
+This Project’s Monitoring Network
+</h4>
+<p>
+Temperature loggers, a conductivity logger in Steamboat Creek, re-mapped
+springs and wells, and a growing chemistry record extend the Lindsey et
+al. (2026) response effort into a standing, reproducible monitoring
+system. See the <a href="data.html">Data System</a> and <a
+href="results.html">Results</a> pages for what that network shows so
+far.
+</p>
+</div>
+</div>
+</div>
+<div id="turning-this-documentation-into-map-points"
+class="section level2 hasAnchor">
+<h2 class="hasAnchor">Turning This Documentation Into Map Points<a
+href="#turning-this-documentation-into-map-points"
+class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Every photo above already carries an exact capture timestamp, and one
+also carries a GPS coordinate extracted directly from the file’s own
+metadata. That extraction runs through the same
+<code>ingest_image_locations.R</code> pipeline used for every other
+field photo in this project (documented in full on the <a
+href="pipeline.html">Pipeline</a> page); no coordinate on this page was
+typed in by hand. As of this update, that pipeline also scans video
+files for embedded GPS the same way it already handled still images. All
+seven files on this page (five photos, two videos) have been run through
+it directly: it correctly read the one real GPS fix present, and quietly
+skipped the six files with no location tag at all rather than erroring,
+which is exactly the behavior a mixed photo/video drop folder needs.
+Most drone and phone videos checked so far, including both videos above,
+simply carry no embedded location metadata, so a video becomes a mapped
+point only once someone assigns it a coordinate or an existing station
+code by hand in <code>image_location_map.csv</code>, the same review
+step every photo already goes through before it can create or check a
+<code>Locations</code> row. This page’s timeline and the database’s
+spatial layer are built from that same underlying mechanism, just
+applied to documentation photos and videos instead of routine
+field-visit photos.</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 
 

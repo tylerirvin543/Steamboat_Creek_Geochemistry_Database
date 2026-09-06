@@ -2,21 +2,24 @@
 # ingest_image_locations.R
 #
 # Purpose:
-# Streamline turning field photos into registered Locations, using
-# exiftool to pull GPS coordinates out of photo EXIF metadata instead
-# of manually reading them off a phone/camera and typing coordinates
-# in by hand.
+# Streamline turning field photos and videos into registered Locations, using
+# exiftool to pull GPS coordinates out of embedded metadata instead
+# of manually reading them off a phone/camera/drone and typing coordinates
+# in by hand. As of 2026-09-06 this also scans common video containers
+# (mp4/mov/m4v), though many videos -- especially drone footage -- carry
+# no embedded GPS at all; those are simply skipped by Step 1 rather than
+# erroring, and can still get a manual coordinate in Step 2's mapping file.
 #
 # Workflow (two deliberately separate steps -- GPS extraction is
-# automatic, but "this filename is this named site" is a human
+# automatic when a file has it, but "this filename is this named site" is a user
 # judgment call that is never inferred):
 #
-#   1. AUTOMATIC: every photo dropped in data/raw/images/image_drop/
+#   1. AUTOMATIC: every photo or video dropped in data/raw/images/image_drop/
 #      gets its GPS lat/lon/altitude + capture time extracted via
 #      exiftool.exe and appended to Photo_Location_Candidates (raw,
 #      append-only, keyed by filename -- safe to re-run any time).
 #
-#   2. HUMAN-CONFIRMED: data/raw/images/image_location_map.csv (a
+#   2. USER-CONFIRMED: data/raw/images/image_location_map.csv (a
 #      plain spreadsheet you maintain -- NOT auto-generated) maps a
 #      filename to an external_station_code, site_type, and name.
 #      Only rows present in this mapping ever create or touch a row
@@ -72,15 +75,15 @@ haversine_m <- function(lat1, lon1, lat2, lon2) {
   2 * r * asin(pmin(1, sqrt(a)))
 }
 
-#' Run exiftool over every photo in `image_dir`, returning a data
+#' Run exiftool over every photo or video in `image_dir`, returning a data
 #' frame with one row per file (GPS columns are NA for non-geotagged
-#' images, e.g. screenshots accidentally dropped in the folder).
+#' images/videos, e.g. screenshots or GPS-less drone clips (see file header).
 extract_photo_gps <- function(image_dir, exiftool_path) {
   args <- c(
     "-csv", "-gpslatitude", "-gpslongitude", "-gpsaltitude",
     "-gpshpositioningerror",  # device-reported horizontal accuracy (m), when recorded
     "-datetimeoriginal", "-filename",
-    "-ext", "heic", "-ext", "jpg", "-ext", "jpeg", "-ext", "png", "-ext", "tif", "-ext", "tiff",
+    "-ext", "heic", "-ext", "jpg", "-ext", "jpeg", "-ext", "png", "-ext", "tif", "-ext", "tiff", "-ext", "mp4", "-ext", "mov", "-ext", "m4v",
     "-n",  # numeric GPS output instead of "39 deg 22' 56.66\" N"
     image_dir
   )

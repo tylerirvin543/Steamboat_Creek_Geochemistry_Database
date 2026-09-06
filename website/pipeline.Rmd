@@ -1,139 +1,155 @@
----
-title: "Pipeline"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-```
-
-## From a Folder of Files to a Trustworthy Database
-
-Every dataset in this project starts life as a file that someone else designed for their own purposes &mdash; an NDEP regulatory CSV, a field spreadsheet, a raw export from a temperature or conductivity logger, a scanned NDWR well-completion PDF. None of those formats agree with each other, and none of them were built with database integration in mind. The pipeline's job is to take that pile of heterogeneous files and turn it into a single, internally consistent database that can be trusted for analysis, without ever touching or reinterpreting the original files themselves. It does that through five stages applied uniformly to every source: each file is first **parsed and standardized** into a common shape, then **checked** for structural and logical consistency, **normalized** into the shared relational schema, **inserted** into the database, and finally **exported** into the GIS, modeling, and web formats that downstream analysis actually uses. Because that sequence is identical for every source, a new data type &mdash; a new well-log batch, a newly digitized shapefile &mdash; is a matter of writing one more script that plugs into the same five stages, not redesigning the system.
-
-```{r workflow-diagram, fig.cap="Conceptual data flow: raw sources on the left feed dedicated ingestion scripts, which populate a normalized relational schema; derived products, quality control, and GIS/modeling exports all sit downstream of that shared core.", fig.width=12, fig.height=10}
-DiagrammeR::grViz("
-digraph steamboat_database {
-
-graph [
-  layout = dot,
-  rankdir = TB,
-  nodesep = 0.4,
-  ranksep = 0.9,
-  label = \"Steamboat Hydrothermal Data System Architecture\",
-  labelloc = t,
-  fontsize = 16
-]
-
-node [fontname = Helvetica, fontsize = 10]
-edge [color=\"#555555\"]
-
-node [shape = folder, style=filled, fillcolor=\"#C7E9C0\", width=1.1]
-NDEP   [label=\"NDEP\\n(CSV / PRR)\"]
-Field  [label=\"Field\\n(Excel)\"]
-Lab    [label=\"Lab\\n(CSV/XLSX)\"]
-Loggers[label=\"Temp / EC\\nLoggers\"]
-NDWR   [label=\"NDWR\\n(wells, logs)\"]
-USGS   [label=\"USGS\"]
-Weather[label=\"NOAA\"]
-Iso    [label=\"Isotopes\"]
-
-node [shape = box, style=filled, fillcolor=\"#FFF7BC\"]
-ing_ndep   [label=\"ingest_ndep\"]
-ing_field  [label=\"ingest_field\"]
-ing_lab    [label=\"ingest_lab\"]
-ing_log    [label=\"ingest_logger /\\ningest_conductivity\"]
-ing_ndwr   [label=\"ingest_ndwr /\\ningest_well_logs\"]
-ing_usgs   [label=\"ingest_usgs\"]
-ing_weather[label=\"ingest_noaa_weather\"]
-ing_iso    [label=\"ingest_iso\"]
-
-node [shape = record, style=filled, fillcolor=\"#BDD7E7\"]
-Locations [label=\"{Locations|PK location_id|lat, lon}\"]
-Events [label=\"{Sampling_Events|PK event_id|date}\"]
-Samples [label=\"{Samples|PK sample_id|FK location_id\\nFK event_id|time}\"]
-LabAnalyses [label=\"{Lab_Analyses|FK sample_id|analyte|value}\"]
-TempObs [label=\"{Temperature_Observations|FK logger_id|timestamp|temperature}\"]
-CondObs [label=\"{Conductivity_Observations|FK logger_id|timestamp|sc_25c}\"]
-Wells [label=\"{Wells|PK well_id|role, depth}\"]
-WaterLevels [label=\"{Water_Level_Observations|FK well_id|timestamp|level}\"]
-Isotopes [label=\"{Isotope_Analyses|FK sample_id|d18O|d2H}\"]
-
-node [shape = ellipse, style=filled, fillcolor=\"#FEC44F\"]
-Gradients [label=\"Hydraulic Gradients\"]
-
-node [shape = ellipse, style=filled, fillcolor=\"#FDD0A2\"]
-QC [label=\"QA / QC Validation\"]
-
-node [shape = folder, style=filled, fillcolor=\"#D9D9D9\"]
-GeoPkg  [label=\"GeoPackage\"]
-Website [label=\"Website Outputs\"]
-
-node [shape = ellipse, style=filled, fillcolor=\"#FEE391\"]
-ModelInputs [label=\"Model Inputs\"]
-Modeling    [label=\"PHREEQC / Cl-SC\\nCalibration / Interpolation\"]
-
-{rank=same; NDEP Field Lab Loggers NDWR USGS Weather Iso}
-{rank=same; ing_ndep ing_field ing_lab ing_log ing_ndwr ing_usgs ing_weather ing_iso}
-{rank=same; Locations Events Wells}
-{rank=same; Samples WaterLevels TempObs CondObs}
-
-NDEP -> ing_ndep
-Field -> ing_field
-Lab -> ing_lab
-Loggers -> ing_log
-NDWR -> ing_ndwr
-USGS -> ing_usgs
-Weather -> ing_weather
-Iso  -> ing_iso
-
-ing_ndep -> Locations
-ing_ndep -> Samples
-ing_ndep -> LabAnalyses
-ing_ndep -> Events
-ing_field -> Events
-Events -> Samples
-ing_field -> Samples
-ing_field -> Locations
-ing_lab -> LabAnalyses
-ing_log -> TempObs
-ing_log -> CondObs
-Locations -> TempObs
-ing_ndwr -> Wells
-Wells -> WaterLevels
-ing_usgs -> Gradients
-ing_iso  -> Isotopes
-
-Locations -> Samples
-Samples   -> LabAnalyses
-Samples   -> Isotopes
-
-WaterLevels -> Gradients
-Wells       -> Gradients
-
-Gradients -> QC
-LabAnalyses -> QC
-TempObs -> QC
-CondObs -> QC
-Isotopes -> QC
-
-QC -> GeoPkg
-QC -> Website
-QC -> ModelInputs
-ModelInputs -> Modeling
-
-}
-")
-```
-
-Reading the diagram from left to right tells the whole story: raw inputs enter through source-specific ingestion scripts that handle each format's own quirks, land in a small set of core relational tables &mdash; **Locations, Sampling Events, Samples,** and the observation tables hanging off them &mdash; that everything else is built from, and then flow through a cross-cutting quality-control layer before being exported to GIS, the website, and eventually the geochemical and spatial modeling this project is building toward. That QC layer never modifies the underlying data; it only evaluates it and logs what it finds, which keeps the audit trail between a raw file and a database row completely unbroken.
-
-## Two Modes, One Codebase
-
-The same pipeline code runs in two different modes depending on the situation. **DEMO mode** rebuilds the database from scratch on every run, which makes it deterministic and ideal for teaching, debugging, and proving that the whole system really can be reconstructed from raw inputs alone. **OPERATIONAL mode** instead persists the database between runs and grows it incrementally as new field seasons, lab batches, and logger downloads arrive &mdash; the mode this project actually runs in day to day. Because ingestion is idempotent by design (records are matched against stable identifiers like a logger's serial number and timestamp, or a sample's external ID, rather than blindly appended), running the same ingestion step twice, or leaving old files sitting in a raw-data folder, never duplicates or corrupts what is already there. A single configuration block at the top of `run_pipeline.R` decides which sources actually run on a given pass, so a targeted update &mdash; say, just the newest NDWR well logs &mdash; never has to pay the cost of re-processing everything else.
-
-## What the Pipeline Actually Has to Deal With
-
-In practice, most of the engineering effort goes into handling the ways real-world environmental data misbehaves: file formats that vary release to release, column names that drift between one field season's spreadsheet and the next, timestamps recorded in at least three different conventions depending on the source, coordinate systems that need reprojecting before anything can be mapped together, and the occasional literal duplicate record that has to be caught before it inflates a summary statistic. Temperature and conductivity logger ingestion is a good example of all of this at once: each deployment can arrive as a slightly different Excel export, with its own timestamp formatting and its own column layout, and the ingestion script has to normalize all of that into one consistent shape before a single row reaches the database. Solving that class of problem once, carefully, is what lets every later step &mdash; the QC checks, the GIS export, the eventual geochemical models &mdash; assume clean, consistent data rather than re-solving the same formatting problems over and over.
-
-Once ingestion and validation are complete, a final post-processing stage updates spatial geometry for every location and well, rebuilds the GIS-ready views the GeoPackage export depends on, and reruns the full suite of quality-control checks across the database. The result is a set of outputs &mdash; a GeoPackage ready to drop into ArcGIS, a rendered website, and validated tables ready for the next stage of modeling &mdash; that are always freshly regenerated from whatever is currently in the database, and never hand-maintained separately from it.
+---
+title: "Pipeline"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+```
+
+## From a Folder of Files to a Trustworthy Database
+
+Every dataset in this project starts life as a file that someone else designed for their own purposes: an NDEP regulatory CSV, a field spreadsheet, a raw export from a temperature or conductivity logger, a scanned NDWR well-completion PDF. None of those formats agree with each other, and none of them were built with database integration in mind. The pipeline's job is to take that pile of heterogeneous files and turn it into a single, internally consistent database that can be trusted for analysis, without ever touching or reinterpreting the original files themselves. It does that through five stages applied uniformly to every source: each file is first **parsed and standardized** into a common shape, then **checked** for structural and logical consistency, **normalized** into the shared relational schema, **inserted** into the database, and finally **exported** into the GIS, modeling, and web formats that downstream analysis actually uses. Because that sequence is identical for every source, a new data type &mdash; a new well-log batch, a newly digitized shapefile &mdash; is a matter of writing one more script that plugs into the same five stages, not redesigning the system.
+
+```{r workflow-diagram, fig.cap="Conceptual data flow: raw sources on the left feed dedicated ingestion scripts, which populate a normalized relational schema; derived products, quality control, and GIS/modeling exports all sit downstream of that shared core.", fig.width=12, fig.height=10}
+DiagrammeR::grViz("
+digraph steamboat_database {
+
+graph [
+  layout = dot,
+  rankdir = TB,
+  nodesep = 0.4,
+  ranksep = 0.9,
+  label = \"Steamboat Hydrothermal Data System Architecture\",
+  labelloc = t,
+  fontsize = 16
+]
+
+node [fontname = Helvetica, fontsize = 10]
+edge [color=\"#555555\"]
+
+node [shape = folder, style=filled, fillcolor=\"#C7E9C0\", width=1.1]
+NDEP     [label=\"NDEP\\n(CSV / PRR)\"]
+Field    [label=\"Field\\n(Excel)\"]
+Lab      [label=\"Lab\\n(CSV/XLSX)\"]
+TempLog  [label=\"Temperature\\nLoggers\"]
+CondLog  [label=\"Conductivity\\nLoggers\"]
+NDWR     [label=\"NDWR\\n(wells, logs)\"]
+USGS     [label=\"USGS\"]
+Weather  [label=\"NOAA\"]
+Iso      [label=\"Isotopes\"]
+Photos   [label=\"Field Photos /\\nVideos (EXIF GPS)\"]
+WellNet  [label=\"Well Network /\\nFacility CSVs, GIS\"]
+
+node [shape = box, style=filled, fillcolor=\"#FFF7BC\"]
+ing_ndep    [label=\"ingest_ndep\"]
+ing_field   [label=\"ingest_field\"]
+ing_lab     [label=\"ingest_lab\"]
+ing_temp    [label=\"ingest_temperature_loggers\"]
+ing_cond    [label=\"ingest_conductivity\"]
+ing_ndwr    [label=\"ingest_ndwr /\\ningest_well_logs\"]
+ing_usgs    [label=\"ingest_usgs\"]
+ing_weather [label=\"ingest_noaa_weather\"]
+ing_iso     [label=\"ingest_isotopes\"]
+ing_photos  [label=\"ingest_image_locations\"]
+ing_wellnet [label=\"register_well_network /\\nregister_facility_areas\"]
+
+node [shape = record, style=filled, fillcolor=\"#BDD7E7\"]
+Locations [label=\"{Locations|PK location_id|lat, lon}\"]
+Events [label=\"{Sampling_Events|PK event_id|date}\"]
+Samples [label=\"{Samples|PK sample_id|FK location_id\\nFK event_id|time}\"]
+LabAnalyses [label=\"{Lab_Analyses|FK sample_id|analyte|value}\"]
+TempObs [label=\"{Temperature_Observations|FK logger_id|timestamp|temperature}\"]
+CondObs [label=\"{Conductivity_Observations|FK logger_id|timestamp|sc_25c}\"]
+Wells [label=\"{Wells|PK well_id|role, depth}\"]
+WaterLevels [label=\"{Water_Level_Observations|FK well_id|timestamp|level}\"]
+Isotopes [label=\"{Isotope_Analyses|FK sample_id|d18O|d2H}\"]
+
+node [shape = ellipse, style=filled, fillcolor=\"#FEC44F\"]
+Gradients [label=\"Hydraulic Gradients\"]
+FlowNet   [label=\"Well Flow Network\\n(ports, injection)\"]
+
+node [shape = ellipse, style=filled, fillcolor=\"#FDD0A2\"]
+QC [label=\"QA / QC Validation\"]
+
+node [shape = folder, style=filled, fillcolor=\"#D9D9D9\"]
+GeoPkg  [label=\"GeoPackage\"]
+Website [label=\"Website Outputs\"]
+
+node [shape = ellipse, style=filled, fillcolor=\"#FEE391\"]
+ModelInputs [label=\"Model Inputs\"]
+Modeling    [label=\"PHREEQC / Cl-SC\\nCalibration / Interpolation\"]
+
+{rank=same; NDEP Field Lab TempLog CondLog NDWR USGS Weather Iso Photos WellNet}
+{rank=same; ing_ndep ing_field ing_lab ing_temp ing_cond ing_ndwr ing_usgs ing_weather ing_iso ing_photos ing_wellnet}
+{rank=same; Locations Events Wells}
+{rank=same; Samples WaterLevels TempObs CondObs}
+
+NDEP -> ing_ndep
+Field -> ing_field
+Lab -> ing_lab
+TempLog -> ing_temp
+CondLog -> ing_cond
+NDWR -> ing_ndwr
+USGS -> ing_usgs
+Weather -> ing_weather
+Iso  -> ing_iso
+Photos -> ing_photos
+WellNet -> ing_wellnet
+
+ing_ndep -> Locations
+ing_ndep -> Samples
+ing_ndep -> LabAnalyses
+ing_ndep -> Events
+ing_field -> Events
+Events -> Samples
+ing_field -> Samples
+ing_field -> Locations
+ing_lab -> LabAnalyses
+ing_temp -> TempObs
+ing_cond -> CondObs
+Locations -> TempObs
+Locations -> CondObs
+ing_ndwr -> Wells
+Wells -> WaterLevels
+ing_usgs -> Gradients
+ing_iso  -> Isotopes
+ing_photos -> Locations
+ing_wellnet -> Wells
+ing_wellnet -> FlowNet
+
+Locations -> Samples
+Samples   -> LabAnalyses
+Samples   -> Isotopes
+
+WaterLevels -> Gradients
+Wells       -> Gradients
+Wells       -> FlowNet
+
+Gradients -> QC
+FlowNet -> QC
+LabAnalyses -> QC
+TempObs -> QC
+CondObs -> QC
+Isotopes -> QC
+
+QC -> GeoPkg
+QC -> Website
+QC -> ModelInputs
+ModelInputs -> Modeling
+
+}
+")
+```
+
+Reading the diagram from left to right tells the whole story: raw inputs enter through source-specific ingestion scripts that handle each format's own quirks, land in a small set of core relational tables &mdash; **Locations, Sampling Events, Samples,** and the observation tables hanging off them &mdash; that everything else is built from, and then flow through a cross-cutting quality-control layer before being exported to GIS, the website, and eventually the geochemical and spatial modeling this project is building toward. That QC layer never modifies the underlying data; it only evaluates it and logs what it finds, which keeps the audit trail between a raw file and a database row completely unbroken.
+
+## Two Modes, One Codebase
+
+The same pipeline code runs in two different modes depending on the situation. **DEMO mode** rebuilds the database from scratch on every run, which makes it deterministic and ideal for teaching, debugging, and proving that the whole system really can be reconstructed from raw inputs alone. **OPERATIONAL mode** instead persists the database between runs and grows it incrementally as new field seasons, lab batches, and temperature- and conductivity-logger downloads arrive &mdash; the mode this project actually runs in day to day. Because ingestion is idempotent by design (records are matched against stable identifiers like a temperature or conductivity logger's serial number and timestamp, or a sample's external ID, rather than blindly appended), running the same ingestion step twice, or leaving old files sitting in a raw-data folder, never duplicates or corrupts what is already there. A single configuration block at the top of `run_pipeline.R` decides which sources actually run on a given pass, so a targeted update &mdash; say, just the newest NDWR well logs &mdash; never has to pay the cost of re-processing everything else.
+
+## What the Pipeline Actually Has to Deal With
+
+In practice, most of the engineering effort goes into handling the ways real-world environmental data misbehaves: file formats that vary release to release, column names that drift between one field season's spreadsheet and the next, timestamps recorded in at least three different conventions depending on the source, coordinate systems that need reprojecting before anything can be mapped together, and the occasional literal duplicate record that has to be caught before it inflates a summary statistic. Temperature and conductivity logger ingestion is a good example of all of this at once: each deployment can arrive as a slightly different Excel export, with its own timestamp formatting and its own column layout, and the ingestion script has to normalize all of that into one consistent shape before a single row reaches the database. Solving that class of problem once, carefully, is what lets every later step &mdash; the QC checks, the GIS export, the eventual geochemical models &mdash; assume clean, consistent data rather than re-solving the same formatting problems over and over.
+
+Once ingestion and validation are complete, a final post-processing stage updates spatial geometry for every location and well, rebuilds the GIS-ready views the GeoPackage export depends on, and reruns the full suite of quality-control checks across the database. The result is a set of outputs &mdash; a GeoPackage ready to drop into ArcGIS, a rendered website, and validated tables ready for the next stage of modeling &mdash; that are always freshly regenerated from whatever is currently in the database, and never hand-maintained separately from it.

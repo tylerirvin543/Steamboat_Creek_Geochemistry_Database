@@ -1,0 +1,3 @@
+"logger_id","logger_name","role","status","latitude","longitude","location_name"
+1,"Conductivity Logger 1","downstream","active",39.40584,-119.74213,"Steamboat Creek — downstream conductivity logger (SBGG)"
+2,"Conductivity Logger 2","upstream_control","active",39.377133,-119.743658,"SBRR"

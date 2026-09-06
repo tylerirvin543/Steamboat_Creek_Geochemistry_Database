@@ -1,116 +1,142 @@
----
-title: "Data System"
-output: html_document
----
-
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
-library(readr)
-library(dplyr)
-library(ggplot2)
-```
-
-## A Single Schema, Many Kinds of Observation
-
-Underneath every chart on this page sits one normalized relational database, built so that a regulatory chemistry record from the 1970s, a lab result from last month, and a temperature reading logged sixty seconds ago all live in the same structure and can be queried together. The backbone of that structure is a small set of core tables &mdash; **Locations** for every spatial reference point, **Sampling_Events** for the discrete visits or deployments that generate data, **Samples** for the physical specimens collected during those events, and a family of observation tables (**Field_Measurements**, **Lab_Analyses**, **Temperature_Observations**, **Conductivity_Observations**, **Water_Level_Observations**, **Isotope_Analyses**) that each attach to a sample, a location, or a well through explicit foreign keys. That design enforces two things automatically: nothing gets inserted without a real spatial and temporal anchor, and time-series data is strictly append-only, so a logger's history is never silently overwritten by a later download of the same file.
-
-Six distinct kinds of source currently feed that structure, each with its own ingestion script and its own quirks: NDEP's long-running regulatory chemistry program, targeted field sampling campaigns, laboratory analyses (including isotopes), continuous temperature and electrical-conductivity loggers, USGS discharge and historic water-quality records, and NOAA weather observations, with EXIF-tagged field photographs and scanned NDWR well-completion logs rounding out the picture. Each of those sources differs in how often it reports, how it is structured on arrival, and what it is actually good for scientifically &mdash; folding all of them into one schema is what makes it possible to ask a question that spans several of them at once, rather than treating each as its own isolated archive.
-
-```{r source-integration, fig.cap="Total records contributed by each ingested data source (log scale would flatten this further; shown here on a linear scale to make the relative scale of continuous sensors versus discrete chemistry explicit)."}
-source_path <- "../docs/data/source_summary.csv"
-if (file.exists(source_path)) {
-  sources <- read_csv(source_path, show_col_types = FALSE)
-  ggplot(sources, aes(x = reorder(source, n), y = n, fill = source)) +
-    geom_col(show.legend = FALSE) +
-    coord_flip() +
-    labs(title = "Records Contributed by Each Data Source", x = NULL, y = "Records") +
-    theme_minimal(base_size = 13) +
-    scale_fill_manual(values = colorRampPalette(c("#1f4e5f", "#c65d2e"))(nrow(sources)))
-} else {
-  cat("Source breakdown will appear after the pipeline's export stage.")
-}
-```
-
-The imbalance in that chart is expected, not a flaw: continuous instruments like USGS discharge gauges, the new conductivity logger, and temperature loggers generate orders of magnitude more rows than a chemistry program that samples a well a few times a year ever could, simply because they report every few minutes rather than every few months. The system's value comes from holding both kinds of record side by side, not from any one source dominating the count.
-
-## How the Database Grows
-
-Growth in this system happens in discrete jumps rather than a smooth trickle, because that is how the underlying fieldwork actually happens &mdash; a field campaign, a regulatory data drop, or a logger download each shows up as a step in the record count, not a gradual accumulation. Reading those jumps against the calendar (below, for the temperature record specifically) tells you almost as much about *how* this system is monitored as it does about the system itself: dense clusters mark active deployment and campaign periods, and the gaps between them mark when nothing was actively being measured. That distinction matters when it's time to model these data downstream, because a period with no monitoring should never be mistaken for a period with no change in the underlying system.
-
-```{r temporal-histogram, fig.cap="Distribution of temperature-logger observations over time; clustering reflects real deployment history, not measurement gaps in an otherwise continuous record."}
-temp_path <- "../docs/data/temp_sample.csv"
-if (file.exists(temp_path)) {
-  temp <- read_csv(temp_path, show_col_types = FALSE) %>%
-    mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01")) %>%
-    filter(!is.na(timestamp))
-  ggplot(temp, aes(timestamp)) +
-    geom_histogram(bins = 60, fill = "#1f4e5f") +
-    labs(title = "When Temperature Observations Were Collected", x = "Time", y = "Observation count") +
-    theme_minimal(base_size = 13)
-} else {
-  cat("Temporal distribution will appear after export.")
-}
-```
-
-For a system-wide view of that same idea across *every* source at once &mdash; not just temperature &mdash; see the data availability chart on the [Overview](index.html) page, which shows the earliest and latest dated record for each source side by side. Reading the two together makes a pattern visible that neither chart shows on its own: this project has recently layered a dense, high-frequency instrument network on top of a much sparser multi-decade chemistry and discharge record, and a large part of the analytical work ahead is about bridging that gap credibly rather than pretending it isn't there.
-
-## Where the Monitoring Network Actually Sits
-
-The map below shows every well and named field location currently in the database with a resolved coordinate, colored by role. Most wells still show as role "unknown" &mdash; role has only been confirmed so far for wells that appear explicitly in Ormat's own production/injection flow diagram (Dhakal et al. 2025), and confirming the rest is ongoing work, not an oversight. Springs, seeps, and other named sampling locations are shown in their own layer, toggleable independently of the wells.
-
-```{r spatial-map}
-library(leaflet)
-well_path <- "../docs/data/well_sample.csv"
-loc_path <- "../docs/data/locations_sample.csv"
-
-if (!file.exists(well_path)) {
-  cat("Spatial data will appear after export.")
-} else {
-  wells <- read_csv(well_path, show_col_types = FALSE) |>
-    mutate(
-      label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name),
-      role_color = case_when(
-        well_role == "production" ~ "#d95f02",
-        well_role == "injection" ~ "#1b9e77",
-        well_role == "monitor" ~ "#7570b3",
-        well_role == "domestic" ~ "#66a61e",
-        TRUE ~ "#999999"
-      )
-    )
-
-  m <- leaflet() |>
-    addTiles() |>
-    addCircleMarkers(
-      data = wells, lng = ~longitude, lat = ~latitude,
-      radius = 4, color = ~role_color, stroke = FALSE, fillOpacity = 0.85,
-      popup = ~paste0("<b>", label, "</b><br>Role: ", well_role),
-      group = "Wells"
-    )
-
-  if (file.exists(loc_path)) {
-    locs <- read_csv(loc_path, show_col_types = FALSE) |> filter(site_type != "well")
-    m <- m |>
-      addCircleMarkers(
-        data = locs, lng = ~longitude, lat = ~latitude,
-        radius = 4, color = "#377eb8", stroke = FALSE, fillOpacity = 0.85,
-        popup = ~paste0("<b>", coalesce(name, external_station_code), "</b><br>Type: ", site_type),
-        group = "Springs / Seeps / Other"
-      )
-  }
-
-  m |>
-    addLegend(position = "bottomright",
-      colors = c("#d95f02", "#1b9e77", "#7570b3", "#66a61e", "#999999", "#377eb8"),
-      labels = c("Production well", "Injection well", "Monitor well", "Domestic well", "Well (role unknown)", "Spring / seep / other"),
-      title = "Site type") |>
-    addLayersControl(overlayGroups = c("Wells", "Springs / Seeps / Other"), options = layersControlOptions(collapsed = FALSE))
-}
-```
-
-## Provenance in Practice: The NDEP Public Records Request Workflow
-
-A running principle throughout this system is that no dataset becomes "real" &mdash; queryable, mappable, usable in a model &mdash; until a human has confirmed it belongs where the automated pipeline thinks it does. The NDEP Public Records Request workflow is the clearest example: chemistry extracted from scanned NDEP lab-report PDFs is parsed automatically, but it lands only in a staging table, never in the core schema directly. Promotion into real `Samples` and `Lab_Analyses` rows happens through a second, separate, human-reviewed step that resolves each station name against a real-world coordinate, drawn preferentially from the Nevada Bureau of Mines and Geology's statewide geothermal-wells dataset when an exact name match exists there. As of this writing, four of thirteen staged station names have cleared that bar and been promoted; the rest remain intentionally staged rather than guessed, because in a handful of cases &mdash; most notably a station recorded only as "Herz (Deep)" &mdash; multiple independent sources disagree with each other by more than a kilometer, and picking one without better evidence would quietly introduce a wrong answer into every later analysis. The same philosophy governs how well identities are resolved more broadly: a nearby coordinate is a lead, not a confirmation, and only a converging combination of location, ownership, and construction date is treated as proof.
-
-## Current State
-
-Continuous temperature and conductivity monitoring are both fully integrated and actively growing; laboratory chemistry ingestion, well-network resolution, and the well-log OCR pipeline are all active and expanding week to week. In operational mode, none of this is a fixed snapshot &mdash; the database is a live, incrementally-growing representation of the field, and every chart on this page reflects whatever the most recent pipeline run actually found.
+---
+title: "Data System"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
+library(readr)
+library(dplyr)
+library(ggplot2)
+```
+
+## A Single Schema, Many Kinds of Observation
+
+Underneath every chart on this page sits one normalized relational database, built so that a regulatory chemistry record from the 1970s, a lab result from last month, and a temperature reading logged sixty seconds ago all live in the same structure and can be queried together. The backbone of that structure is a small set of core tables &mdash; **Locations** for every spatial reference point, **Sampling_Events** for the discrete visits or deployments that generate data, **Samples** for the physical specimens collected during those events, and a family of observation tables (**Field_Measurements**, **Lab_Analyses**, **Temperature_Observations**, **Conductivity_Observations**, **Water_Level_Observations**, **Isotope_Analyses**) that each attach to a sample, a location, or a well through explicit foreign keys. That design enforces two things automatically: nothing gets inserted without a real spatial and temporal anchor, and time-series data is strictly append-only, so a logger's history is never silently overwritten by a later download of the same file.
+
+Six distinct kinds of source currently feed that structure, each with its own ingestion script and its own quirks: NDEP's long-running regulatory chemistry program, targeted field sampling campaigns, laboratory analyses (including isotopes), continuous temperature and electrical-conductivity loggers, USGS discharge and historic water-quality records, and NOAA weather observations, with EXIF-tagged field photographs and scanned NDWR well-completion logs rounding out the picture. Each of those sources differs in how often it reports, how it is structured on arrival, and what it is actually good for scientifically &mdash; folding all of them into one schema is what makes it possible to ask a question that spans several of them at once, rather than treating each as its own isolated archive.
+
+```{r source-integration, fig.cap="Total records contributed by each ingested data source (log scale would flatten this further; shown here on a linear scale to make the relative scale of continuous sensors versus discrete chemistry explicit)."}
+source_path <- "../docs/data/source_summary.csv"
+if (file.exists(source_path)) {
+  sources <- read_csv(source_path, show_col_types = FALSE)
+  ggplot(sources, aes(x = reorder(source, n), y = n, fill = source)) +
+    geom_col(show.legend = FALSE) +
+    coord_flip() +
+    labs(title = "Records Contributed by Each Data Source", x = NULL, y = "Records") +
+    theme_minimal(base_size = 13) +
+    scale_fill_manual(values = colorRampPalette(c("#1f4e5f", "#c65d2e"))(nrow(sources)))
+} else {
+  cat("Source breakdown will appear after the pipeline's export stage.")
+}
+```
+
+The imbalance in that chart is expected, not a flaw: continuous instruments like USGS discharge gauges, the new conductivity logger, and temperature loggers generate orders of magnitude more rows than a chemistry program that samples a well a few times a year ever could, simply because they report every few minutes rather than every few months. The system's value comes from holding both kinds of record side by side, not from any one source dominating the count.
+
+## How the Database Grows
+
+Growth in this system happens in discrete jumps rather than a smooth trickle, because that is how the underlying fieldwork actually happens: a field campaign, a regulatory data drop, or a temperature- or conductivity-logger download each shows up as a step in the record count, not a gradual accumulation. Reading those jumps against the calendar (below, for the temperature record specifically) tells you almost as much about *how* this system is monitored as it does about the system itself: dense clusters mark active deployment and campaign periods, and the gaps between them mark when nothing was actively being measured. That distinction matters when it's time to model these data downstream, because a period with no monitoring should never be mistaken for a period with no change in the underlying system.
+
+```{r temporal-histogram, fig.cap="Distribution of temperature-logger observations over time; clustering reflects real deployment history, not measurement gaps in an otherwise continuous record."}
+temp_path <- "../docs/data/temp_sample.csv"
+if (file.exists(temp_path)) {
+  temp <- read_csv(temp_path, show_col_types = FALSE) %>%
+    mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01")) %>%
+    filter(!is.na(timestamp))
+  ggplot(temp, aes(timestamp)) +
+    geom_histogram(bins = 60, fill = "#1f4e5f") +
+    labs(title = "When Temperature Observations Were Collected", x = "Time", y = "Observation count") +
+    theme_minimal(base_size = 13)
+} else {
+  cat("Temporal distribution will appear after export.")
+}
+```
+
+For a system-wide view of that same idea across *every* source at once, not just temperature, see the data availability chart on the [Overview](index.html) page, which shows the earliest and latest dated record for each source side by side. Reading the two together makes a pattern visible that neither chart shows on its own: this project has recently layered a dense, high-frequency instrument network on top of a much sparser multi-decade chemistry and discharge record, and a large part of the analytical work ahead is about bridging that gap credibly rather than pretending it isn't there.
+
+## Where the Monitoring Network Actually Sits
+
+The map below shows every well and named field location currently in the database with a resolved coordinate, colored by role. Most wells still show as role "unknown"; role has only been confirmed so far for wells that appear explicitly in Ormat's own production/injection flow diagram (Dhakal et al. 2025), and confirming the rest is ongoing work, not an oversight. Springs, seeps, and other named sampling locations are shown in their own layer, toggleable independently of the wells. Two more layers show the physical instrument network itself: every temperature logger (amber dots) and every conductivity logger (hollow rust rings). At **SBRR**, a temperature and a conductivity logger sit at the same coordinate, so a filled amber dot inside a rust ring at that point marks real co-location, not a rendering coincidence.
+```{r spatial-map}
+library(leaflet)
+well_path <- "../docs/data/well_sample.csv"
+loc_path <- "../docs/data/locations_sample.csv"
+temp_logger_path <- "../docs/data/temp_logger_locations.csv"
+cond_logger_path <- "../docs/data/cond_logger_locations.csv"
+
+if (!file.exists(well_path)) {
+  cat("Spatial data will appear after export.")
+} else {
+  wells <- read_csv(well_path, show_col_types = FALSE) |>
+    mutate(
+      label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name),
+      role_color = case_when(
+        well_role == "production" ~ "#d95f02",
+        well_role == "injection" ~ "#1b9e77",
+        well_role == "monitor" ~ "#7570b3",
+        well_role == "domestic" ~ "#66a61e",
+        TRUE ~ "#999999"
+      )
+    )
+
+  m <- leaflet() |>
+    addTiles() |>
+    addCircleMarkers(
+      data = wells, lng = ~longitude, lat = ~latitude,
+      radius = 4, color = ~role_color, stroke = FALSE, fillOpacity = 0.85,
+      popup = ~paste0("<b>", label, "</b><br>Role: ", well_role),
+      group = "Wells"
+    )
+
+  if (file.exists(loc_path)) {
+    locs <- read_csv(loc_path, show_col_types = FALSE) |> filter(site_type != "well")
+    m <- m |>
+      addCircleMarkers(
+        data = locs, lng = ~longitude, lat = ~latitude,
+        radius = 4, color = "#377eb8", stroke = FALSE, fillOpacity = 0.85,
+        popup = ~paste0("<b>", coalesce(name, external_station_code), "</b><br>Type: ", site_type),
+        group = "Springs / Seeps / Other"
+      )
+  }
+
+  if (file.exists(temp_logger_path)) {
+    tloggers <- read_csv(temp_logger_path, show_col_types = FALSE)
+    m <- m |>
+      addCircleMarkers(
+        data = tloggers, lng = ~longitude, lat = ~latitude,
+        radius = 5, color = "#e9a13b", stroke = FALSE, fillOpacity = 0.95,
+        popup = ~paste0("<b>Temperature logger ", logger_name, "</b><br>Status: ", status, "<br>Site: ", location_name),
+        group = "Temperature Loggers"
+      )
+  }
+
+  if (file.exists(cond_logger_path)) {
+    cloggers <- read_csv(cond_logger_path, show_col_types = FALSE)
+    m <- m |>
+      addCircleMarkers(
+        data = cloggers, lng = ~longitude, lat = ~latitude,
+        radius = 9, color = "#c65d2e", weight = 3, fill = FALSE, opacity = 0.95,
+        popup = ~paste0("<b>Conductivity logger ", logger_name, "</b><br>Role: ", role, "<br>Status: ", status, "<br>Site: ", location_name),
+        group = "Conductivity Loggers"
+      )
+  }
+
+  m |>
+    addLegend(position = "bottomright",
+      colors = c("#d95f02", "#1b9e77", "#7570b3", "#66a61e", "#999999", "#377eb8", "#e9a13b", "#c65d2e"),
+      labels = c("Production well", "Injection well", "Monitor well", "Domestic well", "Well (role unknown)", "Spring / seep / other", "Temperature logger", "Conductivity logger (ring)"),
+      title = "Site type") |>
+    addLayersControl(
+      overlayGroups = c("Wells", "Springs / Seeps / Other", "Temperature Loggers", "Conductivity Loggers"),
+      options = layersControlOptions(collapsed = FALSE)
+    )
+}
+```
+
+## Provenance in Practice: The NDEP Public Records Request Workflow
+
+A running principle throughout this system is that no dataset becomes "real" &mdash; queryable, mappable, usable in a model &mdash; until a user has confirmed it belongs where the automated pipeline thinks it does. The NDEP Public Records Request workflow is the clearest example: chemistry extracted from scanned NDEP lab-report PDFs is parsed automatically, but it lands only in a staging table, never in the core schema directly. Promotion into real `Samples` and `Lab_Analyses` rows happens through a second, separate, user-reviewed step that resolves each station name against a real-world coordinate, drawn preferentially from the Nevada Bureau of Mines and Geology's statewide geothermal-wells dataset when an exact name match exists there. As of this writing, four of thirteen staged station names have cleared that bar and been promoted; the rest remain intentionally staged rather than guessed, because in a handful of cases &mdash; most notably a station recorded only as "Herz (Deep)" &mdash; multiple independent sources disagree with each other by more than a kilometer, and picking one without better evidence would quietly introduce a wrong answer into every later analysis. The same philosophy governs how well identities are resolved more broadly: a nearby coordinate is a lead, not a confirmation, and only a converging combination of location, ownership, and construction date is treated as proof.
+
+## Current State
+
+Continuous temperature and conductivity monitoring are both fully integrated and actively growing; laboratory chemistry ingestion, well-network resolution, and the well-log OCR pipeline are all active and expanding week to week. In operational mode, none of this is a fixed snapshot: the database is a live, incrementally-growing representation of the field, and every chart on this page reflects whatever the most recent pipeline run actually found.
