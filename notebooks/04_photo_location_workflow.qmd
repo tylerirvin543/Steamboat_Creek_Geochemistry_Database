@@ -22,6 +22,18 @@ pointed to but didn't yet exist: **why** each step works the way it does,
 what's assumed, and — per an explicit design goal — where uncertainty is
 recorded rather than silently discarded.
 
+As of 2026-09-06, Step 1 also scans video files (mp4/mov/m4v) for
+embedded GPS the same way it already handled still images -- tested
+against all 7 real 2025-2026 Lower Sinter Terrace event photos and
+videos (see `website/timeline.Rmd`), which confirmed exiftool *can*
+extract GPS from video containers when a device embeds it, but that
+most drone/phone video checked so far simply carries no location
+metadata at all. Everything below describing the two-step design
+applies identically to video; a video without embedded GPS just means
+Step 1 has nothing to extract, not an error, and it still becomes a
+mapped point the same way any un-geotagged photo would: a coordinate
+or existing station code assigned by hand in `image_location_map.csv`.
+
 ## Two deliberately separate steps
 
 ```{mermaid}

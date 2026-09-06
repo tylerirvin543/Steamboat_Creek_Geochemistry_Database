@@ -1456,6 +1456,162 @@ excluding literature PDFs.
   worth folding in if a future page starts using it, for the same
   reason the other nine files needed it.
 
+## Session 13 updates (2026-09-06, continued): Timeline page, GRC poster/QR integration, logger maps, a real data-loss incident, and a systemic CRLF bug
+
+Large follow-up to Session 12's website overhaul, covering a real photo/
+video-driven Timeline page, integrating the user's own GRC poster
+(co-authored with Cary Lindsey), two independent critical bugs found and
+fixed (one causing real, unrecoverable data loss), and a project-wide
+line-ending audit the user explicitly requested.
+
+- **New Timeline page** (`website/timeline.Rmd`, added to the navbar):
+  dated entirely from each asset's own embedded EXIF capture timestamp
+  (and GPS, where present) rather than a remembered date -- covers 2022
+  steaming-ground onset through the 2026-02 Lindsey et al. publication.
+  Real photos viewed directly (via resized thumbnails under the `read`
+  tool's 5 MB limit) to write accurate captions rather than guessing
+  from filenames alone; corrected mid-session per user feedback that the
+  well was capped *shortly after* the June 2025 eruption, not in
+  January 2026 (confirmed against Lindsey et al.'s text: "the eruption
+  briefly generated a geyser-like column... before the pipe was capped
+  ... discharge did not cease but instead shifted laterally"). A second
+  video (a January 2026 "walkaround" of the steaming fissure) was
+  later removed per user request, folded into the existing photo
+  caption as prose instead of its own embed.
+- **`ingest_image_locations.R` extended to scan video files** (mp4/mov/
+  m4v) for embedded GPS via exiftool, alongside the still-image formats
+  it already handled. Tested against all 7 real 2025-2026 event assets
+  on a scratch DB copy: correctly extracted the one real GPS fix
+  present (a Dec-2025 photo) and cleanly skipped the six files with no
+  location tag (most drone/phone video checked so far carries no
+  embedded GPS at all) rather than erroring -- confirms the pipeline
+  is ready for future geotagged video, though these particular clips
+  still need a manual coordinate/station code in
+  `image_location_map.csv` like any un-geotagged photo would.
+- **Critical bug #1 -- real, unrecoverable data loss.** Calling
+  `rmarkdown::render_site("website")` directly (bypassing
+  `run_pipeline.R`'s wrapper) deleted ~26 of the ~29 files then in
+  `docs/literature/` -- a user-maintained, entirely untracked folder of
+  reference PDFs with no git history to recover from -- because
+  `render_site()`'s standard cleanup deletes anything under its
+  `output_dir` with no counterpart in the site's own input tree, the
+  same bug class already fixed for `docs/data/`/`docs/figures/` in
+  Session 12 but never extended to literature. Not recoverable from the
+  Recycle Bin either (R's file deletion bypasses it). Disclosed to the
+  user immediately and in full (exact file list, root cause, no
+  minimizing); the user re-attached the files from their own Downloads
+  folder. **Fixed at the root**: `build_website()` in `run_pipeline.R`
+  now backs up `docs/literature/` to a temp directory before calling
+  `render_site()` and restores it verbatim afterward, living inside the
+  function itself (not just a gated caller) so the protection applies
+  regardless of how/where `build_website()` is invoked. Verified twice
+  against the real, now-32-file `docs/literature/` (the user also added
+  a few more references while re-attaching) across multiple real
+  renders this session. `docs/literature/` is also now explicitly
+  gitignored (previously just untracked by omission) -- consistent
+  with `references.Rmd`'s own stated citation-not-rehosting policy, and
+  necessary anyway since it's genuinely huge (~431 MB, mostly full-
+  resolution 1960s USGS plate scans).
+- **Critical bug #2 -- `results_files/` gitignore collision.** A bare
+  `results_files/` rule (intended for some other, no-longer-existent
+  folder) was matching `docs/results_files/` too, since gitignore
+  patterns with no leading slash match at any depth -- this is the
+  knitr figure-output folder `results.Rmd`'s plots render into, so the
+  Results page's second chart (temperature-by-logger boxplot) was
+  silently never committed and appeared broken on the live GitHub Pages
+  site, exactly matching the user's bug report. Fixed by removing the
+  rule (confirmed via `find` that no other `results_files` directory
+  exists anywhere in the repo) and committing `docs/results_files/` for
+  the first time.
+- **Critical bug #3 -- systemic CRLF doubling, found via a project-wide
+  audit the user explicitly requested ("do a brief crlf check").** Root
+  cause: on this Windows R installation, `writeLines(x, con, sep =
+  "\r\n")` opens a text-mode connection that itself auto-translates
+  every `\n` to `\r\n`; passing an explicit `"\r\n"` separator gets its
+  own trailing `\n` translated a second time, silently doubling the
+  carriage return to `\r\r\n`. This is exactly what broke
+  `website/timeline.Rmd`'s YAML front matter earlier this session
+  (pandoc fell back to rendering the literal `title:`/`output:` text
+  instead of parsing it, and the page's `<title>` fell back to the
+  knit filename) -- and a full-repo scan (`grep -U $'\r\r'`) found the
+  same corruption, silently tolerated by pandoc so it never visibly
+  broke rendering, in `website/{about,data,index,pipeline,project,
+  results}.Rmd`, `_site.yml`, `styles.css`, and `run_pipeline.R`
+  itself. **Also briefly corrupted `.gitignore` mid-session** while
+  fixing the `results_files/` bug above, which silently stopped it
+  from ignoring anything at all (including `data/raw/` and the
+  `.sqlite` databases) until caught by `git status` unexpectedly
+  showing files that should have been invisible. Fixed everywhere by
+  stripping all stray/doubled CR then rewriting with a plain `"\n"`
+  separator (letting Windows perform the single, correct translation
+  itself) instead of an explicit CRLF separator -- **this is now the
+  standing rule for any future CRLF round-trip on this project**,
+  documented permanently in README.md's Troubleshooting section, not
+  just here. Verified clean via a repeated full-repo scan and a real
+  re-render (all page titles correct, `docs/literature/` still intact,
+  zero remaining corruption).
+- **Aggressive `&mdash;` reduction, especially on the Pipeline page per
+  explicit request.** Went from dozens of instances across all six
+  original pages down to zero anywhere on the site, converting each to
+  a colon, semicolon, comma, or parenthetical depending on context.
+- **GRC poster integration.** Read the user's actual poster PDF
+  (`docs/literature/GRC_2026_Steamboat.pdf`, co-authored with Cary
+  Lindsey) directly for its real content rather than guessing: title,
+  authors, the chloride mass-balance formula, the ~27 L/s current
+  thermal-inflow estimate (vs. the 60 L/s / 45-90 L/s range Sorey &
+  Spielman 2017 reported for 2008-2016), the r = -0.68 paired-logger
+  correlation, and the conduit-reactivation-not-new-source conclusion.
+  Added as a full citation in `references.Rmd`, a substantive (clearly
+  poster-stage, not pipeline-verified) finding on `results.Rmd`, and a
+  tie-in sentence in `project.Rmd`.
+- **QR code**: generated three versions with the `qrcode` R package in
+  `website/assets/qr/` (themed, print-safe black-on-white, and a
+  captioned poster-ready PNG with the URL beneath), all pointing at the
+  live GitHub Pages URL -- confirmed live and reachable via `webfetch`
+  before generating. New "Scan to Follow This Work" section on
+  `about.Rmd` explains the poster connection.
+- **Logger layers on both leaflet maps** (`data.Rmd`, `results.Rmd`):
+  temperature loggers (amber dots) and conductivity loggers (hollow
+  rust rings), each its own toggleable group, backed by new
+  `temp_logger_locations.csv`/`cond_logger_locations.csv` exports in
+  `export_website_data_files()`. Confirmed real co-location at SBRR
+  (both logger types share the identical coordinate) directly from the
+  database rather than assuming it.
+- **USGS live-gauge link**: added the user-supplied direct URL for
+  station 10349300's live monitoring-location page (continuous gage
+  height, co-located with the SBRR conductivity logger) to
+  `references.Rmd`, `data.Rmd`, and the Overview page.
+- **Sorey citations split and verified**: the previous vague, unverified
+  "2008 and 2017 papers referenced in project working notes" placeholder
+  is now two full, independently-read citations -- Sorey & Spielman
+  (2008, GRC Transactions, Vol. 32, "Thermal-Water Discharge from
+  Steamboat Hills Geothermal System") and Sorey & Spielman (2017,
+  Geothermics 69, "Rates of Thermal Water Discharge from the Hot Water
+  Geothermal System Beneath the Steamboat Hills in Western Nevada,
+  USA") -- both read directly from the PDFs the user placed in
+  `docs/literature/`.
+- **Visual polish**: photo-based hero banner (real eruption photo with
+  a readable gradient overlay), a "live/growing" badge, a featured-
+  finding callout on the homepage tied to the poster result, and subtle
+  hover states on stat cards/callouts/timeline media.
+- **Video compression**: the two raw event videos (originally ~125 MB
+  combined) re-encoded with the `av` R package (854 px width, 15 fps,
+  libx264) to ~14.7 MB total for `website/assets/video_compressed/`,
+  installed after confirming no system `ffmpeg` binary exists anywhere
+  on this machine (the `av` package bundles its own). Original full-
+  resolution photos and videos relocated from `website/assets/` into
+  `data/raw/images/image_drop/` (gitignored, the pipeline's proper raw-
+  media home) rather than committed at full size.
+- **Not done this session**: `notebooks/01`-`05` were reviewed for
+  relevance but not edited -- none reference website structure directly
+  enough to need updating; the photo-location workflow notebook
+  (`04_photo_location_workflow.qmd`) is the closest candidate for a
+  future video-support addendum but was left as-is pending a real
+  geotagged-video example to document. All work this session verified
+  against the real `geochem_operational.sqlite` and the real
+  `docs/literature/`, not scratch copies, given the website-focused
+  (not schema-migration-focused) nature of the work.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
