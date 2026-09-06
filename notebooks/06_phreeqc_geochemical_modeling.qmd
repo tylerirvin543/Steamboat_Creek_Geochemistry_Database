@@ -158,7 +158,8 @@ dbExecute(con, "PRAGMA foreign_keys = ON;")
 
 for (f in c("utils_phreeqc.R", "08_build_phreeqc_tables.R", "09_run_phreeqc.R",
             "10_run_phreeqc_mixing.R", "11_run_phreeqc_inverse.R",
-            "12_run_phreeqc_gas_phase.R", "run_phreeqc_analysis.R")) {
+            "12_run_phreeqc_gas_phase.R", "13_gas_geothermometry.R",
+            "14_gas_mixing.R", "run_phreeqc_analysis.R")) {
   source(file.path("scripts", "phreeqc", f))
 }
 
@@ -523,6 +524,106 @@ uses an atmospheric CO2 partial pressure ($10^{-3.5}$ atm) rather than 1 atm
 pure CO2 for exactly this reason, and visibly raises the synthetic solution's
 pH from 6.0 to ~9 on degassing.
 
+## Gas geothermometry and gas mixing (2026-09-06, built ahead of real data)
+
+A UCSB gas-geochemistry sampling campaign (Tobias Fischer) is planned at the
+Lower Sinter Terrace geysering fissure and nearby fumaroles: free-gas mass
+spectrometry (CO2, H2S, and the rest of the major gas suite) plus He
+isotopes and other tracers still to be scoped once real analyses are in
+hand. No real gas-sample data exists yet in this database. Per an explicit
+"make aware of direction, hold off on schema" instruction, this section
+documents two standalone capability modules built and validated against
+**real, cited literature data** rather than fabricated numbers -- neither
+creates a database table or is wired into `run_pipeline.R`.
+
+### The literature anchor
+
+`docs/literature/"Geochem Data and concept model Mariner & Janik 1995.pdf"`
+(GRC Transactions v.19) is this project's only Steamboat-specific
+gas-geochemistry reference. Its Table 2 reports real free-gas mole-percent
+compositions (CO2, H2S, H2, CH4, NH3, N2, O2, Ar, He) and three
+gas-geothermometer temperature columns for the Caithness/Far West wells and
+one real fumarole sample (at PW3-4) -- exactly the kind of data Fischer's
+campaign will eventually produce.
+
+### D'Amore & Panichi (1980) gas geothermometer
+
+`dap_gas_geothermometer()` (`13_gas_geothermometry.R`) implements the
+CO2-H2-H2S-CH4 multicomponent geothermometer:
+
+$$
+t(^{\circ}C) = \frac{24775}{\alpha + \beta + 36.05} - 273.15$$
+
+$$\alpha = 2\log_{10}\left(\frac{CH_4}{CO_2}\right) - 6\log_{10}\left(\frac{H_2}{CO_2}\right) - 3\log_{10}\left(\frac{H_2S}{CO_2}\right), \qquad \beta = -7\log_{10}(p_{CO_2})$$
+
+::: {.callout-important collapse="true"}
+#### A transcription risk caught by validating against real numbers, not just syntax
+
+Several secondary sources (paper abstracts, review articles) transcribe
+alpha's H2 term as a bare `-log10(H2/CO2)` (coefficient 1). Only
+coefficient **6** (per Powell 2000, a Stanford GRC short-course review)
+reproduces Mariner & Janik's own published T-DP values for real well 23-5
+samples -- coefficient 1 overshoots by more than 150°C. This is exactly the
+same class of risk as the SO4/`S(6)` PHREEQC element-name bug found earlier
+this session: a formula that "looks right" syntactically can still be
+numerically wrong. `demo_gas_geothermometry()` below is a literature
+cross-check, not a synthetic syntax test.
+:::
+
+```{r gas-geothermometer-demo}
+gas_geotherm_result <- demo_gas_geothermometry()
+gas_geotherm_result
+```
+
+Computed T-DP matches Mariner & Janik's own published values to within
+0.3°C across all four real 23-5 sampling dates. The other two Table 2
+columns (T-HA, attributed to Giggenbach & Goguel 1989; T-CO2, attributed to
+Arnórsson & Gunnlaugsson 1985) were deliberately **not** implemented -- only
+qualitative descriptions of both could be found, not a citable calibration
+verifiable against real numbers the way D'Amore-Panichi's was. Flagged as a
+known gap, not silently skipped.
+
+### Forward and inverse gas mixing
+
+`forward_gas_mixing()`/`compute_gas_mixing_fraction()`
+(`14_gas_mixing.R`) are the gas-phase analogue of
+`compute_mixing_fractions()`'s water-Cl model above, using a conservative
+gas ratio (default N2/Ar -- the same axis as Mariner & Janik's Fig. 9
+N2-He-Ar plot, used there to assess air dilution of deep thermal gas)
+instead of a dissolved-ion concentration.
+
+::: {.callout-important collapse="true"}
+#### A ratio does not mix linearly -- caught by the self-test, not assumed away
+
+An earlier version of `compute_gas_mixing_fraction()` reused the water-Cl
+model's linear inversion formula directly on the N2/Ar ratio. This is wrong:
+a ratio of two linearly-mixing quantities is a *hyperbolic*, not linear,
+function of the mixing fraction. The self-test below (forward-mix at a known
+fraction, then invert and check the fraction is recovered) caught this
+immediately -- it recovered 0.10 instead of the true 0.85. Fixed by solving
+the correct hyperbolic relation for the mixing fraction directly from each
+end-member's numerator/denominator components, not a pre-collapsed ratio.
+:::
+
+```{r gas-mixing-demo}
+gas_mixing_result <- demo_gas_mixing()
+gas_mixing_result[c("true_fraction", "recovered_fraction", "pass")]
+```
+
+The self-test uses well 23-5's real gas composition (11/5/91) as the
+"thermal" end-member and standard dry-air composition (NIST/CIPM constants)
+as the "meteoric/atmospheric" end-member -- a real sampling artifact
+(air contamination) this project will need to screen for once Fischer's
+samples arrive.
+
+### Where real Fischer/UCSB data would plug in
+
+Once real gas-sample data (composition, He isotopes, etc.) is in hand, the
+next step is a `Gas_Samples`/`Gas_Analyses` schema designed around its
+*actual* reporting format -- deliberately not designed now, consistent
+with this project's standing rule against building storage for a data shape
+that hasn't been seen yet.
+
 ## Known limitations and status (2026-09-06)
 
 - **Real mixing/inverse modeling is blocked on field data, not code**: the
@@ -554,6 +655,7 @@ pH from 6.0 to ~9 on degassing.
 | 2026-09-06 | NDEP pH/temperature-location bug, mixed-unit-averaging bug, and missing "Total Alkalinity" ingest bug found and fixed; PHREEQC-eligible samples went from 8 to 233. |
 | 2026-09-06 | Duplicate HCO3/CO3 rows cleaned up in both NDEP ingest pathways; FIELD's own `make.names()`-mangled-join-key bug found and fixed, backfilling Alkalinity (and NO3) for all 8 real thermal samples for the first time. |
 | 2026-09-06 | `SBW_0002` PHREEQC convergence failure diagnosed (boron/alkalinity interaction at pH 9) and the boron-exclusion guard replaced with a physically-grounded, pH-aware check. `PHREEQC_Run_Failures` empty database-wide. |
+| 2026-09-06 | Gas geothermometry (D'Amore-Panichi 1980, validated against real Mariner & Janik 1995 numbers) and forward/inverse gas mixing added (`13_gas_geothermometry.R`, `14_gas_mixing.R`) -- standalone, no schema/pipeline wiring, ahead of the planned UCSB (Fischer) gas-sampling campaign. Also fixed a latent PHREEQC SO4/sulfide element-name ambiguity (bare `S` -> explicit `S(6)`) and made the PHREEQC pipeline stage auto-detect new/changed chemistry and expose mixing/inverse/gas-phase runs via toggleable config CSVs. |
 
 ```{r cleanup}
 #| include: false

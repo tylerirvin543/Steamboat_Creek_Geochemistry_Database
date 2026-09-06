@@ -142,11 +142,21 @@ ingest_well_logs <- function(
   n_text_layer <- 0L
   n_crossref <- 0L
 
-  for (f in pdf_files) {
+  n_files <- length(pdf_files)
+  # Progress bar: OCR (via .ocr_pdf()/parse_well_log_pdf.R) can take
+  # 20-60+ seconds per scanned PDF at 400 dpi -- with no visible
+  # progress, a run of a dozen scans looks hung. This gives a simple,
+  # dependency-free (base R) bar plus a per-file elapsed time.
+  message("[ingest_well_logs] Processing ", n_files, " PDF(s) -- OCR on scanned files can take a while per file.")
+  .pb <- utils::txtProgressBar(min = 0, max = n_files, style = 3, width = 50)
+  for (.i in seq_along(pdf_files)) {
+    f <- pdf_files[.i]
+    .file_start_time <- Sys.time()
     file_hash <- digest(f, algo = "sha256", file = TRUE)
 
     if (any(existing$file_path == f & existing$file_hash == file_hash)) {
       n_skipped <- n_skipped + 1L
+      utils::setTxtProgressBar(.pb, .i)
       next
     }
 
@@ -222,7 +232,12 @@ ingest_well_logs <- function(
     ))
 
     n_processed <- n_processed + 1L
+
+    .file_elapsed <- round(as.numeric(difftime(Sys.time(), .file_start_time, units = "secs")), 1)
+    message("    (", .file_elapsed, " sec)")
+    utils::setTxtProgressBar(.pb, .i)
   }
+  close(.pb)
 
   message("  -> Processed ", n_processed, " document(s) (", n_skipped, " unchanged, skipped); ",
           n_text_layer, " had an extractable text layer; ", n_crossref, " matched an NDWR log number cross-reference.")

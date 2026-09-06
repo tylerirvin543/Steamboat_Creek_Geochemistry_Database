@@ -14,15 +14,27 @@ library(tibble)
     "K",  "K",  "mg/L", "major_ion", "K", 1, 39.098, 1,
     
     "Cl", "Cl", "mg/L", "major_ion", "Cl", -1, 35.45, 1,
-    # phreeqc_name is "S" (not "SO4") -- PHREEQC's SOLUTION_MASTER_SPECIES
-    # element name for sulfate is "S" in every checked database (phreeqc.dat,
-    # llnl.dat); "SO4" is only a species/gfw label, not a valid element
-    # token for direct SOLUTION input. Confirmed 2026-09-06: specifying
-    # "SO4  <value>" literally produced "WARNING: Could not find element
-    # in database, SO4" (silently dropping sulfate from every PHREEQC run)
-    # until fixed to "S  <value>  as SO4" -- see
-    # scripts/phreeqc/utils_phreeqc.R's format_solution_block() as_unit_lookup.
-    "SO4", "SO4", "mg/L", "major_ion", "S", -2, 96.06, 1,
+    # phreeqc_name is "S(6)" (not "SO4", and not bare "S") -- PHREEQC's
+    # SOLUTION_MASTER_SPECIES element name for sulfate is "S" in every
+    # checked database (phreeqc.dat, llnl.dat); "SO4" is only a
+    # species/gfw label, not a valid element token for direct SOLUTION
+    # input. Confirmed 2026-09-06: specifying "SO4  <value>" literally
+    # produced "WARNING: Could not find element in database, SO4"
+    # (silently dropping sulfate from every PHREEQC run) until fixed to
+    # "S  <value>  as SO4" -- see scripts/phreeqc/utils_phreeqc.R's
+    # format_solution_block() as_unit_lookup. Tightened further
+    # 2026-09-06 (multi-gas CO2+H2S GAS_PHASE testing): a bare,
+    # valence-unqualified "S" line is ambiguous the moment a second
+    # sulfur species (e.g. dissolved sulfide, "S(-2)") is also specified
+    # in the same SOLUTION block -- PHREEQC's default valence assignment
+    # for unqualified "S" collided with an explicit "S(-2)" line and
+    # threw "ERROR: Analytical data entered twice for HS-." (confirmed
+    # against llnl.dat; this project has no sulfide analyte mapped yet,
+    # so no real sample has hit this, but it will the moment one does).
+    # Explicit "S(6)" is unambiguous and behaves identically to the old
+    # bare "S" when no other sulfur species is present -- confirmed via
+    # a side-by-side PHREEQC run against llnl.dat with only SO4 supplied.
+    "SO4", "SO4", "mg/L", "major_ion", "S(6)", -2, 96.06, 1,
     "NO3 (as N)", "NO3", "mg/L", "nutrient", "N(5)", -1, 14.01, 1,
     "F", "F", "mg/L", "tracer", "F", -1, 18.998, 1,
     "Br", "Br", "mg/L", "tracer", "Br", -1, 79.904, 1,

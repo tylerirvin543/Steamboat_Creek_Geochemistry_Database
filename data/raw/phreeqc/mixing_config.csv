@@ -1,0 +1,2 @@
+# One row per mixing run you want run_pipeline.R (RUN_ANALYSIS$phreeqc_mixing = TRUE) to execute automatically. sample_ids are real Samples.sample_id values -- never guessed. Set enabled=TRUE to activate a row; leave FALSE/blank to keep it defined but skipped.
+label,thermal_sample_id,meteoric_sample_id,tracer,enabled,notes

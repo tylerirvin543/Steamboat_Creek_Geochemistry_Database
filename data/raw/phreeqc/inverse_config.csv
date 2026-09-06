@@ -1,0 +1,2 @@
+# One row per inverse model you want run_pipeline.R (RUN_ANALYSIS$phreeqc_inverse = TRUE) to execute automatically. end_member_sample_ids and phases are semicolon-separated (e.g. "12;45" and "Calcite;Quartz"). sample_ids are real Samples.sample_id values -- never guessed.
+label,target_sample_id,end_member_sample_ids,phases,uncertainty_pct,enabled,notes

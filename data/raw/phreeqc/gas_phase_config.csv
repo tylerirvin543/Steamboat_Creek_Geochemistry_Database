@@ -1,0 +1,2 @@
+# One row per gas-phase run you want run_pipeline.R (RUN_ANALYSIS$phreeqc_gas_phase = TRUE) to execute automatically. sample_ids and gas_components are semicolon-separated (e.g. "12;45" and "CO2(g);H2S(g)"). gas_phase_type is fixed_pressure or fixed_volume.
+label,sample_ids,gas_components,gas_phase_type,total_pressure_atm,volume_liters,enabled,notes

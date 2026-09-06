@@ -133,9 +133,54 @@ if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
 # gas-phase modeling are not run automatically at all (see
 # scripts/phreeqc/run_phreeqc_analysis.R) since they require the caller to
 # name real end-member sample_ids, which should never be guessed.
-if (!exists("RUN_ANALYSIS")) RUN_ANALYSIS <- list(phreeqc = FALSE)
+# (Old single-line default replaced 2026-09-06 -- see the CONSOLE UX HELPERS block below, which sets RUN_ANALYSIS$phreeqc and the new phreeqc_force_rerun/_mixing/_inverse/_gas_phase flags individually.)
 
 DB_PATH <- if (MODE == "DEMO") DB_DEMO else DB_PROD
+
+# ============================================================
+# CONSOLE UX HELPERS: timers, section banners, structured errors
+# ============================================================
+# 2026-09-06: run_pipeline.R had per-step timers scattered ad hoc
+# (some steps timed via run_step()/run_analysis_step(), others not
+# timed at all) and no overall run duration or failure recap. These
+# three pieces give every stage a consistent look and produce a single
+# summary table (see PIPELINE SUMMARY, bottom of file) instead of
+# having to scroll back through the whole console log to see what
+# happened, how long it took, and whether anything failed.
+PIPELINE_START_TIME <- Sys.time()
+.STAGE_LOG <- list()
+
+#' Record one stage's outcome for the end-of-run summary table.
+.log_stage <- function(name, start_time, status = "OK", note = NA_character_) {
+  elapsed <- round(as.numeric(difftime(Sys.time(), start_time, units = "secs")), 1)
+  .STAGE_LOG[[length(.STAGE_LOG) + 1]] <<- data.frame(
+    stage = name, seconds = elapsed, status = status, note = note, stringsAsFactors = FALSE
+  )
+  invisible(elapsed)
+}
+
+#' Consistent section-header banner (replaces the repeated 3-line
+#' message("\n===...")/message(" TITLE")/message("===...") blocks that
+#' were previously copy-pasted at every major section).
+section_banner <- function(title) {
+  message("\n", strrep("=", 62))
+  message(" ", title)
+  message(strrep("=", 62))
+}
+
+# RUN_ANALYSIS defaults, filled in individually (not as one list()) so
+# a caller who only sets RUN_ANALYSIS <- list(phreeqc = TRUE) before
+# sourcing this file does not lose the other flags to a missing-name
+# NULL. phreeqc_force_rerun/_mixing/_inverse/_gas_phase are new
+# 2026-09-06 -- see the PHREEQC GEOCHEMICAL MODELING section below and
+# scripts/phreeqc/run_phreeqc_analysis.R's "USER-FRIENDLY AUTOMATION
+# LAYER" for what each does.
+if (!exists("RUN_ANALYSIS")) RUN_ANALYSIS <- list()
+if (is.null(RUN_ANALYSIS$phreeqc)) RUN_ANALYSIS$phreeqc <- FALSE
+if (is.null(RUN_ANALYSIS$phreeqc_force_rerun)) RUN_ANALYSIS$phreeqc_force_rerun <- FALSE
+if (is.null(RUN_ANALYSIS$phreeqc_mixing)) RUN_ANALYSIS$phreeqc_mixing <- FALSE
+if (is.null(RUN_ANALYSIS$phreeqc_inverse)) RUN_ANALYSIS$phreeqc_inverse <- FALSE
+if (is.null(RUN_ANALYSIS$phreeqc_gas_phase)) RUN_ANALYSIS$phreeqc_gas_phase <- FALSE
 
 message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
 
@@ -143,9 +188,7 @@ message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
 # CONNECT DATABASE
 # ============================
 
-message("\n==============================")
-message(" STARTING PIPELINE")
-message("==============================")
+section_banner("STARTING PIPELINE")
 
 dir.create("database", recursive = TRUE, showWarnings = FALSE)
 
@@ -209,6 +252,16 @@ source("scripts/phreeqc/09_run_phreeqc.R")
 source("scripts/phreeqc/10_run_phreeqc_mixing.R")
 source("scripts/phreeqc/11_run_phreeqc_inverse.R")
 source("scripts/phreeqc/12_run_phreeqc_gas_phase.R")
+# 2026-09-06: gas geothermometry + gas mixing capability, built ahead of
+# real data for the planned UCSB (Tobias Fischer) fumarole/geysering-
+# fissure gas sampling campaign. Standalone, data-frame-based modules --
+# no database table, no RUN_INGEST/RUN_ANALYSIS flag, no automatic
+# execution here. Only sourced so their self-tests
+# (demo_gas_geothermometry(), demo_gas_mixing()) are reachable via
+# demo_phreeqc_analysis(); see scripts/phreeqc/13_gas_geothermometry.R
+# and 14_gas_mixing.R for the full rationale.
+source("scripts/phreeqc/13_gas_geothermometry.R")
+source("scripts/phreeqc/14_gas_mixing.R")
 source("scripts/phreeqc/run_phreeqc_analysis.R")
 
 # optional
@@ -243,22 +296,51 @@ source("database/schema/08_phreeqc_schema.R")
 # INGEST STAGE
 # ============================================================
 
-message("\n==============================")
-message(" INGEST STAGE")
-message("==============================")
+section_banner("INGEST STAGE")
 
+#' Run one ingest step with a clear header, elapsed time, warning
+#' capture, and error containment. 2026-09-06: previously an error in
+#' any single ingest step (e.g. a malformed source file) hard-stopped
+#' the *entire* pipeline with a raw R traceback -- every other,
+#' unrelated ingest source never even got a chance to run. Failures
+#' are now caught, reported with a clear "[ERROR] <name> failed: ..."
+#' line, recorded in the end-of-run PIPELINE SUMMARY, and the pipeline
+#' continues with the next step. Warnings are similarly caught and
+#' tagged "[WARNING] <name>: ..." instead of appearing as a detached
+#' R warning message with no stage context.
 run_step <- function(flag, name, expr) {
+  stage_label <- paste0("INGEST: ", name)
   if (flag) {
     message("\n[INGEST] ---- ", name, " ----")
     start_time <- Sys.time()
-    
-    force(expr)
-    
-    end_time <- Sys.time()
-    message("[INGEST] Completed ", name,
-            " (", round(difftime(end_time, start_time, units = "secs"), 1), " sec)")
+    n_warnings <- 0L
+
+    result <- tryCatch({
+      withCallingHandlers({
+        force(expr)
+        NULL
+      }, warning = function(w) {
+        n_warnings <<- n_warnings + 1L
+        message("  [WARNING] ", name, ": ", conditionMessage(w))
+        invokeRestart("muffleWarning")
+      })
+    }, error = function(e) e)
+
+    elapsed <- round(as.numeric(difftime(Sys.time(), start_time, units = "secs")), 1)
+
+    if (inherits(result, "error")) {
+      message("[ERROR] ", name, " failed after ", elapsed, " sec: ", conditionMessage(result))
+      message("[INGEST] Continuing with remaining pipeline steps.")
+      .log_stage(stage_label, start_time, status = "FAILED", note = conditionMessage(result))
+    } else {
+      warn_note <- if (n_warnings > 0) paste0(n_warnings, " warning(s)") else NA_character_
+      message("[INGEST] Completed ", name, " (", elapsed, " sec)",
+              if (n_warnings > 0) paste0(" -- ", n_warnings, " warning(s), see above") else "")
+      .log_stage(stage_label, start_time, status = "OK", note = warn_note)
+    }
   } else {
     message("\n[INGEST] Skipping ", name)
+    .log_stage(stage_label, Sys.time(), status = "SKIPPED", note = NA_character_)
   }
 }
 
@@ -386,6 +468,13 @@ run_step(RUN_INGEST$well_network, "DHAKAL WELL/PORT FLOW NETWORK", {
   register_well_coordinates(con, coords_csv = "data/raw/wells/dhakal_wells_arcgis.csv")
   source("scripts/ingest/register_facility_areas.R")
   register_facility_areas(con)
+})
+# 2026-09-06 bug fix: this run_step() call was previously left nested
+# *inside* the "DHAKAL WELL/PORT FLOW NETWORK" run_step() block above
+# (missing closing brace), so WELL LOG PDFs ingestion only ever ran
+# when RUN_INGEST$well_network was TRUE, regardless of its own
+# RUN_INGEST$well_logs flag -- found while auditing this file for the
+# console-UX pass. Now a properly independent step.
 
 run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # Stages NDWR "WELL DRILLER'S REPORT" PDFs (data/raw/ndwr/Ormat_well_logs/)
@@ -411,15 +500,12 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # unambiguous that it isn't a confirmed identity match.
   register_provisional_well_logs(con)
 })
-})
 
 # ============================================================
 # PROCESSING STAGE (PHASE 1: CORE SQL VIEWS)
 # ============================================================
 
-message("\n==============================")
-message(" PROCESSING STAGE (CORE)")
-message("==============================")
+section_banner("PROCESSING STAGE (CORE)")
 
 message("\n[PROCESS] Updating geometry")
 update_location_geometry(con)
@@ -431,21 +517,73 @@ message("\n[PROCESS] Creating base analysis views")
 
 create_analysis_views(con)   # safe: builds core + placeholders
 
-# ============================================================
-# PHREEQC GEOCHEMICAL MODELING (speciation, SI, geothermometry)
-# ============================================================
-
-message("\n==============================")
-message(" PHREEQC GEOCHEMICAL MODELING")
-message("==============================")
+section_banner("PHREEQC GEOCHEMICAL MODELING")
+.phreeqc_stage_start <- Sys.time()
 
 if (isTRUE(RUN_ANALYSIS$phreeqc)) {
   message("[PHREEQC] Building PHREEQC_Solutions from Lab_Analyses + Field_Measurements + Isotope_Analyses")
   build_phreeqc_solutions(con)
-  message("[PHREEQC] Running speciation + saturation index pipeline")
-  run_phreeqc_pipeline(con)
+
+  # 2026-09-06: auto-detects whether anything actually changed since
+  # the last run (should_rerun_phreeqc(), compares the eligible sample
+  # set to PHREEQC_Pipeline_State) instead of unconditionally
+  # re-speciating every sample on every pipeline run. Set
+  # RUN_ANALYSIS$phreeqc_force_rerun = TRUE to re-run regardless.
+  .check <- should_rerun_phreeqc(con)
+  if (.check$should_rerun || isTRUE(RUN_ANALYSIS$phreeqc_force_rerun)) {
+    if (!.check$should_rerun) {
+      message("[PHREEQC] ", .check$reason, " Running anyway (RUN_ANALYSIS$phreeqc_force_rerun = TRUE).")
+    } else {
+      message("[PHREEQC] ", .check$reason, " Running speciation + saturation index pipeline.")
+    }
+    tryCatch({
+      run_phreeqc_pipeline(con)
+      record_phreeqc_run_state(con, .check$current_count, .check$current_max_id)
+      .log_stage("PHREEQC: speciation", .phreeqc_stage_start)
+    }, error = function(e) {
+      message("[ERROR] [PHREEQC] speciation run failed: ", conditionMessage(e))
+      .log_stage("PHREEQC: speciation", .phreeqc_stage_start, status = "FAILED", note = conditionMessage(e))
+    })
+  } else {
+    message("[PHREEQC] ", .check$reason, " Skipping (set RUN_ANALYSIS$phreeqc_force_rerun = TRUE to force).")
+    .log_stage("PHREEQC: speciation", .phreeqc_stage_start, status = "SKIPPED (no new data)")
+  }
+
+  # Mixing/inverse/gas-phase modeling: still require real, human-named
+  # end-member sample_ids (never inferred automatically), but are now
+  # toggled with a single flag + a plain config CSV instead of editing
+  # R code -- see scripts/phreeqc/run_phreeqc_analysis.R's
+  # "USER-FRIENDLY AUTOMATION LAYER" and data/raw/phreeqc/*.csv (each
+  # created automatically, header-only, on first use).
+  if (isTRUE(RUN_ANALYSIS$phreeqc_mixing)) {
+    .st <- Sys.time()
+    tryCatch({ run_phreeqc_mixing_from_config(con); .log_stage("PHREEQC: mixing (config)", .st) },
+             error = function(e) { message("[ERROR] [PHREEQC] mixing config run failed: ", conditionMessage(e)); .log_stage("PHREEQC: mixing (config)", .st, "FAILED", conditionMessage(e)) })
+  } else {
+    message("[PHREEQC] Mixing config skipped (RUN_ANALYSIS$phreeqc_mixing = FALSE). Define runs in data/raw/phreeqc/mixing_config.csv.")
+  }
+
+  if (isTRUE(RUN_ANALYSIS$phreeqc_inverse)) {
+    .st <- Sys.time()
+    tryCatch({ run_phreeqc_inverse_from_config(con); .log_stage("PHREEQC: inverse (config)", .st) },
+             error = function(e) { message("[ERROR] [PHREEQC] inverse config run failed: ", conditionMessage(e)); .log_stage("PHREEQC: inverse (config)", .st, "FAILED", conditionMessage(e)) })
+  } else {
+    message("[PHREEQC] Inverse-model config skipped (RUN_ANALYSIS$phreeqc_inverse = FALSE). Define runs in data/raw/phreeqc/inverse_config.csv.")
+  }
+
+  if (isTRUE(RUN_ANALYSIS$phreeqc_gas_phase)) {
+    .st <- Sys.time()
+    tryCatch({ run_phreeqc_gas_phase_from_config(con); .log_stage("PHREEQC: gas phase (config)", .st) },
+             error = function(e) { message("[ERROR] [PHREEQC] gas-phase config run failed: ", conditionMessage(e)); .log_stage("PHREEQC: gas phase (config)", .st, "FAILED", conditionMessage(e)) })
+  } else {
+    message("[PHREEQC] Gas-phase config skipped (RUN_ANALYSIS$phreeqc_gas_phase = FALSE). Define runs in data/raw/phreeqc/gas_phase_config.csv.")
+  }
+
 } else {
-  message("[PHREEQC] Skipping (RUN_ANALYSIS$phreeqc = FALSE). Run manually via scripts/phreeqc/run_phreeqc_analysis.R for speciation, temperature-sweep geothermometry, mixing, inverse modeling, or gas-phase modes.")
+  message("[PHREEQC] Skipping entirely (RUN_ANALYSIS$phreeqc = FALSE).")
+  message("  To enable: RUN_ANALYSIS <- list(phreeqc = TRUE, phreeqc_mixing = TRUE, phreeqc_inverse = TRUE, phreeqc_gas_phase = TRUE)")
+  message("  before sourcing this file. Mixing/inverse/gas-phase runs are defined in data/raw/phreeqc/*.csv (auto-created, header-only, on first use) -- toggle individual rows with their own 'enabled' column, no code editing needed.")
+  .log_stage("PHREEQC", .phreeqc_stage_start, status = "SKIPPED (RUN_ANALYSIS$phreeqc = FALSE)")
 }
 
 
@@ -453,9 +591,7 @@ if (isTRUE(RUN_ANALYSIS$phreeqc)) {
 # TIMESERIES ALIGNMENT (R-BASED)
 # ============================================================
 
-message("\n==============================")
-message(" TIMESERIES ALIGNMENT (R)")
-message("==============================")
+section_banner("TIMESERIES ALIGNMENT (R)")
 
 message("\n[ALIGN] Building temperature-flow relationships")
 
@@ -483,9 +619,7 @@ message("[ALIGN] sample_flux completed in ",
 # ✅ PROCESSING STAGE (PHASE 2: FLOW-DEPENDENT VIEWS)
 # ============================================================
 
-message("\n==============================")
-message(" PROCESSING STAGE (FLOW-DEPENDENT)")
-message("==============================")
+section_banner("PROCESSING STAGE (FLOW-DEPENDENT)")
 
 # ------------------------------------------------------------
 # ✅ NOW rebuild ONLY the view(s) that depend on alignment
@@ -569,21 +703,40 @@ message("  → Stored ", nrow(grad), " gradient vectors")
 # ADVANCED ANALYSIS PRODUCTS
 # ============================================================
 
-message("\n==============================")
-message(" ADVANCED ANALYSIS PRODUCTS")
-message("==============================")
+section_banner("ADVANCED ANALYSIS PRODUCTS")
 
+#' Mirrors run_step()'s warning/error handling for the derived-analysis
+#' stage: clear [WARNING]/[ERROR] tags, continues on failure, and
+#' records outcome + elapsed time into .STAGE_LOG for the end-of-run
+#' PIPELINE SUMMARY.
 run_analysis_step <- function(name, expr) {
   message("\n[ANALYSIS] ---- ", name, " ----")
   start_time <- Sys.time()
-  
-  tryCatch({
-    force(expr)
-    elapsed <- round(difftime(Sys.time(), start_time, units = "secs"), 1)
-    message("[ANALYSIS] Completed ", name, " (", elapsed, " sec)")
-  }, error = function(e) {
-    warning("[ANALYSIS] Failed ", name, ": ", e$message)
-  })
+  stage_label <- paste0("ANALYSIS: ", name)
+  n_warnings <- 0L
+
+  result <- tryCatch({
+    withCallingHandlers({
+      force(expr)
+      NULL
+    }, warning = function(w) {
+      n_warnings <<- n_warnings + 1L
+      message("  [WARNING] ", name, ": ", conditionMessage(w))
+      invokeRestart("muffleWarning")
+    })
+  }, error = function(e) e)
+
+  elapsed <- round(as.numeric(difftime(Sys.time(), start_time, units = "secs")), 1)
+
+  if (inherits(result, "error")) {
+    message("[ERROR] ", name, " failed after ", elapsed, " sec: ", conditionMessage(result))
+    .log_stage(stage_label, start_time, status = "FAILED", note = conditionMessage(result))
+  } else {
+    warn_note <- if (n_warnings > 0) paste0(n_warnings, " warning(s)") else NA_character_
+    message("[ANALYSIS] Completed ", name, " (", elapsed, " sec)",
+            if (n_warnings > 0) paste0(" -- ", n_warnings, " warning(s), see above") else "")
+    .log_stage(stage_label, start_time, status = "OK", note = warn_note)
+  }
 }
 
 run_analysis_step("Gradient Vector Products", {
@@ -606,9 +759,7 @@ run_analysis_step("Integrated Analysis Products", {
 # QA / QC STAGE
 # ============================================================
 
-message("\n==============================")
-message(" QA / QC STAGE")
-message("==============================")
+section_banner("QA / QC STAGE")
 
 message("\n[QC] Validating database relationships")
 validate_database(con)
@@ -639,9 +790,7 @@ ON QC_Issues(created_at, issue_type)
 # QC REPORT GENERATION STAGE
 # ============================================================
 
-message("\n==============================")
-message(" REPORT GENERATION")
-message("==============================")
+section_banner("REPORT GENERATION")
 
 # ------------------------------------------------------------
 # ✅ Define root-relative output (pipeline is in scripts/)
@@ -702,9 +851,7 @@ tryCatch({
 # EXPORT STAGE
 # ============================================================
 
-message("\n==============================")
-message(" EXPORT STAGE")
-message("==============================")
+section_banner("EXPORT STAGE")
 
 message("\n[EXPORT] Computing data availability across all sources")
 # Read-only reporting: which sources have data, over what date range.
@@ -915,9 +1062,7 @@ export_website_data_files(con)
 # WEBSITE BUILD STAGE
 # ============================================================
 
-message("\n==============================")
-message(" WEBSITE BUILD")
-message("==============================")
+section_banner("WEBSITE BUILD")
 
 build_website <- function() {
   
@@ -989,6 +1134,31 @@ if (BUILD_WEBSITE) {
 
 dbDisconnect(con)
 
-message("\n==============================")
-message(" PIPELINE COMPLETE ✅")
-message("==============================\n")
+
+# ============================================================
+# PIPELINE SUMMARY
+# ============================================================
+section_banner("PIPELINE SUMMARY")
+
+if (length(.STAGE_LOG) > 0) {
+  .stage_df <- dplyr::bind_rows(.STAGE_LOG)
+  for (.i in seq_len(nrow(.stage_df))) {
+    .r <- .stage_df[.i, ]
+    .flag <- if (identical(.r$status, "FAILED")) " ⚠" else ""
+    message(sprintf("  %-45s %8.1fs  [%s]%s", .r$stage, .r$seconds, .r$status, .flag))
+  }
+  .failed <- .stage_df[.stage_df$status == "FAILED", ]
+  if (nrow(.failed) > 0) {
+    message("\n[WARNING] ", nrow(.failed), " stage(s) failed this run -- see [ERROR] lines above for details:")
+    for (.i in seq_len(nrow(.failed))) message("  - ", .failed$stage[.i], ": ", .failed$note[.i])
+  } else {
+    message("\nNo stage failures this run.")
+  }
+} else {
+  message("(No stage timing recorded.)")
+}
+
+.total_elapsed <- round(as.numeric(difftime(Sys.time(), PIPELINE_START_TIME, units = "secs")), 1)
+message(sprintf("\nTotal pipeline runtime: %.1f sec (%.1f min)", .total_elapsed, .total_elapsed / 60))
+
+section_banner("PIPELINE COMPLETE ✅")

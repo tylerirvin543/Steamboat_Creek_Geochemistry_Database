@@ -264,4 +264,22 @@ CREATE TABLE IF NOT EXISTS PHREEQC_Gas_Phase_Results (
 );
 ")
 
+# ------------------------------------------------------------
+# PHREEQC_Pipeline_State -- one row, tracks the last automatic
+# speciation run so run_pipeline.R can decide whether new/changed
+# chemistry warrants re-running PHREEQC without the caller having to
+# remember to force it (see run_pipeline.R's PHREEQC section, and
+# scripts/phreeqc/run_phreeqc_analysis.R's should_rerun_phreeqc()).
+# Added 2026-09-06 as part of making the PHREEQC stage more user-
+# friendly to run repeatedly as new chemistry arrives.
+# ------------------------------------------------------------
+dbExecute(con, "
+CREATE TABLE IF NOT EXISTS PHREEQC_Pipeline_State (
+  state_id INTEGER PRIMARY KEY CHECK (state_id = 1),
+  last_run_at TEXT,
+  last_eligible_count INTEGER,
+  last_max_sample_id INTEGER
+);
+")
+
 message("[SCHEMA] PHREEQC schema (08_phreeqc_schema.R) ready.")
