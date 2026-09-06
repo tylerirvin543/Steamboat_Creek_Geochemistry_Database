@@ -112,6 +112,7 @@ WHERE hydraulic_head IS NOT NULL
     elevation_m,
     'POINT(' || longitude || ' ' || latitude || ')' AS geom_wkt
   FROM Wells
+  WHERE latitude IS NOT NULL AND longitude IS NOT NULL
   ")
   
   message("✅ Hydraulics ready")

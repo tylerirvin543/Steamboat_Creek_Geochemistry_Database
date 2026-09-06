@@ -184,6 +184,120 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # HYDRAULIC GRADIENTS
   # ============================================================
   
+  message("\n[EXPORT] Processing: facility_areas")
+
+  if (!("Facility_Areas" %in% dbListTables(con))) {
+    message("[EXPORT] Facility_Areas table does not exist yet (run 06_facility_areas_schema.R first) -- skipping.")
+  } else {
+    tryCatch({
+      fac_df <- dbGetQuery(con, "SELECT facility_area_id, facility_name, source, notes, geom_wkt FROM Facility_Areas")
+      if (nrow(fac_df) == 0) {
+        message("[EXPORT] No facility area features to write")
+      } else {
+        fac_sf <- st_as_sf(fac_df, wkt = "geom_wkt", crs = 4326)
+        st_write(fac_sf, gpkg_path, layer = "facility_areas", delete_layer = TRUE, quiet = TRUE)
+        message("[EXPORT] \u2705 facility_areas (", nrow(fac_sf), " rows)")
+      }
+    }, error = function(e) {
+      warning("[EXPORT] facility_areas export failed -> ", e$message)
+    })
+  }
+
+  message("\n[EXPORT] Processing: source_arcgis_power_plant_locations / source_arcgis_wells_dhakal")
+
+  arcgis_dir <- "data/raw/arcgis/dhakal .shp"
+  pp_shp <- file.path(arcgis_dir, "Steamboat_power_plant_locations.shp")
+  wells_shp <- file.path(arcgis_dir, "Steamboat_wells_dhakal.shp")
+
+  # Repackages the user's original ArcGIS shapefiles as-is (all source
+  # attributes preserved, e.g. Shape_Leng/Shape_Area/Powerplant), distinct
+  # from the derived Facility_Areas/Wells tables built from them -- so the
+  # exact source data handed off is always retrievable from the GeoPackage,
+  # not just its processed form.
+  if (file.exists(pp_shp)) {
+    tryCatch({
+      pp_raw <- sf::st_read(pp_shp, quiet = TRUE)
+      pp_raw <- sf::st_transform(pp_raw, 4326)
+      st_write(pp_raw, gpkg_path, layer = "source_arcgis_power_plant_locations", delete_layer = TRUE, quiet = TRUE)
+      message("[EXPORT] ✅ source_arcgis_power_plant_locations (", nrow(pp_raw), " rows)")
+    }, error = function(e) {
+      warning("[EXPORT] source_arcgis_power_plant_locations export failed -> ", e$message)
+    })
+  } else {
+    message("[EXPORT] ", pp_shp, " not found -- skipping.")
+  }
+
+  if (file.exists(wells_shp)) {
+    tryCatch({
+      wells_raw <- sf::st_read(wells_shp, quiet = TRUE)
+      wells_raw <- sf::st_transform(wells_raw, 4326)
+      st_write(wells_raw, gpkg_path, layer = "source_arcgis_wells_dhakal", delete_layer = TRUE, quiet = TRUE)
+      message("[EXPORT] ✅ source_arcgis_wells_dhakal (", nrow(wells_raw), " rows)")
+    }, error = function(e) {
+      warning("[EXPORT] source_arcgis_wells_dhakal export failed -> ", e$message)
+    })
+  } else {
+    message("[EXPORT] ", wells_shp, " not found -- skipping.")
+  }
+
+  # ------------------------------------------------------------
+  # WELL FLOW NETWORK -- two segments (see 05_well_network_schema.R for
+  # why this is split rather than one chained view: injection wells do
+  # not carry a port_name the way production wells do, so the old
+  # single-view chain could only ever return 0 rows).
+  # ------------------------------------------------------------
+  build_line_layer <- function(df, id1, lat1, lon1, id2, lat2, lon2, layer_name) {
+    df <- df[!is.na(df[[lat1]]) & !is.na(df[[lon1]]) & !is.na(df[[lat2]]) & !is.na(df[[lon2]]), ]
+    if (nrow(df) == 0) {
+      message("[EXPORT] No ", layer_name, " features with resolved coordinates on both ends -- skipping.")
+      return(invisible(NULL))
+    }
+    pts1 <- st_transform(st_as_sf(df, coords = c(lon1, lat1), crs = 4326), 32611)
+    pts2 <- st_transform(st_as_sf(df, coords = c(lon2, lat2), crs = 4326), 32611)
+    c1 <- st_coordinates(pts1)
+    c2 <- st_coordinates(pts2)
+    geoms <- lapply(seq_len(nrow(df)), function(i) st_linestring(rbind(c1[i, ], c2[i, ])))
+    out_sf <- st_transform(st_as_sf(df, geometry = st_sfc(geoms, crs = 32611)), 4326)
+    st_write(out_sf, gpkg_path, layer = layer_name, delete_layer = TRUE, quiet = TRUE)
+    message("[EXPORT] ✅ ", layer_name, " (", nrow(out_sf), " rows)")
+  }
+
+  message("\n[EXPORT] Processing: production_to_port")
+  if (nrow(dbGetQuery(con, "SELECT name FROM sqlite_master WHERE type='view' AND name='vw_production_to_port'")) == 0) {
+    message("[EXPORT] vw_production_to_port does not exist yet -- skipping.")
+  } else {
+    tryCatch({
+      seg1 <- dbGetQuery(con, "SELECT * FROM vw_production_to_port")
+      if (nrow(seg1) == 0) {
+        message("[EXPORT] No production_to_port features to write")
+      } else {
+        well_coords <- dbGetQuery(con, "SELECT well_id, latitude AS lat1, longitude AS lon1 FROM Wells")
+        port_coords <- dbGetQuery(con, "SELECT port_id, latitude AS lat2, longitude AS lon2 FROM Sampling_Ports")
+        seg1 <- seg1 %>% left_join(well_coords, by = c("production_well_id" = "well_id")) %>%
+          left_join(port_coords, by = "port_id")
+        build_line_layer(seg1, "production_well_id", "lat1", "lon1", "port_id", "lat2", "lon2", "production_to_port")
+      }
+    }, error = function(e) warning("[EXPORT] production_to_port export failed -> ", e$message))
+  }
+
+  message("\n[EXPORT] Processing: port_to_injection")
+  if (nrow(dbGetQuery(con, "SELECT name FROM sqlite_master WHERE type='view' AND name='vw_port_to_injection'")) == 0) {
+    message("[EXPORT] vw_port_to_injection does not exist yet -- skipping.")
+  } else {
+    tryCatch({
+      seg2 <- dbGetQuery(con, "SELECT * FROM vw_port_to_injection")
+      if (nrow(seg2) == 0) {
+        message("[EXPORT] No port_to_injection features to write (no port-level injection assignment identified yet -- see 05_well_network_schema.R)")
+      } else {
+        port_coords <- dbGetQuery(con, "SELECT port_id, latitude AS lat1, longitude AS lon1 FROM Sampling_Ports")
+        well_coords <- dbGetQuery(con, "SELECT well_id, latitude AS lat2, longitude AS lon2 FROM Wells")
+        seg2 <- seg2 %>% left_join(port_coords, by = "port_id") %>%
+          left_join(well_coords, by = c("injection_well_id" = "well_id"))
+        build_line_layer(seg2, "port_id", "lat1", "lon1", "injection_well_id", "lat2", "lon2", "port_to_injection")
+      }
+    }, error = function(e) warning("[EXPORT] port_to_injection export failed -> ", e$message))
+  }
+
   message("\n[EXPORT] Processing: hydraulic_gradients")
   
   if (!("Hydraulic_Gradients" %in% dbListTables(con))) {

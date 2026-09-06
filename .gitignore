@@ -77,3 +77,6 @@ notebooks/*_files/
 # ==================================================
 ~$*
 *.tmp
+
+# tesseract OCR cache (redirected into project to work around sandbox restriction -- see parse_well_log_pdf.R)
+.tesseract_cache/

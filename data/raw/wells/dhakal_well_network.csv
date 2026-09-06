@@ -1,0 +1,45 @@
+well_name,well_role,port_name,valid_from,valid_to,source,notes
+78-29,production,Galena 1,,,"Dhakal et al. (2025) Figure 5 (""Steamboat geothermal complex configuration with average flow rates and temperatures in 2024"")","Lower Steamboat group. Galena 1 total: 615 kg/s, 123.7 C. Coordinate: NBMG Geothermal_Wells match (see dhakal_well_coordinates.csv)."
+HA-4,production,Galena 1,,,"Dhakal et al. (2025) Figure 5",Lower Steamboat / Galena 1 group. Coordinate: NBMG Geothermal_Wells match (low confidence -- see dhakal_well_coordinates.csv note on shared/generic coordinates).
+PW-1,production,Galena 1,,,"Dhakal et al. (2025) Figure 5; also Table 1 (Lower Steamboat production well classification)","Confirmed by user (2026-09-05) to be a genuinely DIFFERENT, separately-located well from PW 2-x/PW 3-x below -- not a naming variant. Still no coordinate resolved for PW-1 itself."
+PW-2,production,Galena 1,,,"Dhakal et al. (2025) Figure 5; also Table 1","Confirmed distinct from PW 2-x/PW 3-x, same basis as PW-1. Still no coordinate resolved."
+PW-3,production,Galena 1,,,"Dhakal et al. (2025) Figure 5; also Table 1","Confirmed distinct from PW 2-x/PW 3-x, same basis as PW-1. Still no coordinate resolved."
+PW 2-1,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1 (printed there as ""PW2-1"", no space)","Lower Steamboat / SB2/3 group (941 kg/s, 120.4 C combined). NEW well identified from the literature only -- not in the ArcGIS-digitized wells layer (which had PW 2-3/2-5/3-1/2/3/4 but not this one) -- no coordinate yet. Spelled with a space here for consistency with the coordinate-bearing PW 2-x/PW 3-x wells already in this file; the paper itself omits the space."
+PW 2-3,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization (data/raw/arcgis/Steamboat_wells_dhakal.shp)","Lower Steamboat / SB2/3 group. Port corrected 2026-09-05: Figure 5 shows PW2-x and PW3-x wells combining at a SINGLE port literally named ""SB2/3"" (matching the single combined polygon in Steamboat_power_plant_locations.shp) -- superseding the earlier guess that split this into separate ""SB2""/""SB3"" ports by name pattern alone."
+PW 2-5,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
+PW 3-1,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
+PW 3-2,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
+PW 3-3,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
+PW 3-4,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
+14A-33,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group (586 kg/s total production; 454 kg/s reported downstream to injection -- see 23-33RD/43-33 notes on the ~132 kg/s unaccounted difference).
+34-32,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group.
+44-32,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group.
+44A-32,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group.
+13-5R,production,SBHR,,,"Dhakal et al. (2025) Figure 5 (printed as ""13-5RD"" in Table 1)","Upper Steamboat / SBHR group. Per user (2026-09-05), this is the *later* of two same-named historical wells (permit 0340, Production)."
+21-5R,production,SBHR,,,"Dhakal et al. (2025) Figure 5",Upper Steamboat / SBHR group.
+21B-5R,production,SBHR,,,"Dhakal et al. (2025) Figure 5",Upper Steamboat / SBHR group.
+23-5,production,SBHR,,,"Dhakal et al. (2025) Figure 5",Upper Steamboat / SBHR group (593 kg/s, 154.3 C).
+83B-6R,production,SBHR,,,"Dhakal et al. (2025) Figure 5 (printed as ""83B-6RD"" in Table 1)",Upper Steamboat / SBHR group.
+83C-6ST1,production,SBHR,,,"Dhakal et al. (2025) Figure 5 (printed as ""83C-6"" in Table 1)",Upper Steamboat / SBHR group.
+24-5,production,Galena 2,,,"Dhakal et al. (2025) Figure 5",Upper Steamboat / Galena 2 group (205 kg/s, 150.3 C).
+41-5,production,Galena 2,,,"Dhakal et al. (2025) Figure 5",Upper Steamboat / Galena 2 group.
+IW-1,injection,Galena 1,,,"Dhakal et al. (2025) Figure 5","Fed by the COMBINED Galena 1 + SB2/3 output (1556 kg/s, 73.7 C total = 615 + 941 kg/s -- mass balance checks out exactly). Two rows (this one and the SB2/3 row below) represent the same combined feed, not two independent 100% flows."
+IW-1,injection,SB2/3,,,"Dhakal et al. (2025) Figure 5",See Galena 1 row note -- same combined Galena 1 + SB2/3 feed.
+IW-4,injection,Galena 1,,,"Dhakal et al. (2025) Figure 5",Same combined Galena 1 + SB2/3 feed as IW-1.
+IW-4,injection,SB2/3,,,"Dhakal et al. (2025) Figure 5",Same combined Galena 1 + SB2/3 feed as IW-1.
+IW-5,injection,Galena 1,,,"Dhakal et al. (2025) Figure 5",Same combined Galena 1 + SB2/3 feed as IW-1.
+IW-5,injection,SB2/3,,,"Dhakal et al. (2025) Figure 5",Same combined Galena 1 + SB2/3 feed as IW-1.
+IW-6,injection,Galena 1,,,"Dhakal et al. (2025) Figure 5",Same combined Galena 1 + SB2/3 feed as IW-1.
+IW-6,injection,SB2/3,,,"Dhakal et al. (2025) Figure 5",Same combined Galena 1 + SB2/3 feed as IW-1.
+IW-2,injection,,,,"Dhakal et al. (2025)","NOT in Figure 5's 2024 flow diagram at all -- consistent with the 2025/2026 NDEP TFT Compliance Reports showing IW-2 status = Idle. No port assignment because it's not currently receiving flow, not because the data is missing."
+IW-3,injection,,,,"Dhakal et al. (2025)","NOT in Figure 5's 2024 flow diagram -- consistent with the TFT Compliance Reports showing IW-3 status = Plugged and Abandoned."
+23-33RD,injection,Galena 3,,,"Dhakal et al. (2025) Figure 5","Fed by Galena 3 (454 kg/s, 76.9 C, paired with 43-33). NBMG's coordinate match was for a well named exactly ""23-33"" (no RD suffix) -- Figure 5's own well-name spelling (""23-33RD"") is used here as the network entry, on the working assumption ""RD"" = redrill of the same physical well NBMG has as ""23-33""; not independently confirmed, flagged in dhakal_well_coordinates.csv."
+43-33,injection,Galena 3,,,"Dhakal et al. (2025) Figure 5","Fed by Galena 3, paired with 23-33RD (454 kg/s combined, 76.9 C)."
+42A-32,injection,SBHR,,,"Dhakal et al. (2025) Figure 5","Fed by SBHR (794 kg/s, 70.8 C, paired with 21-32)."
+42A-32,injection,Galena 3,,,"Dhakal et al. (2025) Figure 5; confirmed by user (2026-09-05)","Middle Steamboat (Galena 3) and Upper Steamboat (SBHR) share this injection pair -- confirmed by user: the vertical connector in Figure 5 is real, not a rendering artifact. Galena 3 feeds BOTH {23-33RD, 43-33} and {42A-32, 21-32}; Lower Steamboat (Galena 1 / SB2/3), by contrast, stays separate between its own two ports and does not connect to Middle/Upper injectors."
+21-32,injection,SBHR,,,"Dhakal et al. (2025) Figure 5","Fed by SBHR, paired with 42A-32."
+21-32,injection,Galena 3,,,"Dhakal et al. (2025) Figure 5; confirmed by user (2026-09-05)","Shares Galena 3 feed with 42A-32 -- see that rows note."
+64A-32,injection,Galena 2,,,"Dhakal et al. (2025) Figure 5","Fed by Galena 2 (136 kg/s, 80.7 C) -- a separate arrow from Galena 2's other output that joins SBHR's combined 794 kg/s/42A-32/21-32 line. Galena 2's own total production (205 kg/s) does not need to reconcile neatly against either downstream number since they are different metering points on the same diagram."
+MTH 12-33,,,,,"Dhakal et al. (2025) diagram; NBMG cross-reference (coordinate candidate cross-referenced 2026-09-05)","Not a production or injection well in Figure 5 or Table 1 -- NBMG classifies its function as Observation. well_role intentionally left blank rather than guessed."
+OW-2,monitor,,,,"ArcGIS satellite-overlay digitization of Dhakal Figure 5 (data/raw/arcgis/Steamboat_wells_dhakal.shp)","well_role inferred from the 'OW' (Observation Well) prefix -- not in Table 1/Figure 5's named lists, not independently confirmed against the figure's legend."
+2-1,,,,,"ArcGIS satellite-overlay digitization of Dhakal Figure 5 (data/raw/arcgis/Steamboat_wells_dhakal.shp)","Real well found via satellite overlay, but the name has no PW/IW/OW prefix and does not appear in Table 1 or Figure 5 either -- well_role NOT guessed, left blank. Needs user confirmation of what this well is."

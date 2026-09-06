@@ -106,6 +106,24 @@ ingest_flux <- function(con) {
   raw_data <- map_dfr(data_sheets, function(sheet) {
     df <- read_excel(flux_file, sheet = sheet)
     
+    # stream_discharge.xlsx has a source-spreadsheet defect: every transect
+    # sheet has two columns both literally named "transect_id", so readxl
+    # disambiguates them on read as transect_id...3 / transect_id...11 (the
+    # numbers are the original column positions). The FIRST occurrence sits
+    # in the expected schema position (right after datetime, before
+    # point_id) and is the real per-point transect identifier. The later
+    # occurrence is a spreadsheet-authoring artifact that just repeats the
+    # sheet name as a constant on every row (e.g. "transect_A") -- already
+    # redundant with the sheet_name column added below. Keep the first
+    # occurrence as the authoritative transect_id; drop any others.
+    dup_transect_cols <- grep("^transect_id(\\.\\.\\.[0-9]+)?$", names(df))
+    if (length(dup_transect_cols) > 1) {
+      keep <- dup_transect_cols[1]
+      drop <- dup_transect_cols[-1]
+      names(df)[keep] <- "transect_id"
+      df <- df[, -drop, drop = FALSE]
+    }
+    
     df %>%
       mutate(sheet_name = sheet)
   })
@@ -135,6 +153,27 @@ ingest_flux <- function(con) {
   
   if (!all(required_cols %in% names(raw_data))) {
     stop("Missing required columns in flux file.")
+  }
+  
+  # ------------------------------------------------------------
+  # DROP BLANK PLACEHOLDER ROWS
+  # ------------------------------------------------------------
+  # stream_discharge.xlsx currently ships as a header-only template
+  # awaiting field data entry -- every data row across all three transect
+  # sheets is blank except for the spurious constant column removed above.
+  # Drop rows with no real measurement data instead of letting them fail
+  # validation below, so this ingest runs cleanly (inserting 0 rows) today
+  # and starts processing real rows the moment field data is entered.
+  raw_data <- raw_data %>%
+    filter(
+      !(is.na(external_station_code) & is.na(datetime) &
+        is.na(point_id) & is.na(depth_total_m) &
+        is.na(width_m) & is.na(velocity_m_s))
+    )
+  
+  if (nrow(raw_data) == 0) {
+    message("Flux file contains no populated measurement rows yet — skipping.")
+    return(invisible(NULL))
   }
   
   # ------------------------------------------------------------

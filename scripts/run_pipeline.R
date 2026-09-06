@@ -88,24 +88,27 @@ pipeline_menu <- function() {
   list(mode = mode, profile = profile_choice, build_website = identical(website_choice, 2L))
 }
 
-# Named by profile_choice above. flux (Cl-discharge transects) is off
-# in every preset: data/raw/discharge/stream_discharge.xlsx has two
-# columns both literally named "transect_id" per sheet, a
-# source-spreadsheet defect that needs a human decision on which one
-# is authoritative before it can run -- see ingest_flux.R.
+# Named by profile_choice above. flux (Cl-discharge transects) is now on
+# in the chemistry-bearing presets: data/raw/discharge/stream_discharge.xlsx
+# had two columns both literally named "transect_id" per sheet, a
+# source-spreadsheet defect resolved 2026-09-05 -- see ingest_flux.R for
+# which one is authoritative and why. The file itself is still just a
+# header-only template with no populated rows yet, so this currently
+# ingests 0 rows; it's wired in now so real transect data starts flowing
+# the moment it's entered, without needing another pipeline-code change.
 profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
-             lab = TRUE, isotope = TRUE, flux = FALSE, usgs = TRUE, usgs_historic_chem = TRUE,
+             lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
-             lab = TRUE, isotope = TRUE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
+             lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -153,6 +156,9 @@ source("database/schema/01_define_schema.R")
 source("database/schema/02_conductivity_schema.R")
 source("database/schema/03_weather_schema.R")
 source("database/schema/04_photo_location_schema.R")
+source("database/schema/05_well_network_schema.R")
+source("database/schema/06_facility_areas_schema.R")
+source("database/schema/07_well_logs_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -208,6 +214,9 @@ if (MODE == "DEMO") {
 source("database/schema/02_conductivity_schema.R")
 source("database/schema/03_weather_schema.R")
 source("database/schema/04_photo_location_schema.R")
+source("database/schema/05_well_network_schema.R")
+source("database/schema/06_facility_areas_schema.R")
+source("database/schema/07_well_logs_schema.R")
 }
 
 # ============================================================
@@ -333,6 +342,48 @@ run_step(RUN_INGEST$monitor_well_locations, "LITERATURE-SOURCED MONITOR WELL LOC
   # data/raw/ndwr/klein2007_monitor_well_locations.csv.
   source("scripts/ingest/register_monitor_well_locations.R")
   register_monitor_well_locations(con)
+})
+
+run_step(RUN_INGEST$well_network, "DHAKAL WELL/PORT FLOW NETWORK", {
+  # Registers Wells/Well_Aliases/Sampling_Ports/Production_Port_Links/
+  # Port_Injection_Links rows for the Dhakal et al. (2025) production
+  # well -> port -> injection well flow network. Idempotent: only adds
+  # new rows, never updates existing ones. See
+  # scripts/ingest/register_well_network.R and
+  # data/raw/wells/dhakal_well_network.csv /
+  # data/raw/wells/well_aliases.csv.
+  source("scripts/ingest/register_well_network.R")
+  register_well_network(con)
+  # Coordinate matches (currently NBMG Geothermal_Wells) are a separate,
+  # independently-reviewed claim from network topology -- see
+  # scripts/ingest/register_well_coordinates.R for provenance details.
+  source("scripts/ingest/register_well_coordinates.R")
+  register_well_coordinates(con)
+  # Second, independent coordinate source: ArcGIS satellite-overlay
+  # digitization of the Dhakal figure (data/raw/arcgis/*.shp). Same
+  # never-overwrite idempotency -- only fills wells still missing a
+  # coordinate after the NBMG pass above.
+  register_well_coordinates(con, coords_csv = "data/raw/wells/dhakal_wells_arcgis.csv")
+  source("scripts/ingest/register_facility_areas.R")
+  register_facility_areas(con)
+
+run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
+  # Stages NDWR "WELL DRILLER'S REPORT" PDFs (data/raw/ndwr/Ormat_well_logs/)
+  # into Well_Log_Documents -- most have no extractable text (OCR
+  # blocked in this sandbox, per earlier sessions), so this mostly
+  # captures whatever an NDWR log-number cross-reference can supply
+  # (owner, PLSS location, coordinates, completion date) rather than
+  # full drillers-report detail. Idempotent on (file_path, file_hash).
+  # See scripts/ingest/ingest_well_logs.R.
+  source("scripts/ingest/ingest_well_logs.R")
+  ingest_well_logs(con)
+  # Promotion to Wells/Water_Level_Observations requires a human-
+  # confirmed log_number -> well_name mapping (identity is NOT
+  # guessed from an NDWR cross-references bare "ORMAT" owner name) --
+  # see data/raw/ndwr/well_log_document_map.csv (currently empty; no
+  # confident matches established yet).
+  promote_well_log_documents(con)
+})
 })
 
 # ============================================================
