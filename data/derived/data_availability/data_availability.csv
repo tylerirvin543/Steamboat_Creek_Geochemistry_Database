@@ -1,0 +1,8 @@
+"source","category","start_date","end_date","n_records"
+"Water Level Observations","Discrete / Event",1969-06-23,2026-01-01,153436
+"USGS Historic Specific Conductance (grab samples)","Discrete / Event",1971-07-28,2001-02-07,73
+"Chemistry Sampling Events","Discrete / Event",1974-02-06,2026-05-01,759
+"NOAA Weather Observations","External Time Series",2001-08-08,2026-07-20,28043
+"USGS Discharge (live, param 60)","Continuous Logger",2025-01-01,2026-06-06,272039
+"Temperature Logger Observations","Continuous Logger",2025-10-01,2026-08-22,204622
+"Conductivity Logger Observations","Continuous Logger",2026-07-15,2026-08-22,21901

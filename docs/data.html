@@ -11,7 +11,7 @@
 
 
 
-<title>Data and Schema</title>
+<title>Data System</title>
 
 <script src="site_libs/header-attrs-2.31/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -33,16 +33,14 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
+<link href="site_libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="site_libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.1.0/anchor-sections.js"></script>
 <link href="site_libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet" />
 <script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
-<script src="site_libs/plotly-binding-4.12.1/plotly.js"></script>
-<script src="site_libs/typedarray-0.1/typedarray.min.js"></script>
-<link href="site_libs/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet" />
-<script src="site_libs/crosstalk-1.2.2/js/crosstalk.min.js"></script>
-<link href="site_libs/plotly-htmlwidgets-css-2.25.2/plotly-htmlwidgets.css" rel="stylesheet" />
-<script src="site_libs/plotly-main-2.25.2/plotly-latest.min.js"></script>
 <link href="site_libs/leaflet-1.3.1/leaflet.css" rel="stylesheet" />
 <script src="site_libs/leaflet-1.3.1/leaflet.js"></script>
 <link href="site_libs/leafletfix-1.0.0/leafletfix.css" rel="stylesheet" />
@@ -50,6 +48,8 @@
 <script src="site_libs/Proj4Leaflet-1.0.1/proj4leaflet.js"></script>
 <link href="site_libs/rstudio_leaflet-1.3.1/rstudio_leaflet.css" rel="stylesheet" />
 <script src="site_libs/leaflet-binding-2.2.3/leaflet.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -235,6 +235,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -330,7 +333,7 @@ div.tocify {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Steamboat Data Pipeline</a>
+      <a class="navbar-brand" href="index.html">Steamboat Hydrothermal Data Platform</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -350,11 +353,19 @@ div.tocify {
   <a href="results.html">Results</a>
 </li>
 <li>
+  <a href="references.html">References</a>
+</li>
+<li>
   <a href="about.html">About</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
@@ -362,350 +373,161 @@ div.tocify {
 
 <div id="header">
 
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
-<h1 class="title toc-ignore">Data and Schema</h1>
+
+<h1 class="title toc-ignore">Data System</h1>
 
 </div>
 
 
-<div id="data-structure" class="section level1">
-<h1>Data &amp; Structure</h1>
-<p>This system integrates heterogeneous environmental observations into
-a unified relational database designed to support reproducible
-scientific analysis.</p>
-<p>Rather than storing datasets independently, all observations are
-structured within a shared schema that enforces spatial, temporal, and
-relational consistency. This enables direct comparison across data
-types, monitoring scales, and time.</p>
-<p>The following sections explore how the database behaves as an
-integrated system, highlighting patterns in data sources, temporal
-growth, structural</p>
-<hr />
-<div id="data-sources" class="section level2">
-<h2>📥 Data Sources</h2>
-<p>The database integrates multiple observational domains, each
-representing a different aspect of the hydrothermal system:</p>
-<ul>
-<li><strong>Regulatory data (NDEP)</strong> — long-term geochemical
-records<br />
-</li>
-<li><strong>Field measurements</strong> — site-specific sampling
-campaigns<br />
-</li>
-<li><strong>Laboratory analyses</strong> — high-quality analytical
-chemistry<br />
-</li>
-<li><strong>Temperature loggers</strong> — continuous thermal
-monitoring</li>
-<li><strong>Continuous conductivity loggers, USGS discharge &amp;
-historic chemistry, NOAA weather, and field-photo EXIF GPS</strong>
-(added 2026-09) — see <code>AGENTS.md</code>/<code>README.md</code> for
-the current per-source drop-folder and ingest-script mapping</li>
-</ul>
-<p>Each source differs in temporal resolution, structure, and analytical
-purpose.</p>
-<p>Bringing these datasets into a common framework allows relationships
-to be established between measurements that were previously
-isolated.</p>
-<blockquote>
-<p>This integration is essential for interpreting the hydrothermal
-system as a coupled hydraulic, thermal, and geochemical process.</p>
-</blockquote>
-<hr />
+<div id="a-single-schema-many-kinds-of-observation"
+class="section level2 hasAnchor">
+<h2 class="hasAnchor">A Single Schema, Many Kinds of Observation<a
+href="#a-single-schema-many-kinds-of-observation" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<p>Underneath every chart on this page sits one normalized relational
+database, built so that a regulatory chemistry record from the 1970s, a
+lab result from last month, and a temperature reading logged sixty
+seconds ago all live in the same structure and can be queried together.
+The backbone of that structure is a small set of core tables —
+<strong>Locations</strong> for every spatial reference point,
+<strong>Sampling_Events</strong> for the discrete visits or deployments
+that generate data, <strong>Samples</strong> for the physical specimens
+collected during those events, and a family of observation tables
+(<strong>Field_Measurements</strong>, <strong>Lab_Analyses</strong>,
+<strong>Temperature_Observations</strong>,
+<strong>Conductivity_Observations</strong>,
+<strong>Water_Level_Observations</strong>,
+<strong>Isotope_Analyses</strong>) that each attach to a sample, a
+location, or a well through explicit foreign keys. That design enforces
+two things automatically: nothing gets inserted without a real spatial
+and temporal anchor, and time-series data is strictly append-only, so a
+logger’s history is never silently overwritten by a later download of
+the same file.</p>
+<p>Six distinct kinds of source currently feed that structure, each with
+its own ingestion script and its own quirks: NDEP’s long-running
+regulatory chemistry program, targeted field sampling campaigns,
+laboratory analyses (including isotopes), continuous temperature and
+electrical-conductivity loggers, USGS discharge and historic
+water-quality records, and NOAA weather observations, with EXIF-tagged
+field photographs and scanned NDWR well-completion logs rounding out the
+picture. Each of those sources differs in how often it reports, how it
+is structured on arrival, and what it is actually good for
+scientifically — folding all of them into one schema is what makes it
+possible to ask a question that spans several of them at once, rather
+than treating each as its own isolated archive.</p>
+<div class="figure">
+<img src="data_files/figure-html/source-integration-1.png" alt="Total records contributed by each ingested data source (log scale would flatten this further; shown here on a linear scale to make the relative scale of continuous sensors versus discrete chemistry explicit)." width="672" />
+<p class="caption">
+Total records contributed by each ingested data source (log scale would
+flatten this further; shown here on a linear scale to make the relative
+scale of continuous sensors versus discrete chemistry explicit).
+</p>
 </div>
-<div id="data-flow" class="section level2">
-<h2>🔄 Data Flow</h2>
-<p>All data entering the system pass through a controlled sequence of
-transformations:</p>
-<p><strong>Raw Input → Validation → Standardization → Database → Derived
-Outputs</strong></p>
-<p>Key features of this process:</p>
-<ul>
-<li>Raw inputs are never modified<br />
-</li>
-<li>All transformations are scripted and version-controlled<br />
-</li>
-<li>External identifiers (e.g., station codes) are translated into
-internal database keys<br />
-</li>
-<li>Invalid or inconsistent data are rejected during ingest</li>
-</ul>
-<div id="archival-and-provenance" class="section level3">
-<h3>Archival and Provenance</h3>
-<p>To preserve reproducibility:</p>
-<ul>
-<li>All raw field templates are <strong>archived before
-ingestion</strong><br />
-</li>
-<li>Templates are <strong>cleared only after successful
-ingest</strong><br />
-</li>
-<li>This prevents duplication while maintaining a complete history of
-inputs</li>
-</ul>
-<hr />
+<p>The imbalance in that chart is expected, not a flaw: continuous
+instruments like USGS discharge gauges, the new conductivity logger, and
+temperature loggers generate orders of magnitude more rows than a
+chemistry program that samples a well a few times a year ever could,
+simply because they report every few minutes rather than every few
+months. The system’s value comes from holding both kinds of record side
+by side, not from any one source dominating the count.</p>
 </div>
+<div id="how-the-database-grows" class="section level2 hasAnchor">
+<h2 class="hasAnchor">How the Database Grows<a
+href="#how-the-database-grows" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<p>Growth in this system happens in discrete jumps rather than a smooth
+trickle, because that is how the underlying fieldwork actually happens —
+a field campaign, a regulatory data drop, or a logger download each
+shows up as a step in the record count, not a gradual accumulation.
+Reading those jumps against the calendar (below, for the temperature
+record specifically) tells you almost as much about <em>how</em> this
+system is monitored as it does about the system itself: dense clusters
+mark active deployment and campaign periods, and the gaps between them
+mark when nothing was actively being measured. That distinction matters
+when it’s time to model these data downstream, because a period with no
+monitoring should never be mistaken for a period with no change in the
+underlying system.</p>
+<div class="figure">
+<img src="data_files/figure-html/temporal-histogram-1.png" alt="Distribution of temperature-logger observations over time; clustering reflects real deployment history, not measurement gaps in an otherwise continuous record." width="672" />
+<p class="caption">
+Distribution of temperature-logger observations over time; clustering
+reflects real deployment history, not measurement gaps in an otherwise
+continuous record.
+</p>
 </div>
-<div id="database-structure" class="section level2">
-<h2>🧱 Database Structure</h2>
-<p>The system is built on a normalized relational schema with the
-following core tables:</p>
-<ul>
-<li><strong>Locations</strong> — spatial reference points<br />
-</li>
-<li><strong>Sampling_Events</strong> — time-based groupings of
-observations<br />
-</li>
-<li><strong>Samples</strong> — discrete physical observations<br />
-</li>
-<li><strong>Field_Measurements</strong> — in-situ measurements<br />
-</li>
-<li><strong>Lab_Analyses</strong> — analytical chemistry results<br />
-</li>
-<li><strong>Temperature_Observations</strong> — high-frequency
-time-series data</li>
-</ul>
-<div id="design-principles" class="section level3">
-<h3>Design Principles</h3>
-<ul>
-<li>normalized relational structure<br />
-</li>
-<li>strict foreign key relationships<br />
-</li>
-<li>append-only time series (no overwriting)<br />
-</li>
-<li>explicit separation of raw vs. derived data</li>
-</ul>
-<hr />
+<p>For a system-wide view of that same idea across <em>every</em> source
+at once — not just temperature — see the data availability chart on the
+<a href="index.html">Overview</a> page, which shows the earliest and
+latest dated record for each source side by side. Reading the two
+together makes a pattern visible that neither chart shows on its own:
+this project has recently layered a dense, high-frequency instrument
+network on top of a much sparser multi-decade chemistry and discharge
+record, and a large part of the analytical work ahead is about bridging
+that gap credibly rather than pretending it isn’t there.</p>
 </div>
+<div id="where-the-monitoring-network-actually-sits"
+class="section level2 hasAnchor">
+<h2 class="hasAnchor">Where the Monitoring Network Actually Sits<a
+href="#where-the-monitoring-network-actually-sits"
+class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>The map below shows every well and named field location currently in
+the database with a resolved coordinate, colored by role. Most wells
+still show as role “unknown” — role has only been confirmed so far for
+wells that appear explicitly in Ormat’s own production/injection flow
+diagram (Dhakal et al. 2025), and confirming the rest is ongoing work,
+not an oversight. Springs, seeps, and other named sampling locations are
+shown in their own layer, toggleable independently of the wells.</p>
+<div class="leaflet html-widget html-fill-item" id="htmlwidget-4e29d987400ea89914f3" style="width:672px;height:480px;"></div>
+<script type="application/json" data-for="htmlwidget-4e29d987400ea89914f3">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[39.34624,39.35506,39.35955,39.33813,39.364597,39.346027,39.345925,39.343791,39.348158,39.38112,39.37888,39.366406,39.364953,39.378909,39.34936,39.5189,39.518898,39.536026,39.536044,39.461878,39.409606,39.432544,39.458283,39.458329,39.461812,39.454094,39.443586,39.443508,39.534095,39.533972,39.533953,39.518871,39.517257,39.517321,39.512257,39.512292,39.511893,39.470573,39.468835,39.54189,39.541957,39.541964,39.535923,39.525326,39.525326,39.525263,39.526487,39.526436,39.533247,39.533355,39.533372,39.528769,39.528619,39.528895,39.528906,39.528872,39.522542,39.522329,39.514472,39.51107,39.481834,39.482166,39.469284,39.466681,39.466781,39.454201,39.431335,39.381801,39.37888,39.418527,39.395714,39.418533,39.407588,39.39663,39.39642,39.39482,39.38978,39.39131,39.39392,39.39506,39.39595,39.39081,39.39181,39.39103,39.39255,39.3849895,39.38046,39.3826722,39.382543,39.3700873,39.3730878,39.37526,39.39359,39.3839177,39.38726,39.3899274,39.3802347,39.3861874,39.39357,39.387972,39.40739,39.3840040620284,39.389515,39.388225,39.397972,39.394361],[-119.7831,-119.77406,-119.85889,-119.8736,-119.819923,-119.807974,-119.815633,-119.826154,-119.831604,-119.820081,-119.825034,-119.810357,-119.833582,-119.836044,-119.786778,-119.82987,-119.82989,-119.77773,-119.777745,-119.7808,-119.827413,-119.75973,-119.774102,-119.774076,-119.780849,-119.780729,-119.779433,-119.779378,-119.790128,-119.790084,-119.790096,-119.830014,-119.835432,-119.835349,-119.83598,-119.836055,-119.848574,-119.808118,-119.805967,-119.775814,-119.775678,-119.775697,-119.777743,-119.772092,-119.772124,-119.771838,-119.776066,-119.775968,-119.762142,-119.762679,-119.762633,-119.763432,-119.763531,-119.763482,-119.76348,-119.763549,-119.75695,-119.75694,-119.756592,-119.778151,-119.773959,-119.773954,-119.784196,-119.775726,-119.775681,-119.779105,-119.776051,-119.818835,-119.825034,-119.773506,-119.796467,-119.783454,-119.771611,-119.7441,-119.7455,-119.7454,-119.7556519,-119.75332,-119.7507,-119.7494,-119.7484,-119.7473,-119.7469,-119.7458,-119.7462,-119.7450731,-119.75974,-119.7630336,-119.7616471,-119.7668318,-119.7645127,-119.7648,-119.7466,-119.7442997,-119.764,-119.7685792,-119.759455,-119.7515632,-119.7494,-119.747698,-119.75474,-119.744477414504,-119.766953,-119.767523,-119.75381,-119.75381],4,null,"Wells",{"interactive":true,"className":"","stroke":false,"color":["#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#1b9e77","#1b9e77","#1b9e77","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#1b9e77","#1b9e77","#1b9e77","#1b9e77","#1b9e77","#999999","#7570b3","#999999","#999999","#999999","#999999","#999999","#999999","#999999"],"weight":5,"opacity":0.5,"fill":true,"fillColor":["#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#999999","#1b9e77","#1b9e77","#1b9e77","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#d95f02","#1b9e77","#1b9e77","#1b9e77","#1b9e77","#1b9e77","#999999","#7570b3","#999999","#999999","#999999","#999999","#999999","#999999","#999999"],"fillOpacity":0.85},null,null,["<b>PAGNI LANE<\/b><br>Role: unknown","<b>MONTREAUX RANCH<\/b><br>Role: unknown","<b>GALENA CREEK PARK<\/b><br>Role: unknown","<b>SKY TAVERN SKI RESORT<\/b><br>Role: unknown","<b>Shonnard<\/b><br>Role: unknown","<b>St. James MW1<\/b><br>Role: unknown","<b>St. James MW2<\/b><br>Role: unknown","<b>St. James MW3<\/b><br>Role: unknown","<b>St. James MW4<\/b><br>Role: unknown","<b>Tessa East<\/b><br>Role: unknown","<b>Tessa West<\/b><br>Role: unknown","<b>Mt. Rose 3<\/b><br>Role: unknown","<b>Mt. Rose 6<\/b><br>Role: unknown","<b>Timberline MW<\/b><br>Role: unknown","<b>Sunrise Estates 3<\/b><br>Role: unknown","<b>Reno High MWD<\/b><br>Role: unknown","<b>Reno High MWS<\/b><br>Role: unknown","<b>View MWD<\/b><br>Role: unknown","<b>View MWS<\/b><br>Role: unknown","<b>Virginia MWD<\/b><br>Role: unknown","<b>Arrow Creek 4S<\/b><br>Role: unknown","<b>Double Diamond 5<\/b><br>Role: unknown","<b>Longley Lane Well<\/b><br>Role: unknown","<b>Longley Lane MW<\/b><br>Role: unknown","<b>S. Virginia Street Well<\/b><br>Role: unknown","<b>Patriot Well<\/b><br>Role: unknown","<b>Holcomb Lane Well<\/b><br>Role: unknown","<b>Holcomb Lane MW<\/b><br>Role: unknown","<b>4th Street Well<\/b><br>Role: unknown","<b>4th Street Deep MW<\/b><br>Role: unknown","<b>4th Street Shallow MW<\/b><br>Role: unknown","<b>Reno High Well<\/b><br>Role: unknown","<b>Glenn Hare Well<\/b><br>Role: unknown","<b>Glenn Hare MW<\/b><br>Role: unknown","<b>Hunter Lake Well<\/b><br>Role: unknown","<b>Hunter Lake MW<\/b><br>Role: unknown","<b>Swope Well<\/b><br>Role: unknown","<b>Lakeside Drive Well<\/b><br>Role: unknown","<b>Bartley Ranch<\/b><br>Role: unknown","<b>El Rancho Drive Well<\/b><br>Role: unknown","<b>El Rancho Deep MW<\/b><br>Role: unknown","<b>El Rancho Shallow MW<\/b><br>Role: unknown","<b>View Street Well<\/b><br>Role: unknown","<b>21st Street Deep MW<\/b><br>Role: unknown","<b>21st Street Shallow MW<\/b><br>Role: unknown","<b>21st Street Well<\/b><br>Role: unknown","<b>Galletti Way Well<\/b><br>Role: unknown","<b>Galletti Way MW<\/b><br>Role: unknown","<b>Sparks Avenue Well<\/b><br>Role: unknown","<b>CTM67<\/b><br>Role: unknown","<b>CTM68<\/b><br>Role: unknown","<b>Poplar #1 Well<\/b><br>Role: unknown","<b>Poplar #2 Well<\/b><br>Role: unknown","<b>CTM 74<\/b><br>Role: unknown","<b>CTM 75<\/b><br>Role: unknown","<b>Poplar #1 MW<\/b><br>Role: unknown","<b>Greg Street Well<\/b><br>Role: unknown","<b>Greg Street Deep MW<\/b><br>Role: unknown","<b>Pezzi Well<\/b><br>Role: unknown","<b>Terminal Way Well<\/b><br>Role: unknown","<b>Peckham Lane Well<\/b><br>Role: unknown","<b>USGSPeckham<\/b><br>Role: unknown","<b>Delucchi Lane Well<\/b><br>Role: unknown","<b>Sierra Plaza MW<\/b><br>Role: unknown","<b>Sierra Plaza Well<\/b><br>Role: unknown","<b>8055 S. Virigina Street MW<\/b><br>Role: unknown","<b>Picollo MW<\/b><br>Role: unknown","<b>Tessa East MWA<\/b><br>Role: unknown","<b>Tessa West MW<\/b><br>Role: unknown","<b>STMGID MW1<\/b><br>Role: unknown","<b>STMGID MW10<\/b><br>Role: unknown","<b>STMGID 11 MWA<\/b><br>Role: unknown","<b>STMGID MW3<\/b><br>Role: unknown","<b>45-28<\/b><br>Role: injection","<b>35-28<\/b><br>Role: injection","<b>46-28<\/b><br>Role: injection","<b>78-29<\/b><br>Role: production","<b>HA-4<\/b><br>Role: production","<b>PW 2-1<\/b><br>Role: production","<b>PW 2-3<\/b><br>Role: production","<b>PW 2-5<\/b><br>Role: production","<b>PW 3-1<\/b><br>Role: production","<b>PW 3-2<\/b><br>Role: production","<b>PW 3-3<\/b><br>Role: production","<b>PW 3-4<\/b><br>Role: production","<b>14A-33<\/b><br>Role: production","<b>34-32<\/b><br>Role: production","<b>44-32<\/b><br>Role: production","<b>44A-32<\/b><br>Role: production","<b>23-5<\/b><br>Role: production","<b>24-5<\/b><br>Role: production","<b>41-5<\/b><br>Role: production","<b>IW-6<\/b><br>Role: injection","<b>43-33<\/b><br>Role: injection","<b>42A-32<\/b><br>Role: injection","<b>21-32<\/b><br>Role: injection","<b>64A-32<\/b><br>Role: injection","<b>MTH 12-33<\/b><br>Role: unknown","<b>OW-2<\/b><br>Role: monitor","<b>Unidentified Well (NDWR Log 102799)<\/b><br>Role: unknown","<b>Unidentified Well (NDWR Log 103616)<\/b><br>Role: unknown","<b>Unidentified Well (NDWR Log 123802)<\/b><br>Role: unknown","<b>Unidentified Well (NDWR Log 125850)<\/b><br>Role: unknown","<b>Unidentified Well (NDWR Log 125851)<\/b><br>Role: unknown","<b>Unidentified Well (NDWR Log 27731)<\/b><br>Role: unknown","<b>Unidentified Well (NDWR Log 27732)<\/b><br>Role: unknown"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addCircleMarkers","args":[[39.40584,39.391781,39.41869,39.345661,39.41864,39.387421,39.404171,39.408371,39.450427,39.377171,39.377468,39.402222,39.384689,39.37817,39.405998,39.39434,39.380078,39.380192,39.380108,39.380261,39.380256,39.380394,39.381486,39.380669,39.38115,39.381969,39.381997,39.382278,39.383525,39.384056,39.383389,39.384833,39.384967,39.384986,39.385036,39.385242,39.38575,39.386822,39.386756,39.388825,39.389408,39.389408,39.389428,39.389481,39.389881,39.390225,39.390194,39.390281,39.390369,39.390361,39.390561,39.390561,39.390953,39.390964,39.394997,39.397025,39.397061,39.397067,39.397094,39.397172,39.397225,39.397369,39.397397,39.397656,39.397839,39.397842,39.398347,39.382406,39.380142,39.381656,39.390219,39.397178,39.397367,39.380242,39.466278,39.377133],[-119.74213,-119.838097,-119.765999,-119.778,-119.741501,-119.739304,-119.780403,-119.7482,-119.723421,-119.743797,-119.743797,-119.743599,-119.837799,-119.7431,-119.804001,-119.792396,-119.739875,-119.739914,-119.739656,-119.739769,-119.739869,-119.739808,-119.739442,-119.739464,-119.738983,-119.739494,-119.739539,-119.739508,-119.739036,-119.738769,-119.739625,-119.739708,-119.739533,-119.739525,-119.739853,-119.739608,-119.739831,-119.740075,-119.739769,-119.73935,-119.740258,-119.740258,-119.740294,-119.740272,-119.739936,-119.740119,-119.740128,-119.740097,-119.740036,-119.740036,-119.739753,-119.739747,-119.739472,-119.739425,-119.739486,-119.742036,-119.742028,-119.742028,-119.742028,-119.742089,-119.742081,-119.742128,-119.742128,-119.742203,-119.742753,-119.742797,-119.742919,-119.739853,-119.739931,-119.739447,-119.740111,-119.742097,-119.742128,-119.739906,-119.728919,-119.743658],4,null,"Springs / Seeps / Other",{"interactive":true,"className":"","stroke":false,"color":"#377eb8","weight":5,"opacity":0.5,"fill":true,"fillColor":"#377eb8","fillOpacity":0.85},null,null,["<b>Steamboat Creek — downstream conductivity logger (SBGG)<\/b><br>Type: creek","<b>Thomas Creek @ North Timberline Drive &[STBT03Thomas-3]<\/b><br>Type: background","<b>North Fork Whites Creek @ West Zolezzi Lane<\/b><br>Type: background","<b>Steamboat Creek @ Pleasant Valley &[STBT02Stbt-2]<\/b><br>Type: background","<b>Middle Fork Whites Creek @ Sage Hill Road<\/b><br>Type: background","<b>Steamboat Creek @ Old Post Office &[STBT02Stbt-3]<\/b><br>Type: background","<b>North Fork Whites Creek @ Arrow Creek Parkway<\/b><br>Type: background","<b>South Fork Whites Creek @ Old Virginia Road<\/b><br>Type: background","<b>Steamboat Creek @ So. Meadows Pkwy<\/b><br>Type: background","<b>Steamboat Creek @ Rhodes Road<\/b><br>Type: background","<b>Steamboat Ditch @ Rhodes Road<\/b><br>Type: background","<b>Steamboat Creek @ Geiger Grade<\/b><br>Type: background","<b>Whites Creek @ North Timberline Drive<\/b><br>Type: background","<b>Steamboat Creek north of the USGS gage off of Rhodes Road<\/b><br>Type: background","<b>Thomas Creek above Arrowhead Parkway &[TC111]<\/b><br>Type: background","<b>Whites Creek above Thomas Creek Road &[WC-11]<\/b><br>Type: background","<b>SBO_00001<\/b><br>Type: seep","<b>SBO_00002<\/b><br>Type: spring","<b>SBO_00003<\/b><br>Type: seep","<b>SBO_00004<\/b><br>Type: seep","<b>SBO_00005<\/b><br>Type: spring","<b>SBO_00006<\/b><br>Type: spring","<b>SBO_00007<\/b><br>Type: seep","<b>SBO_00008<\/b><br>Type: seep","<b>SBO_00009<\/b><br>Type: seep","<b>SBO_00010<\/b><br>Type: spring","<b>SBO_00011<\/b><br>Type: spring","<b>SBO_00012<\/b><br>Type: seep","<b>SBO_00013<\/b><br>Type: seep","<b>SBO_00014<\/b><br>Type: seep","<b>SBO_00015<\/b><br>Type: seep","<b>SBO_00016<\/b><br>Type: seep","<b>SBO_00017<\/b><br>Type: seep","<b>SBO_00018<\/b><br>Type: seep","<b>SBO_00019<\/b><br>Type: seep","<b>SBO_00020<\/b><br>Type: seep","<b>SBO_00021<\/b><br>Type: seep","<b>SBO_00022<\/b><br>Type: seep","<b>SBO_00023<\/b><br>Type: seep","<b>SBO_00024<\/b><br>Type: steaming ground","<b>SBO_00025<\/b><br>Type: steaming ground","<b>SBO_00026<\/b><br>Type: steaming ground","<b>SBO_00027<\/b><br>Type: steaming ground","<b>SBO_00028<\/b><br>Type: steaming ground","<b>SBO_00029<\/b><br>Type: creek","<b>SBO_00030<\/b><br>Type: spring","<b>SBO_00031<\/b><br>Type: spring","<b>SBO_00032<\/b><br>Type: seep","<b>SBO_00033<\/b><br>Type: seep","<b>SBO_00034<\/b><br>Type: seep","<b>SBO_00035<\/b><br>Type: steaming ground","<b>SBO_00036<\/b><br>Type: steaming ground","<b>SBO_00037<\/b><br>Type: steaming ground","<b>SBO_00038<\/b><br>Type: steaming ground","<b>SBO_00039<\/b><br>Type: creek","<b>SBO_00040<\/b><br>Type: creek","<b>SBO_00041<\/b><br>Type: steaming ground","<b>SBO_00042<\/b><br>Type: steaming ground","<b>SBO_00043<\/b><br>Type: seep","<b>SBO_00044<\/b><br>Type: seep","<b>SBO_00045<\/b><br>Type: seep","<b>SBO_00046<\/b><br>Type: seep","<b>SBO_00047<\/b><br>Type: seep","<b>SBO_00048<\/b><br>Type: steaming ground","<b>SBO_00049<\/b><br>Type: seep","<b>SBO_00050<\/b><br>Type: seep","<b>SBO_00051<\/b><br>Type: steaming ground","<b>SBF_0001<\/b><br>Type: fumarole","<b>SBS_0001<\/b><br>Type: spring","<b>SBS_0002<\/b><br>Type: seep","<b>SBS_0003<\/b><br>Type: spring","<b>SBS_0004<\/b><br>Type: seep","<b>SBS_0005<\/b><br>Type: seep","<b>SBS_0006<\/b><br>Type: spring","<b>SBBV<\/b><br>Type: transect","<b>SBRR<\/b><br>Type: transect"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]},{"method":"addLegend","args":[{"colors":["#d95f02","#1b9e77","#7570b3","#66a61e","#999999","#377eb8"],"labels":["Production well","Injection well","Monitor well","Domestic well","Well (role unknown)","Spring / seep / other"],"na_color":null,"na_label":"NA","opacity":0.5,"position":"bottomright","type":"unknown","title":"Site type","extra":null,"layerId":null,"className":"info legend","group":null}]},{"method":"addLayersControl","args":[[],["Wells","Springs / Seeps / Other"],{"collapsed":false,"autoZIndex":true,"position":"topright"}]}],"limits":{"lat":[39.33813,39.541964],"lng":[-119.8736,-119.723421]}},"evals":[],"jsHooks":[]}</script>
 </div>
-<div id="continuous-vs-discrete-data" class="section level2">
-<h2>🌡️ Continuous vs Discrete Data</h2>
-<p>A key feature of the system is the integration of:</p>
-<div id="discrete-observations" class="section level3">
-<h3>Discrete observations</h3>
-<ul>
-<li>field measurements<br />
-</li>
-<li>laboratory chemistry</li>
-</ul>
+<div
+id="provenance-in-practice-the-ndep-public-records-request-workflow"
+class="section level2 hasAnchor">
+<h2 class="hasAnchor">Provenance in Practice: The NDEP Public Records
+Request Workflow<a
+href="#provenance-in-practice-the-ndep-public-records-request-workflow"
+class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>A running principle throughout this system is that no dataset becomes
+“real” — queryable, mappable, usable in a model — until a human has
+confirmed it belongs where the automated pipeline thinks it does. The
+NDEP Public Records Request workflow is the clearest example: chemistry
+extracted from scanned NDEP lab-report PDFs is parsed automatically, but
+it lands only in a staging table, never in the core schema directly.
+Promotion into real <code>Samples</code> and <code>Lab_Analyses</code>
+rows happens through a second, separate, human-reviewed step that
+resolves each station name against a real-world coordinate, drawn
+preferentially from the Nevada Bureau of Mines and Geology’s statewide
+geothermal-wells dataset when an exact name match exists there. As of
+this writing, four of thirteen staged station names have cleared that
+bar and been promoted; the rest remain intentionally staged rather than
+guessed, because in a handful of cases — most notably a station recorded
+only as “Herz (Deep)” — multiple independent sources disagree with each
+other by more than a kilometer, and picking one without better evidence
+would quietly introduce a wrong answer into every later analysis. The
+same philosophy governs how well identities are resolved more broadly: a
+nearby coordinate is a lead, not a confirmation, and only a converging
+combination of location, ownership, and construction date is treated as
+proof.</p>
 </div>
-<div id="continuous-observations" class="section level3">
-<h3>Continuous observations</h3>
-<ul>
-<li>temperature logger data</li>
-</ul>
-<p>Continuous data enable:</p>
-<ul>
-<li>detection of short-term variability<br />
-</li>
-<li>temporal pattern recognition<br />
-</li>
-<li>higher-resolution system monitoring</li>
-</ul>
-<hr />
-</div>
-</div>
-<div id="integration-of-data-sources" class="section level2">
-<h2>🔗 Integration of Data Sources</h2>
-<p>The degree to which different datasets contribute to the system
-provides insight into both data availability and monitoring
-strategy.</p>
-<pre><code>## Source breakdown available after pipeline export.</code></pre>
-<p>Interpretation: This distribution reflects the heterogeneous nature
-of environmental monitoring. Regulatory datasets typically dominate
-long-term records, while field and sensor data provide targeted and
-high-resolution observations. Key Insight: The strength of the system
-lies not in any single dataset, but in the ability to integrate multiple
-observational scales into a unified structure.</p>
-<hr />
-</div>
-<div id="system-growth-through-time" class="section level2">
-<h2>📈 System Growth Through Time</h2>
-<p>The database evolves through discrete ingestion events rather than
-continuous accumulation, reflecting how environmental data are collected
-and integrated.</p>
-<div class="plotly html-widget html-fill-item" id="htmlwidget-657fd6a5b5f3d2e0e4e7" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-657fd6a5b5f3d2e0e4e7">{"x":{"data":[{"x":[1781030904],"y":[12241],"text":"timestamp: 2026-06-09 18:48:24<br />cumulative:  12241<br />data_source: FIELD","type":"scatter","mode":"lines","line":{"width":4.5354330708661417,"color":"rgba(248,118,109,1)","dash":"solid"},"hoveron":"points","name":"FIELD","legendgroup":"FIELD","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1781030921],"y":[134453],"text":"timestamp: 2026-06-09 18:48:41<br />cumulative: 134453<br />data_source: LAB","type":"scatter","mode":"lines","line":{"width":4.5354330708661417,"color":"rgba(183,159,0,1)","dash":"solid"},"hoveron":"points","name":"LAB","legendgroup":"LAB","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1781030913],"y":[122300],"text":"timestamp: 2026-06-09 18:48:33<br />cumulative: 122300<br />data_source: LOGGER","type":"scatter","mode":"lines","line":{"width":4.5354330708661417,"color":"rgba(0,186,56,1)","dash":"solid"},"hoveron":"points","name":"LOGGER","legendgroup":"LOGGER","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1781030903],"y":[12153],"text":"timestamp: 2026-06-09 18:48:23<br />cumulative:  12153<br />data_source: NDEP","type":"scatter","mode":"lines","line":{"width":4.5354330708661417,"color":"rgba(0,191,196,1)","dash":"solid"},"hoveron":"points","name":"NDEP","legendgroup":"NDEP","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[null,null],"y":[425625,559928],"text":["timestamp: NA<br />cumulative: 425625<br />data_source: NDWR","timestamp: NA<br />cumulative: 559928<br />data_source: NDWR"],"type":"scatter","mode":"lines","line":{"width":4.5354330708661417,"color":"rgba(97,156,255,1)","dash":"solid"},"hoveron":"points","name":"NDWR","legendgroup":"NDWR","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[1781030947],"y":[406492],"text":"timestamp: 2026-06-09 18:49:07<br />cumulative: 406492<br />data_source: USGS","type":"scatter","mode":"lines","line":{"width":4.5354330708661417,"color":"rgba(245,100,227,1)","dash":"solid"},"hoveron":"points","name":"USGS","legendgroup":"USGS","showlegend":true,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":40.840182648401829,"r":7.3059360730593621,"b":37.260273972602747,"l":54.794520547945211},"paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"title":{"text":"Cumulative Database Growth","font":{"color":"rgba(0,0,0,1)","family":"","size":17.534246575342465},"x":0,"xref":"paper"},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[1781030900.8,1781030949.2],"tickmode":"array","ticktext":["30","40","50","00"],"tickvals":[1781030910,1781030920,1781030930,1781030940],"categoryorder":"array","categoryarray":["30","40","50","00"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"y","title":{"text":"Time","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-15235.75,587316.75],"tickmode":"array","ticktext":["0e+00","2e+05","4e+05"],"tickvals":[0,200000,400000],"categoryorder":"array","categoryarray":["0e+00","2e+05","4e+05"],"nticks":null,"ticks":"","tickcolor":null,"ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(77,77,77,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":false,"linecolor":null,"linewidth":0,"showgrid":true,"gridcolor":"rgba(235,235,235,1)","gridwidth":0.66417600664176002,"zeroline":false,"anchor":"x","title":{"text":"Total Records","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[],"showlegend":true,"legend":{"bgcolor":null,"bordercolor":null,"borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"title":{"text":"data_source","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"421c38de7df7":{"x":{},"y":{},"colour":{},"type":"scatter"}},"cur_data":"421c38de7df7","visdat":{"421c38de7df7":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script>
-<p>Interpretation: Each increase corresponds to a specific ingestion
-event, such as a field campaign, regulatory update, or logger
-deployment. Key Insight: The stepwise growth pattern provides explicit
-provenance, allowing users to trace how and when data entered the
-system.</p>
-<hr />
-</div>
-<div id="data-granularity-continuous-vs-discrete-observations"
-class="section level2">
-<h2>⚖️ Data Granularity: Continuous vs Discrete Observations</h2>
-<p>A defining characteristic of the system is the coexistence of
-continuous and discrete data.</p>
-<p>Interpretation: Continuous temperature observations dominate the
-total number of records, while discrete datasets (chemistry and field
-measurements) provide analytical depth. Key Insight: This multi-scale
-structure enables the system to capture both high-frequency variability
-and chemically diagnostic signals.</p>
-<hr />
-</div>
-<div id="temporal-distribution-of-observations" class="section level2">
-<h2>🕒 Temporal Distribution of Observations</h2>
-<p>Understanding when data are collected is critical for interpreting
-system dynamics.</p>
-<p>Interpretation: Clustering reflects episodic data acquisition,
-including sensor deployments, field campaigns, and regulatory sampling.
-Key Insight: Temporal structure reveals not only system behavior, but
-also sampling strategy and data availability constraints.</p>
-</div>
-<div id="spatial-coverage-sample-points" class="section level2">
-<h2>🗺️ Spatial Coverage (Sample Points)</h2>
-<p>Spatial distribution determines how well the system is observed
-across the hydrothermal field.</p>
-<div class="leaflet html-widget html-fill-item" id="htmlwidget-b3015331d5325d25a761" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-b3015331d5325d25a761">{"x":{"options":{"crs":{"crsClass":"L.CRS.EPSG3857","code":null,"proj4def":null,"projectedBounds":null,"options":{}}},"calls":[{"method":"addTiles","args":["https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",null,null,{"minZoom":0,"maxZoom":18,"tileSize":256,"subdomains":"abc","errorTileUrl":"","tms":false,"noWrap":false,"zoomOffset":0,"zoomReverse":false,"opacity":1,"zIndex":1,"detectRetina":false,"attribution":"&copy; <a href=\"https://openstreetmap.org/copyright/\">OpenStreetMap<\/a>,  <a href=\"https://opendatacommons.org/licenses/odbl/\">ODbL<\/a>"}]},{"method":"addCircleMarkers","args":[[39.34624,39.35506,39.35955,39.33813,39.364597,39.346027,39.345925,39.343791,39.348158,39.38112,39.37888,39.366406,39.364953,39.378909,39.34936,39.5189,39.518898,39.536026,39.536044,39.461878,39.409606,39.432544,39.458283,39.458329,39.461812,39.454094,39.443586,39.443508,39.534095,39.533972,39.533953,39.518871,39.517257,39.517321,39.512257,39.512292,39.511893,39.470573,39.468835,39.54189,39.541957,39.541964,39.535923,39.525326,39.525326,39.525263,39.526487,39.526436,39.533247,39.533355,39.533372,39.528769,39.528619,39.528895,39.528906,39.528872,39.522542,39.522329,39.514472,39.51107,39.481834,39.482166,39.469284,39.466681,39.466781,39.454201,39.431335,39.381801,39.37888,39.418527,39.395714,39.418533,39.407588],[-119.7831,-119.77406,-119.85889,-119.8736,-119.819923,-119.807974,-119.815633,-119.826154,-119.831604,-119.820081,-119.825034,-119.810357,-119.833582,-119.836044,-119.786778,-119.82987,-119.82989,-119.77773,-119.777745,-119.7808,-119.827413,-119.75973,-119.774102,-119.774076,-119.780849,-119.780729,-119.779433,-119.779378,-119.790128,-119.790084,-119.790096,-119.830014,-119.835432,-119.835349,-119.83598,-119.836055,-119.848574,-119.808118,-119.805967,-119.775814,-119.775678,-119.775697,-119.777743,-119.772092,-119.772124,-119.771838,-119.776066,-119.775968,-119.762142,-119.762679,-119.762633,-119.763432,-119.763531,-119.763482,-119.76348,-119.763549,-119.75695,-119.75694,-119.756592,-119.778151,-119.773959,-119.773954,-119.784196,-119.775726,-119.775681,-119.779105,-119.776051,-119.818835,-119.825034,-119.773506,-119.796467,-119.783454,-119.771611],4,null,null,{"interactive":true,"className":"","stroke":true,"color":"blue","weight":5,"opacity":0.5,"fill":true,"fillColor":"blue","fillOpacity":0.2},null,null,["Well: 1","Well: 2","Well: 3","Well: 4","Well: 5","Well: 6","Well: 7","Well: 8","Well: 9","Well: 10","Well: 11","Well: 12","Well: 13","Well: 14","Well: 15","Well: 16","Well: 17","Well: 18","Well: 19","Well: 20","Well: 21","Well: 22","Well: 23","Well: 24","Well: 25","Well: 26","Well: 27","Well: 28","Well: 29","Well: 30","Well: 31","Well: 32","Well: 33","Well: 34","Well: 35","Well: 36","Well: 37","Well: 38","Well: 39","Well: 40","Well: 41","Well: 42","Well: 43","Well: 44","Well: 45","Well: 46","Well: 47","Well: 48","Well: 49","Well: 50","Well: 51","Well: 52","Well: 53","Well: 54","Well: 55","Well: 56","Well: 57","Well: 58","Well: 59","Well: 60","Well: 61","Well: 62","Well: 63","Well: 64","Well: 65","Well: 66","Well: 67","Well: 68","Well: 69","Well: 70","Well: 71","Well: 72","Well: 73"],null,null,{"interactive":false,"permanent":false,"direction":"auto","opacity":1,"offset":[0,0],"textsize":"10px","textOnly":false,"className":"","sticky":true},null]}],"limits":{"lat":[39.33813,39.541964],"lng":[-119.8736,-119.756592]}},"evals":[],"jsHooks":[]}</script>
-<p>Interpretation: Observed clusters represent areas of active
-monitoring, while gaps indicate potential regions of uncertainty or
-under-sampling. Key Insight: Spatial structure directly influences the
-ability to interpret hydrothermal flow paths and system
-heterogeneity.</p>
-<hr />
-</div>
-<div id="system-level-interpretation" class="section level2">
-<h2>📊 System-Level Interpretation</h2>
-<p>Taken together, these patterns describe a system that is:</p>
-<ul>
-<li>incrementally constructed through controlled ingestion
-workflows<br />
-</li>
-<li>composed of heterogeneous but integrated data sources<br />
-</li>
-<li>dominated by high-frequency continuous observations<br />
-</li>
-<li>structured across irregular temporal sampling intervals<br />
-</li>
-<li>spatially distributed according to monitoring access and
-priorities</li>
-</ul>
-<blockquote>
-<p>The database is not simply a collection of datasets—it is a
-structured representation of system observation itself.</p>
-</blockquote>
-<hr />
-</div>
-<div id="geochemical-modeling-integration" class="section level2">
-<h2>🔬 Geochemical Modeling Integration</h2>
-<p>Validated chemistry is transformed into <strong>PHREEQC-ready
-inputs</strong>, enabling process-based interpretation of hydrothermal
-conditions.</p>
-<p>These transformations support:</p>
-<ul>
-<li>forward speciation modeling<br />
-</li>
-<li>inverse geochemical modeling<br />
-</li>
-<li>evaluation of mineral saturation states</li>
-</ul>
-<blockquote>
-<p>This step links observational data to thermodynamic interpretation,
-extending the system beyond monitoring into predictive modeling.</p>
-</blockquote>
-<hr />
-</div>
-<div id="reproducibility-and-provenance" class="section level2">
-<h2>🔁 Reproducibility and Provenance</h2>
-<p>All transformations within the system are:</p>
-<ul>
-<li>scripted<br />
-</li>
-<li>version-controlled<br />
-</li>
-<li>reproducible</li>
-</ul>
-<p>No manual edits are made to database contents.</p>
-<p>Every dataset can be:</p>
-<ul>
-<li>traced to its original input<br />
-</li>
-<li>reconstructed from raw data<br />
-</li>
-<li>validated through ingestion logs</li>
-</ul>
-<blockquote>
-<p>This ensures that all analyses performed using the system are
-transparent, auditable, and reproducible.</p>
-</blockquote>
-<hr />
-</div>
-<div id="image-data" class="section level2">
-<h2>📸 Image Data</h2>
-<p>Photographic observations are stored as structured metadata and
-linked to:</p>
-<ul>
-<li>locations<br />
-</li>
-<li>sampling events<br />
-</li>
-<li>field measurements</li>
-</ul>
-<p>Images are stored externally, while metadata remain relational.</p>
-<hr />
-</div>
-<div id="ndep-public-records-request-prr-staging-promotion"
-class="section level2">
-<h2>📄 NDEP Public Records Request (PRR) Staging &amp; Promotion</h2>
-<p>Chemistry extracted from NDEP PRR PDF lab reports never becomes
-“real” data automatically – it always passes through two deliberately
-separate steps:</p>
-<ol style="list-style-type: decimal">
-<li><strong><code>ingest_ndep_prr.R</code></strong> parses a supported
-PDF layout (currently the SGS lab-report format) and writes every result
-to <code>Staging_NDEP_WQ</code> only. Nothing here touches
-<code>Locations</code>, <code>Samples</code>, or
-<code>Lab_Analyses</code>.</li>
-<li><strong><code>promote_staged_ndep.R</code></strong> (a separate,
-manually-invoked step) reads a human-maintained mapping,
-<code>data/raw/ndep/PRR/staged_ndep_location_map.csv</code>
-(<code>station_name -&gt; external_station_code, site_type, latitude, longitude, coordinate_source, coordinate_uncertainty_m, notes</code>),
-and only promotes a station’s staged rows into
-<code>Samples</code>/<code>Lab_Analyses</code> once that mapping gives
-it real coordinates.</li>
-</ol>
-<p><strong>Where coordinates come from:</strong> NBMG’s statewide
-“Geothermal_Wells” dataset (ArcGIS Open Data,
-<code>data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0</code>),
-matched by <strong>exact well name</strong> – preferred over
-PLSS-derived (quarter-section-precision) or digitized-from-topo-map
-estimates, both of which carry too much uncertainty to register with
-confidence. Matched stations get
-<code>coordinate_source = 'nbmg_geothermal_wells'</code> and a
-documented <code>coordinate_uncertainty_m</code> (100 m by default,
-since NBMG doesn’t publish its own uncertainty for these records) rather
-than being treated as precise.</p>
-<p>As of this writing, 4 of 13 staged station names (Boyd Dom, Jeppson
-Dom, Rogers Well, Soccer Field) have an unambiguous exact-name match and
-have been promoted; the rest remain intentionally unresolved – either
-because multiple, mutually-inconsistent NBMG records exist for the same
-name (e.g. “Herz Deep”: two different NBMG sources disagree on its
-coordinate by over a kilometer), or because no match exists at all
-(e.g. the “Outlet” stations, likely Ormat’s own creek monitoring points
-rather than registered water wells). Their chemistry stays staged, not
-promoted, until a confident coordinate is found.</p>
-<hr />
-</div>
-<div id="current-state" class="section level2">
-<h2>✅ Current State</h2>
-<p>The system is actively evolving:</p>
-<ul>
-<li>continuous temperature monitoring is fully integrated<br />
-</li>
-<li>field and sampling workflows are operational<br />
-</li>
-<li>laboratory chemistry ingestion is expanding</li>
-</ul>
-<blockquote>
-<p>In operational mode, the database evolves incrementally, providing a
-live representation of the hydrothermal system through time.</p>
-</blockquote>
-</div>
+<div id="current-state" class="section level2 hasAnchor">
+<h2 class="hasAnchor">Current State<a href="#current-state"
+class="anchor-section" aria-label="Anchor link to header"></a></h2>
+<p>Continuous temperature and conductivity monitoring are both fully
+integrated and actively growing; laboratory chemistry ingestion,
+well-network resolution, and the well-log OCR pipeline are all active
+and expanding week to week. In operational mode, none of this is a fixed
+snapshot — the database is a live, incrementally-growing representation
+of the field, and every chart on this page reflects whatever the most
+recent pipeline run actually found.</p>
 </div>
 
 
@@ -743,6 +565,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

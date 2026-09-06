@@ -1,188 +1,53 @@
 ---
-title: "Project Overview"
+title: "Scientific Context"
 output: html_document
 ---
 
-## 🌋 Context and Motivation
-
-The Steamboat Springs geothermal field represents a dynamic hydrothermal system shaped by decades of geothermal production, fluid extraction, and reinjection. These processes have altered the natural hydraulic and thermal structure of the system, creating a complex and evolving subsurface environment.
-
-After more than forty years of declining surface activity, the system experienced a dramatic reactivation in June 2025, when a geyser-like eruption exceeding 30 feet occurred from an abandoned well. This event represents a sudden and observable manifestation of deeper system changes, likely tied to shifts in pressure, fluid pathways, or reinjection dynamics.
-
-
-This observation highlights a fundamental scientific challenge:
-
-> **How do we monitor and interpret rapidly evolving hydrothermal systems through time?**
-
----
-
-## ⚠️ The Problem
-
-
-Hydrothermal systems exhibit strong variability across both **space and time**, yet the datasets used to study them are often poorly suited to capture this complexity.
-
-Traditional observations are typically:
-
-- **temporally sparse** — periodic sampling misses short-term dynamics  
-- **structurally inconsistent** — regulatory, field, and sensor datasets differ in format  
-
-- **difficult to integrate** — linking datasets across spatial and temporal scales requires significant preprocessing  
-
-As a result, critical signals—particularly those associated with transient events, system transitions, or short-lived anomalies—are frequently unresolved.
-
-This mismatch between system behavior and observational resolution is a central limitation in hydrothermal monitoring.
-
----
-
-## 🌡️ Why Temperature Matters
-
-Temperature is one of the most responsive and informative indicators of subsurface processes in hydrothermal systems. Unlike many chemical parameters, temperature responds directly and continuously to changes in fluid movement and system pressure.
-
-Variations in temperature can indicate:
-
-- changes in subsurface flow pathways  
-
-- mixing between thermal and non-thermal waters  
-- pressure fluctuations and transient flow events  
-
-In contrast to discrete geochemical sampling, temperature loggers provide:
-
-> ✅ **continuous, high-frequency measurements that capture system variability in real time**
-
-This makes temperature data uniquely suited to detecting short-term system changes that would otherwise remain unobserved.
-
-## 📈 Example: Continuous Thermal Signal
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(readr)
 library(dplyr)
 library(ggplot2)
+```
 
-temp_path <- "docs/data/temp_sample.csv"
+## A System That Just Reminded Everyone It's Alive
 
+The Steamboat Springs geothermal field has been producing power for four decades, and for most of that time its surface expression &mdash; the springs, seeps, and steaming ground that give the area its name &mdash; had been quietly declining as production and reinjection reshaped the plumbing underground. That story changed abruptly in June 2025, when a geyser-like eruption over 30 feet tall burst from an abandoned well at the Lower Sinter Terrace. An eruption like that is not a random event; it is the visible tip of a much larger, mostly invisible change in subsurface pressure and fluid pathways. The obvious question it raises &mdash; and the one this project exists to help answer &mdash; is how the system's outflow has actually changed, and whether the monitoring network in place is good enough to tell the difference between routine variability and something new.
+
+That question turns out to be harder to answer than it sounds, because the tools traditionally used to watch a hydrothermal system are mismatched to how fast the system can actually move. Regulatory and field chemistry sampling happens a few times a year at best, which is more than enough to miss a transient pressure pulse, a short-lived mixing event, or the kind of gradual drift that only becomes obvious once you have three years of data instead of three months. Different agencies and field crews also record things in different formats and at different resolutions, so simply lining up a well's chemistry against its water level against a nearby creek's conductivity has historically required a fair amount of manual reassembly before any comparison could even begin. The gap between how quickly the system can change and how coarsely it is normally observed is the central problem this project is built to narrow.
+
+## Why Temperature and Conductivity Do the Heavy Lifting
+
+Of the properties that are practical to measure continuously, temperature and electrical conductivity are the most directly informative about what a hydrothermal system is doing right now. Temperature responds quickly to changes in flow pathways, to mixing between hot deep water and cooler shallow water, and to pressure changes that shift where fluid is moving &mdash; and because loggers can record it every few minutes indefinitely, it captures exactly the kind of short-term variability that a quarterly chemistry sample would simply never see. Conductivity plays a related but distinct role: in Steamboat Creek, it stands in for chloride concentration, which is itself the tracer Michael Sorey's classic studies used to estimate how much geothermal water is discharging from the system as a whole. Chloride behaves conservatively (it neither precipitates nor reacts appreciably on its way downstream), so multiplying its concentration by the creek's discharge gives a mass flux that, combined with a reference concentration for the deep thermal water, converts directly into an estimate of geothermal outflow. Conductivity can be logged every few minutes for the cost of one instrument; chloride requires a lab. The practical question this project is chasing &mdash; and one of its three core objectives &mdash; is exactly how infrequently chloride actually needs to be sampled to keep a conductivity-based estimate of that outflow trustworthy.
+
+```{r continuous-signal, fig.cap="A short window of raw temperature-logger data, illustrating the kind of short-term variability that would be invisible to periodic discrete sampling.", out.width="100%"}
+temp_path <- "../docs/data/temp_sample.csv"
 if (!file.exists(temp_path)) {
-  
-  cat("Temperature data will appear after pipeline export.")
-  
+  cat("Temperature data will appear after the pipeline's next export.")
 } else {
-  
   temp <- read_csv(temp_path, show_col_types = FALSE) %>%
     mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01", tz = "UTC")) %>%
-    filter(!is.na(timestamp), !is.na(temperature))
-  
-  # take a subset for clarity (avoid clutter)
-  temp_subset <- temp %>%
+    filter(!is.na(timestamp), !is.na(temperature)) %>%
     arrange(timestamp) %>%
-    slice(1:500)   # small window
-  
-  ggplot(temp_subset,
-         aes(x = timestamp, y = temperature)) +
-    geom_line(color = "firebrick", linewidth = 0.7) +
+    slice(1:500)
+
+  ggplot(temp, aes(x = timestamp, y = temperature)) +
+    geom_line(color = "#c65d2e", linewidth = 0.7) +
     labs(
-      title = "Example Temperature Signal",
-      subtitle = "Short-term variability captured by continuous monitoring",
-      x = "Time",
-      y = "Temperature (°C)"
+      title = "A Close-up View of Continuous Temperature Monitoring",
+      subtitle = "Even a short window shows structure that a quarterly grab sample would miss entirely",
+      x = "Time", y = "Temperature (\u00b0C)"
     ) +
-    theme_minimal()
+    theme_minimal(base_size = 13)
 }
 ```
-**Insight:**
-Even over a short interval, temperature exhibits continuous variability that would be completely missed by discrete sampling. This illustrates the importance of high-frequency monitoring for resolving transient hydrothermal behavior.
----
 
-## 🧠 Project Approach
+## From Isolated Readings to a System-Level Picture
 
-To address these limitations, this project develops a **reproducible data system** that integrates multiple observational domains into a unified framework.
+The approach this project takes is to stop treating each data type as its own island and instead fold everything &mdash; groundwater levels, field and laboratory chemistry, continuous temperature and conductivity, and now, increasingly, the physical construction records of the wells themselves &mdash; into one relational database, where every observation carries an explicit link to where and when it was collected and by what method. That structure is what makes it possible to ask genuinely cross-domain questions: whether a hydraulic gradient between two wells lines up with a chemical difference between them, whether a spike in creek conductivity coincides with a nearby field visit rather than a real signal, or whether the same well's chemistry from a 1970s survey and a 2026 field sample tell a consistent story about how the outflow has evolved. None of those comparisons are possible when the underlying data live in disconnected spreadsheets; they become simple queries once the data live in a shared schema.
 
+That same structure is also what prepares the ground for the modeling this project is building toward. Validated chemistry, once it is sitting in normalized tables rather than scattered lab reports, becomes a direct input to PHREEQC for speciation and mixing calculations; a time-aligned record of conductivity and the chloride samples that overlap with it becomes the training data for a calibrated Cl-conductivity relationship; and water levels and chemistry attached to precise well coordinates become exactly the input ArcGIS needs to interpolate a potentiometric surface and trace where a chemical signature is migrating underground. Each of those next steps depends on the data first being trustworthy and consistently structured &mdash; which is the whole reason this system exists before any of that modeling work begins.
 
-The system incorporates:
+## The Goal, Stated Plainly
 
-- regulatory geochemical datasets (NDEP)  
-- field sampling campaigns  
-- continuous temperature logger records  
-
-Rather than treating these datasets independently, they are organized within a single **relational database structure**. This enables consistent relationships between:
-
-
-- observations collected at different times  
-- measurements originating from different sources  
-- spatially distributed monitoring locations  
-
-> The result is a coherent representation of the hydrothermal system that can be analyzed systematically.
-
----
-
-## 🔧 What This System Enables
-
-
-Structuring the data in a consistent and reproducible way enables analytical capabilities that are not possible with isolated datasets.
-
-These include:
-
-- **time-aligned comparisons** between temperature and chemistry  
-- **integration across data sources**, linking field, regulatory, and sensor data  
-
-- **high-resolution monitoring** of hydrothermal dynamics  
-- **direct input into geochemical modeling frameworks**
-
-Beyond individual analyses, the system provides a foundation for interpreting system-wide behavior.
-
-> Importantly, this enables the identification of relationships between hydraulic conditions, thermal patterns, and geochemical signatures.
-
----
-
-## 🔬 From Data to Interpretation
-
-
-A central goal of the project is to transform raw observations into interpretable representations of hydrothermal processes.
-
-This workflow can be conceptualized as:
- 
- observations → validated data → derived products → interpretation
- 
- Within this framework:
-
-- raw data are standardized and validated  
-- derived datasets are constructed (e.g., gradients, aligned time series)  
-- outputs are used for interpretation and modeling  
-
-Validated geochemical data are further prepared for **PHREEQC modeling**, enabling:
-
-- forward speciation analysis  
-- inverse modeling of fluid processes  
-- evaluation of mineral saturation conditions  
-
-> This bridges the gap between measurement and process-based interpretation.
-
----
-
-## 🎯 Project Goal
-
-The goal of this project extends beyond data aggregation.
-
-> **To create a reproducible framework for understanding how hydrothermal systems evolve through time.**
-
-This framework enables:
-- continuous system monitoring  
-- integration across observational scales  
-- hypothesis-driven analysis and modeling  
-
-Rather than producing static datasets, the system supports an evolving understanding of hydrothermal behavior.
-
----
-
-## 🚀 Broader Impact
-
-Although developed for Steamboat Springs, the approach is broadly applicable to other environmental and geoscientific systems.
-
-This framework can be adapted to:
-
-- geothermal monitoring systems  
-- groundwater and hydrogeologic studies  
-- environmental observatories  
-- long-term ecological monitoring   
-
-The key contribution lies in demonstrating how heterogeneous environmental data can be transformed into a **unified, reproducible analytical system**.
-
-> This approach supports not only data integration, but also scalable scientific interpretation across complex natural systems.
+Beyond any single analysis, the aim of this project is to build a framework that keeps working as new data arrive, rather than a static report that goes stale the moment the next field season starts. Every script that touches the database can be re-run safely on new data without duplicating or corrupting what came before, so the system's picture of the Steamboat Hills field keeps sharpening as more springs are re-sampled, more wells are logged, and more conductivity data accumulates against the growing chemistry record. Although this platform was built specifically for Steamboat Hills, the same architecture &mdash; ingest once, validate consistently, integrate across sources, model on top &mdash; applies just as well to any environmental system where the hard part is not any single measurement, but making dozens of different kinds of measurement talk to each other.

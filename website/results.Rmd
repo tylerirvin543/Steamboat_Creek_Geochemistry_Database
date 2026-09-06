@@ -3,203 +3,95 @@ title: "Results"
 output: html_document
 ---
 
-# Results
-
-This section presents observational insights derived from the integrated hydrothermal monitoring system.
-
-By combining continuous temperature measurements with spatial and temporal structure, the system reveals patterns that are not accessible through traditional discrete sampling alone.
-
-Rather than focusing on database structure, these results emphasize **system behavior**, **variability**, and **emerging hydrothermal signals**.
-
----
-
-## 🌡️ Temperature Dynamics
-
-Continuous temperature monitoring provides direct insight into subsurface processes and system variability.
-
-```{r plotly, echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(readr)
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
 library(plotly)
+```
 
+## What the Data Show So Far
+
+This page is deliberately narrower in scope than the [Data System](data.html) page: rather than describing the database's structure, it asks what the observations collected so far actually reveal about how the Steamboat Hills system behaves. The honest answer, at this stage, is that the continuous temperature record is the richest signal currently available, and it already shows more structure than any discrete sampling program could have captured on its own.
+
+```{r temp-timeseries, fig.cap="Continuous temperature record across all active loggers, colored by logger. Interactive: hover to inspect individual readings, or drag to zoom into a shorter window."}
 temp_path <- "../docs/data/temp_sample.csv"
-
-if (!file.exists(temp_path)) {
-  
-  cat("Temperature data will appear after pipeline export.")
-  
-} else {
-  
+if (file.exists(temp_path)) {
   temp <- read_csv(temp_path, show_col_types = FALSE) %>%
-    mutate(
-      timestamp = as.POSIXct(timestamp, origin = "1970-01-01", tz = "UTC")
-    ) %>%
+    mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01", tz = "UTC")) %>%
     filter(!is.na(timestamp), !is.na(temperature)) %>%
-    mutate(logger_id = factor(logger_id))
-  
-  p <- ggplot(temp,
-              aes(timestamp, temperature, color = logger_id)) +
-    
+    mutate(logger_id = factor(logger_id)) %>%
+    group_by(logger_id) %>%
+    slice(seq(1, n(), by = 15)) %>%
+    ungroup()
+
+  p <- ggplot(temp, aes(timestamp, temperature, color = logger_id)) +
     geom_line(alpha = 0.6, linewidth = 0.6) +
-    
-    geom_smooth(se = FALSE, linewidth = 1.0, alpha = 0.3) +
-    
-    labs(
-      title = "Temperature Time Series",
-      subtitle = "Continuous monitoring reveals system variability",
-      x = "Time",
-      y = "Temperature (°C)",
-      color = "Logger"
-    ) +
-    
-    theme_minimal() +
-    theme(legend.position = "bottom")
-  
+    labs(title = "Temperature Time Series by Logger", x = "Time", y = "Temperature (\u00b0C)", color = "Logger") +
+    theme_minimal(base_size = 13) + theme(legend.position = "bottom")
   ggplotly(p)
-}
-```
-**Interpretation:**
-Temperature exhibits continuous variability across multiple monitoring locations, reflecting dynamic and evolving subsurface conditions.
-
-**Key Insight:**  
-These signals capture both short-term fluctuations and longer-term trends, providing a level of temporal resolution that is fundamentally inaccessible through discrete sampling approaches.
-
----
-
-## 📊 Temporal Patterns in Monitoring
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(readr)
-library(dplyr)
-library(ggplot2)
-
-path <- "../docs/data/temp_sample.csv"
-
-if (!file.exists(path)) {
-  
-  cat("Temporal distribution will appear after export.")
-  
 } else {
-  
-  temp <- read_csv(path, show_col_types = FALSE) %>%
-    mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01")) %>%
-    filter(!is.na(timestamp))
-  
-  ggplot(temp, aes(timestamp)) +
-    geom_histogram(bins = 60, fill = "#2c7fb8", alpha = 0.8) +
-    labs(
-      title = "Temporal Distribution of Observations",
-      subtitle = "Clustering reflects deployments and monitoring periods",
-      x = "Time",
-      y = "Observation Frequency"
-    ) +
-    theme_minimal()
+  cat("Temperature data will appear after export.")
 }
 ```
-**Interpretation:**
-Observations are temporally clustered, reflecting discrete monitoring deployments, field campaigns, and sensor operation periods.
 
-**Key Insight:**  
-Temporal clustering highlights how data collection strategies shape the dataset and influence the ability to resolve system dynamics.
+Two things stand out in that record. First, individual loggers hold distinct, persistent temperature ranges rather than converging on one system-wide value &mdash; a strong indication that the field is spatially heterogeneous, with different monitoring points sitting on different flow paths, at different depths, or at different distances from the main upflow zones. Second, within any single logger's record there is real short-term variability that a quarterly or even monthly chemistry sample would average away entirely; that variability is exactly the kind of signal this project's monitoring-frequency question (below) is trying to characterize rigorously rather than just observe qualitatively.
 
----
-
-## 📊 Thermal Variability Across Monitoring Locations
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(readr)
-library(dplyr)
-library(ggplot2)
-
-path <- "../docs/data/temp_sample.csv"
-
-if (!file.exists(path)) {
-  
-  cat("Logger variability will appear after export.")
-  
-} else {
-  
-  temp <- read_csv(path, show_col_types = FALSE) %>%
-    filter(!is.na(temperature))
-  
-  ggplot(temp,
-         aes(x = factor(logger_id), y = temperature)) +
-    geom_boxplot(fill = "#fc8d59", alpha = 0.8) +
-    labs(
-      title = "Temperature Variability by Logger",
-      subtitle = "Different locations exhibit distinct thermal behavior",
-      x = "Logger",
-      y = "Temperature (°C)"
-    ) +
-    theme_minimal()
+```{r temp-boxplot, fig.cap="Distribution of temperature readings by logger, showing how much thermal ranges differ across monitoring locations."}
+if (file.exists(temp_path)) {
+  temp2 <- read_csv(temp_path, show_col_types = FALSE) %>% filter(!is.na(temperature))
+  ggplot(temp2, aes(x = factor(logger_id), y = temperature)) +
+    geom_boxplot(fill = "#c65d2e", alpha = 0.85) +
+    labs(title = "Temperature Variability by Logger", x = "Logger", y = "Temperature (\u00b0C)") +
+    theme_minimal(base_size = 13)
 }
 ```
-**Interpretation:**
-Different monitoring locations exhibit distinct temperature ranges and variability patterns.
 
-**Key Insight:**  
-These differences reflect spatial heterogeneity in the hydrothermal system, potentially indicating variations in flow paths, heat sources, or fluid mixing.
+## Where the Network Actually Observes the System
 
----
+Any pattern in the charts above has to be read alongside where the underlying instruments actually sit, since a monitoring network that is spatially uneven will always look more (or less) variable than the system truly is, depending on where its gaps fall. The map below repeats the well/spring layer from the [Data System](data.html) page for that reason &mdash; it is the map to have open while interpreting anything else on this page.
 
-## 🗺️ Spatial Structure of Monitoring Network
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r spatial-map-results}
 library(leaflet)
-library(readr)
-
-path <- "../docs/data/well_sample.csv"
-
-if (!file.exists(path)) {
-  
-  cat("Spatial data will appear after export.")
-  
+well_path <- "../docs/data/well_sample.csv"
+loc_path <- "../docs/data/locations_sample.csv"
+if (file.exists(well_path)) {
+  wells <- read_csv(well_path, show_col_types = FALSE) |>
+    mutate(label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name))
+  m <- leaflet() |> addTiles() |>
+    addCircleMarkers(data = wells, lng = ~longitude, lat = ~latitude,
+      radius = 5, color = "#2b8cbe", fillOpacity = 0.7,
+      popup = ~paste0("<b>", label, "</b><br>Role: ", well_role), group = "Wells")
+  if (file.exists(loc_path)) {
+    locs <- read_csv(loc_path, show_col_types = FALSE) |> filter(site_type != "well")
+    m <- m |> addCircleMarkers(data = locs, lng = ~longitude, lat = ~latitude,
+      radius = 5, color = "#e6550d", fillOpacity = 0.7,
+      popup = ~paste0("<b>", coalesce(name, external_station_code), "</b><br>Type: ", site_type),
+      group = "Springs / Seeps / Other")
+  }
+  m |> addLayersControl(overlayGroups = c("Wells", "Springs / Seeps / Other"), options = layersControlOptions(collapsed = FALSE))
 } else {
-  
-  wells <- read_csv(path, show_col_types = FALSE)
-  
-  leaflet(wells) |>
-    addTiles() |>
-    addCircleMarkers(
-      lng = ~longitude,
-      lat = ~latitude,
-      radius = 5,
-      color = "#2b8cbe",
-      fillOpacity = 0.7,
-      popup = ~paste("Well:", well_id)
-    )
+  cat("Spatial data will appear after export.")
 }
 ```
-**Interpretation:**
-Monitoring locations are spatially clustered in accessible or actively studied areas of the hydrothermal field.
 
-**Key Insight:**  
-Spatial distribution constrains where system behavior can be observed, influencing interpretations of subsurface flow and thermal structure.
+Taken together, these first-order patterns &mdash; persistent, location-specific thermal regimes; short-term variability layered on top of them; and a monitoring network that is spatially uneven by necessity, concentrated where access and prior study made it possible &mdash; describe a system that genuinely requires integrated, multi-scale observation to characterize well. No single well, and no single data type, tells the whole story on its own.
 
----
+## What Comes Next
 
-## 🔬 Emerging System Behavior
+Three pieces of modeling sit directly downstream of the data assembled here, and each is at a different stage of readiness.
 
-Combining temporal, spatial, and thermal observations reveals several first-order characteristics of the hydrothermal system:
+<div class="callout-box future">
+**PHREEQC geochemical modeling.** Validated major-ion and isotope chemistry is the direct input to forward speciation, mineral-saturation, and inverse mixing models in PHREEQC &mdash; the step that turns a table of concentrations into a statement about what water types are mixing, and where. A starter script for building PHREEQC-ready input tables already exists in this codebase, but it is not yet wired into the automated pipeline and has not been re-verified against the current database; getting it fully integrated is the next major modeling milestone.
+</div>
 
-- temperature signals are highly dynamic and continuous  
-- monitoring is spatially structured and unevenly distributed  
-- observations are temporally clustered around data collection events - different locations exhibit distinct thermal regimes  
+<div class="callout-box future">
+**Calibrating conductivity against chloride.** The conductivity logger deployed in Steamboat Creek is only useful as a chloride-discharge proxy once its relationship to real chloride measurements is calibrated against paired samples collected during its deployment window. That calibration, and the Monte Carlo analysis built around it to identify the coarsest chemistry sampling interval that still keeps flux estimates accurate, are both implemented and self-tested against synthetic data already &mdash; they are simply waiting on chloride samples that temporally overlap the logger's live deployment period to produce a real, rather than simulated, recommendation.
+</div>
 
-> Together, these patterns indicate a system that is both spatially heterogeneous and temporally variable, requiring integrated multi-scale observation to fully characterize.
+<div class="callout-box future">
+**A potentiometric surface and contaminant-transport picture.** Water levels and chemistry are both already tied to precise well coordinates in the database, which is exactly the input ArcGIS needs to interpolate a potentiometric surface across the field and trace how a chemical signature &mdash; a chloride plume, say &mdash; might be migrating through the subsurface between wells. That interpolation and transport-mapping step hasn't been built yet, but the data pipeline was designed from the start with this specific export in mind, and it is the natural next spatial-analysis milestone once well coordinates and roles are more fully resolved.
+</div>
 
----
-
-## 🚀 Future Analysis
-
-As additional datasets are integrated, the system will support more advanced interpretations, including:
-
-- linking temperature anomalies with hydraulic gradients  
-- identifying hydrothermal upflow and recharge zones  
-- integrating geochemical signatures with thermal signals  
-- developing process-based hydrothermal models (PHREEQC)  
-
-> These analyses will extend the system from observational monitoring to predictive understanding of hydrothermal processes.
-
-
+None of these three are blocked on new instrumentation or new fieldwork so much as on continuing to run the pipeline that already exists: more chloride samples collected during the conductivity logger's deployment, more wells with confirmed roles and coordinates, and a dedicated pass to wire the existing PHREEQC starter script into the automated build. The infrastructure to take each of these the rest of the way is already in place.

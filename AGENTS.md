@@ -1198,6 +1198,264 @@ lon -119.74 to -119.77).
   standing rule to never guess a specific-well identity from
   proximity/owner-name evidence alone.
 
+## Session 11 updates (2026-09-05, continued): well-log/NBMG date cross-check, data-availability chart, well-log promotion, README/website/notebook refresh
+
+Large multi-part follow-up session covering well-log identity
+resolution, a new "data availability through time" reporting layer, two
+real bugs found/fixed along the way, and a documentation/website pass.
+
+- **Well log 123802 vs. 43-33: confirmed NOT a match.** Cross-checking
+  `data/raw/nbmg/Geothermal_Wells.csv` by BOTH location and completion
+  date (previously only location had been checked) shows 123802 was
+  completed 9/24/2015 (NDWR log-number cross-reference, permit
+  WL150094) while 43-33 -- its closest NBMG neighbor at just 19.5 m --
+  was drilled in 2007, an 8-year gap. Applying the same location+date
+  check to the other 6 real Steamboat logs found exactly one comparably
+  tight lead: log 27731 (completed 8/15/1986) sits 133 m from NBMG's
+  "Injection Well No. 3" (SBGeo, completed 8/8/1986, one week apart).
+  Per the user's judgment, 1986-era Steamboat drilling moved fast enough
+  that this is more likely a genuinely distinct well than the same well
+  misdated -- **not** written to `well_log_document_map.csv`.
+- **All 7 real (non-Gerlach) Steamboat well logs now registered as
+  provisional `Wells` rows** via new `register_provisional_well_logs()`
+  in `scripts/ingest/ingest_well_logs.R` (wired into `run_pipeline.R`
+  right after `promote_well_log_documents()`), named
+  `"Unidentified Well (NDWR Log <log_number>)"`, `well_role='unknown'`,
+  `coordinate_source` recording OCR-vs-NDWR-crossref provenance. This
+  makes the real coordinate/depth/perforation/static-water-level data
+  visible/mappable instead of stranded in `Well_Log_Documents` staging,
+  without claiming any confirmed identity. Applied to the real
+  `geochem_operational.sqlite` (backed up first to
+  `database/archive/geochem_operational_pre_provisional_wells_<ts>.sqlite`).
+- **Two real bugs found and fixed while building this:**
+  1. **`promote_well_log_documents()` and the new
+     `register_provisional_well_logs()` both stored an unparseable OCR
+     completion-date string (e.g. `"OF en"`) or a `Sys.time()`
+     ("today") fallback directly as a `Water_Level_Observations`
+     timestamp** -- caught by inspecting the new data-availability
+     chart, which showed an implausible "most recent water level
+     observation: today." Fixed with a new `.safe_completion_date()`
+     helper (tries several date formats, then a bare-4-digit-year
+     fallback, else `NA` -- skips the observation row entirely rather
+     than inventing a date) in both functions. Two already-inserted bad
+     rows deleted from the operational database.
+  2. **`Sampling_Events.date` mixes two different numeric epoch
+     conventions within the same column**: recent rows use Excel-serial
+     (days since 1899-12-30), but ~723 of 759 rows are actually
+     Unix-epoch-days (days since 1970-01-01) -- e.g. raw value 6502
+     parses to a nonsensical 1917-10-19 under the Excel assumption, but
+     is exactly correct for 1987-10-21 under the Unix-epoch-day
+     assumption, which matches that row's own `external_event_id`
+     (`"SB10_1987-10-21"`). Root cause (which ingest script wrote the
+     bad rows) is **not yet identified** -- flagged for follow-up, not
+     fixed at the source. Worked around read-only in the new
+     `.parse_mixed_event_date()` (in `scripts/analysis/
+     data_availability.R`), which trusts a `YYYY-MM-DD` suffix on
+     `external_event_id` over the ambiguous numeric column whenever one
+     is present (749 of 759 rows have one).
+- **New "data availability through time" reporting layer**
+  (`scripts/analysis/data_availability.R`,
+  `compute_data_availability()`/`plot_data_availability()`/
+  `build_data_availability_outputs()`) -- a sideways (horizontal)
+  bar/Gantt-style chart, one bar per source spanning its earliest to
+  latest dated record, colored by data type (continuous logger /
+  discrete event / external time series). Covers chemistry sampling
+  events, water level observations, temperature/conductivity logger
+  observations, live USGS discharge, historic USGS specific
+  conductance, NOAA weather, and photo-linked field observations.
+  Deliberately excludes well-log completion dates (too irregular/OCR-
+  noisy to trust as a real range). Wired into `run_pipeline.R`'s export
+  stage unconditionally (read-only reporting, no `RUN_INGEST` flag) --
+  writes `data/derived/data_availability/data_availability.csv` and
+  `output/figures/data_availability_timeline.png`.
+- **New notebook**: `notebooks/05_data_inventory_and_well_network.qmd`
+  -- the living reference for the data-availability chart and the
+  well/facility flow network + well-log identity-matching work (which
+  didn't have a natural home in `01`, which is specifically about the
+  conductivity/Cl workstream). Rendered successfully end-to-end against
+  the real operational database. Note for future editors: this
+  project's notebooks execute with the *notebook's own directory*
+  (`notebooks/`) as the working directory when rendered via `quarto
+  render` (Quarto project `execute-dir` default), not the repo root --
+  `05`'s setup chunk uses a `file.exists()`-based fallback between
+  `"database/..."` and `"../database/..."` to work either way; consider
+  applying the same pattern to `01`-`04` if they're ever rendered from
+  a different starting directory than whatever made them work
+  originally.
+- **Leaflet maps on the website (`website/data.Rmd`, `website/results.Rmd`)
+  reworked**: previously showed only `Wells` with a bare `"Well: <id>"`
+  popup. Now show `well_name` (falling back to `"Well <id>"` only when
+  genuinely unnamed) colored by `well_role`, **plus a new layer for
+  springs/seeps/other `Locations`** (previously absent entirely) with
+  their own popups and a toggleable layer control. Backing CSV export
+  in `run_pipeline.R` extended (`well_sample.csv` now includes
+  `well_name`/`well_role`, filtered to non-null coordinates; new
+  `locations_sample.csv` added for the springs/seeps layer). Both CSVs
+  regenerated directly against the real operational database this
+  session (not just the next full pipeline run).
+- **`scripts/pipeline_report.Rmd` extended**: table-counts list expanded
+  to include `Conductivity_Observations`, `Sampling_Events`,
+  `Lab_Analyses`, `Isotope_Analyses`, `Well_Log_Documents`,
+  `Sampling_Ports`, `Production_Port_Links`, `Port_Injection_Links`,
+  `Facility_Areas` (previously only 5 core tables); new "Data
+  Availability" section embedding the chart above; new "Well & Facility
+  Flow Network Summary" section (wells by role, production wells per
+  port). Test-rendered successfully against the real operational
+  database.
+- **README.md substantially expanded**: new "Data Availability
+  Reporting" and "Well & Facility Flow Network" top-level sections; new
+  rows in the "New data-drop locations" table (conductivity loggers,
+  well-log PDFs, well-network CSVs, well-coordinate CSVs, ArcGIS
+  shapefiles); a "Status (2026-09-05)" note added to "PHREEQC
+  Integration" flagging that `scripts/phreeqc/09_build_phreeqc_tables.R`
+  exists but is **not wired into `run_pipeline.R`** and was not audited
+  this session -- next major integration priority once the well-network
+  and sampling-frequency threads stabilize; new "Interactive Entry
+  Point" / "Manual Confirmation / Promotion Steps" / "Version-
+  Controlling New Raw-Data Files" subsections under "User Data
+  Ingestion," consolidating patterns that were previously only
+  documented ad hoc in AGENTS.md session notes (the `register_*`/
+  `promote_*` staging philosophy, and the `git add -f` requirement for
+  tracking hand-maintained CSVs inside the gitignored `data/raw/`).
+- **`2-1` confirmed and merged into `PW 2-1`** (user: "2-1 is PW 2-1,
+  just another name; PW-1 is its own name but with other aliases").
+  Found the DB already had two separate `Wells` rows for this (well_id
+  82 = `PW 2-1`, no coordinate; well_id 111 = `2-1`, with a real
+  ArcGIS-digitized coordinate) -- confirmed well_id 111 had zero
+  dependent rows in any link/observation table, then: added a
+  `Well_Aliases` row (`PW 2-1` -> `2-1`, `alias_type='other'`, the
+  schema's `CHECK` only allows `dhakal_diagram`/`uic_permit`/
+  `historical_gs_number`/`ndwr_permit`/`other`) to
+  `data/raw/wells/well_aliases.csv`; deleted the redundant `Wells` row
+  for well_id 111; removed the now-superseded standalone `2-1` row from
+  `data/raw/wells/dhakal_well_network.csv`; re-ran
+  `register_well_network()`/`register_well_coordinates()`, which
+  resolved `2-1`'s coordinate onto canonical `PW 2-1` (well_id 82) via
+  the alias-fallback mechanism built in session 7. `PW-1/2/3` remain
+  confirmed distinct from `PW 2-x`/`PW 3-x` (no change needed -- already
+  correctly noted as distinct in `dhakal_well_network.csv` since session
+  8). `docs/data/well_sample.csv` re-exported to reflect the merge.
+- **Not done this session** (deferred, not forgotten): the docs/
+  literature/ PDFs commit-to-git question is still open; root-causing
+  the `Sampling_Events.date` dual-epoch
+  bug; auditing/wiring up `scripts/phreeqc/09_build_phreeqc_tables.R`;
+  none of this session's file changes have been committed/pushed to git
+  yet (several touch CRLF files -- `scripts/run_pipeline.R`,
+  `scripts/ingest/ingest_well_logs.R`, `scripts/pipeline_report.Rmd`,
+  `README.md`, `website/results.Rmd` -- all edited via a
+  `readLines()`/`writeLines(sep="\r\n")` round-trip this session since
+  the `edit` tool's exact-string matching intermittently failed against
+  them for reasons not fully diagnosed, consistent with -- but somewhat
+  worse than -- prior sessions' CRLF caveats for `run_pipeline.R`
+  specifically).
+
+## Session 12 updates (2026-09-06): full website overhaul, references page, critical render_site() data-loss bug fixed
+
+User requested a full website redesign (more technical/narrative tone,
+fewer small bulleted sections, live-data-driven paragraphs, a dedicated
+References page, and explicit "what's next" framing for PHREEQC/Cl-SC
+calibration/potentiometric-transport modeling), plus a git commit/push
+excluding literature PDFs.
+
+- **All 6 website pages rewritten** (`website/index.Rmd`,
+  `project.Rmd`, `pipeline.Rmd`, `data.Rmd`, `results.Rmd`,
+  `about.Rmd`) plus a **new `references.Rmd`** (added to the navbar):
+  consolidated dozens of small emoji-bulleted sections into longer
+  flowing paragraphs; added a hero banner and live-computed "stat card"
+  summary (`index.Rmd`, pulling real counts from `docs/data/*.csv` at
+  render time -- wells/springs mapped, temperature/conductivity/water-
+  level reading counts, lab analyses); embedded the session-11 data-
+  availability chart on the homepage; added an explicit three-objective
+  framing (outflow characterization, Cl-conductivity calibration,
+  potentiometric/transport mapping) matching this project's actual
+  thesis scope; added three `.callout-box.future` sections on
+  `results.Rmd` stating exactly where PHREEQC, Cl-SC calibration, and
+  ArcGIS potentiometric/transport interpolation each stand today (none
+  presented as done -- PHREEQC is an unwired starter script, Cl-SC
+  calibration is built/self-tested but waiting on real overlapping
+  chloride samples, and the ArcGIS interpolation step hasn't been built
+  at all yet).
+- **New theme**: `website/styles.css` rewritten with a geothermal-
+  themed palette (deep blue-green + rust/amber accents) layered on the
+  existing "flatly" Bootstrap theme, serif headings, a hero-banner
+  class, stat-card grid, and styled callout boxes; `_site.yml` updated
+  with the References nav entry and a GitHub icon link.
+- **New `references.Rmd`**: full bibliographic citations (not re-hosted
+  PDFs) for Dhakal et al. (2025, verified via web search: *Forty Years
+  of Production from the Steamboat Geothermal Field: Numerical Model
+  Update*, 50th Stanford Geothermal Workshop, SGP-TR-228), Klein,
+  Johnson & Spielman (2007, verified: *Exploitation at Steamboat,
+  Nevada...*, GRC Transactions Vol. 31 -- corrected from this file's
+  earlier paraphrased title), Sorey & Spielman (Cl-flux GRC papers,
+  cited with an honest caveat that the exact 2008/2017 bibliographic
+  details are from project working notes and not independently
+  re-verified this session), White et al. (1964, USGS PP 458-B), White
+  (1968, USGS PP 458-C), Cohen & Loeltz (1964, USGS WSP 1779-S), Mariner
+  & Janik (flagged explicitly as "citation under review" rather than
+  guessed), plus the public agency/software sources (NDEP, NDWR, NBMG
+  ArcGIS Geothermal_Wells dataset with its real URL, USGS, NOAA,
+  PHREEQC, R ecosystem). Per the user's explicit instruction, no
+  literature PDFs were added to the repo -- sources are cited, not
+  re-hosted.
+- **Critical, previously-undiscovered bug found and fixed**:
+  `rmarkdown::render_site("website")` actively deletes any file under
+  `docs/` (the site's `output_dir`) that has no corresponding source in
+  `website/`'s own input tree -- this is standard site-generator
+  cleanup behavior, but it collided catastrophically with this
+  project's pattern of having `run_pipeline.R` write chart-backing CSVs
+  directly into `docs/data/` for the Rmd chunks to read at render time.
+  Compounding this: `website/data/`, `website/database/`, and
+  `website/scripts/` turned out to be stale (dated June 9, i.e.
+  3-months-old), accidentally-committed duplicate copies of this
+  project's real `data/`, `database/`, and `scripts/` directories,
+  sitting *inside* the website source folder -- every site rebuild was
+  silently overwriting freshly-exported `docs/data/*.csv` files with
+  these ancient duplicates (explaining several stale numbers this
+  session, like a "Wells: 73" count that had already grown to 117).
+  Deleted all three stale directories (confirmed zero unique content
+  first -- they were exact, longstanding duplicates). But removing them
+  fully exposed the deeper problem: with no `website/data/` left to
+  partially mask it, `render_site()` deleted `docs/data/` **in its
+  entirety**, since nothing in `website/`'s input tree referenced it at
+  all. **Root-cause fix**: `scripts/run_pipeline.R`'s CSV-export block
+  was refactored into a new `export_website_data_files(con)` function,
+  now called *twice* -- once immediately before `build_website()` (so
+  the Rmd charts render against real data) and once immediately after
+  (so the CSVs still exist afterward, surviving `render_site()`'s
+  cleanup, for direct download or the next pipeline stage). Verified
+  end-to-end: ran the export -> render -> export sequence directly and
+  confirmed all 9 `docs/data/*.csv` files survive with correct row
+  counts after the full sequence completes.
+- Also fixed a smaller bug of this session's own making: `project.Rmd`
+  referenced `temp_path <- "docs/data/temp_sample.csv"` (missing the
+  `../` prefix every other page's chunks use) -- silently fell back to
+  its "data will appear after export" placeholder text instead of
+  erroring, which is how it went unnoticed until a deliberate check.
+- **`results.Rmd`'s interactive `ggplotly()` temperature chart** was
+  embedding the *entire* ~200k-row temperature record inline in the
+  page (20 MB rendered HTML) -- thinned to every 15th point per logger
+  (`group_by(logger_id) %>% slice(seq(1, n(), by = 15))`), cutting
+  `results.html` to ~1.4 MB with no visible change to the plotted
+  pattern.
+- `docs/database/`, `docs/scripts/` (the corresponding stale copies
+  that had been committed into the *published site output* itself, not
+  just the website source) are now correctly gone from git's tracked
+  tree as well, following the same deletion.
+- **Second related bug, same root cause**: the data-availability figure
+  embedded on the new homepage was referenced from `output/figures/`,
+  which is entirely gitignored (rebuildable scratch space) -- meaning
+  it would 404 on the live GitHub Pages site even though it rendered
+  fine locally. Fixed by having `export_website_data_files()` also copy
+  it to `docs/figures/data_availability_timeline.png` (creating that
+  directory every call, since `render_site()`'s cleanup deletes it too)
+  and pointing `index.Rmd` at that copy instead.
+- Not done this session: `docs/data/qc_summary.csv` (written by
+  `scripts/qc/qc_data_integrity_checks.R`, not currently read by any
+  website page) was not added to the new `export_website_data_files()`
+  double-call pattern -- low priority since nothing displays it, but
+  worth folding in if a future page starts using it, for the same
+  reason the other nine files needed it.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

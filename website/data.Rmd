@@ -1,395 +1,116 @@
 ---
-title: "Data and Schema"
+title: "Data System"
 output: html_document
 ---
 
-# Data & Structure
-
-This system integrates heterogeneous environmental observations into a unified relational database designed to support reproducible scientific analysis.  
-
-Rather than storing datasets independently, all observations are structured within a shared schema that enforces spatial, temporal, and relational consistency. This enables direct comparison across data types, monitoring scales, and time.
-
-The following sections explore how the database behaves as an integrated system, highlighting patterns in data sources, temporal growth, structural
-
----
-
-## 📥 Data Sources
-
-The database integrates multiple observational domains, each representing a different aspect of the hydrothermal system:
-
-- **Regulatory data (NDEP)** — long-term geochemical records  
-- **Field measurements** — site-specific sampling campaigns  
-- **Laboratory analyses** — high-quality analytical chemistry  
-- **Temperature loggers** — continuous thermal monitoring
-- **Continuous conductivity loggers, USGS discharge & historic chemistry, NOAA weather, and field-photo EXIF GPS** (added 2026-09) — see `AGENTS.md`/`README.md` for the current per-source drop-folder and ingest-script mapping
-
-Each source differs in temporal resolution, structure, and analytical purpose.  
-
-Bringing these datasets into a common framework allows relationships to be established between measurements that were previously isolated.
-
-> This integration is essential for interpreting the hydrothermal system as a coupled hydraulic, thermal, and geochemical process.
-
-
----
-
-## 🔄 Data Flow
-
-All data entering the system pass through a controlled sequence of transformations:
-
-**Raw Input → Validation → Standardization → Database → Derived Outputs**
-
-Key features of this process:
-
-- Raw inputs are never modified  
-- All transformations are scripted and version-controlled  
-- External identifiers (e.g., station codes) are translated into internal database keys  
-- Invalid or inconsistent data are rejected during ingest  
-
-### Archival and Provenance
-
-To preserve reproducibility:
-
-- All raw field templates are **archived before ingestion**  
-- Templates are **cleared only after successful ingest**  
-- This prevents duplication while maintaining a complete history of inputs  
-
----
-
-## 🧱 Database Structure
-
-The system is built on a normalized relational schema with the following core tables:
-
-- **Locations** — spatial reference points  
-- **Sampling_Events** — time-based groupings of observations  
-- **Samples** — discrete physical observations  
-- **Field_Measurements** — in-situ measurements  
-- **Lab_Analyses** — analytical chemistry results  
-- **Temperature_Observations** — high-frequency time-series data  
-
-### Design Principles
-
-- normalized relational structure  
-- strict foreign key relationships  
-- append-only time series (no overwriting)  
-- explicit separation of raw vs. derived data  
-
----
-
-## 🌡️ Continuous vs Discrete Data
-
-A key feature of the system is the integration of:
-
-### Discrete observations
-- field measurements  
-- laboratory chemistry  
-
-### Continuous observations
-- temperature logger data  
-
-Continuous data enable:
-
-- detection of short-term variability  
-- temporal pattern recognition  
-- higher-resolution system monitoring  
-
----
-
-## 🔗 Integration of Data Sources
-
-The degree to which different datasets contribute to the system provides insight into both data availability and monitoring strategy.
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, message = FALSE, warning = FALSE)
 library(readr)
-library(ggplot2)
 library(dplyr)
+library(ggplot2)
+```
 
+## A Single Schema, Many Kinds of Observation
+
+Underneath every chart on this page sits one normalized relational database, built so that a regulatory chemistry record from the 1970s, a lab result from last month, and a temperature reading logged sixty seconds ago all live in the same structure and can be queried together. The backbone of that structure is a small set of core tables &mdash; **Locations** for every spatial reference point, **Sampling_Events** for the discrete visits or deployments that generate data, **Samples** for the physical specimens collected during those events, and a family of observation tables (**Field_Measurements**, **Lab_Analyses**, **Temperature_Observations**, **Conductivity_Observations**, **Water_Level_Observations**, **Isotope_Analyses**) that each attach to a sample, a location, or a well through explicit foreign keys. That design enforces two things automatically: nothing gets inserted without a real spatial and temporal anchor, and time-series data is strictly append-only, so a logger's history is never silently overwritten by a later download of the same file.
+
+Six distinct kinds of source currently feed that structure, each with its own ingestion script and its own quirks: NDEP's long-running regulatory chemistry program, targeted field sampling campaigns, laboratory analyses (including isotopes), continuous temperature and electrical-conductivity loggers, USGS discharge and historic water-quality records, and NOAA weather observations, with EXIF-tagged field photographs and scanned NDWR well-completion logs rounding out the picture. Each of those sources differs in how often it reports, how it is structured on arrival, and what it is actually good for scientifically &mdash; folding all of them into one schema is what makes it possible to ask a question that spans several of them at once, rather than treating each as its own isolated archive.
+
+```{r source-integration, fig.cap="Total records contributed by each ingested data source (log scale would flatten this further; shown here on a linear scale to make the relative scale of continuous sensors versus discrete chemistry explicit)."}
 source_path <- "../docs/data/source_summary.csv"
-
-if (!file.exists(source_path)) {
-  
-  cat("Source breakdown available after pipeline export.")
-  
-} else {
-  
+if (file.exists(source_path)) {
   sources <- read_csv(source_path, show_col_types = FALSE)
-  
-  p <- ggplot(sources,
-              aes(x = reorder(source, n), y = n, fill = source)) +
-    geom_col() +
+  ggplot(sources, aes(x = reorder(source, n), y = n, fill = source)) +
+    geom_col(show.legend = FALSE) +
     coord_flip() +
-    labs(
-      title = "Integration of Data Sources",
-      x = "",
-      y = "Records"
-    ) +
-    theme_minimal()
-  
-  print(p)
-}
-
-```
-Interpretation:
-This distribution reflects the heterogeneous nature of environmental monitoring. Regulatory datasets typically dominate long-term records, while field and sensor data provide targeted and high-resolution observations.
-Key Insight:
-The strength of the system lies not in any single dataset, but in the ability to integrate multiple observational scales into a unified structure.
-
----
-
-## 📈 System Growth Through Time
-
-The database evolves through discrete ingestion events rather than continuous accumulation, reflecting how environmental data are collected and integrated.
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-library(readr)
-library(dplyr)
-library(lubridate)
-library(ggplot2)
-library(plotly)
-
-path <- "../docs/data/ingest_log.csv"
-
-if (!file.exists(path)) {
-  cat("Ingestion history will appear after pipeline runs.")
-  
+    labs(title = "Records Contributed by Each Data Source", x = NULL, y = "Records") +
+    theme_minimal(base_size = 13) +
+    scale_fill_manual(values = colorRampPalette(c("#1f4e5f", "#c65d2e"))(nrow(sources)))
 } else {
-  
-  ingest <- read_csv(path, show_col_types = FALSE) %>%
-    mutate(timestamp = ymd_hms(timestamp)) %>%
-    arrange(timestamp) %>%
-    mutate(cumulative = cumsum(measurements_inserted))
-  
-p <- ggplot(ingest,
-              aes(timestamp, cumulative, color = data_source)) +
-    geom_line(linewidth = 1.2) +
-    labs(
-      title = "Cumulative Database Growth",
-      x = "Time",
-      y = "Total Records"
-    ) +
-    theme_minimal()
-  
-  ggplotly(p)
+  cat("Source breakdown will appear after the pipeline's export stage.")
 }
 ```
 
-Interpretation:
-Each increase corresponds to a specific ingestion event, such as a field campaign, regulatory update, or logger deployment.
-Key Insight:
-The stepwise growth pattern provides explicit provenance, allowing users to trace how and when data entered the system.
+The imbalance in that chart is expected, not a flaw: continuous instruments like USGS discharge gauges, the new conductivity logger, and temperature loggers generate orders of magnitude more rows than a chemistry program that samples a well a few times a year ever could, simply because they report every few minutes rather than every few months. The system's value comes from holding both kinds of record side by side, not from any one source dominating the count.
 
----
+## How the Database Grows
 
-## ⚖️ Data Granularity: Continuous vs Discrete Observations
+Growth in this system happens in discrete jumps rather than a smooth trickle, because that is how the underlying fieldwork actually happens &mdash; a field campaign, a regulatory data drop, or a logger download each shows up as a step in the record count, not a gradual accumulation. Reading those jumps against the calendar (below, for the temperature record specifically) tells you almost as much about *how* this system is monitored as it does about the system itself: dense clusters mark active deployment and campaign periods, and the gaps between them mark when nothing was actively being measured. That distinction matters when it's time to model these data downstream, because a period with no monitoring should never be mistaken for a period with no change in the underlying system.
 
-A defining characteristic of the system is the coexistence of continuous and discrete data.
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-if (file.exists("docs/data/table_counts.csv")) {
-  
-  table_counts <- read_csv("../docs/data/table_counts.csv", show_col_types = FALSE)
-  
-  summary_df <- table_counts %>%
-    mutate(type = case_when(
-      grepl("Temperature", table) ~ "Continuous",
-      TRUE ~ "Discrete"
-    )) %>%
-    group_by(type) %>%
-    summarise(n = sum(n_rows))
-  
-  p <- ggplot(summary_df,
-              aes(x = type, y = n, fill = type)) +
-    geom_col() +
-    labs(
-      title = "Continuous vs Discrete Observations",
-      y = "Number of Records",
-      x = ""
-    ) +
-    theme_minimal()
-  
-  print(p)
-}
-```
-
-Interpretation:
-Continuous temperature observations dominate the total number of records, while discrete datasets (chemistry and field measurements) provide analytical depth.
-Key Insight:
-This multi-scale structure enables the system to capture both high-frequency variability and chemically diagnostic signals.
-
----
-
-## 🕒 Temporal Distribution of Observations
-
-Understanding when data are collected is critical for interpreting system dynamics.
-
-```{r echo=FALSE, message=FALSE, warning=FALSE}
-if (file.exists("docs/data/temp_sample.csv")) {
-  
-  temp <- read_csv("../docs/data/temp_sample.csv", show_col_types = FALSE) %>%
+```{r temporal-histogram, fig.cap="Distribution of temperature-logger observations over time; clustering reflects real deployment history, not measurement gaps in an otherwise continuous record."}
+temp_path <- "../docs/data/temp_sample.csv"
+if (file.exists(temp_path)) {
+  temp <- read_csv(temp_path, show_col_types = FALSE) %>%
     mutate(timestamp = as.POSIXct(timestamp, origin = "1970-01-01")) %>%
     filter(!is.na(timestamp))
-  
-  p <- ggplot(temp,
-              aes(timestamp)) +
-    geom_histogram(bins = 50, fill = "steelblue") +
-    labs(
-      title = "Temporal Distribution of Observations",
-      x = "Time",
-      y = "Frequency"
-    ) +
-    theme_minimal()
-  
-  print(p)
+  ggplot(temp, aes(timestamp)) +
+    geom_histogram(bins = 60, fill = "#1f4e5f") +
+    labs(title = "When Temperature Observations Were Collected", x = "Time", y = "Observation count") +
+    theme_minimal(base_size = 13)
+} else {
+  cat("Temporal distribution will appear after export.")
 }
-
 ```
 
-Interpretation:
-Clustering reflects episodic data acquisition, including sensor deployments, field campaigns, and regulatory sampling.
-Key Insight:
-Temporal structure reveals not only system behavior, but also sampling strategy and data availability constraints.
+For a system-wide view of that same idea across *every* source at once &mdash; not just temperature &mdash; see the data availability chart on the [Overview](index.html) page, which shows the earliest and latest dated record for each source side by side. Reading the two together makes a pattern visible that neither chart shows on its own: this project has recently layered a dense, high-frequency instrument network on top of a much sparser multi-decade chemistry and discharge record, and a large part of the analytical work ahead is about bridging that gap credibly rather than pretending it isn't there.
 
-## 🗺️ Spatial Coverage (Sample Points)
+## Where the Monitoring Network Actually Sits
 
-Spatial distribution determines how well the system is observed across the hydrothermal field.
+The map below shows every well and named field location currently in the database with a resolved coordinate, colored by role. Most wells still show as role "unknown" &mdash; role has only been confirmed so far for wells that appear explicitly in Ormat's own production/injection flow diagram (Dhakal et al. 2025), and confirming the rest is ongoing work, not an oversight. Springs, seeps, and other named sampling locations are shown in their own layer, toggleable independently of the wells.
 
-```{r echo=FALSE, message=FALSE, warning=FALSE}
+```{r spatial-map}
 library(leaflet)
+well_path <- "../docs/data/well_sample.csv"
+loc_path <- "../docs/data/locations_sample.csv"
 
-path <- "../docs/data/well_sample.csv"
-
-if (!file.exists(path)) {
-  
+if (!file.exists(well_path)) {
   cat("Spatial data will appear after export.")
-  
 } else {
-  
-  wells <- read_csv(path, show_col_types = FALSE)
-  
-  leaflet(wells) |>
+  wells <- read_csv(well_path, show_col_types = FALSE) |>
+    mutate(
+      label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name),
+      role_color = case_when(
+        well_role == "production" ~ "#d95f02",
+        well_role == "injection" ~ "#1b9e77",
+        well_role == "monitor" ~ "#7570b3",
+        well_role == "domestic" ~ "#66a61e",
+        TRUE ~ "#999999"
+      )
+    )
+
+  m <- leaflet() |>
     addTiles() |>
     addCircleMarkers(
-      lng = ~longitude,
-      lat = ~latitude,
-      radius = 4,
-      color = "blue",
-      popup = ~paste("Well:", well_id)
+      data = wells, lng = ~longitude, lat = ~latitude,
+      radius = 4, color = ~role_color, stroke = FALSE, fillOpacity = 0.85,
+      popup = ~paste0("<b>", label, "</b><br>Role: ", well_role),
+      group = "Wells"
     )
+
+  if (file.exists(loc_path)) {
+    locs <- read_csv(loc_path, show_col_types = FALSE) |> filter(site_type != "well")
+    m <- m |>
+      addCircleMarkers(
+        data = locs, lng = ~longitude, lat = ~latitude,
+        radius = 4, color = "#377eb8", stroke = FALSE, fillOpacity = 0.85,
+        popup = ~paste0("<b>", coalesce(name, external_station_code), "</b><br>Type: ", site_type),
+        group = "Springs / Seeps / Other"
+      )
+  }
+
+  m |>
+    addLegend(position = "bottomright",
+      colors = c("#d95f02", "#1b9e77", "#7570b3", "#66a61e", "#999999", "#377eb8"),
+      labels = c("Production well", "Injection well", "Monitor well", "Domestic well", "Well (role unknown)", "Spring / seep / other"),
+      title = "Site type") |>
+    addLayersControl(overlayGroups = c("Wells", "Springs / Seeps / Other"), options = layersControlOptions(collapsed = FALSE))
 }
 ```
-Interpretation:
-Observed clusters represent areas of active monitoring, while gaps indicate potential regions of uncertainty or under-sampling.
-Key Insight:
-Spatial structure directly influences the ability to interpret hydrothermal flow paths and system heterogeneity.
 
----
+## Provenance in Practice: The NDEP Public Records Request Workflow
 
-## 📊 System-Level Interpretation
+A running principle throughout this system is that no dataset becomes "real" &mdash; queryable, mappable, usable in a model &mdash; until a human has confirmed it belongs where the automated pipeline thinks it does. The NDEP Public Records Request workflow is the clearest example: chemistry extracted from scanned NDEP lab-report PDFs is parsed automatically, but it lands only in a staging table, never in the core schema directly. Promotion into real `Samples` and `Lab_Analyses` rows happens through a second, separate, human-reviewed step that resolves each station name against a real-world coordinate, drawn preferentially from the Nevada Bureau of Mines and Geology's statewide geothermal-wells dataset when an exact name match exists there. As of this writing, four of thirteen staged station names have cleared that bar and been promoted; the rest remain intentionally staged rather than guessed, because in a handful of cases &mdash; most notably a station recorded only as "Herz (Deep)" &mdash; multiple independent sources disagree with each other by more than a kilometer, and picking one without better evidence would quietly introduce a wrong answer into every later analysis. The same philosophy governs how well identities are resolved more broadly: a nearby coordinate is a lead, not a confirmation, and only a converging combination of location, ownership, and construction date is treated as proof.
 
-Taken together, these patterns describe a system that is:
+## Current State
 
-- incrementally constructed through controlled ingestion workflows  
-- composed of heterogeneous but integrated data sources  
-- dominated by high-frequency continuous observations  
-- structured across irregular temporal sampling intervals  
-- spatially distributed according to monitoring access and priorities  
-
-> The database is not simply a collection of datasets—it is a structured representation of system observation itself.
-
----
-
-## 🔬 Geochemical Modeling Integration
-
-Validated chemistry is transformed into **PHREEQC-ready inputs**, enabling process-based interpretation of hydrothermal conditions.
-
-These transformations support:
-
-- forward speciation modeling  
-- inverse geochemical modeling  
-- evaluation of mineral saturation states  
-
-> This step links observational data to thermodynamic interpretation, extending the system beyond monitoring into predictive modeling.
-
----
-
-## 🔁 Reproducibility and Provenance
-
-All transformations within the system are:
-
-- scripted  
-- version-controlled  
-- reproducible  
-
-No manual edits are made to database contents.
-
-Every dataset can be:
-
-- traced to its original input  
-- reconstructed from raw data  
-- validated through ingestion logs  
-
-> This ensures that all analyses performed using the system are transparent, auditable, and reproducible.
-
----
-
-## 📸 Image Data
-
-Photographic observations are stored as structured metadata and linked to:
-
-- locations  
-- sampling events  
-- field measurements  
-
-Images are stored externally, while metadata remain relational.
-
----
-
-## 📄 NDEP Public Records Request (PRR) Staging & Promotion
-
-Chemistry extracted from NDEP PRR PDF lab reports never becomes "real"
-data automatically -- it always passes through two deliberately separate
-steps:
-
-1. **`ingest_ndep_prr.R`** parses a supported PDF layout (currently the
-   SGS lab-report format) and writes every result to `Staging_NDEP_WQ`
-   only. Nothing here touches `Locations`, `Samples`, or `Lab_Analyses`.
-2. **`promote_staged_ndep.R`** (a separate, manually-invoked step) reads
-   a human-maintained mapping,
-   `data/raw/ndep/PRR/staged_ndep_location_map.csv`
-   (`station_name -> external_station_code, site_type, latitude,
-   longitude, coordinate_source, coordinate_uncertainty_m, notes`), and
-   only promotes a station's staged rows into `Samples`/`Lab_Analyses`
-   once that mapping gives it real coordinates.
-
-**Where coordinates come from:** NBMG's statewide "Geothermal_Wells"
-dataset (ArcGIS Open Data,
-`data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0`),
-matched by **exact well name** -- preferred over PLSS-derived
-(quarter-section-precision) or digitized-from-topo-map estimates, both of
-which carry too much uncertainty to register with confidence. Matched
-stations get `coordinate_source = 'nbmg_geothermal_wells'` and a
-documented `coordinate_uncertainty_m` (100 m by default, since NBMG
-doesn't publish its own uncertainty for these records) rather than being
-treated as precise.
-
-As of this writing, 4 of 13 staged station names (Boyd Dom, Jeppson Dom,
-Rogers Well, Soccer Field) have an unambiguous exact-name match and have
-been promoted; the rest remain intentionally unresolved -- either because
-multiple, mutually-inconsistent NBMG records exist for the same name
-(e.g. "Herz Deep": two different NBMG sources disagree on its coordinate
-by over a kilometer), or because no match exists at all (e.g. the
-"Outlet" stations, likely Ormat's own creek monitoring points rather than
-registered water wells). Their chemistry stays staged, not promoted,
-until a confident coordinate is found.
-
----
-
-
-## ✅ Current State
-
-The system is actively evolving:
-
-- continuous temperature monitoring is fully integrated  
-- field and sampling workflows are operational  
-- laboratory chemistry ingestion is expanding  
-
-> In operational mode, the database evolves incrementally, providing a live representation of the hydrothermal system through time.
+Continuous temperature and conductivity monitoring are both fully integrated and actively growing; laboratory chemistry ingestion, well-network resolution, and the well-log OCR pipeline are all active and expanding week to week. In operational mode, none of this is a fixed snapshot &mdash; the database is a live, incrementally-growing representation of the field, and every chart on this page reflects whatever the most recent pipeline run actually found.

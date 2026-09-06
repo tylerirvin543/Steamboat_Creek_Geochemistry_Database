@@ -1,28 +1,182 @@
-body {
-  font-size: 16px;
-  line-height: 1.6;
+/* ---------------------------------------------------------------
+   Steamboat Hydrothermal Data Platform — site theme
+   Palette: geothermal warmth (rust / amber) against deep basin blue,
+   on a clean neutral background. Built on top of Bootstrap "flatly".
+   --------------------------------------------------------------- */
+
+:root {
+  --sb-blue: #1f4e5f;
+  --sb-blue-dark: #123542;
+  --sb-rust: #c65d2e;
+  --sb-amber: #e9a13b;
+  --sb-ink: #2b2b2b;
+  --sb-paper: #fbf9f6;
 }
 
-h1, h2, h3 {
-  font-weight: 600;
+body {
+  font-family: "Lato", "Helvetica Neue", Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.72;
+  color: var(--sb-ink);
+  background-color: var(--sb-paper);
+}
+
+.container-fluid.main-container {
+  max-width: 980px;
+}
+
+h1, h2, h3, h4 {
+  font-family: "Merriweather", Georgia, serif;
+  font-weight: 700;
+  color: var(--sb-blue-dark);
 }
 
 h1 {
-  margin-top: 30px;
+  margin-top: 10px;
+  border-bottom: 3px solid var(--sb-rust);
+  padding-bottom: 12px;
+}
+
+h2 {
+  margin-top: 48px;
+  padding-top: 8px;
+  border-top: 1px solid #e3ddd3;
+}
+
+h3 {
+  color: var(--sb-rust);
+}
+
+p {
+  margin-bottom: 1.1em;
+}
+
+a {
+  color: var(--sb-rust);
+}
+
+a:hover {
+  color: var(--sb-blue);
 }
 
 blockquote {
   font-style: italic;
   color: #444;
-  border-left: 4px solid #2c7fb8;
-  padding-left: 10px;
+  background: #fff4e9;
+  border-left: 5px solid var(--sb-amber);
+  padding: 12px 18px;
+  margin: 24px 0;
+  border-radius: 2px;
 }
 
 .navbar {
   font-size: 15px;
+  border-bottom: 3px solid var(--sb-rust);
+}
+
+.navbar-default {
+  background-color: var(--sb-blue-dark);
+}
+
+.navbar-default .navbar-brand,
+.navbar-default .navbar-nav > li > a {
+  color: #f5f0e8 !important;
+}
+
+.navbar-default .navbar-nav > li > a:hover,
+.navbar-default .navbar-nav > .active > a {
+  color: var(--sb-amber) !important;
 }
 
 code {
-  background-color: #f4f4f4;
-  padding: 2px 4px;
+  background-color: #f0ece4;
+  color: var(--sb-blue-dark);
+  padding: 2px 5px;
+  border-radius: 3px;
+}
+
+pre {
+  border-radius: 6px;
+}
+
+/* Hero banner used on the Overview page */
+.hero-banner {
+  background: linear-gradient(120deg, var(--sb-blue-dark) 0%, var(--sb-blue) 55%, var(--sb-rust) 130%);
+  color: #fdf6ec;
+  padding: 46px 40px;
+  margin: -20px -20px 30px -20px;
+  border-radius: 0 0 10px 10px;
+}
+
+.hero-banner h1 {
+  color: #fdf6ec;
+  border-bottom: none;
+  font-size: 2.4em;
+  margin-top: 0;
+}
+
+.hero-banner p {
+  font-size: 1.15em;
+  max-width: 760px;
+  color: #f0e6d8;
+}
+
+/* Stat cards for live database figures */
+.stat-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin: 22px 0 30px 0;
+}
+
+.stat-card {
+  flex: 1 1 150px;
+  background: #ffffff;
+  border: 1px solid #e3ddd3;
+  border-left: 4px solid var(--sb-amber);
+  border-radius: 6px;
+  padding: 14px 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.stat-card .stat-value {
+  font-family: "Merriweather", Georgia, serif;
+  font-size: 1.7em;
+  font-weight: 700;
+  color: var(--sb-blue-dark);
+  display: block;
+}
+
+.stat-card .stat-label {
+  font-size: 0.82em;
+  color: #6b6259;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.callout-box {
+  background: #eef4f2;
+  border: 1px solid #cfe0db;
+  border-radius: 6px;
+  padding: 16px 20px;
+  margin: 22px 0;
+}
+
+.callout-box.future {
+  background: #fff4e9;
+  border-color: #f0d4b0;
+}
+
+figure, .figure {
+  margin: 24px 0;
+}
+
+figcaption, .caption {
+  font-size: 0.9em;
+  color: #6b6259;
+  font-style: italic;
+}
+
+table {
+  font-size: 0.94em;
 }

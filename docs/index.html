@@ -33,13 +33,14 @@
 <link href="site_libs/tocify-1.9.1/jquery.tocify.css" rel="stylesheet" />
 <script src="site_libs/tocify-1.9.1/jquery.tocify.js"></script>
 <script src="site_libs/navigation-1.1/tabsets.js"></script>
+<script src="site_libs/navigation-1.1/codefolding.js"></script>
 <link href="site_libs/highlightjs-9.12.0/textmate.css" rel="stylesheet" />
 <script src="site_libs/highlightjs-9.12.0/highlight.js"></script>
-<link href="site_libs/htmltools-fill-0.5.9/fill.css" rel="stylesheet" />
-<script src="site_libs/htmlwidgets-1.6.4/htmlwidgets.js"></script>
-<script src="site_libs/viz-1.8.2/viz.js"></script>
-<link href="site_libs/DiagrammeR-styles-0.2/styles.css" rel="stylesheet" />
-<script src="site_libs/grViz-binding-1.0.12/grViz.js"></script>
+<link href="site_libs/anchor-sections-1.1.0/anchor-sections.css" rel="stylesheet" />
+<link href="site_libs/anchor-sections-1.1.0/anchor-sections-hash.css" rel="stylesheet" />
+<script src="site_libs/anchor-sections-1.1.0/anchor-sections.js"></script>
+<link href="site_libs/font-awesome-6.5.2/css/all.min.css" rel="stylesheet" />
+<link href="site_libs/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet" />
 
 <style type="text/css">
   code{white-space: pre-wrap;}
@@ -225,6 +226,9 @@ $(document).ready(function () {
 </style>
 
 <!-- code folding -->
+<style type="text/css">
+.code-folding-btn { margin-bottom: 4px; }
+</style>
 
 
 
@@ -320,7 +324,7 @@ div.tocify {
         <span class="icon-bar"></span>
         <span class="icon-bar"></span>
       </button>
-      <a class="navbar-brand" href="index.html">Steamboat Data Pipeline</a>
+      <a class="navbar-brand" href="index.html">Steamboat Hydrothermal Data Platform</a>
     </div>
     <div id="navbar" class="navbar-collapse collapse">
       <ul class="nav navbar-nav">
@@ -340,17 +344,33 @@ div.tocify {
   <a href="results.html">Results</a>
 </li>
 <li>
+  <a href="references.html">References</a>
+</li>
+<li>
   <a href="about.html">About</a>
 </li>
       </ul>
       <ul class="nav navbar-nav navbar-right">
-        
+        <li>
+  <a href="https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database">
+    <span class="fa fa-github"></span>
+     
+  </a>
+</li>
       </ul>
     </div><!--/.nav-collapse -->
   </div><!--/.container -->
 </div><!--/.navbar -->
 
 <div id="header">
+
+<div class="btn-group pull-right float-right">
+<button type="button" class="btn btn-default btn-xs btn-secondary btn-sm dropdown-toggle" data-toggle="dropdown" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span>Code</span> <span class="caret"></span></button>
+<ul class="dropdown-menu dropdown-menu-right" style="min-width: 50px;">
+<li><a id="rmd-show-all-code" href="#">Show All Code</a></li>
+<li><a id="rmd-hide-all-code" href="#">Hide All Code</a></li>
+</ul>
+</div>
 
 
 
@@ -359,90 +379,155 @@ div.tocify {
 </div>
 
 
-<div id="steamboat-hydrothermal-data-platform" class="section level1">
-<h1>🌎 Steamboat Hydrothermal Data Platform</h1>
-<p>A reproducible system for integrating <strong>hydrologic, thermal,
-and geochemical observations</strong> into a unified database for
-hydrothermal system analysis.</p>
-<hr />
-<div id="scientific-purpose" class="section level2">
-<h2>🔬 Scientific Purpose</h2>
-<p>This platform addresses a central question:</p>
-<blockquote>
-<p><strong>How does the hydrothermal system evolve through time and
-space?</strong></p>
-</blockquote>
-<p>To answer this, the system combines:</p>
-<ul>
-<li>groundwater hydraulics (water levels, gradients)<br />
-</li>
-<li>geochemical observations (field + laboratory)<br />
-</li>
-<li>continuous temperature monitoring<br />
-</li>
-<li>future isotope and thermodynamic modeling</li>
-</ul>
-<p>Together, these datasets allow interpretation of:</p>
-<ul>
-<li>groundwater flow patterns<br />
-</li>
-<li>hydrothermal upflow zones<br />
-</li>
-<li>fluid mixing and recharge<br />
-</li>
-<li>temporal system variability</li>
-</ul>
-<hr />
+<div class="hero-banner">
+<h1>
+Steamboat Hydrothermal Data Platform
+</h1>
+<p>
+A reproducible database and analysis system that fuses continuous
+sensors, laboratory chemistry, and decades of regulatory records into
+one coherent picture of a geothermal system in motion — built for the
+Steamboat Hills field south of Reno, Nevada, in the year following the
+Lower Sinter Terrace eruption.
+</p>
 </div>
-<div id="system-architecture" class="section level2">
-<h2>🧱 System Architecture</h2>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-312feac23b520240fbab" style="width:672px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-312feac23b520240fbab">{"x":{"diagram":"\ndigraph {\n  rankdir=LR;\n  node [shape=box style=filled fillcolor=lightblue]\n\n  RawData [label=\"Raw Data\"]\n  Database\n  Analysis\n  Export\n\n  RawData -> Database\n  Database -> Analysis\n  Analysis -> Export\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
-<hr />
+<div id="what-this-project-is" class="section level2 hasAnchor">
+<h2 class="hasAnchor">What This Project Is<a
+href="#what-this-project-is" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<p>Steamboat Hills is one of the longest-operating geothermal fields in
+the Great Basin, and it is not standing still. Decades of production and
+reinjection by Ormat Technologies have reshaped the plumbing of the
+system underground, and a geyser-like eruption at the Lower Sinter
+Terrace re-opened the question of how fluids are actually moving beneath
+the surface today. Answering that question well requires more than any
+single dataset can offer: it takes groundwater chemistry from newly
+re-mapped springs and wells, decades of chloride and temperature records
+held by state agencies, a real-time conductivity sensor standing in for
+chloride discharge in Steamboat Creek, and a growing archive of well
+construction records and production/injection routing. This project’s
+purpose is to bring all of that together — cleanly, reproducibly, and in
+a form that supports both day-to-day exploration and rigorous
+statistical and spatial modeling.</p>
+<p>Three objectives anchor the work. First, <strong>characterize how the
+outflow of the system has changed</strong> since the eruption, by
+remapping the springs Ormat currently lists as inactive and comparing
+today’s spring and well chemistry, temperatures, and chloride discharge
+against Michael Sorey’s historical baseline. Second, <strong>build a
+live proxy for chloride discharge</strong> using in-stream conductivity,
+and determine how infrequently chloride itself actually needs to be
+sampled to keep that proxy trustworthy — a direct, practical question
+about monitoring design, not just chemistry. Third, <strong>map the
+subsurface hydrologic and chemical state</strong> of the field using
+well chemistry and water levels, in a form ready to hand to ArcGIS for
+interpolation and spatial statistics, so that patterns invisible in any
+one well become visible across the whole field.</p>
+<div class="stat-row">
+<div class="stat-card">
+<span class="stat-value">106</span><span class="stat-label">Wells &amp;
+springs mapped</span>
 </div>
-<div id="what-makes-this-system-different" class="section level2">
-<h2>🧪 What Makes This System Different</h2>
-<p>Unlike traditional datasets, this platform:</p>
-<ul>
-<li>integrates continuous and discrete observations</li>
-<li>preserves full data provenance</li>
-<li>supports reproducible analysis workflows</li>
-<li>enables multi-domain interpretation (hydraulic + thermal +
-chemical)</li>
-</ul>
-<hr />
+<div class="stat-card">
+<span class="stat-value">204,622</span><span
+class="stat-label">Temperature readings</span>
 </div>
-<div id="what-the-system-contains" class="section level2">
-<h2>📊 What the System Contains</h2>
-<p>The database currently includes:</p>
-<ul>
-<li>thousands of temperature observations (high-frequency)</li>
-<li>groundwater level measurements</li>
-<li>field and regulatory chemistry data</li>
-<li><h2 id="spatially-referenced-wells-and-sampling-locations">spatially
-referenced wells and sampling locations</h2></li>
-</ul>
+<div class="stat-card">
+<span class="stat-value">21,901</span><span
+class="stat-label">Conductivity readings</span>
 </div>
-<div id="explore" class="section level2">
-<h2>🧭 Explore</h2>
-<ul>
-<li>📘 <strong>Project</strong> → scientific context and
-motivation<br />
-</li>
-<li>⚙️ <strong>Pipeline</strong> → ingestion and processing design<br />
-</li>
-<li>🧱 <strong>Data</strong> → schema and relationships<br />
-</li>
-<li>📊 <strong>Results</strong> → analysis and outputs<br />
-</li>
-<li>👤 <strong>About</strong> → author and tools</li>
-</ul>
-<hr />
+<div class="stat-card">
+<span class="stat-value">153,436</span><span
+class="stat-label">Water-level readings</span>
 </div>
-<div id="status" class="section level2">
-<h2>✅ Status</h2>
-<p>System is operational and updated via controlled ingestion
-workflows.</p>
+<div class="stat-card">
+<span class="stat-value">10,449</span><span class="stat-label">Lab
+analyses (767 samples)</span>
+</div>
+</div>
+<p>These figures update automatically every time the pipeline runs, so
+the numbers above reflect the database as it stands today, not a
+snapshot frozen at some earlier point in the project.</p>
+</div>
+<div id="why-a-database-and-not-just-spreadsheets"
+class="section level2 hasAnchor">
+<h2 class="hasAnchor">Why a Database, and Not Just Spreadsheets<a
+href="#why-a-database-and-not-just-spreadsheets" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<p>Every one of those data types arrives in its own shape: NDEP hands
+over regulatory PDFs and CSVs on its own schedule, field crews fill out
+spreadsheets in the field, temperature and conductivity loggers dump
+proprietary export files, and USGS and NOAA publish their own time
+series in their own formats. A spreadsheet-per-source approach makes it
+easy to lose track of which version of which file is current, and nearly
+impossible to ask a question that spans sources — “does the conductivity
+signal in the creek track the chemistry we measured at the springs two
+weeks earlier?” — without manual, error-prone reassembly every time.
+This project instead pushes every source through its own small,
+dedicated ingestion script into a single normalized SQLite database, so
+that a well’s location, its water levels, its chemistry, and its role in
+Ormat’s production network are all facts about the <em>same</em> row,
+joinable in one query rather than three lookups across three files.</p>
+<p>That structure also buys reproducibility almost for free. Nothing is
+ever hand-edited inside the database; every transformation lives in a
+script that can be re-run from the raw files, every source carries a
+record of exactly where it came from, and re-running an ingestion twice
+never duplicates data. The <a href="pipeline.html">Pipeline</a> page
+walks through how that actually works, and the <a href="data.html">Data
+System</a> page shows what has accumulated so far.</p>
+</div>
+<div id="data-availability-at-a-glance"
+class="section level2 hasAnchor">
+<h2 class="hasAnchor">Data Availability at a Glance<a
+href="#data-availability-at-a-glance" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<p>The chart below is generated directly from the database and shows,
+for every major data source, the earliest and latest dated record
+currently on file. It is a useful way to see at a glance how a
+decades-long regulatory and chemistry record is now being layered with a
+brand-new generation of high-frequency sensors.</p>
+<p><img src="../docs/figures/data_availability_timeline.png" alt="" width="100%" /></p>
+<p>Notice the gap: the historical chemistry and specific-conductance
+record thins out after the early 2000s, and then a cluster of continuous
+instruments — temperature loggers, a conductivity logger in Steamboat
+Creek, and live USGS discharge — all start up together in 2025-2026.
+That gap, and the deliberate effort to bridge it, is a running theme
+across the rest of this site.</p>
+</div>
+<div id="find-your-way-around" class="section level2 hasAnchor">
+<h2 class="hasAnchor">Find Your Way Around<a
+href="#find-your-way-around" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<div class="stat-row">
+<div class="stat-card">
+<span class="stat-label">Scientific Context</span><br>Why the system
+matters and what question it’s built to answer.
+</div>
+<div class="stat-card">
+<span class="stat-label">Pipeline</span><br>How raw files become a
+trustworthy, queryable database.
+</div>
+<div class="stat-card">
+<span class="stat-label">Data System</span><br>What is actually in the
+database right now, and where it came from.
+</div>
+<div class="stat-card">
+<span class="stat-label">Results</span><br>Patterns visible in the data
+so far, and what they suggest.
+</div>
+<div class="stat-card">
+<span class="stat-label">References</span><br>The published studies and
+public datasets this work builds on.
+</div>
+</div>
+<div class="callout-box future">
+<p><strong>Where this is headed next:</strong> the database is
+deliberately built to feed three pieces of modeling that are still ahead
+— geochemical speciation and mixing models in PHREEQC, a calibrated
+conductivity-to-chloride relationship that pins down how often chloride
+really needs to be sampled, and a potentiometric/contaminant-transport
+surface built by interpolating well chemistry and water levels in
+ArcGIS. See the <a href="results.html">Results</a> page for where each
+of those stands today.</p>
 </div>
 </div>
 
@@ -481,6 +566,11 @@ $(document).ready(function () {
 </script>
 
 <!-- code folding -->
+<script>
+$(document).ready(function () {
+  window.initializeCodeFolding("hide" === "show");
+});
+</script>
 
 <script>
 $(document).ready(function ()  {

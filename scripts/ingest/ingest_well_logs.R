@@ -51,6 +51,35 @@ library(digest)
 
 source("scripts/ingest/helpers/parse_well_log_pdf.R")
 
+#' Best-effort parse of a driller's-report completion date into a clean
+#' YYYY-MM-DD, or NA if it isn't parseable. Used to decide the timestamp
+#' for the Water_Level_Observations row a well log's static water level
+#' gets promoted into.
+#'
+#' 2026-09-05 (session 11) bug fix: both promote_well_log_documents() and
+#' register_provisional_well_logs() previously stored *whatever*
+#' completion_date_raw held -- including unparseable OCR noise like
+#' "OF en" or "92 2018" -- directly as the observation timestamp, and
+#' fell back to `Sys.time()` (today's date) when it was NA. Both are
+#' wrong: an unparseable or missing historical date should not silently
+#' become garbage text or today's date in a real observation table --
+#' found by inspecting the data-availability chart (scripts/analysis/
+#' data_availability.R), which showed an implausible "most recent water
+#' level observation: today" data point traced back to this.
+.safe_completion_date <- function(raw) {
+  if (is.na(raw) || trimws(raw) == "") return(NA_character_)
+  for (fmt in c("%Y-%m-%d", "%m/%d/%Y", "%B %d, %Y", "%b %d, %Y", "%b. %d, %Y")) {
+    d <- tryCatch(as.Date(trimws(raw), format = fmt), error = function(e) NA)
+    if (!is.na(d)) return(as.character(d))
+  }
+  # last resort: a bare 4-digit year somewhere in the text (e.g. OCR
+  # noise "92 2018" -- keep only the year, dated to Jan 1 as a clearly
+  # approximate placeholder, never "today").
+  yr <- regmatches(raw, regexpr("(19|20)\\d{2}", raw))
+  if (length(yr) == 1 && nzchar(yr)) return(paste0(yr, "-01-01"))
+  NA_character_
+}
+
 #' Read one NDWR WellLogQuery basin export (the same htm files parsed
 #' elsewhere in this project) into a data.frame with real column names.
 .read_ndwr_welllog_table <- function(htm_path) {
@@ -260,20 +289,26 @@ promote_well_log_documents <- function(
     }
 
     if (!is.na(doc$static_water_level_ft)) {
-      already <- dbGetQuery(con, "
-        SELECT observation_id FROM Water_Level_Observations
-        WHERE well_id = ? AND method = 'driller_report'
-      ", params = list(well_id))
-      if (nrow(already) == 0) {
-        dbExecute(con, "
-          INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes)
-          VALUES (?, ?, ?, 'driller_report', 'driller_report', ?)
-        ", params = list(
-          well_id,
-          if (!is.na(doc$completion_date_raw)) doc$completion_date_raw else format(Sys.time(), "%Y-%m-%d"),
-          doc$static_water_level_ft,
-          paste0("Static water level at time of drilling, from NDWR well log #", doc$log_number, ". ", row$notes)
-        ))
+      completion_date <- .safe_completion_date(doc$completion_date_raw)
+      if (is.na(completion_date)) {
+        warning("[promote_well_log_documents] log #", doc$log_number,
+                " has a static water level but no parseable completion date -- skipping the Water_Level_Observations row rather than defaulting to today's date.")
+      } else {
+        already <- dbGetQuery(con, "
+          SELECT observation_id FROM Water_Level_Observations
+          WHERE well_id = ? AND method = 'driller_report'
+        ", params = list(well_id))
+        if (nrow(already) == 0) {
+          dbExecute(con, "
+            INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes)
+            VALUES (?, ?, ?, 'driller_report', 'driller_report', ?)
+          ", params = list(
+            well_id,
+            completion_date,
+            doc$static_water_level_ft,
+            paste0("Static water level at time of drilling, from NDWR well log #", doc$log_number, ". ", row$notes)
+          ))
+        }
       }
     }
 
@@ -288,4 +323,136 @@ promote_well_log_documents <- function(
 
   message("  -> Promoted ", n_promoted, " well-log document(s).")
   invisible(list(promoted = n_promoted, skipped_well = n_skipped_well))
+}
+
+#' Register a provisional Wells row for any Well_Log_Documents row that
+#' still has no well_id after promote_well_log_documents() -- i.e. a real
+#' log with real coordinates/construction data, but no confirmed identity
+#' match to an existing named well (2026-09-05 session 11: none of the
+#' 7 real Steamboat logs cleared the bar for a confident name match --
+#' see AGENTS.md for the per-log nearest-NBMG-candidate comparison,
+#' including 27731's rejected "Injection Well No. 3" lead, which the
+#' user judged is more likely a genuinely different well drilled about
+#' a week apart than the same well misdated.
+#'
+#' Rather than leaving this real data stranded in the staging table,
+#' each qualifying log gets its own placeholder Wells row named
+#' "Unidentified Well (NDWR Log <log_number>)" with well_role='unknown'
+#' and coordinate_source recording exactly how the location was derived
+#' (OCR text vs. NDWR log-number cross-reference), so the data is
+#' visible/mappable/exportable while being unambiguous that it is NOT a
+#' confirmed match to any Dhakal-diagram or NBMG well. If a human later
+#' confirms a real identity, add a row to well_log_document_map.csv and
+#' re-run promote_well_log_documents() -- reconciling the provisional
+#' Wells row at that point is a manual step, not automated here.
+#'
+#' Deliberately restricted to a Steamboat-area bounding box: 5 of the 12
+#' logs on hand (146238-146241, 146403) are confirmed Gerlach-area NVGD
+#' wells from an unrelated Ormat project and are skipped, not registered
+#' as Steamboat Wells rows.
+register_provisional_well_logs <- function(
+    con,
+    log_dir_filter = "data/raw/ndwr/Ormat_well_logs",
+    lat_range = c(39.30, 39.50),
+    lon_range = c(-119.85, -119.65)) {
+
+  message("---- Registering provisional Wells rows for unmatched well logs ----")
+
+  docs <- dbGetQuery(con, "
+    SELECT * FROM Well_Log_Documents
+    WHERE well_id IS NULL AND file_path LIKE ?
+  ", params = list(paste0(log_dir_filter, "%")))
+
+  if (nrow(docs) == 0) {
+    message("  -> No unmatched well-log documents to register.")
+    return(invisible(list(created = 0L, out_of_scope = character(0), no_coord = character(0))))
+  }
+
+  n_created <- 0L
+  skipped_oos <- character(0)
+  skipped_nocoord <- character(0)
+
+  for (i in seq_len(nrow(docs))) {
+    d <- docs[i, ]
+    well_name <- paste0("Unidentified Well (NDWR Log ", d$log_number, ")")
+
+    already <- dbGetQuery(con, "SELECT well_id FROM Wells WHERE well_name = ?", params = list(well_name))
+    if (nrow(already) > 0) {
+      dbExecute(con, "UPDATE Well_Log_Documents SET well_id = ? WHERE document_id = ?",
+                params = list(already$well_id[1], d$document_id))
+      next
+    }
+
+    if (is.na(d$latitude) || is.na(d$longitude)) {
+      skipped_nocoord <- c(skipped_nocoord, d$log_number)
+      next
+    }
+    if (d$latitude < lat_range[1] || d$latitude > lat_range[2] ||
+        d$longitude < lon_range[1] || d$longitude > lon_range[2]) {
+      skipped_oos <- c(skipped_oos, d$log_number)
+      next
+    }
+
+    coord_source <- if (identical(d$match_method, "ndwr_log_number_crossref")) {
+      "ndwr_well_log_crossref"
+    } else if (identical(d$match_method, "parsed_text")) {
+      "well_log_ocr_or_text"
+    } else {
+      "well_log_unknown_method"
+    }
+    coord_uncertainty_m <- if (identical(d$match_method, "ndwr_log_number_crossref")) 200 else 150
+
+    notes <- paste0(
+      "Provisional well, identity NOT confirmed. Created from NDWR well log #", d$log_number,
+      " (Well_Log_Documents.document_id=", d$document_id, "). ",
+      if (!is.na(d$notes)) paste0(d$notes, " ") else "",
+      "See AGENTS.md session 10/11 notes for nearest-NBMG-well candidates considered and rejected."
+    )
+
+    dbExecute(con, "
+      INSERT INTO Wells (
+        well_name, latitude, longitude, total_depth, top_perforation, bottom_perforation,
+        well_role, coordinate_source, coordinate_uncertainty_m, notes
+      ) VALUES (?, ?, ?, ?, ?, ?, 'unknown', ?, ?, ?)
+    ", params = list(
+      well_name, d$latitude, d$longitude,
+      d$depth_drilled_ft, d$slot_from_ft, d$slot_to_ft,
+      coord_source, coord_uncertainty_m, notes
+    ))
+
+    well_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+    dbExecute(con, "UPDATE Well_Log_Documents SET well_id = ? WHERE document_id = ?",
+              params = list(well_id, d$document_id))
+
+    if (!is.na(d$static_water_level_ft)) {
+      completion_date <- .safe_completion_date(d$completion_date_raw)
+      if (is.na(completion_date)) {
+        message("  (log #", d$log_number, ": static water level has no parseable completion date -- skipping Water_Level_Observations row.)")
+      } else {
+        already_wl <- dbGetQuery(con, "
+          SELECT observation_id FROM Water_Level_Observations
+          WHERE well_id = ? AND method = 'driller_report'
+        ", params = list(well_id))
+        if (nrow(already_wl) == 0) {
+          dbExecute(con, "
+            INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes)
+            VALUES (?, ?, ?, 'driller_report', 'driller_report', ?)
+          ", params = list(
+            well_id,
+            completion_date,
+            d$static_water_level_ft,
+            paste0("Static water level at time of drilling, from NDWR well log #", d$log_number, " (provisional well identity).")
+          ))
+        }
+      }
+    }
+
+    n_created <- n_created + 1L
+  }
+
+  message("  -> Created ", n_created, " provisional Wells row(s); ",
+          length(skipped_oos), " skipped (outside Steamboat bounding box -- likely Gerlach-area NVGD wells); ",
+          length(skipped_nocoord), " skipped (no coordinate available).")
+
+  invisible(list(created = n_created, out_of_scope = skipped_oos, no_coord = skipped_nocoord))
 }

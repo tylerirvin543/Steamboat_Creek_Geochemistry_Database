@@ -1,0 +1,163 @@
+---
+title: "Data Inventory & Well/Facility Flow Network"
+format: html
+---
+
+## Purpose and Scope
+
+This notebook is the living reference for two threads that, unlike the
+conductivity/sampling-frequency workstream (`01_conductivity_temporal_structure.qmd`),
+don't have a single home yet: **(1)** what data currently exists in the
+database and over what time span, and **(2)** the production well -> port
+-> injection well flow network (Dhakal et al. 2025) plus the raw NDWR
+well-log records that back up individual well identities/construction.
+Update this notebook, not just the underlying scripts, as both threads
+evolve -- consistent with this project's convention for `01`.
+
+```{r setup}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(ggplot2)
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
+con <- dbConnect(SQLite(), db_path)
+source_path <- file.path("scripts", "analysis", "data_availability.R")
+if (!file.exists(source_path)) source_path <- file.path("..", "scripts", "analysis", "data_availability.R")
+source(source_path)
+```
+
+## 1. Data Availability Through Time
+
+`scripts/analysis/data_availability.R` computes, for every major dated
+table, the earliest/latest record and count. It handles each table's own
+date-storage convention -- and, notably, discovered that
+`Sampling_Events.date` mixes **two different numeric epoch conventions**
+within the same column (Excel-serial-from-1899-12-30 for recent rows,
+Unix-epoch-days-from-1970-01-01 for ~723 older rows) -- a real,
+previously-undiscovered data bug, not something introduced by this
+notebook. `external_event_id` (e.g. `"SB10_1987-10-21"`) reliably encodes
+the true date and is used as ground truth wherever available; only ~10
+of 759 rows lack that suffix and still rely on the ambiguous numeric
+column.
+
+```{r availability-table}
+avail <- compute_data_availability(con)
+avail
+```
+
+```{r availability-plot}
+#| fig-width: 10
+#| fig-height: 5.5
+plot_data_availability(avail)
+```
+
+**Reading this chart:** continuous logger records (temperature,
+conductivity, live USGS discharge) all start in 2025-2026 -- this is a
+genuinely young, high-frequency instrumentation deployment layered on
+top of decades of sparser discrete sampling (chemistry events back to
+1974, USGS grab-sample specific conductance 1971-2001, NOAA weather back
+to 2001). The gap between the historic USGS SC record ending in 2001 and
+today is real, not a data-loading artifact -- worth keeping in mind when
+interpreting any long-term trend across that boundary.
+
+**Known follow-up (not fixed here):** the root cause of the
+`Sampling_Events.date` dual-epoch bug -- which ingest script wrote the
+Unix-epoch-day rows -- has not been identified. `external_event_id`
+appears to be a reliable independent record of the true date for nearly
+all rows, but the underlying `date` column itself remains wrong for
+roughly 95% of rows and should not be trusted directly by any other
+script until traced and fixed at the source.
+
+## 2. Well & Facility Flow Network
+
+Production wells feed named commingling ports, which route to injection
+wells (Dhakal et al. 2025, Figure 5). `well_role` classifies each well;
+`vw_production_to_port` / `vw_port_to_injection` expose each leg of the
+network independently since the two legs are confirmed at different
+levels of confidence.
+
+```{r well-roles}
+dbGetQuery(con, "SELECT well_role, COUNT(*) n FROM Wells GROUP BY well_role ORDER BY n DESC")
+```
+
+```{r production-to-port}
+dbGetQuery(con, "SELECT * FROM vw_production_to_port")
+```
+
+```{r port-to-injection}
+dbGetQuery(con, "SELECT * FROM vw_port_to_injection")
+```
+
+Both legs are real (transcribed directly from the Dhakal figure), but
+**not every well in either table yet has a coordinate** -- see the
+GeoPackage's `production_to_port`/`port_to_injection` line layers, which
+only draw a line where both endpoints are located. `PW-1/2/3`, `13-5R`,
+`21B-5R`, `83B-6R`, and `23-33RD` are the main remaining coordinate gaps
+as of this writing.
+
+## 3. Well Logs: OCR Extraction & Identity Matching
+
+12 NDWR "Well Driller's Report" PDFs were OCR'd (via `tesseract`, with a
+labeled-field -> unlabeled-scan -> UTM-conversion fallback chain -- see
+`scripts/ingest/helpers/parse_well_log_pdf.R`). 5 are confirmed
+Gerlach-area wells from an unrelated Ormat project (excluded from
+Steamboat analysis); the remaining 7 are genuinely in the Steamboat
+field but **none has a confirmed named-well identity** -- matching by
+coordinate proximity alone is not reliable in this densely-drilled
+field, and matching by completion date is essential to rule out
+false-positive proximity matches.
+
+```{r well-log-candidates}
+dbGetQuery(con, "
+  SELECT log_number, latitude, longitude, completion_date_raw, notes
+  FROM Well_Log_Documents
+  WHERE well_id IS NOT NULL AND well_name_parsed IS NULL
+    AND log_number NOT IN ('146238','146239','146240','146241','146403')
+  ORDER BY log_number
+")
+```
+
+**Worked example -- why proximity alone is misleading:** log `123802`
+sits only ~19.5 m from NBMG's "Industrial Production Well 43-33," the
+closest lat/lon match found across all 12 logs. But `123802`'s own NDWR
+record shows it was completed **9/24/2015**, while 43-33 was drilled in
+**2007** -- an 8-year gap that rules out the match despite the tight
+spatial coincidence. Applying the same location-*and*-date cross-check
+to the other 6 real Steamboat logs found one comparably tight lead --
+log `27731` (completed 8/15/1986) sits 133 m from NBMG's "Injection Well
+No. 3" (SBGeo, Inc., completion recorded 8/8/1986), a one-week date gap
+-- but per-project judgment is that 1986-era Steamboat drilling moved
+fast enough that a well finished a week apart is more likely a
+genuinely distinct, separate well than the same well misdated. No
+identity is written to `well_log_document_map.csv` for any of the 7
+without a human confirming it first.
+
+Because none of the 7 real logs cleared the bar for a confident identity
+match, each is registered as its own **provisional** `Wells` row (see
+`register_provisional_well_logs()` in `scripts/ingest/ingest_well_logs.R`)
+so the real coordinate/depth/construction data is visible and mappable
+rather than stranded in the staging table -- clearly named and flagged
+as unconfirmed, not silently merged into any named well:
+
+```{r provisional-wells}
+dbGetQuery(con, "
+  SELECT well_id, well_name, latitude, longitude, total_depth,
+         top_perforation, bottom_perforation, coordinate_source, coordinate_uncertainty_m
+  FROM Wells
+  WHERE well_name LIKE 'Unidentified Well%'
+  ORDER BY well_id
+")
+```
+
+## Changelog
+
+| Date | Change |
+|---|---|
+| 2026-09-05 | Notebook created. Data availability chart built for the first time (and the `Sampling_Events.date` dual-epoch bug discovered while building it). 7 Steamboat well logs cross-checked against NBMG by location *and* completion date together (previously only location had been checked); `123802` conclusively rejected as a match to `43-33`; `27731`/"Injection Well No. 3" flagged as the tightest remaining lead but judged more likely a distinct well. All 7 registered as provisional `Wells` rows. |
+
+```{r cleanup}
+#| include: false
+dbDisconnect(con)
+```

@@ -1,0 +1,35 @@
+---
+title: "References"
+output: html_document
+---
+
+## Scope of This Page
+
+This project builds directly on decades of prior published work on the Steamboat Hills geothermal field, plus several public agency datasets used throughout the pipeline. In keeping with copyright and reproducibility practice, this repository does not re-host any copyrighted source PDFs; instead, every reference below is cited so the original can be located and consulted directly, and the codebase cites these same sources inline wherever a specific number, coordinate, or method is drawn from one of them.
+
+## Steamboat Hills: Geology, Development, and Hydrothermal Structure
+
+- **Dhakal, S., Spake, D., Lee, L., Feucht, D., Murphy, J., Akerley, J., Johnson, A., Libbey, R., and Spielman, P. (2025).** *Forty Years of Production from the Steamboat Geothermal Field: Numerical Model Update.* Proceedings, 50th Workshop on Geothermal Reservoir Engineering, Stanford University, SGP-TR-228. The production/injection/port flow network implemented in this project's `Sampling_Ports`, `Production_Port_Links`, and `Port_Injection_Links` tables is transcribed directly from this paper's Figure 5 and Table 1.
+- **Klein, C.W., Johnson, S., and Spielman, P. (2007).** *Exploitation at Steamboat, Nevada: What It Takes to Document and Understand the Reservoir/Groundwater/Community Interaction.* Geothermal Resources Council (GRC) Transactions, Vol. 31. The primary reference for this project's groundwater monitor-well network and the historical map of production, injection, and monitor wells.
+- **Sorey, M.L. and Spielman, P.** Chloride-flux estimates of geothermal fluid discharge at Steamboat Springs, presented in GRC Transactions (2008 and 2017 papers referenced in project working notes). Sorey's chloride mass-balance method &mdash; multiplying stream chloride concentration by discharge, referenced against a deep thermal-water end-member concentration &mdash; is the historical baseline this project's conductivity-proxy and sampling-frequency work is designed to update and extend.
+- **White, D.E., Thompson, G.A., and Sandberg, C.H. (1964).** *Rocks, Structure, and Geologic History of Steamboat Springs Thermal Area, Washoe County, Nevada.* U.S. Geological Survey Professional Paper 458-B.
+- **White, D.E. (1968).** *Hydrology, Activity, and Heat Flow of the Steamboat Springs Thermal System, Washoe County, Nevada.* U.S. Geological Survey Professional Paper 458-C. Plate 1 of this report is a geologic map showing the historical, pre-Ormat "Nevada Thermal Power" plant locations and GS-numbered exploration wells &mdash; a separate, older well-numbering scheme from the one used in current Ormat operations.
+- **Cohen, P. and Loeltz, O.J. (1964).** *Evaluation of Hydrogeology and Hydrogeochemistry of Truckee Meadows Area, Washoe County, Nevada.* U.S. Geological Survey Water-Supply Paper 1779-S.
+- **Mariner, R.H. and Janik, C.J.** Geochemistry of thermal waters in the Steamboat Springs area (full citation under review; referenced in project working notes as a source for historical fluid-chemistry characterization, not yet independently re-verified for this page).
+
+## Public Agency Data Sources
+
+- **Nevada Division of Environmental Protection (NDEP).** Regulatory water-quality monitoring records for Steamboat-area production and monitoring wells, obtained both through NDEP's open-data channels and through Public Records Request PDF submittals (e.g. semi-annual digital submittals and Temporary UIC Permit compliance reporting for Permit UNEV2007204).
+- **Nevada Division of Water Resources (NDWR).** Well-completion ("Well Driller's Report") records and the statewide WellLogQuery database, used for well-location cross-referencing and construction detail throughout this project's well-log ingestion pipeline.
+- **Nevada Bureau of Mines and Geology (NBMG).** *Geothermal_Wells* dataset, ArcGIS Open Data, [data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0](https://data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0). The primary source for well coordinates and construction metadata used to resolve well identities across this project, matched by exact well name against a Washoe County / Steamboat-area bounding box.
+- **U.S. Geological Survey (USGS).** Live discharge, historic grab-sample specific conductance, and water-quality data for Steamboat Creek and surrounding stations, accessed via the National Water Information System and Water Quality Portal.
+- **National Oceanic and Atmospheric Administration (NOAA).** Regional precipitation and temperature records used as environmental context alongside the hydrothermal monitoring record.
+
+## Methods and Software
+
+- **Parkhurst, D.L. and Appelo, C.A.J.** *PHREEQC* &mdash; geochemical speciation, saturation-index, and inverse-modeling software, U.S. Geological Survey. The intended engine for this project's forward and inverse geochemical modeling once its input-table pipeline is fully wired in.
+- **R Core Team and the tidyverse, DBI/RSQLite, sf, leaflet, and rmarkdown package ecosystems.** The full data-engineering, spatial-analysis, and web-publishing stack this platform runs on.
+
+## A Note on Citation Practice
+
+Where this project's own code, database notes, or documentation draw a specific number, coordinate, or method from one of the sources above, the citation is recorded inline at the point of use (in script comments, in `AGENTS.md` provenance notes, or in the relevant page of this website) rather than only listed here in aggregate. If you use this platform's data or outputs in your own work, please cite both this project (see the [About](about.html) page) and the original source of any specific published result you rely on.

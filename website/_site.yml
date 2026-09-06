@@ -2,7 +2,7 @@ name: "steamboat-project"
 output_dir: "../docs"
 
 navbar:
-  title: "Steamboat Data Pipeline"
+  title: "Steamboat Hydrothermal Data Platform"
   left:
     - text: "Overview"
       href: index.html
@@ -14,9 +14,13 @@ navbar:
       href: data.html
     - text: "Results"
       href: results.html
+    - text: "References"
+      href: references.html
     - text: "About"
       href: about.html
-
+  right:
+    - icon: fa-github
+      href: https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database
 
 output:
   html_document:
@@ -24,5 +28,10 @@ output:
     css: styles.css
     highlight: textmate
     toc: true
-    toc_float: true
-
+    toc_float:
+      collapsed: true
+      smooth_scroll: true
+    number_sections: false
+    df_print: kable
+    code_folding: hide
+    anchor_sections: true

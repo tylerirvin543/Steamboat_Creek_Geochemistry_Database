@@ -11,7 +11,7 @@
 
 
 
-<title>Scientific Context</title>
+<title>References</title>
 
 <script src="site_libs/header-attrs-2.31/header-attrs.js"></script>
 <script src="site_libs/jquery-3.6.0/jquery-3.6.0.min.js"></script>
@@ -374,130 +374,133 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Scientific Context</h1>
+<h1 class="title toc-ignore">References</h1>
 
 </div>
 
 
-<div id="a-system-that-just-reminded-everyone-its-alive"
-class="section level2 hasAnchor">
-<h2 class="hasAnchor">A System That Just Reminded Everyone It’s Alive<a
-href="#a-system-that-just-reminded-everyone-its-alive"
+<div id="scope-of-this-page" class="section level2 hasAnchor">
+<h2 class="hasAnchor">Scope of This Page<a href="#scope-of-this-page"
 class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The Steamboat Springs geothermal field has been producing power for
-four decades, and for most of that time its surface expression — the
-springs, seeps, and steaming ground that give the area its name — had
-been quietly declining as production and reinjection reshaped the
-plumbing underground. That story changed abruptly in June 2025, when a
-geyser-like eruption over 30 feet tall burst from an abandoned well at
-the Lower Sinter Terrace. An eruption like that is not a random event;
-it is the visible tip of a much larger, mostly invisible change in
-subsurface pressure and fluid pathways. The obvious question it raises —
-and the one this project exists to help answer — is how the system’s
-outflow has actually changed, and whether the monitoring network in
-place is good enough to tell the difference between routine variability
-and something new.</p>
-<p>That question turns out to be harder to answer than it sounds,
-because the tools traditionally used to watch a hydrothermal system are
-mismatched to how fast the system can actually move. Regulatory and
-field chemistry sampling happens a few times a year at best, which is
-more than enough to miss a transient pressure pulse, a short-lived
-mixing event, or the kind of gradual drift that only becomes obvious
-once you have three years of data instead of three months. Different
-agencies and field crews also record things in different formats and at
-different resolutions, so simply lining up a well’s chemistry against
-its water level against a nearby creek’s conductivity has historically
-required a fair amount of manual reassembly before any comparison could
-even begin. The gap between how quickly the system can change and how
-coarsely it is normally observed is the central problem this project is
-built to narrow.</p>
+<p>This project builds directly on decades of prior published work on
+the Steamboat Hills geothermal field, plus several public agency
+datasets used throughout the pipeline. In keeping with copyright and
+reproducibility practice, this repository does not re-host any
+copyrighted source PDFs; instead, every reference below is cited so the
+original can be located and consulted directly, and the codebase cites
+these same sources inline wherever a specific number, coordinate, or
+method is drawn from one of them.</p>
 </div>
-<div id="why-temperature-and-conductivity-do-the-heavy-lifting"
+<div id="steamboat-hills-geology-development-and-hydrothermal-structure"
 class="section level2 hasAnchor">
-<h2 class="hasAnchor">Why Temperature and Conductivity Do the Heavy
-Lifting<a href="#why-temperature-and-conductivity-do-the-heavy-lifting"
+<h2 class="hasAnchor">Steamboat Hills: Geology, Development, and
+Hydrothermal Structure<a
+href="#steamboat-hills-geology-development-and-hydrothermal-structure"
 class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>Of the properties that are practical to measure continuously,
-temperature and electrical conductivity are the most directly
-informative about what a hydrothermal system is doing right now.
-Temperature responds quickly to changes in flow pathways, to mixing
-between hot deep water and cooler shallow water, and to pressure changes
-that shift where fluid is moving — and because loggers can record it
-every few minutes indefinitely, it captures exactly the kind of
-short-term variability that a quarterly chemistry sample would simply
-never see. Conductivity plays a related but distinct role: in Steamboat
-Creek, it stands in for chloride concentration, which is itself the
-tracer Michael Sorey’s classic studies used to estimate how much
-geothermal water is discharging from the system as a whole. Chloride
-behaves conservatively (it neither precipitates nor reacts appreciably
-on its way downstream), so multiplying its concentration by the creek’s
-discharge gives a mass flux that, combined with a reference
-concentration for the deep thermal water, converts directly into an
-estimate of geothermal outflow. Conductivity can be logged every few
-minutes for the cost of one instrument; chloride requires a lab. The
-practical question this project is chasing — and one of its three core
-objectives — is exactly how infrequently chloride actually needs to be
-sampled to keep a conductivity-based estimate of that outflow
-trustworthy.</p>
-<div class="figure">
-<img src="project_files/figure-html/continuous-signal-1.png" alt="A short window of raw temperature-logger data, illustrating the kind of short-term variability that would be invisible to periodic discrete sampling." width="100%" />
-<p class="caption">
-A short window of raw temperature-logger data, illustrating the kind of
-short-term variability that would be invisible to periodic discrete
-sampling.
-</p>
+<ul>
+<li><strong>Dhakal, S., Spake, D., Lee, L., Feucht, D., Murphy, J.,
+Akerley, J., Johnson, A., Libbey, R., and Spielman, P. (2025).</strong>
+<em>Forty Years of Production from the Steamboat Geothermal Field:
+Numerical Model Update.</em> Proceedings, 50th Workshop on Geothermal
+Reservoir Engineering, Stanford University, SGP-TR-228. The
+production/injection/port flow network implemented in this project’s
+<code>Sampling_Ports</code>, <code>Production_Port_Links</code>, and
+<code>Port_Injection_Links</code> tables is transcribed directly from
+this paper’s Figure 5 and Table 1.</li>
+<li><strong>Klein, C.W., Johnson, S., and Spielman, P. (2007).</strong>
+<em>Exploitation at Steamboat, Nevada: What It Takes to Document and
+Understand the Reservoir/Groundwater/Community Interaction.</em>
+Geothermal Resources Council (GRC) Transactions, Vol. 31. The primary
+reference for this project’s groundwater monitor-well network and the
+historical map of production, injection, and monitor wells.</li>
+<li><strong>Sorey, M.L. and Spielman, P.</strong> Chloride-flux
+estimates of geothermal fluid discharge at Steamboat Springs, presented
+in GRC Transactions (2008 and 2017 papers referenced in project working
+notes). Sorey’s chloride mass-balance method — multiplying stream
+chloride concentration by discharge, referenced against a deep
+thermal-water end-member concentration — is the historical baseline this
+project’s conductivity-proxy and sampling-frequency work is designed to
+update and extend.</li>
+<li><strong>White, D.E., Thompson, G.A., and Sandberg, C.H.
+(1964).</strong> <em>Rocks, Structure, and Geologic History of Steamboat
+Springs Thermal Area, Washoe County, Nevada.</em> U.S. Geological Survey
+Professional Paper 458-B.</li>
+<li><strong>White, D.E. (1968).</strong> <em>Hydrology, Activity, and
+Heat Flow of the Steamboat Springs Thermal System, Washoe County,
+Nevada.</em> U.S. Geological Survey Professional Paper 458-C. Plate 1 of
+this report is a geologic map showing the historical, pre-Ormat “Nevada
+Thermal Power” plant locations and GS-numbered exploration wells — a
+separate, older well-numbering scheme from the one used in current Ormat
+operations.</li>
+<li><strong>Cohen, P. and Loeltz, O.J. (1964).</strong> <em>Evaluation
+of Hydrogeology and Hydrogeochemistry of Truckee Meadows Area, Washoe
+County, Nevada.</em> U.S. Geological Survey Water-Supply Paper
+1779-S.</li>
+<li><strong>Mariner, R.H. and Janik, C.J.</strong> Geochemistry of
+thermal waters in the Steamboat Springs area (full citation under
+review; referenced in project working notes as a source for historical
+fluid-chemistry characterization, not yet independently re-verified for
+this page).</li>
+</ul>
 </div>
-</div>
-<div id="from-isolated-readings-to-a-system-level-picture"
-class="section level2 hasAnchor">
-<h2 class="hasAnchor">From Isolated Readings to a System-Level Picture<a
-href="#from-isolated-readings-to-a-system-level-picture"
-class="anchor-section" aria-label="Anchor link to header"></a></h2>
-<p>The approach this project takes is to stop treating each data type as
-its own island and instead fold everything — groundwater levels, field
-and laboratory chemistry, continuous temperature and conductivity, and
-now, increasingly, the physical construction records of the wells
-themselves — into one relational database, where every observation
-carries an explicit link to where and when it was collected and by what
-method. That structure is what makes it possible to ask genuinely
-cross-domain questions: whether a hydraulic gradient between two wells
-lines up with a chemical difference between them, whether a spike in
-creek conductivity coincides with a nearby field visit rather than a
-real signal, or whether the same well’s chemistry from a 1970s survey
-and a 2026 field sample tell a consistent story about how the outflow
-has evolved. None of those comparisons are possible when the underlying
-data live in disconnected spreadsheets; they become simple queries once
-the data live in a shared schema.</p>
-<p>That same structure is also what prepares the ground for the modeling
-this project is building toward. Validated chemistry, once it is sitting
-in normalized tables rather than scattered lab reports, becomes a direct
-input to PHREEQC for speciation and mixing calculations; a time-aligned
-record of conductivity and the chloride samples that overlap with it
-becomes the training data for a calibrated Cl-conductivity relationship;
-and water levels and chemistry attached to precise well coordinates
-become exactly the input ArcGIS needs to interpolate a potentiometric
-surface and trace where a chemical signature is migrating underground.
-Each of those next steps depends on the data first being trustworthy and
-consistently structured — which is the whole reason this system exists
-before any of that modeling work begins.</p>
-</div>
-<div id="the-goal-stated-plainly" class="section level2 hasAnchor">
-<h2 class="hasAnchor">The Goal, Stated Plainly<a
-href="#the-goal-stated-plainly" class="anchor-section"
+<div id="public-agency-data-sources" class="section level2 hasAnchor">
+<h2 class="hasAnchor">Public Agency Data Sources<a
+href="#public-agency-data-sources" class="anchor-section"
 aria-label="Anchor link to header"></a></h2>
-<p>Beyond any single analysis, the aim of this project is to build a
-framework that keeps working as new data arrive, rather than a static
-report that goes stale the moment the next field season starts. Every
-script that touches the database can be re-run safely on new data
-without duplicating or corrupting what came before, so the system’s
-picture of the Steamboat Hills field keeps sharpening as more springs
-are re-sampled, more wells are logged, and more conductivity data
-accumulates against the growing chemistry record. Although this platform
-was built specifically for Steamboat Hills, the same architecture —
-ingest once, validate consistently, integrate across sources, model on
-top — applies just as well to any environmental system where the hard
-part is not any single measurement, but making dozens of different kinds
-of measurement talk to each other.</p>
+<ul>
+<li><strong>Nevada Division of Environmental Protection (NDEP).</strong>
+Regulatory water-quality monitoring records for Steamboat-area
+production and monitoring wells, obtained both through NDEP’s open-data
+channels and through Public Records Request PDF submittals
+(e.g. semi-annual digital submittals and Temporary UIC Permit compliance
+reporting for Permit UNEV2007204).</li>
+<li><strong>Nevada Division of Water Resources (NDWR).</strong>
+Well-completion (“Well Driller’s Report”) records and the statewide
+WellLogQuery database, used for well-location cross-referencing and
+construction detail throughout this project’s well-log ingestion
+pipeline.</li>
+<li><strong>Nevada Bureau of Mines and Geology (NBMG).</strong>
+<em>Geothermal_Wells</em> dataset, ArcGIS Open Data, <a
+href="https://data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0">data-nbmg.opendata.arcgis.com/datasets/72341ba987e34c12a575c83f1d7c5367_0</a>.
+The primary source for well coordinates and construction metadata used
+to resolve well identities across this project, matched by exact well
+name against a Washoe County / Steamboat-area bounding box.</li>
+<li><strong>U.S. Geological Survey (USGS).</strong> Live discharge,
+historic grab-sample specific conductance, and water-quality data for
+Steamboat Creek and surrounding stations, accessed via the National
+Water Information System and Water Quality Portal.</li>
+<li><strong>National Oceanic and Atmospheric Administration
+(NOAA).</strong> Regional precipitation and temperature records used as
+environmental context alongside the hydrothermal monitoring record.</li>
+</ul>
+</div>
+<div id="methods-and-software" class="section level2 hasAnchor">
+<h2 class="hasAnchor">Methods and Software<a
+href="#methods-and-software" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<ul>
+<li><strong>Parkhurst, D.L. and Appelo, C.A.J.</strong> <em>PHREEQC</em>
+— geochemical speciation, saturation-index, and inverse-modeling
+software, U.S. Geological Survey. The intended engine for this project’s
+forward and inverse geochemical modeling once its input-table pipeline
+is fully wired in.</li>
+<li><strong>R Core Team and the tidyverse, DBI/RSQLite, sf, leaflet, and
+rmarkdown package ecosystems.</strong> The full data-engineering,
+spatial-analysis, and web-publishing stack this platform runs on.</li>
+</ul>
+</div>
+<div id="a-note-on-citation-practice" class="section level2 hasAnchor">
+<h2 class="hasAnchor">A Note on Citation Practice<a
+href="#a-note-on-citation-practice" class="anchor-section"
+aria-label="Anchor link to header"></a></h2>
+<p>Where this project’s own code, database notes, or documentation draw
+a specific number, coordinate, or method from one of the sources above,
+the citation is recorded inline at the point of use (in script comments,
+in <code>AGENTS.md</code> provenance notes, or in the relevant page of
+this website) rather than only listed here in aggregate. If you use this
+platform’s data or outputs in your own work, please cite both this
+project (see the <a href="about.html">About</a> page) and the original
+source of any specific published result you rely on.</p>
 </div>
 
 

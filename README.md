@@ -461,6 +461,45 @@ sources incrementally
 
 ------------------------------------------------------------------------
 
+### Interactive Entry Point
+
+When `run_pipeline.R` is sourced interactively (e.g. in RStudio) with
+`MODE`/`RUN_INGEST`/`BUILD_WEBSITE` not already set, it prompts with
+`utils::menu()` for the target database, ingestion profile, and whether
+to rebuild the website, then proceeds unattended. Non-interactive runs
+(`Rscript`, CI) default safely to `MODE = "DEMO"` with all working
+sources enabled. Setting any of those three variables before sourcing
+the script (as a plain assignment) bypasses the prompts -- this is how
+scripted/automated runs should invoke it.
+
+### Manual Confirmation / Promotion Steps
+
+A recurring pattern in this project: automated ingestion **stages**
+ambiguous data rather than guessing an identity, and a separate,
+human-driven `register_*`/`promote_*` step (each backed by a small,
+version-controlled mapping CSV) confirms it before it reaches a core
+table. Examples: `promote_staged_ndep.R` (NDEP PRR station name ->
+location), `register_monitor_well_locations.R` /
+`register_well_coordinates.R` / `register_well_network.R` (well
+identity/coordinate/role confirmation), `promote_well_log_documents.R`
+(well-log -> named well). These are wired into `run_pipeline.R` as
+their own flagged stages precisely so a completed round of manual
+confirmation work is never silently lost on a future database rebuild
+-- but the mapping CSVs themselves are only ever as complete as a human
+has made them; an empty or partial mapping file means "nothing
+confirmed yet," not "nothing to confirm."
+
+### Version-Controlling New Raw-Data Files
+
+`data/raw/` is gitignored by default (it can get large and often holds
+sensitive/unpublished data), but the small, hand-maintained CSVs that
+encode real provenance decisions (the mapping/deployment/coordinate
+files referenced throughout this README) are exactly the kind of file
+that *should* be tracked. Because git will not evaluate a
+per-file `!`-negation inside an already-ignored directory, adding one
+of these requires `git add -f <path>` explicitly -- a plain `git add`
+or a `!data/raw/whatever.csv` gitignore rule will not pick it up.
+
 # Database Structure
 
 ## Core Tables
@@ -638,6 +677,77 @@ source types (each with its own idempotent ingest script, wired into
 | NOAA weather (precipitation/temperature) -- any of the formats seen so far | `data/raw/noaa/*.csv` | `ingest_noaa_weather.R` |
 | Field photos (for EXIF GPS location extraction) | `data/raw/images/image_drop/*` (+ a human-maintained `data/raw/images/image_location_map.csv`) | `ingest_image_locations.R` |
 | NDEP Public Records Request documents | `data/raw/ndep/PRR/PPR_<date>/*.pdf` (new request = new dated sibling folder, never overwrite) | `ingest_ndep_prr.R` (pilot; stages to `Staging_NDEP_WQ` for review, does not write directly to core tables) |
+| Conductivity/EC loggers (HOBO/Onset) | `data/raw/conductivity/` (+ `conductivity_logger_deployments.csv`) | `ingest_conductivity.R` |
+| NDWR "Well Driller's Report" PDFs (any future batch) | any directory of these PDFs, e.g. `data/raw/ndwr/Ormat_well_logs/` | `ingest_well_logs.R` (OCR + NDWR log-number cross-reference; see "Well & Facility Flow Network" below) |
+| Human-curated well/port network assignments (from a flow diagram like Dhakal et al. 2025 Fig. 5) | `data/raw/wells/dhakal_well_network.csv`, `well_aliases.csv` | `register_well_network.R` |
+| Well coordinates from an external source (NBMG, ArcGIS digitization, etc.) | `data/raw/wells/*_coordinates*.csv` | `register_well_coordinates.R` |
+| ArcGIS-digitized point/polygon layers (satellite-overlay wells, facility footprints) | `data/raw/arcgis/*.shp` | `register_facility_areas.R` |
+
+## Data Availability Reporting
+
+`scripts/analysis/data_availability.R` answers "what data do we have, and
+for what time period?" across every major dated table in one place --
+previously only approximated indirectly (an ingest-log growth curve and a
+temperature-observation histogram on the website). It handles each
+table's own date-storage quirk (Excel serial numbers, Unix epoch
+seconds, ISO strings, and -- as discovered while building this --
+`Sampling_Events.date` mixing *both* Excel-serial and Unix-epoch-day
+conventions within the same column for different rows; see the
+Troubleshooting section below) and produces:
+
+- `data/derived/data_availability/data_availability.csv` -- one row per
+  source with `start_date`/`end_date`/`n_records`.
+- `output/figures/data_availability_timeline.png` -- a horizontal
+  bar/Gantt-style chart, one bar per source spanning its earliest to
+  latest dated record, colored by data type (continuous logger vs.
+  discrete/event vs. external time series).
+
+![Data availability by source](output/figures/data_availability_timeline.png)
+
+Runs automatically, unconditionally, in the pipeline's export stage
+(`build_data_availability_outputs(con)` in `run_pipeline.R`) -- it's
+read-only reporting, not gated by any `RUN_INGEST` flag.
+
+# Well & Facility Flow Network
+
+## Status: 🟡 Partially implemented (production→port routing real; injection-side and several well identities still open)
+
+Represents Ormat's production well → commingling port (Galena 1/2/3,
+SB2/3, SBHR) → injection well routing, transcribed from Dhakal et al.
+(2025)'s Figure 5 flow diagram, plus the raw NDWR well-log PDFs that
+back up individual well construction records.
+
+**Schema:** `Wells.well_role` (production/injection/monitor/domestic/
+unknown), `Well_Aliases` (a well may have several names -- diagram
+labels, UIC permit IDs, historical GS-numbers), `Sampling_Ports`,
+`Production_Port_Links`/`Port_Injection_Links` (both carry
+`valid_from`/`valid_to`, since routing is an operational choice that can
+change), and `Facility_Areas` (polygon footprints digitized from
+satellite imagery). Two views, `vw_production_to_port` and
+`vw_port_to_injection`, expose each leg independently so real partial
+data renders without waiting on the harder-to-source leg.
+
+**Well-log ingestion:** `ingest_well_logs.R` OCRs (via `tesseract`,
+falling back through a labeled field → unlabeled scan → UTM-conversion
+chain) and/or NDWR-log-number-cross-references NDWR "Well Driller's
+Report" PDFs into a `Well_Log_Documents` staging table -- never assigned
+a `well_id` without a human-confirmed match in
+`data/raw/ndwr/well_log_document_map.csv`, following this project's
+standing rule against guessing well identity from proximity or owner
+name alone. Logs with real coordinates/construction data but no
+confirmed identity are still registered as their own provisional `Wells`
+rows (named `"Unidentified Well (NDWR Log <log_number>)"`,
+`well_role = 'unknown'`) via `register_provisional_well_logs()`, so the
+real data is visible/mappable rather than stranded in staging.
+
+**Known gaps** (see `AGENTS.md` for full per-well provenance): several
+Dhakal-diagram well identities (`PW-1/2/3`, `13-5R`, `21B-5R`, `83B-6R`,
+`23-33RD`) still lack a coordinate; well `2-1`'s role is unconfirmed;
+and matching individual well logs to named wells has so far only
+produced leads, not confirmed identities (a lat/lon-only match can be
+misleadingly close -- e.g. one log initially looked like an 18 m match
+to a known production well, but its completion date was 8 years off).
+
 
 
 # Hydraulic Gradient System
@@ -752,6 +862,17 @@ not pairwise lines. Planned design (not yet implemented):
 ------------------------------------------------------------------------
 
 # PHREEQC Integration (Next Phase)
+
+## Status (2026-09-05)
+
+A starter script, `scripts/phreeqc/09_build_phreeqc_tables.R`, exists but
+is **not yet wired into `run_pipeline.R`** and has not been audited or
+re-verified this session -- everything below is the design intent, not
+a confirmed current state. This is the next major integration priority
+for this project once the well/facility network and sampling-frequency
+workstreams above stabilize. `phreeqc/templates/` and `phreeqc/runs/`
+hold model templates and prior run I/O respectively.
+
 
 ## Goal
 

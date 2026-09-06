@@ -383,6 +383,13 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # see data/raw/ndwr/well_log_document_map.csv (currently empty; no
   # confident matches established yet).
   promote_well_log_documents(con)
+  # 2026-09-05 (session 11): none of the 7 real Steamboat logs cleared
+  # the bar for a confident name match after cross-checking NBMG dates
+  # AND locations together (see AGENTS.md) -- rather than leaving this
+  # real coordinate/depth/water-level data stranded in staging, give
+  # each a provisional Wells row so it's visible/mappable while staying
+  # unambiguous that it isn't a confirmed identity match.
+  register_provisional_well_logs(con)
 })
 })
 
@@ -662,6 +669,13 @@ message("\n==============================")
 message(" EXPORT STAGE")
 message("==============================")
 
+message("\n[EXPORT] Computing data availability across all sources")
+# Read-only reporting: which sources have data, over what date range.
+# Always runs (not gated by RUN_INGEST) since it just reflects whatever
+# is currently in the database. See scripts/analysis/data_availability.R.
+source("scripts/analysis/data_availability.R")
+build_data_availability_outputs(con)
+
 message("\n[EXPORT] Creating GIS views")
 create_gis_views(con)
 
@@ -672,121 +686,166 @@ export_geopackage(con, mode = MODE)
 # WEBSITE EXPORT
 # ============================================================
 
-message("\n[EXPORT] Writing website CSV outputs")
-
-dir.create("docs/data", recursive = TRUE, showWarnings = FALSE)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT timestamp, data_source, measurements_inserted
-    FROM Ingest_Run_Log
-    ORDER BY timestamp
-  "),
-  "docs/data/ingest_log.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT logger_id, timestamp, temperature
-    FROM Temperature_Observations
-  "),
-  "docs/data/temp_sample.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      w.well_id,
-      w.ndwr_site_id,
-      w.latitude,
-      w.longitude,
-      w.mid_screen_depth,
-      w.total_depth,
-      w.basin_name
-    FROM Wells w
-  "),
-  "docs/data/well_sample.csv",
-  row.names = FALSE
-)
-
-tables <- dbListTables(con)
-
-table_counts <- lapply(tables, function(t) {
-  n <- tryCatch(
-    dbGetQuery(con, paste0("SELECT COUNT(*) n FROM ", t))$n,
-    error = function(e) NA
+# 2026-09-06: docs/data/*.csv (read by the Rmd chunks below at render
+# time) live inside the same output_dir that rmarkdown::render_site()
+# actively cleans on every call -- any file under docs/ with no
+# corresponding source in website/ gets deleted as "orphaned" the
+# moment render_site() runs, even mid-pipeline. Wrapped in a function
+# and called both immediately before AND immediately after
+# build_website() below so the charts render against real data *and*
+# the CSVs still exist afterward for direct download / the next run.
+export_website_data_files <- function(con) {
+  # output/ is gitignored (rebuildable scratch space), but docs/ is
+  # the published GitHub Pages root -- any figure a website page
+  # embeds has to live under docs/, or it 404s on the live site even
+  # though it renders fine locally. Copy figures referenced by the
+  # website out of output/figures/ into docs/figures/ here.
+  dir.create("docs/figures", recursive = TRUE, showWarnings = FALSE)
+  if (file.exists("output/figures/data_availability_timeline.png")) {
+    file.copy("output/figures/data_availability_timeline.png",
+               "docs/figures/data_availability_timeline.png", overwrite = TRUE)
+  }
+  message("\n[EXPORT] Writing website CSV outputs")
+  
+  dir.create("docs/data", recursive = TRUE, showWarnings = FALSE)
+  
+  write.csv(
+    dbGetQuery(con, "
+      SELECT timestamp, data_source, measurements_inserted
+      FROM Ingest_Run_Log
+      ORDER BY timestamp
+    "),
+    "docs/data/ingest_log.csv",
+    row.names = FALSE
   )
   
-  data.frame(
-    table = t,
-    n_rows = n
+  write.csv(
+    dbGetQuery(con, "
+      SELECT logger_id, timestamp, temperature
+      FROM Temperature_Observations
+    "),
+    "docs/data/temp_sample.csv",
+    row.names = FALSE
   )
-}) %>%
-  bind_rows()
+  
+  write.csv(
+    dbGetQuery(con, "
+      SELECT 
+        w.well_id,
+        w.well_name,
+        w.ndwr_site_id,
+        w.well_role,
+        w.latitude,
+        w.longitude,
+        w.mid_screen_depth,
+        w.total_depth,
+        w.basin_name
+      FROM Wells w
+      WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL
+    "),
+    "docs/data/well_sample.csv",
+    row.names = FALSE
+  )
+  
+  # 2026-09-05 (session 11): the website leaflet maps previously showed
+  # only Wells with a bare "Well: <id>" popup, and had no springs/seeps/
+  # other Locations layer at all. This adds real names + site types for
+  # both, so data.Rmd/results.Rmd can render meaningful labels.
+  write.csv(
+    dbGetQuery(con, "
+      SELECT
+        location_id,
+        name,
+        external_station_code,
+        site_type,
+        latitude,
+        longitude
+      FROM Locations
+      WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+    "),
+    "docs/data/locations_sample.csv",
+    row.names = FALSE
+  )
+  
+  tables <- dbListTables(con)
+  
+  table_counts <- lapply(tables, function(t) {
+    n <- tryCatch(
+      dbGetQuery(con, paste0("SELECT COUNT(*) n FROM ", t))$n,
+      error = function(e) NA
+    )
+    
+    data.frame(
+      table = t,
+      n_rows = n
+    )
+  }) %>%
+    bind_rows()
+  
+  write.csv(
+    table_counts,
+    "docs/data/table_counts.csv",
+    row.names = FALSE
+  )
+  
+  write.csv(
+    dbGetQuery(con, "
+      SELECT data_source as source,
+             SUM(measurements_inserted) as n
+      FROM Ingest_Run_Log
+      GROUP BY data_source
+    "),
+    "docs/data/source_summary.csv",
+    row.names = FALSE
+  )
+  
+  write.csv(
+    dbGetQuery(con, "
+      SELECT 
+        DATE(timestamp, 'unixepoch') as date,
+        COUNT(*) as n
+      FROM Temperature_Observations
+      GROUP BY date
+    "),
+    "docs/data/temp_density.csv",
+    row.names = FALSE
+  )
+  
+  write.csv(
+    dbGetQuery(con, "
+      SELECT 
+        COUNT(DISTINCT sample_id) as samples,
+        COUNT(*) as analyses
+      FROM Lab_Analyses
+    "),
+    "docs/data/chem_summary.csv",
+    row.names = FALSE
+  )
+  
+  write.csv(
+    dbGetQuery(con, "
+      SELECT 
+        logger_id,
+        COUNT(*) as observations,
+        MIN(timestamp) as start_time,
+        MAX(timestamp) as end_time
+      FROM Temperature_Observations
+      GROUP BY logger_id
+    "),
+    "docs/data/logger_summary.csv",
+    row.names = FALSE
+  )
+  
+  dir.create("output/qc", recursive = TRUE, showWarnings = FALSE)
+  
+  write.csv(
+    dbReadTable(con, "QC_Issues"),
+    "output/qc/qc_issues_full.csv",
+    row.names = FALSE
+  )
+}
 
-write.csv(
-  table_counts,
-  "docs/data/table_counts.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT data_source as source,
-           SUM(measurements_inserted) as n
-    FROM Ingest_Run_Log
-    GROUP BY data_source
-  "),
-  "docs/data/source_summary.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      DATE(timestamp, 'unixepoch') as date,
-      COUNT(*) as n
-    FROM Temperature_Observations
-    GROUP BY date
-  "),
-  "docs/data/temp_density.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      COUNT(DISTINCT sample_id) as samples,
-      COUNT(*) as analyses
-    FROM Lab_Analyses
-  "),
-  "docs/data/chem_summary.csv",
-  row.names = FALSE
-)
-
-write.csv(
-  dbGetQuery(con, "
-    SELECT 
-      logger_id,
-      COUNT(*) as observations,
-      MIN(timestamp) as start_time,
-      MAX(timestamp) as end_time
-    FROM Temperature_Observations
-    GROUP BY logger_id
-  "),
-  "docs/data/logger_summary.csv",
-  row.names = FALSE
-)
-
-dir.create("output/qc", recursive = TRUE, showWarnings = FALSE)
-
-write.csv(
-  dbReadTable(con, "QC_Issues"),
-  "output/qc/qc_issues_full.csv",
-  row.names = FALSE
-)
+export_website_data_files(con)
 
 # ============================================================
 # WEBSITE BUILD STAGE
@@ -823,6 +882,11 @@ build_website <- function() {
 
 if (BUILD_WEBSITE) {
   build_website()
+  # See export_website_data_files()'s definition above for why this
+  # runs a second time here: render_site() deletes docs/data/*.csv
+  # as part of its own cleanup, so the CSVs need rewriting once more
+  # after the build completes, not just before it.
+  export_website_data_files(con)
 } else {
   message("[WEBSITE] Skipping build")
 }

@@ -38,15 +38,65 @@ tables <- c(
   "Wells",
   "Water_Level_Observations",
   "Temperature_Observations",
+  "Conductivity_Observations",
+  "Sampling_Events",
+  "Lab_Analyses",
+  "Isotope_Analyses",
+  "Well_Log_Documents",
+  "Sampling_Ports",
+  "Production_Port_Links",
+  "Port_Injection_Links",
+  "Facility_Areas",
   "Hydraulic_Gradients"
 )
 
 counts <- do.call(rbind, lapply(tables, function(t) {
-  n <- dbGetQuery(con, paste0("SELECT COUNT(*) AS n FROM ", t))$n
+  n <- tryCatch(dbGetQuery(con, paste0("SELECT COUNT(*) AS n FROM ", t))$n, error = function(e) NA)
   data.frame(table = t, rows = n)
 }))
 
 counts
+```
+
+# Data Availability
+
+Which sources have data, and over what time period -- see
+`scripts/analysis/data_availability.R`.
+
+```{r}
+avail_path <- here::here("data", "derived", "data_availability", "data_availability.csv")
+if (file.exists(avail_path)) {
+  read.csv(avail_path)
+} else {
+  cat("Data availability output not yet generated -- run the pipeline's export stage.")
+}
+```
+
+```{r, out.width="100%"}
+avail_plot <- here::here("output", "figures", "data_availability_timeline.png")
+if (file.exists(avail_plot)) knitr::include_graphics(avail_plot)
+```
+
+# Well & Facility Flow Network Summary
+
+Production well -> port -> injection well routing (see README's "Well &
+Facility Flow Network" section for the schema/provenance behind this).
+
+```{r}
+tryCatch({
+  wells_by_role <- dbGetQuery(con, "SELECT well_role, COUNT(*) n FROM Wells GROUP BY well_role ORDER BY n DESC")
+  wells_by_role
+}, error = function(e) cat("Wells.well_role not available:", conditionMessage(e)))
+```
+
+```{r}
+tryCatch({
+  dbGetQuery(con, "
+    SELECT sp.port_name, COUNT(*) n_production_wells
+    FROM Production_Port_Links ppl JOIN Sampling_Ports sp ON ppl.port_id = sp.port_id
+    GROUP BY sp.port_name ORDER BY n_production_wells DESC
+  ")
+}, error = function(e) cat("Production_Port_Links not available:", conditionMessage(e)))
 ```
 
 
