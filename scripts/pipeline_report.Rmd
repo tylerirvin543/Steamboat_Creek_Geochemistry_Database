@@ -1,5 +1,5 @@
 ---
-title: "Pipeline Run Report"
+title: "Pipeline QC & Status Report"
 output: html_document
 params:
   db_path: "database/geochem_demo.sqlite"
@@ -9,14 +9,19 @@ params:
 
 # Overview
 
-This report summarizes the results of the data pipeline run.
+A fast, mechanical status check generated after every pipeline run
+(`scripts/run_pipeline.R`) -- table counts, ingest recap, data
+availability, and a `QC_Issues`/`PHREEQC_Run_Failures` summary. This is
+deliberately **not** a science/interpretation document: geochemical
+interpretation, geothermometry, mixing models, and well-network detail
+live in the versioned Quarto notebooks under `notebooks/` (in
+particular `05_data_inventory_and_well_network.qmd` for well/facility
+network detail and `06_phreeqc_geochemical_modeling.qmd` for PHREEQC),
+which are rendered on demand rather than on every pipeline run, and on
+the project website. See those for the "why" behind any number here.
 
-It includes:
-
-- database status
-- ingest summary
-- hydrologic analysis outputs
-- QA/QC checks
+- **Mode:** `r params$mode`
+- **Run time:** `r params$run_time`
 
 ---
 
@@ -26,11 +31,13 @@ It includes:
 library(DBI)
 library(RSQLite)
 library(here)
+library(dplyr)
 
 db_path <- if (!is.null(params$db_path)) params$db_path else file.path("database", "geochem_demo.sqlite")
 con <- dbConnect(SQLite(), here::here(db_path))
 ```
 
+# Table Row Counts
 
 ```{r}
 tables <- c(
@@ -47,7 +54,10 @@ tables <- c(
   "Production_Port_Links",
   "Port_Injection_Links",
   "Facility_Areas",
-  "Hydraulic_Gradients"
+  "Hydraulic_Gradients",
+  "PHREEQC_Solutions",
+  "PHREEQC_Results",
+  "QC_Issues"
 )
 
 counts <- do.call(rbind, lapply(tables, function(t) {
@@ -58,10 +68,95 @@ counts <- do.call(rbind, lapply(tables, function(t) {
 counts
 ```
 
+# Ingest Recap
+
+Most recent ingest run per source (`Ingest_Run_Log`) -- a quick way to
+confirm every expected source actually ran this pipeline execution, and
+roughly how much it inserted.
+
+```{r}
+tryCatch({
+  dbGetQuery(con, "
+    SELECT data_source, MAX(timestamp) AS last_run,
+           SUM(locations_inserted) AS locations,
+           SUM(events_inserted) AS events,
+           SUM(samples_inserted) AS samples,
+           SUM(measurements_inserted) AS measurements
+    FROM Ingest_Run_Log
+    GROUP BY data_source
+    ORDER BY last_run DESC
+  ")
+}, error = function(e) cat("Ingest_Run_Log not available:", conditionMessage(e)))
+```
+
+# QC Issues Summary
+
+Counts from `QC_Issues` (populated by `run_qc_checks()` /
+`scripts/qc/qc_data_integrity_checks.R`), broken down by type and
+severity -- a genuine pass/fail signal, not exploratory. See
+`qc_reports/*.csv` and `docs/data/qc_summary.csv` for the full,
+record-level detail behind each count.
+
+```{r}
+tryCatch({
+  qc_summary <- dbGetQuery(con, "
+    SELECT issue_type, severity, COUNT(*) AS n
+    FROM QC_Issues
+    GROUP BY issue_type, severity
+    ORDER BY n DESC
+  ")
+  if (nrow(qc_summary) == 0) {
+    cat("No QC_Issues rows -- either QC has not run yet, or nothing was flagged.")
+  } else {
+    qc_summary
+  }
+}, error = function(e) cat("QC_Issues not available:", conditionMessage(e)))
+```
+
+```{r}
+tryCatch({
+  worst <- dbGetQuery(con, "
+    SELECT table_name, issue_type, severity, COUNT(*) AS n
+    FROM QC_Issues
+    WHERE severity = 'ERROR'
+    GROUP BY table_name, issue_type, severity
+    ORDER BY n DESC
+    LIMIT 10
+  ")
+  if (nrow(worst) > 0) {
+    cat("Top ERROR-severity issue types:\n")
+    worst
+  } else {
+    cat("No ERROR-severity QC issues.")
+  }
+}, error = function(e) NULL)
+```
+
+# PHREEQC Run Failures
+
+Samples that failed to converge with every thermodynamic database tried
+(`PHREEQC_Run_Failures`) -- should normally be empty or very small; a
+growing count here is worth investigating in
+`notebooks/06_phreeqc_geochemical_modeling.qmd`.
+
+```{r}
+tryCatch({
+  failures <- dbGetQuery(con, "SELECT sample_id, location_name, site_type, reason, logged_at FROM PHREEQC_Run_Failures ORDER BY logged_at DESC")
+  if (nrow(failures) == 0) {
+    cat("No PHREEQC_Run_Failures rows.")
+  } else {
+    failures
+  }
+}, error = function(e) cat("PHREEQC_Run_Failures not available:", conditionMessage(e)))
+```
+
 # Data Availability
 
 Which sources have data, and over what time period -- see
-`scripts/analysis/data_availability.R`.
+`scripts/analysis/data_availability.R`. Fuller well/facility-network
+detail (production -> port -> injection routing, wells by role) lives in
+`notebooks/05_data_inventory_and_well_network.qmd`, not here, to avoid
+maintaining the same summary in two places.
 
 ```{r}
 avail_path <- here::here("data", "derived", "data_availability", "data_availability.csv")
@@ -75,82 +170,6 @@ if (file.exists(avail_path)) {
 ```{r, out.width="100%"}
 avail_plot <- here::here("output", "figures", "data_availability_timeline.png")
 if (file.exists(avail_plot)) knitr::include_graphics(avail_plot)
-```
-
-# Well & Facility Flow Network Summary
-
-Production well -> port -> injection well routing (see README's "Well &
-Facility Flow Network" section for the schema/provenance behind this).
-
-```{r}
-tryCatch({
-  wells_by_role <- dbGetQuery(con, "SELECT well_role, COUNT(*) n FROM Wells GROUP BY well_role ORDER BY n DESC")
-  wells_by_role
-}, error = function(e) cat("Wells.well_role not available:", conditionMessage(e)))
-```
-
-```{r}
-tryCatch({
-  dbGetQuery(con, "
-    SELECT sp.port_name, COUNT(*) n_production_wells
-    FROM Production_Port_Links ppl JOIN Sampling_Ports sp ON ppl.port_id = sp.port_id
-    GROUP BY sp.port_name ORDER BY n_production_wells DESC
-  ")
-}, error = function(e) cat("Production_Port_Links not available:", conditionMessage(e)))
-```
-
-
-```{r}
-grad <- dbGetQuery(con, "SELECT * FROM Hydraulic_Gradients")
-
-head(grad)
-```
-
-```{r}
-summary(grad$gradient)
-```
-
-```{r}
-library(ggplot2)
-
-ggplot(grad, aes(x = gradient)) +
-  geom_histogram(bins = 50) +
-  theme_minimal()
-```
-
-```{r}
-table(grad$gradient_class)
-```
-
-```{r}
-sum(is.na(grad$gradient))
-```
-
-```{r}
-subset(grad, abs(grad$gradient) > 0.05)[1:10, ]
-```
-
-```{r}
-summary(grad$distance_m)
-```
-
-```{r}
-temp <- dbGetQuery(con, "
-  SELECT temperature FROM Temperature_Observations
-")
-
-summary(temp$temperature)
-```
-
-```{r}
-library(sf)
-
-grad_sf <- st_read(
-  here::here("output", "geopackage", "hydro_data.gpkg"),
-  layer = "hydraulic_gradients"
-)
-
-plot(st_geometry(grad_sf))
 ```
 
 ```{r}

@@ -2085,6 +2085,255 @@ Investigated the single remaining `PHREEQC_Run_Failures` row from Session
   case the aggregate fallback happened to get right by coincidence.
 - Committed and pushed (`cadbd9d`).
 
+## Session 19 updates (2026-09-06, continued): gas geothermometry/mixing, PHREEQC pipeline UX overhaul, well-log OCR progress bar, Mariner & Janik location matching
+
+- **New gas modules** (`scripts/phreeqc/13_gas_geothermometry.R`,
+  `14_gas_mixing.R`), same "hold off on Fischer schema, build the
+  capability now" direction as the prior turn: D'Amore & Panichi (1980)
+  multicomponent CO2-H2-H2S-CH4 gas geothermometer, cross-validated to
+  within 0.3C against real published Mariner & Janik (1995) Table 2
+  values for well 23-5 across all four sampling dates -- this caught a
+  real formula-transcription risk (several secondary sources give the
+  alpha term's H2 coefficient as 1; only coefficient 6, per Powell 2000,
+  reproduces the real published temperatures). Forward/inverse
+  two-end-member gas mixing (conservative N2/Ar ratio, mirroring
+  Mariner & Janik's own Fig. 9 diagram) also built; its self-test caught
+  a genuine math bug (a ratio of two linearly-mixing quantities is
+  hyperbolic, not linear, in the mixing fraction -- reusing the water-Cl
+  model's linear inversion formula directly on a ratio recovered 0.10
+  instead of the true 0.85) before it could reach real use. Neither
+  module creates a database table or is wired into `run_pipeline.R`.
+- **Fixed a latent PHREEQC ambiguity bug**: `lab_analyte_map.R`'s SO4
+  row had `phreeqc_name = "S"` (bare, unqualified) -- fine alone, but
+  ambiguous the instant a second sulfur species (e.g. dissolved
+  sulfide, `"S(-2)"`) is also specified in the same SOLUTION block;
+  confirmed via a real PHREEQC error ("Analytical data entered twice
+  for HS-") while building the multi-gas GAS_PHASE test. Fixed to
+  explicit `"S(6)"` -- confirmed behaviorally identical for every
+  existing SO4-bearing sample (no sulfide analyte exists in this
+  project yet).
+- **`run_pipeline.R` console-UX overhaul** (user-requested: "run timers
+  and better subsection text... clear error messaging and warnings"):
+  - New `section_banner()` helper replaces the repeated 3-line
+    `message("\n===...")`/`message(" TITLE")`/`message("===...")` blocks
+    throughout the file (13 call sites).
+  - `PIPELINE_START_TIME`/`.STAGE_LOG`/`.log_stage()` accumulate every
+    stage's name, elapsed seconds, and status (OK/FAILED/SKIPPED); a new
+    **PIPELINE SUMMARY** section at the end prints the full table plus
+    total runtime and a recap of any failed stages.
+  - `run_step()` (ingest) and `run_analysis_step()` (derived analysis)
+    both now use `withCallingHandlers()` to catch warnings (printed as
+    `[WARNING] <name>: ...`, muffled from the default R warning
+    printer) and `tryCatch()` to catch errors (printed as `[ERROR]
+    <name> failed: ...`) -- **and the pipeline now continues** to the
+    next step instead of hard-stopping on a single ingest/analysis
+    failure (a deliberate behavior change, consistent with how
+    per-file loops elsewhere in this project already tolerate
+    individual failures; failures are never silent, just non-fatal).
+  - **Real pre-existing bug found and fixed while doing this**: the
+    `run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {...})` call was
+    left nested *inside* `run_step(RUN_INGEST$well_network, ...)`'s
+    block (a missing closing brace) -- well-log ingestion only ever ran
+    when `RUN_INGEST$well_network` was `TRUE`, regardless of its own
+    flag. Now properly independent.
+- **PHREEQC stage made user-friendly** (user-requested: "make sure all
+  phreeqc options are user friendly and ran from run_pipeline and auto
+  if data becomes available redoes all and checks or just does certain
+  updates by user toggle"):
+  - New `PHREEQC_Pipeline_State` table (one row) + `should_rerun_phreeqc()`
+    / `record_phreeqc_run_state()` (`scripts/phreeqc/run_phreeqc_analysis.R`):
+    compares the current PHREEQC-eligible sample count/max sample_id
+    against what was recorded last run; `run_pipeline.R`'s PHREEQC
+    section only re-speciates when something actually changed (or
+    `RUN_ANALYSIS$phreeqc_force_rerun = TRUE`), printing exactly why it
+    ran or skipped. **Real bug found while wiring this up**:
+    `get_phreeqc_eligible(con)` returns `list(eligible=, rejected=)`,
+    not a bare data frame -- `should_rerun_phreeqc()`'s first draft
+    treated it as one directly and crashed with "argument is of length
+    zero"; fixed to `$eligible`.
+  - `RUN_ANALYSIS$phreeqc_mixing`/`_inverse`/`_gas_phase` (each default
+    `FALSE`) toggle three new CSV-config-driven runners
+    (`run_phreeqc_mixing_from_config()`/`_inverse_from_config()`/
+    `_gas_phase_from_config()`) that read
+    `data/raw/phreeqc/{mixing,inverse,gas_phase}_config.csv`
+    (auto-created, header-only, on first use) and run every row with
+    `enabled=TRUE` -- a user adds/toggles a row in a plain CSV instead
+    of editing R code to run a real mixing/inverse/gas-phase model.
+    Still never guesses end-member `sample_id`s (a human fills them
+    into the CSV), consistent with this project's standing rule.
+- **Progress bar for well-log OCR** (user-requested, "could use a
+  loading bar"): `ingest_well_logs.R`'s per-PDF loop now uses a base-R
+  `utils::txtProgressBar` plus a per-file elapsed-time message --
+  previously silent for the 10-60+ seconds/file OCR pass, which looked
+  hung on a batch of a dozen scans.
+- **Verified end-to-end**, twice, against a fresh DEMO rebuild: once
+  exercising the real WELL LOG PDFs OCR + progress-bar path (12
+  documents, 749.2 sec, all warnings/timing displayed correctly), and
+  once (with `well_logs = FALSE` to skip the slow OCR re-run) exercising
+  the new PHREEQC auto-rerun logic end-to-end (ran once, correctly
+  recorded state) plus all three CSV-config toggles (created templates,
+  ran cleanly with 0 enabled rows) and the full PIPELINE SUMMARY table
+  -- zero stage failures in either run.
+- **Notebook updated**: `notebooks/06_phreeqc_geochemical_modeling.qmd`
+  gained a new "Gas geothermometry and gas mixing" section (the D'Amore-
+  Panichi validation, the ratio-mixing bug story, both self-tests run
+  live) and a changelog row; re-rendered successfully.
+- **Website updated**: `website/results.Rmd`'s PHREEQC callout box
+  updated with current real numbers (233 eligible samples -- was stale
+  at "a handful"/8) and a mention of the new gas-geothermometry
+  direction; `website/references.Rmd`'s Mariner & Janik citation
+  upgraded from "under review, not independently verified" to a full,
+  verified citation (read directly from the PDF this session and last).
+  Rebuilt via `build_website()` (the literature-folder-backup-protected
+  wrapper, not a bare `render_site()` call) -- `docs/literature/`
+  confirmed intact afterward (33 files, including `Dhakal.pdf`, despite
+  one harmless "Permission denied" warning on the restore-copy step for
+  a file that was already present and unchanged). `docs/data/qc_summary.csv`
+  (a known, previously-flagged gap -- not part of
+  `export_website_data_files()`) got swept by `render_site()`'s cleanup
+  as expected; restored via `git checkout` rather than expanding scope
+  to fix the underlying gap this session.
+- **Mariner & Janik (1995) site-name matching against this project's
+  own database** (user asked "do we know the locations... for me to
+  find"), read from the paper's Table 1/Table 2 site list, checked
+  against `Wells`/`Locations`/`Well_Aliases`:
+  - **Already resolved with real coordinates**: `23-5` (well_id 96,
+    NBMG-sourced), `21-5` (as `21-5R`, well_id 94, no coordinate yet),
+    `13-5` (as `13-5R`, well_id 93, no coordinate yet), `PW-1`/`PW-2`/
+    `PW-3` (well_ids 79-81, no coordinates yet), `IW-3` (well_id 103, no
+    coordinate), `IW-5` (a confirmed alias to canonical `46-28`, which
+    does have a coordinate), `Curti` (both "Curti Domestic Well" and
+    "Curti Barn Well," Klein-sourced, 39.39436/-119.7396), `Herz`
+    ("Herz Domestic Well," Klein-sourced, 39.40547/-119.7533),
+    `Galena Ck.` (a *different* thing than expected -- the only DB match
+    is "GALENA CREEK PARK," an NDWR-sourced well ~4 km SW of the field
+    near the Mt. Rose Highway area, almost certainly not Mariner &
+    Janik's creek-sampling point; flagged as a coincidental name match,
+    not a real identity), `Thomas Ck.` (three real Thomas/Whites Creek
+    monitoring locations exist, `SB10`/`STBT03Thomas-4`/`STBT03Whites-2`
+    -- plausible candidates, not confirmed which if any is Mariner &
+    Janik's specific site), `Zolezzi` (both "North Fork Whites Creek @
+    West Zolezzi Lane" and "Zolezzi Well," neither confirmed as their
+    specific "Zolezzi Spr"), `DeMonte` (as "DiMonte Well," Klein-sourced,
+    confirming Klein's spelling variant per earlier sessions),
+    `STMGID` (four real NDWR-sourced MW1/MW3/MW10/11-MWA wells exist,
+    but none confirmed as specifically Mariner & Janik's "Stmgid4").
+  - **Not found in this database at all**: `83A-6`/`83-A6`, `COX-1`/
+    `COX1-1`, `GS-5`, `PW2-1` through `PW2-5`, `PW3-1` through `PW3-4`
+    (none of the real SB2/SB3-side wells confirmed in Session 7 have
+    "PW2-x"/"PW3-x" as their literal `Wells.well_name` -- worth
+    double-checking exact naming), `Stuart`, `Brown's School`,
+    `Steinhardt`, `Peigh`, `Tick Spr.`, `Jumbo Gr. S.`, `Tahoe Mdw.`,
+    `Third Ck. Spr.` -- consistent with several of these already being
+    flagged unresolved in earlier sessions (Steinhardt, Peigh, Brown
+    School, STMGID #3/#4 all appear in the Session 4 "still unresolved"
+    list).
+  - Not written anywhere (read-only lookup only, per the user's
+    question) -- no new `Locations`/`Wells` rows created or coordinates
+    guessed from this matching pass.
+- **Committed and pushed** to `origin/main` (commit `7f0c318`,
+  `tylerirvin543/Steamboat_Creek_Geochemistry_Database`) -- covers all
+  of the above except the Mariner & Janik lookup itself (read-only,
+  nothing to commit).
+
+## Session 20 updates (2026-09-06, continued): PW2-x/PW3-x well aliases + provisional wells, pipeline_report refactor, annotated bibliography
+
+Three independent, user-approved (via Plan mode) pieces of follow-up
+work from the prior turn's Mariner & Janik location lookup and
+console-UX session.
+
+- **PW2-x/PW3-x naming mismatch resolved via aliases, not renames.**
+  Confirmed directly against `geochem_operational.sqlite`: this
+  project's `Wells.well_name` values for these wells (`PW 2-1`,
+  `PW 2-3`, `PW 2-5`, `PW 3-1..4`) use a space, sourced from the
+  ArcGIS satellite-overlay digitization (Session 7); Mariner & Janik
+  (1995) print them with no space (`PW2-1`, etc.) -- confirmed by
+  reading the paper's own text, which is why last turn's plain-text
+  name search reported them as "not found." Added 7 new
+  `Well_Aliases` rows (`data/raw/wells/well_aliases.csv`,
+  `alias_type='other'`) mapping the no-space spelling to each
+  canonical well, applied via `register_well_network(con)` against the
+  real database (verified: 7 aliases registered, matching well_ids).
+  **`PW2-2` and `PW2-4` specifically are a genuine gap, not a naming
+  artifact** -- Mariner & Janik's Table 1/Fig. 3 list them as part of
+  the same historical PW2-x/PW3-x group, but neither appears in
+  Dhakal et al. (2025)'s current flow diagram, and neither has ever
+  been digitized/coordinate-matched. **Per explicit user instruction**,
+  added them as provisional `Wells` rows (well_role/port_name
+  intentionally blank -> defaults to `'unknown'`, no coordinate) via
+  `data/raw/wells/dhakal_well_network.csv`, so they're tracked as
+  known-but-unlocated rather than only living in prose -- mirrors the
+  `register_provisional_well_logs()` philosophy from the well-log
+  workstream. Applied directly to the real database (well_ids 119,
+  120); no scratch-copy verification needed since it's a pure additive
+  insert via an idempotent, already-tested registration path.
+- **`scripts/pipeline_report.Rmd` refactored from a mixed QC/science
+  grab-bag into a lean "Pipeline QC & Status Report."** Removed: the
+  "Well & Facility Flow Network Summary" section (now redundant with
+  `notebooks/05_data_inventory_and_well_network.qmd`, which covers the
+  same ground in more depth) and the ad hoc exploratory chunks
+  (gradient histogram, `table(grad$gradient_class)`, raw
+  `summary(grad$distance_m)`/temperature summaries, and an `sf`-based
+  GeoPackage plot that re-read a multi-hundred-MB layer on every single
+  pipeline run for no decision-relevant payoff). Added: a genuine
+  `QC_Issues` summary (counts by `issue_type` x `severity`, top-10
+  ERROR-severity issue types) and a `PHREEQC_Run_Failures` listing --
+  neither had been surfaced in this report at all despite both tables
+  existing and being populated every run. Retitled from "Pipeline Run
+  Report" to "Pipeline QC & Status Report" to match its actual, now
+  more honest scope; added an explicit pointer to the notebooks/website
+  for anyone looking for interpretation rather than status. Verified by
+  rendering directly against the real `geochem_operational.sqlite`
+  (temporary output file, deleted after confirming it rendered cleanly).
+- **New annotated bibliography**: `docs/literature/annotated_bibliography.qmd`
+  (renders to both `.docx` -- the primary format, easiest to paste into
+  an actual thesis document -- and `.html`; both outputs and the
+  source `.qmd` are gitignored along with the rest of `docs/literature/`,
+  consistent with this project's "cite, don't rehost" policy and this
+  being a personal working thesis tool rather than a pipeline
+  artifact). Covers all 30 unique documents then in `docs/literature/`
+  (33 files minus 3 confirmed byte-identical duplicates, verified via
+  `md5sum` before writing a single entry twice: `Geochem Data and
+  concept model Mariner & Janik 1995.pdf` = `Marine_Janik_1995_...pdf`;
+  `Sorey and Speilman 2008.pdf` = `Sorey_Spielman_2008_...pdf`;
+  `Klein_Johnson_Spielman_2007_...pdf` = `Klein_etal2007_SteamboatMonitoring.pdf`),
+  organized thematically (Steamboat aqueous/gas geochemistry;
+  reservoir engineering/well history/monitoring; structural
+  geology/geophysics; the 2025-2026 eruption literature; regional/
+  Yellowstone comparative-methodology analogs; historical USGS
+  characterization; non-NDEP-authored Steamboat Creek water quality),
+  with every annotation written from each document's own extracted
+  title/abstract/intro text (`pdftotext -layout`), not a secondary
+  summary. **Excluded, per the explicit "not including NDEP documents"**
+  instruction: `ACR_2024.pdf` (a statewide NDEP drinking-water
+  compliance report, not Steamboat-specific) and the three 2020 NDEP
+  Source Water Protection Program HUC-12 watershed profiles (Hidden
+  Valley, Steamboat Valley, Thomas Creek) -- all four are NDEP-authored
+  documents, a different (narrower) criterion than this project's usual
+  ingestion-pipeline sense of "NDEP documents" (the PRR/UIC compliance
+  PDFs under `data/raw/ndep/PRR/`, which were never in
+  `docs/literature/` to begin with). This exclusion boundary is
+  explicitly flagged in the bibliography's own text in case a future
+  pass wants it narrowed. Also found and flagged two real, non-obvious
+  facts while reading: `Lindsey_etal_2016_GeyserE_renewedA_steamboat.pdf`
+  is filed under a "2016" filename but the paper itself (SGP-TR-230,
+  51st Stanford GRC Workshop) is dated February 2026 and is entirely
+  about the June 2025 eruption -- the filename year is wrong, not the
+  content; and `Newman_2026_SC_paper.pdf`'s "Steamboat Springs" is in
+  **Colorado**, a completely different geothermal system from Steamboat
+  Hills, Nevada -- included as a methodological analog only, with an
+  explicit warning against citing it as if it describes the Nevada
+  system (this had been cited in `references.Rmd` previously without
+  this distinction being surfaced).
+- **Also found and deleted**: `docs/literature/nul`, a stray ~638 MB
+  file (Windows's reserved `nul` device name, almost certainly created
+  by an earlier `> nul` shell redirect run outside `cmd.exe`) -- not a
+  literature document, removed as part of this pass.
+- **Committed and pushed** to `origin/main`: the well-alias/provisional-well
+  CSV changes and the `pipeline_report.Rmd` refactor. The annotated
+  bibliography and its rendered outputs are intentionally NOT
+  committed (gitignored, per the reasoning above).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
