@@ -2847,6 +2847,69 @@ end-to-end verification pass (database -> website -> GeoPackage).
   session's scope); DEMO database not rebuilt with any of this session's
   changes.
 
+## Session 26 updates (2026-09-12, continued): temperature_timeseries view/GeoPackage-layer bug fixed at the root
+
+Investigated the `temperature_timeseries` GeoPackage geometry gap
+flagged as "pre-existing, not fixed" at the end of Session 25.
+
+- **Root cause confirmed**: two different files each defined a view
+  named `vw_temperature_timeseries` with **incompatible columns** --
+  `create_analysis_views.R`'s had `logger_id` (required by
+  `build_analysis_products.R`'s `build_thermal_summary()`, which groups
+  by it) but no geometry; `create_gis_views.R`'s had `geom_wkt` but no
+  `logger_id`. Whichever `CREATE VIEW` ran last simply won, silently,
+  with no error -- purely a function-call-order dependency in
+  `run_pipeline.R` (`create_analysis_views(con)` at line ~565, then
+  `create_gis_views(con)` at line ~911, so a full pipeline run is fine,
+  but any manual/partial re-run that calls only one of the two --
+  exactly what Session 25's interactive verification did when it called
+  `create_analysis_views(con)` alone to refresh `vw_wells_gis` --
+  silently leaves the database in the "wrong" state for GIS export).
+- **A second, independent, previously-unnoticed bug found in the same
+  investigation**: the GIS version's `timestamp` column was never
+  converted from the raw storage format at all (`Temperature_
+  Observations.timestamp` is stored as Unix-epoch-seconds text) -- so
+  even when the "GIS" version *did* win, its exported timestamps would
+  have been raw epoch numbers, not real dates. This had never been
+  caught before because nobody had compared the two definitions' output
+  side by side.
+- **Fixed by unifying into one definition** (in `create_analysis_views.R`,
+  the file that runs first): `vw_temperature_timeseries` now carries
+  `logger_id`, `location_id`, `coord_key`, `location` (name), `latitude`,
+  `longitude`, a correctly-converted `timestamp`, `temperature`, AND a
+  `geom_wkt` (NULL when the logger's location has no coordinate) all at
+  once -- both consumers' needs met by the same view, so no caller can
+  leave the database in a half-updated state again.
+  `create_gis_views.R`'s competing definition (and its `DROP VIEW`) was
+  removed entirely, with a comment explaining why, rather than just
+  re-flagging the fragility again for a future session to rediscover.
+- **A third, real bug surfaced immediately by testing the fix**:
+  ~11,000 of ~205,000 rows have no matching `Locations` coordinate (a
+  logger with no location, or a location missing lat/lon) and get
+  `geom_wkt = NULL` -- `sf::st_as_sf(..., wkt = "geom_wkt")` fails
+  **outright for the entire layer** the moment even one row has a NULL
+  WKT string, not just those rows. Fixed in `export_geopackage.R` by
+  filtering the export query itself (`WHERE geom_wkt IS NOT NULL`),
+  consistent with how `vw_wells_gis`/`vw_locations_gis` already filter
+  to coordinate-having rows -- the underlying analysis view stays
+  unfiltered (broader) since `build_thermal_summary()` etc. want every
+  row regardless of geometry.
+- **Verified end-to-end against the real `geochem_operational.sqlite`**
+  (no separate backup needed -- pure view/query logic, no data
+  mutation): rebuilt both view-functions in the correct order,
+  confirmed `build_thermal_summary()` and `build_temp_gradient_links()`
+  (the two real consumers) both still work correctly against the
+  unified view, then re-ran `export_geopackage()` -- `temperature_
+  timeseries` now exports 193,656 real point features with `logger_id`,
+  a correctly-converted `timestamp`, and real `POINT(...)` geometry all
+  together, confirmed by reading the layer back out of the `.gpkg` file
+  directly. Final `run_qc_checks()` pass clean (0 PHREEQC failures, 0
+  logger outliers).
+- **Not done this session**: DEMO database not rebuilt with this fix;
+  this session's three files (`scripts/analysis/create_analysis_views.R`,
+  `scripts/ingest/create_gis_views.R`, `scripts/ingest/export_geopackage.R`)
+  not yet committed/pushed to git.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

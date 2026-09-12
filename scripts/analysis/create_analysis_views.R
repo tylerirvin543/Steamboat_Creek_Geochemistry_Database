@@ -133,19 +133,39 @@ WHERE hydraulic_head IS NOT NULL
   # -------------------------------------------------
   message("\n[TEMPERATURE]")
   
+  # 2026-09-12 (session 26): unified with what used to be a second,
+  # incompatible definition in scripts/ingest/create_gis_views.R --
+  # that GIS-only version had no logger_id (needed by
+  # build_analysis_products.R's build_thermal_summary(), which groups
+  # by it) and, worse, never converted the stored Unix-epoch timestamp
+  # at all (a real, independent bug, only now noticed while
+  # investigating why this view kept losing its geometry -- whichever
+  # definition ran last simply won, silently, with no error). This
+  # single definition now carries every column either consumer needs
+  # (logger_id + geom_wkt together), so no caller can leave the
+  # database in a half-updated state by only calling one of the two
+  # view-building functions.
   dbExecute(con, "
 CREATE VIEW vw_temperature_timeseries AS
 SELECT
   t.logger_id,
-  l.location_id,
+  tl.location_id,
+  loc.coord_key,
+  loc.name AS location,
+  loc.latitude,
+  loc.longitude,
   datetime(t.timestamp, 'unixepoch') AS timestamp,
-  t.temperature
+  t.temperature,
+  CASE WHEN loc.latitude IS NOT NULL AND loc.longitude IS NOT NULL
+       THEN 'POINT(' || loc.longitude || ' ' || loc.latitude || ')' END AS geom_wkt
 FROM Temperature_Observations t
-JOIN Temperature_Loggers l
-  ON t.logger_id = l.logger_id
+JOIN Temperature_Loggers tl
+  ON t.logger_id = tl.logger_id
+LEFT JOIN Locations loc
+  ON tl.location_id = loc.location_id
 WHERE t.temperature IS NOT NULL
 ")
-  
+
   message("✅ Temperature ready")
   
   # -------------------------------------------------

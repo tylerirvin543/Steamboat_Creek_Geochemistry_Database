@@ -102,7 +102,12 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # -------------------------
     # THERMAL SYSTEM
     # -------------------------
-    temperature_timeseries = "SELECT * FROM vw_temperature_timeseries",
+    # WHERE geom_wkt IS NOT NULL (session 26 fix): ~11K of ~205K rows
+    # have no matching Locations coordinate (a logger with no location,
+    # or a location missing lat/lon) and get geom_wkt = NULL, which
+    # broke st_as_sf() for the WHOLE layer, not just those rows -- a
+    # single NA WKT value makes sf::st_as_sf(..., wkt = ) fail outright.
+    temperature_timeseries = "SELECT * FROM vw_temperature_timeseries WHERE geom_wkt IS NOT NULL",
     
     # -------------------------
     # GEOCHEMISTRY (CURATED)
