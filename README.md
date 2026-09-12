@@ -678,7 +678,7 @@ source types (each with its own idempotent ingest script, wired into
 | Field photos (for EXIF GPS location extraction) | `data/raw/images/image_drop/*` (+ a human-maintained `data/raw/images/image_location_map.csv`) | `ingest_image_locations.R` |
 | NDEP Public Records Request documents | `data/raw/ndep/PRR/PPR_<date>/*.pdf` (new request = new dated sibling folder, never overwrite) | `ingest_ndep_prr.R` (pilot; stages to `Staging_NDEP_WQ` for review, does not write directly to core tables) |
 | Conductivity/EC loggers (HOBO/Onset) | `data/raw/conductivity/` (+ `conductivity_logger_deployments.csv`) | `ingest_conductivity.R` |
-| NDWR "Well Driller's Report" PDFs (any future batch) | any directory of these PDFs, e.g. `data/raw/ndwr/Ormat_well_logs/` | `ingest_well_logs.R` (OCR + NDWR log-number cross-reference; see "Well & Facility Flow Network" below) |
+| NDWR "Well Driller's Report" PDFs (any future batch) | any directory of these PDFs, e.g. `data/raw/ndwr/Ormat_well_logs/` -- see that folder's own `README.md` for the download/naming workflow | `ingest_well_logs.R` (OCR + NDWR log-number cross-reference + BLM PLSS lookup; see "Well & Facility Flow Network" below) |
 | Human-curated well/port network assignments (from a flow diagram like Dhakal et al. 2025 Fig. 5) | `data/raw/wells/dhakal_well_network.csv`, `well_aliases.csv` | `register_well_network.R` |
 | Well coordinates from an external source (NBMG, ArcGIS digitization, etc.) | `data/raw/wells/*_coordinates*.csv` | `register_well_coordinates.R` |
 | ArcGIS-digitized point/polygon layers (satellite-overlay wells, facility footprints) | `data/raw/arcgis/*.shp` | `register_facility_areas.R` |
@@ -809,6 +809,21 @@ observation/production wells) were added as provisional `Wells` rows,
 and `14-33` was added to the network CSV (Middle Steamboat / Galena 3,
 matching sibling `14A-33`) once Dhakal et al. (2025)'s Table 1 confirmed
 them as two distinct, separately-classified wells.
+
+**Adding new NDWR well-log PDFs:** drop new "Well Driller's Report"
+scans into `data/raw/ndwr/Ormat_well_logs/` (or a sibling folder) and
+re-run the pipeline -- `ingest_well_logs.R` picks up any new file
+automatically, idempotent on file content, so re-running after adding
+more logs never redoes work already done. Full instructions (where to
+download logs from NDWR's public tools, the filename convention the
+pipeline expects, and what gets extracted/tracked) live in
+`data/raw/ndwr/Ormat_well_logs/README.md`. As of 2026-09-12, a fourth
+lat/lon fallback (a BLM Public Land Survey System lookup from
+Section/Township/Range) and structured `work_type`/`proposed_use`/
+diameter extraction were added, plus a `Well_Work_Events` table so a
+well's status history (new -> deepened -> abandoned) is tracked over
+time rather than overwritten -- see `AGENTS.md` session 24 for the
+full change list.
 
 
 

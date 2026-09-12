@@ -506,7 +506,7 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # full drillers-report detail. Idempotent on (file_path, file_hash).
   # See scripts/ingest/ingest_well_logs.R.
   source("scripts/ingest/ingest_well_logs.R")
-  ingest_well_logs(con)
+  ingest_well_logs(con, source_batch = "NDWR ArcGIS public well-log export, 2026-09-12")
   # Promotion to Wells/Water_Level_Observations requires a human-
   # confirmed log_number -> well_name mapping (identity is NOT
   # guessed from an NDWR cross-references bare "ORMAT" owner name) --
@@ -520,6 +520,14 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # each a provisional Wells row so it's visible/mappable while staying
   # unambiguous that it isn't a confirmed identity match.
   register_provisional_well_logs(con)
+  # Repeatable spatial-match QC report (session 24): for every
+  # well-log document with a coordinate, lists the nearest existing
+  # Wells/Locations row and its distance -- replaces a one-off
+  # conversation-driven nearest-candidate pass with a standing,
+  # regenerable artifact a human can review before adding entries to
+  # well_log_document_map.csv. Never auto-matches.
+  source("scripts/qc/qc_well_log_matches.R")
+  qc_well_log_matches(con)
 })
 
 run_step(RUN_INGEST$ndom_wells, "NDOM WELL-PERMIT DATA", {

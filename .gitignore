@@ -25,6 +25,15 @@ data/raw/
 docs/data/raw/
 website/data/raw/
 website/data_files/
+# Explicitly called out (already covered by the blanket data/raw/ rule
+# above, but named here for clarity): NDWR "Well Driller's Report" PDFs
+# downloaded from https://tools.water.nv.gov/WellLogQuery.aspx and
+# https://webgis.water.nv.gov/ live in data/raw/ndwr/Ormat_well_logs/
+# (or any sibling well-log batch folder) and are large, public-record
+# scans that don't belong in git -- see
+# data/raw/ndwr/Ormat_well_logs/README.md for the download/drop-in
+# workflow.
+data/raw/ndwr/Ormat_well_logs/*.pdf
 
 # Excel + temp artifacts
 *.xlsx

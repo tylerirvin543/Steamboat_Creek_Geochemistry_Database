@@ -2591,6 +2591,139 @@ Meadows basin, back to 2017).
   rows in the raw file were left as-is (stored/skipped respectively, not
   investigated further -- see `ingest_ndwr_stream_flow.R`'s warnings).
 
+## Session 24 updates (2026-09-12, continued): large NDWR/ArcGIS well-log batch, PLSS lat/lon fallback, work-history tracking
+
+User added ~100 new well-log PDFs (64 log numbers total, most with a
+second "(2)" reformatted/streamlined scan) to `data/raw/ndwr/
+Ormat_well_logs/`, sourced from NDWR's public ArcGIS well-log
+database. Extended the existing well-log pipeline (built in Sessions
+9-11) rather than replacing it.
+
+- **Confirmed before writing any code**: both the original scans and
+  the new "(2)" scans are image-only (checked with `pdftotext` directly
+  on several examples) -- no shortcut around OCR for either variant.
+  Also found 3 exact-duplicate re-downloads (` (1).pdf` suffix, same
+  byte size/content as an existing file).
+- **New extraction fields** (`scripts/ingest/helpers/parse_well_log_pdf.R`):
+  Section/Township/Range (raw text, always attempted independent of
+  lat/lon status), `work_type` (new/deepening/abandonment/
+  reconstruction/repair/change_of_use, first-match-wins keyword
+  search), `proposed_use` (domestic/monitor/geothermal/industrial/
+  irrigation/municipal/stock/test), `hole_diameter_in`/
+  `casing_diameter_in`.
+- **New lat/lon fallback level 4**: `.convert_plss_to_latlon()` queries
+  BLM's public PLSS CadNSDI ArcGIS REST service
+  (`https://gis.blm.gov/arcgis/rest/services/Cadastral/
+  BLM_Natl_PLSS_CadNSDI/MapServer`) -- Township layer (id=1) by
+  state/township/range to get a `PLSSID`, then the Section layer
+  (id=2) by `PLSSID`+section number for the polygon, centroid taken as
+  the coordinate. Confirmed reachable and correct before relying on
+  it: queried Section 2, T17N R19E and confirmed the returned polygon
+  geometrically contains the independently-known real coordinate of
+  the Shonnard well. `coordinate_uncertainty_m = 800` (bare section
+  resolution) when used. Used on 3 of 52 newly-processed documents.
+- **"(2)" alternate scans tracked on the SAME `Well_Log_Documents` row**
+  (new `alt_file_path`/`alt_file_hash`/`alt_has_text_layer` columns),
+  not as separate documents. Fields merge primary-then-alt, with one
+  deliberate exception found via real testing: **lat/lon merges by
+  confidence rank, not primary-first** -- logs `48594` and `126301`'s
+  primary scan produced a low-confidence `unlabeled_scan` guess wildly
+  outside Nevada/the Steamboat area, while their `(2)` alt scan had a
+  properly `labeled_field` reading; a naive "primary always wins"
+  merge would have kept the wrong one. Fixed by ranking lat/lon
+  specifically (`labeled_field` > `utm_conversion` > `unlabeled_scan`
+  > `plss_section_centroid`) and picking whichever source ranks
+  better, flagging when the alt source won. Any other field
+  (well_name, county, depths, etc.) still merges primary-first with a
+  flag on disagreement, since there's no equivalent confidence
+  ordering for those.
+- **Exact-duplicate re-downloads deduplicated by content hash across
+  ALL existing documents** (not just same file path), so a
+  `"<log> (1).pdf"` re-download of an already-ingested file is
+  recognized and skipped without re-running OCR -- confirmed working
+  on a real case (`27732 (1).pdf` matched the already-ingested
+  original `27732.pdf` from session 9/10, correctly skipped).
+- **Real, pre-existing bug fixed**: `promote_well_log_documents()` and
+  `register_provisional_well_logs()` both checked
+  `WHERE well_id = ? AND method = 'driller_report'` with no
+  `timestamp` in the check -- meaning only the FIRST driller's report
+  ever ingested for a well had its static water level stored; any
+  later report (deepening, re-permit) for the same well was silently
+  dropped. Fixed to also match `timestamp`, aligning with the table's
+  real `UNIQUE(well_id, timestamp, method)` constraint. Verified with
+  a direct synthetic-well test: two documents with different
+  completion dates for the same well now both produce their own
+  `Water_Level_Observations` row.
+- **New `Well_Work_Events` table** (`well_id`, `source_document_id`,
+  `work_type`, `proposed_use`, `event_date`, `hole_diameter_in`,
+  `casing_diameter_in`, `notes`) -- one row per promoted/registered
+  document, so a well's status history (new -> deepened -> abandoned)
+  is a real queryable time series instead of a single overwritten
+  Wells snapshot. Populated by both `promote_well_log_documents()` and
+  `register_provisional_well_logs()`. New `Wells.diameter_in` column
+  (never overwritten) backfilled from the first log that reports a
+  diameter, for a quick "is this a 1" piezometer or a full-scale
+  production well" check without joining to the event table.
+- **`Well_Lithology` populated for the first time** (schema existed
+  since session 9, nothing had ever written to it) -- best-effort
+  intervals from the primary scan's OCR text are staged at ingest time
+  with `well_id = NULL` (schema migration: `Well_Lithology.well_id`
+  was originally `NOT NULL`, rebuilt via table-recreate since SQLite
+  can't drop a NOT NULL constraint via `ALTER TABLE`) and a
+  `confidence=ocr_heuristic_unvalidated` note; still not blindly
+  trusted, same posture as every other OCR-derived field. 5 documents
+  produced staged intervals in this batch.
+- **A water-level reading tied to a `work_type` of `abandonment`** is
+  stored (not dropped) but gets an explicit `[FLAG: ...]` prefix in
+  its `Water_Level_Observations.notes`, since it may not reflect a
+  representative ambient water table.
+- **New repeatable QC report**: `scripts/qc/qc_well_log_matches.R` /
+  `qc_well_log_matches(con)` -- for every unmatched, coordinate-having
+  `Well_Log_Documents` row, writes the nearest existing `Wells` and
+  `Locations` row + distance to
+  `data/derived/well_log_match_candidates.csv` (overwritten each run,
+  never auto-matches). Replaces the earlier pattern (Sessions 10-11)
+  of a one-off conversation-driven "nearest NBMG candidate" writeup
+  per batch with a standing, regenerable artifact. Wired into
+  `run_pipeline.R` right after `register_provisional_well_logs(con)`,
+  inside the same `RUN_INGEST$well_logs` step.
+- **`ingest_well_logs(con, source_batch = ...)`** now tags every
+  document with a free-text provenance string (this batch:
+  `"NDWR ArcGIS public well-log export, 2026-09-12"`), so future
+  batches dropped into the same shared folder stay distinguishable.
+- **Applied to the real `geochem_operational.sqlite`** (backed up
+  first to `database/archive/
+  geochem_operational_pre_well_log_batch2_<timestamp>.sqlite`, and
+  verified twice against scratch copies first -- once catching the
+  `Well_Lithology.well_id NOT NULL` bug, once catching and fixing the
+  lat/lon confidence-merge bug, before the real run): 52 new documents
+  processed (11 already-ingested skipped, 1 exact-duplicate-content
+  skipped) in 6.4 minutes; 44 new provisional `Wells` rows (`Wells`
+  187 total, up from 143); 42 `Well_Work_Events` rows; 5 staged
+  `Well_Lithology` intervals; 1 new `driller_report` water-level
+  reading (OCR only reliably found this phrase once in this batch --
+  not chased further, same caveat as prior sessions' OCR-quality
+  notes); idempotent re-run confirmed (0 processed, 64 skipped).
+  `data/derived/well_log_match_candidates.csv` now has 2 rows for
+  human review (one is the long-known `146403`/Gerlach bad-longitude
+  case from session 10, unchanged; the other is a genuinely new
+  candidate from this batch).
+- **Still unresolved / not attempted this session**: no entries added
+  to `data/raw/ndwr/well_log_document_map.csv` (still empty -- none of
+  the new logs' extracted well names were confident enough to promote
+  automatically, consistent with this project's standing rule); the 7
+  documents with no coordinate at all (`146238`-`146241` --
+  Gerlach-area, consistent with prior sessions; `147782`, `7587`,
+  `7588` -- genuinely new, no PLSS parsed and no NDWR crossref match
+  either) remain staged with `well_id = NULL`; DEMO database not
+  rebuilt with this batch; this session's file changes (`database/
+  schema/07_well_logs_schema.R`, `scripts/ingest/helpers/
+  parse_well_log_pdf.R`, `scripts/ingest/ingest_well_logs.R`,
+  `scripts/qc/qc_well_log_matches.R` [new], `scripts/run_pipeline.R`)
+  not yet committed/pushed to git; the 3 exact-duplicate ` (1).pdf`
+  files and the rest of the raw batch remain untracked/gitignored like
+  other `data/raw/` sources.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

@@ -97,6 +97,67 @@ library(stringr)
 library(pdftools)
 library(sf)
 
+# ============================================================
+# PLSS (Section/Township/Range) SUPPORT (added 2026-09-12, session 24)
+#
+# Some NDWR forms leave BOTH the decimal Lat/Lon field and the UTM
+# field blank, but always carry a Section/Township/Range -- required
+# by the form. This adds a 4th, last-resort lat/lon fallback level:
+# look up the PLSS section polygon via BLM's public PLSS CadNSDI
+# ArcGIS REST service (https://gis.blm.gov/arcgis/rest/services/
+# Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer) and use its centroid.
+# Confirmed reachable from this environment and correct before
+# relying on it: queried Section 2, T17N R19E (Mount Diablo Meridian,
+# BLM's own PRINMERCD='21' for this area) and confirmed its returned
+# polygon geometrically contains the real, independently-known
+# coordinate of the Shonnard well (39.36460, -119.8199), which sits
+# in that exact section per NDWR's own site-naming convention.
+# A bare section centroid is a ~1 sq-mi resolution guess -- assigned
+# coordinate_uncertainty_m = 800 by the caller; quarter/quarter-
+# quarter detail (when legible) would tighten this but is not always
+# present on these forms, so is not assumed.
+# ============================================================
+
+#' Look up a PLSS section's centroid via BLM's public PLSS CadNSDI
+#' REST service. Returns list(latitude=, longitude=) with NA on any
+#' failure (network unavailable, no match found, etc.) -- never
+#' errors out of the wider parse.
+.convert_plss_to_latlon <- function(section, township_no, township_dir, range_no, range_dir, state = "NV") {
+  fail <- list(latitude = NA_real_, longitude = NA_real_)
+  if (any(is.na(c(section, township_no, township_dir, range_no, range_dir)))) return(fail)
+
+  base <- "https://gis.blm.gov/arcgis/rest/services/Cadastral/BLM_Natl_PLSS_CadNSDI/MapServer"
+  twn_pad <- sprintf("%03d", suppressWarnings(as.integer(township_no)))
+  rng_pad <- sprintf("%03d", suppressWarnings(as.integer(range_no)))
+  sec_pad <- sprintf("%02d", suppressWarnings(as.integer(section)))
+  if (is.na(twn_pad) || is.na(rng_pad) || is.na(sec_pad)) return(fail)
+
+  twn_where <- sprintf(
+    "STATEABBR='%s' AND TWNSHPNO='%s' AND TWNSHPDIR='%s' AND RANGENO='%s' AND RANGEDIR='%s'",
+    state, twn_pad, toupper(township_dir), rng_pad, toupper(range_dir)
+  )
+  twn_url <- paste0(base, "/1/query?where=", utils::URLencode(twn_where, reserved = TRUE),
+                     "&outFields=PLSSID&returnGeometry=false&f=json")
+
+  twn_res <- tryCatch(jsonlite::fromJSON(twn_url), error = function(e) NULL)
+  plssid <- tryCatch(twn_res$features$attributes$PLSSID[1], error = function(e) NA_character_)
+  if (is.null(plssid) || length(plssid) == 0 || is.na(plssid)) return(fail)
+
+  sec_where <- sprintf("PLSSID='%s' AND FRSTDIVNO='%s'", plssid, sec_pad)
+  sec_url <- paste0(base, "/2/query?where=", utils::URLencode(sec_where, reserved = TRUE),
+                     "&outFields=FRSTDIVNO&outSR=4326&returnGeometry=true&f=json")
+
+  sec_res <- tryCatch(jsonlite::fromJSON(sec_url), error = function(e) NULL)
+  ring_raw <- tryCatch(sec_res$features$geometry$rings[[1]], error = function(e) NULL)
+  if (is.null(ring_raw)) return(fail)
+  # jsonlite may return this as either a 1 x n x 2 array (single ring)
+  # or a plain n x 2 matrix, depending on feature count -- handle both.
+  ring <- if (length(dim(ring_raw)) == 3) ring_raw[1, , ] else ring_raw
+  if (is.null(ring) || NROW(ring) == 0) return(fail)
+
+  list(latitude = mean(ring[, 2], na.rm = TRUE), longitude = mean(ring[, 1], na.rm = TRUE))
+}
+
 .ensure_tesseract <- function() {
   if (requireNamespace("tesseract", quietly = TRUE) && "tesseract" %in% loadedNamespaces()) {
     return(invisible(TRUE))
@@ -208,6 +269,54 @@ parse_well_log_pdf <- function(path, use_ocr = TRUE) {
   # County
   county <- extract1("(?i)County[.:]?\\s+([A-Za-z]+)")
 
+  # PLSS -- Section/Township/Range. Kept as raw text always (even when
+  # lat/lon is already known some other way), since it's an
+  # independent cross-check and this project's coordinate-conflict
+  # QC (see qc_well_log_matches.R) can flag disagreements. Tolerant of
+  # a few common OCR renderings ("T17N", "17 N", "R19E", "19 E").
+  section_raw <- extract1("(?i)Sec(?:tion)?[.:]?\\s*(\\d{1,2})")
+  township_no_raw <- extract1("(?i)T(?:ownship)?[.:]?\\s*(\\d{1,3})\\s*[NnSs]")
+  township_dir_raw <- extract1("(?i)T(?:ownship)?[.:]?\\s*\\d{1,3}\\s*([NnSs])")
+  range_no_raw <- extract1("(?i)R(?:ange)?[.:]?\\s*(\\d{1,3})\\s*[EeWw]")
+  range_dir_raw <- extract1("(?i)R(?:ange)?[.:]?\\s*\\d{1,3}\\s*([EeWw])")
+
+  # Type of work -- one label may match several ways across form
+  # revisions; first match wins so more specific labels (e.g.
+  # "Deepening") aren't shadowed by a generic later mention of "New".
+  work_type <- NA_character_
+  work_type_patterns <- list(
+    abandonment = "(?i)\\b(Abandon(?:ment|ing)?|Plug(?:ging|ged)?)\\b",
+    deepening = "(?i)\\bDeepen(?:ing)?\\b",
+    reconstruction = "(?i)\\bReconstruct(?:ion)?\\b",
+    change_of_use = "(?i)\\bChange\\s*of\\s*Use\\b",
+    repair = "(?i)\\bRepair(?:ing)?\\b",
+    new = "(?i)\\bNew\\s*Well\\b"
+  )
+  for (wt in names(work_type_patterns)) {
+    if (str_detect(full_text, work_type_patterns[[wt]])) { work_type <- wt; break }
+  }
+
+  # Proposed use / well purpose.
+  proposed_use <- NA_character_
+  use_patterns <- list(
+    geothermal = "(?i)\\bGeothermal\\b",
+    monitor = "(?i)\\b(Monitor(?:ing)?|Piezometer|Observation)\\b",
+    domestic = "(?i)\\bDomestic\\b",
+    industrial = "(?i)\\bIndustrial\\b",
+    irrigation = "(?i)\\bIrrigation\\b",
+    municipal = "(?i)\\b(Municipal|Public\\s*Supply)\\b",
+    stock = "(?i)\\bStock\\b",
+    test = "(?i)\\bTest\\s*Well\\b"
+  )
+  for (u in names(use_patterns)) {
+    if (str_detect(full_text, use_patterns[[u]])) { proposed_use <- u; break }
+  }
+
+  # Hole / casing diameter (inches) -- distinguishes a small domestic/
+  # monitor pipe from a full-scale geothermal production well.
+  hole_diameter_in <- suppressWarnings(as.numeric(extract1("(?i)Diameter\\s*of\\s*[Hh]ole[:=_.\\s]{0,10}(\\d{1,3}(?:\\.\\d+)?)")))
+  casing_diameter_in <- suppressWarnings(as.numeric(extract1("(?i)Diameter\\s*of\\s*[Cc]asing[:=_.\\s]{0,10}(\\d{1,3}(?:\\.\\d+)?)")))
+
   # Latitude / Longitude -- level 1: labeled field, tolerant of OCR
   # noise in the label itself ("Latrtude", "Longitude") but anchored
   # on the numeric decimal-degree value.
@@ -240,6 +349,29 @@ parse_well_log_pdf <- function(path, use_ocr = TRUE) {
       latlon_method <- "utm_conversion"
       flags <- c(flags, "no decimal Latitude/Longitude field found (some forms leave it blank) -- derived from the form's UTM E/N instead, assuming NAD83 UTM Zone 11N")
     }
+
+  # Level 4: PLSS (Section/Township/Range) -> centroid, for forms
+  # that leave lat/lon AND UTM blank but always carry a PLSS location
+  # (a required field). Last resort -- section-level resolution only
+  # (~800 m), and depends on a live call to BLM's public REST
+  # service (see .convert_plss_to_latlon() above), so this can fail
+  # for reasons unrelated to the PDF itself (e.g. no network) -- that
+  # failure is silent (NA) and simply leaves lat/lon unset, not an
+  # error.
+  if (is.na(latitude) && is.na(longitude) &&
+      !is.na(section_raw) && !is.na(township_no_raw) && !is.na(township_dir_raw) &&
+      !is.na(range_no_raw) && !is.na(range_dir_raw)) {
+    plss_ll <- tryCatch(
+      .convert_plss_to_latlon(section_raw, township_no_raw, township_dir_raw, range_no_raw, range_dir_raw),
+      error = function(e) list(latitude = NA_real_, longitude = NA_real_)
+    )
+    if (!is.na(plss_ll$latitude) && !is.na(plss_ll$longitude)) {
+      latitude <- plss_ll$latitude
+      longitude <- plss_ll$longitude
+      latlon_method <- "plss_section_centroid"
+      flags <- c(flags, "no lat/lon, UTM found -- derived from PLSS Section/Township/Range section centroid via BLM PLSS CadNSDI (~800 m resolution); verify against a tighter source before trusting for anything precision-sensitive")
+    }
+  }
   }
 
   # Nevada sanity bounding box (roughly): lat 34-43, lon -121 to -113.
@@ -259,7 +391,7 @@ parse_well_log_pdf <- function(path, use_ocr = TRUE) {
     }
   }
   if (is.na(latitude) && is.na(longitude)) {
-    flags <- c(flags, "no lat/lon found by the labeled field, the unlabeled scan, or UTM conversion -- rely on an independent cross-reference (e.g. NDWR WellLogQuery by log number) for this well's location")
+    flags <- c(flags, "no lat/lon found by the labeled field, the unlabeled scan, UTM conversion, or PLSS lookup -- rely on an independent cross-reference (e.g. NDWR WellLogQuery by log number) for this well's location")
   }
 
   # Depth drilled / cased depth (feet) -- tolerate '=', '_', '.', and
@@ -323,6 +455,15 @@ parse_well_log_pdf <- function(path, use_ocr = TRUE) {
     source_method = source_method,
     well_name = well_name,
     county = county,
+    section = section_raw,
+    township_no = township_no_raw,
+    township_dir = township_dir_raw,
+    range_no = range_no_raw,
+    range_dir = range_dir_raw,
+    work_type = work_type,
+    proposed_use = proposed_use,
+    hole_diameter_in = hole_diameter_in,
+    casing_diameter_in = casing_diameter_in,
     latitude = latitude,
     longitude = longitude,
     latlon_method = latlon_method,
