@@ -70,11 +70,20 @@ if (!file.exists(well_path)) {
   wells <- read_csv(well_path, show_col_types = FALSE) |>
     mutate(
       label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name),
+      status_label = case_when(
+        display_status == "production" ~ "Production",
+        display_status == "injection" ~ "Injection",
+        display_status == "monitor" ~ "Monitoring",
+        display_status == "domestic" ~ "Domestic",
+        display_status == "plugged_abandoned" ~ "Plugged & Abandoned",
+        TRUE ~ "Unknown"
+      ),
       role_color = case_when(
-        well_role == "production" ~ "#d95f02",
-        well_role == "injection" ~ "#1b9e77",
-        well_role == "monitor" ~ "#7570b3",
-        well_role == "domestic" ~ "#66a61e",
+        display_status == "production" ~ "#d95f02",
+        display_status == "injection" ~ "#1b9e77",
+        display_status == "monitor" ~ "#7570b3",
+        display_status == "domestic" ~ "#66a61e",
+        display_status == "plugged_abandoned" ~ "#b3b3b3",
         TRUE ~ "#999999"
       )
     )
@@ -84,7 +93,7 @@ if (!file.exists(well_path)) {
     addCircleMarkers(
       data = wells, lng = ~longitude, lat = ~latitude,
       radius = 4, color = ~role_color, stroke = FALSE, fillOpacity = 0.85,
-      popup = ~paste0("<b>", label, "</b><br>Role: ", well_role),
+      popup = ~paste0("<b>", label, "</b><br>Status: ", status_label),
       group = "Wells"
     )
 
@@ -123,8 +132,8 @@ if (!file.exists(well_path)) {
 
   m |>
     addLegend(position = "bottomright",
-      colors = c("#d95f02", "#1b9e77", "#7570b3", "#66a61e", "#999999", "#377eb8", "#e9a13b", "#c65d2e"),
-      labels = c("Production well", "Injection well", "Monitor well", "Domestic well", "Well (role unknown)", "Spring / seep / other", "Temperature logger", "Conductivity logger (ring)"),
+      colors = c("#d95f02", "#1b9e77", "#7570b3", "#66a61e", "#b3b3b3", "#999999", "#377eb8", "#e9a13b", "#c65d2e"),
+      labels = c("Production well", "Injection well", "Monitoring well", "Domestic well", "Plugged & Abandoned", "Well (status unknown)", "Spring / seep / other", "Temperature logger", "Conductivity logger (ring)"),
       title = "Site type") |>
     addLayersControl(
       overlayGroups = c("Wells", "Springs / Seeps / Other", "Temperature Loggers", "Conductivity Loggers"),

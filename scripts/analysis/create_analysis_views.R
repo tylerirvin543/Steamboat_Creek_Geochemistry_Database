@@ -104,15 +104,25 @@ WHERE hydraulic_head IS NOT NULL
   dbExecute(con, "
   CREATE VIEW vw_wells_gis AS
   SELECT
-    well_id,
-    well_name,
-    coord_key,
-    latitude,
-    longitude,
-    elevation_m,
-    'POINT(' || longitude || ' ' || latitude || ')' AS geom_wkt
-  FROM Wells
-  WHERE latitude IS NOT NULL AND longitude IS NOT NULL
+    w.well_id,
+    w.well_name,
+    w.coord_key,
+    w.latitude,
+    w.longitude,
+    w.elevation_m,
+    w.well_role,
+    -- display_status (added 2026-09-12, session 25): a well shows as
+    -- 'plugged_abandoned' if it has a Well_Work_Events row saying so
+    -- (the most direct structured evidence this database has);
+    -- otherwise it falls back to well_role. Does NOT overwrite/change
+    -- well_role itself -- P&A is a status, not a role, and a well can
+    -- be e.g. a former injection well that is now P&A.
+    CASE WHEN EXISTS (
+      SELECT 1 FROM Well_Work_Events e WHERE e.well_id = w.well_id AND e.work_type = 'abandonment'
+    ) THEN 'plugged_abandoned' ELSE w.well_role END AS display_status,
+    'POINT(' || w.longitude || ' ' || w.latitude || ')' AS geom_wkt
+  FROM Wells w
+  WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL
   ")
   
   message("✅ Hydraulics ready")

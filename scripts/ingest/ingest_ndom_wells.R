@@ -241,7 +241,8 @@ ingest_ndom_wells <- function(
       if (match_method == "exact_name") n_matched_exact <- n_matched_exact + 1L else n_matched_alias <- n_matched_alias + 1L
 
       existing <- dbGetQuery(con, "
-        SELECT well_role, latitude, longitude, elevation_m, total_depth, ndom_permit
+        SELECT well_role, latitude, longitude, elevation_m, total_depth, ndom_permit,
+               coordinate_source, coordinate_uncertainty_m
         FROM Wells WHERE well_id = ?
       ", params = list(well_id))
 
@@ -267,6 +268,8 @@ ingest_ndom_wells <- function(
           discrepancies[[length(discrepancies) + 1]] <- data.frame(
             well_id = well_id, well_name = resolved_well_name, permit = row$permit,
             existing_lat = existing$latitude[1], existing_lon = existing$longitude[1],
+            existing_coordinate_source = existing$coordinate_source[1],
+            existing_coordinate_uncertainty_m = existing$coordinate_uncertainty_m[1],
             ndom_lat = row$latitude, ndom_lon = row$longitude,
             distance_m = round(d, 1)
           )

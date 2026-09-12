@@ -97,54 +97,118 @@ only draw a line where both endpoints are located. `PW-1/2/3`, `13-5R`,
 `21B-5R`, `83B-6R`, and `23-33RD` are the main remaining coordinate gaps
 as of this writing.
 
-## 3. Well Logs: OCR Extraction & Identity Matching
+## 3. Well Logs: OCR Extraction, Identity Matching & Status History
 
-12 NDWR "Well Driller's Report" PDFs were OCR'd (via `tesseract`, with a
-labeled-field -> unlabeled-scan -> UTM-conversion fallback chain -- see
-`scripts/ingest/helpers/parse_well_log_pdf.R`). 5 are confirmed
-Gerlach-area wells from an unrelated Ormat project (excluded from
-Steamboat analysis); the remaining 7 are genuinely in the Steamboat
-field but **none has a confirmed named-well identity** -- matching by
-coordinate proximity alone is not reliable in this densely-drilled
-field, and matching by completion date is essential to rule out
-false-positive proximity matches.
+The well-log pipeline now spans 76 NDWR "Well Driller's Report" PDFs
+across two batches: 12 processed in Sessions 9-11, and 64 more log
+numbers (112 files -- most with a second, "(2)"-suffixed reformatted/
+streamlined re-scan of the same log) added in Session 24 from NDWR's
+public ArcGIS well-log export. Three tables now back this, not just one:
 
-```{r well-log-candidates}
+- **`Well_Log_Documents`** -- one row per log number (tracking both the
+  primary scan and, when present, its "(2)" alternate on the same row),
+  with OCR/cross-reference-derived location, depth, perforation,
+  Section/Township/Range, type of work, proposed use, and hole/casing
+  diameter.
+- **`Well_Work_Events`** -- one row per document once promoted/
+  registered, so a well's status history (new -> deepened -> abandoned,
+  etc.) is a real time series instead of a single overwritten snapshot.
+- **`Well_Lithology`** -- best-effort depth-interval descriptions staged
+  from OCR text (`confidence = 'ocr_heuristic_unvalidated'`), joinable
+  to perforation depth once a well is identified.
+
+**Location extraction now has four fallback levels**, tried in order:
+a labeled Latitude/Longitude field, an unlabeled whole-text scan, UTM
+Easting/Northing conversion, and -- new in Session 24 -- a Bureau of
+Land Management PLSS (Section/Township/Range) lookup via their public
+CadNSDI REST service, used only when the first three all fail. When a
+log has both a primary and "(2)" alternate scan, lat/lon specifically
+merges by **extraction-confidence rank** (labeled field beats UTM beats
+unlabeled scan beats PLSS), not by "primary always wins" -- a real bug
+caught during testing (logs `48594`/`126301`: the primary scan's
+unlabeled-scan guess landed far outside Nevada, while the "(2)" alt scan
+had a properly labeled field).
+
+```{r well-log-table-summary}
 dbGetQuery(con, "
-  SELECT log_number, latitude, longitude, completion_date_raw, notes
-  FROM Well_Log_Documents
-  WHERE well_id IS NOT NULL AND well_name_parsed IS NULL
-    AND log_number NOT IN ('146238','146239','146240','146241','146403')
-  ORDER BY log_number
+  SELECT
+    (SELECT COUNT(*) FROM Well_Log_Documents) AS n_documents,
+    (SELECT COUNT(*) FROM Well_Log_Documents WHERE match_method = 'duplicate_content_skipped') AS n_duplicate_content,
+    (SELECT COUNT(*) FROM Well_Log_Documents WHERE plss_latlon_method = 'plss_section_centroid') AS n_plss_derived,
+    (SELECT COUNT(*) FROM Well_Work_Events) AS n_work_events,
+    (SELECT COUNT(*) FROM Well_Lithology) AS n_lithology_intervals,
+    (SELECT COUNT(DISTINCT well_id) FROM Well_Work_Events WHERE work_type = 'abandonment') AS n_wells_flagged_abandoned
 ")
 ```
 
+**Type of work and proposed use**, extracted per document, give a quick
+sense of what this batch actually contains:
+
+```{r well-log-work-types}
+dbGetQuery(con, "
+  SELECT work_type, proposed_use, COUNT(*) n
+  FROM Well_Log_Documents
+  GROUP BY work_type, proposed_use
+  ORDER BY n DESC
+")
+```
+
+**Well status for mapping (production/injection/monitoring/P&A):**
+rather than overloading `Wells.well_role` (a well's *role* doesn't stop
+being "injection" just because it's later plugged), `vw_wells_gis` adds a
+derived `display_status` column: a well shows as "Plugged & Abandoned" if
+it has any `Well_Work_Events` row with `work_type = 'abandonment'`,
+otherwise it falls back to `well_role`. This is the field the website's
+leaflet maps and the GeoPackage `wells` layer now color by.
+
+```{r display-status-summary}
+dbGetQuery(con, "SELECT display_status, COUNT(*) n FROM vw_wells_gis GROUP BY display_status ORDER BY n DESC")
+```
+
+**Important, explicitly documented limitation:** this only captures P&A
+status where a `Well_Work_Events` row exists (i.e. a driller's report OCR
+found "abandonment" as its type of work). Wells known to be P&A only from
+earlier sessions' free-text prose (e.g. `64-32`, `IW-3` -- see AGENTS.md)
+will NOT show as P&A under this logic unless a `Well_Work_Events` row is
+added for them -- deliberately not guess-parsed from notes fields, to
+avoid false positives.
+
 **Worked example -- why proximity alone is misleading:** log `123802`
 sits only ~19.5 m from NBMG's "Industrial Production Well 43-33," the
-closest lat/lon match found across all 12 logs. But `123802`'s own NDWR
-record shows it was completed **9/24/2015**, while 43-33 was drilled in
-**2007** -- an 8-year gap that rules out the match despite the tight
-spatial coincidence. Applying the same location-*and*-date cross-check
-to the other 6 real Steamboat logs found one comparably tight lead --
-log `27731` (completed 8/15/1986) sits 133 m from NBMG's "Injection Well
-No. 3" (SBGeo, Inc., completion recorded 8/8/1986), a one-week date gap
--- but per-project judgment is that 1986-era Steamboat drilling moved
-fast enough that a well finished a week apart is more likely a
-genuinely distinct, separate well than the same well misdated. No
-identity is written to `well_log_document_map.csv` for any of the 7
-without a human confirming it first.
+closest lat/lon match found across the original 12 logs. But `123802`'s
+own NDWR record shows it was completed **9/24/2015**, while 43-33 was
+drilled in **2007** -- an 8-year gap that rules out the match despite the
+tight spatial coincidence. The same location-*and*-date discipline
+applies to every new candidate from the larger batch --
+`qc_well_log_matches()` now produces a standing, regenerable candidates
+report (`data/derived/well_log_match_candidates.csv`) with a plain-
+English **recommendation** per row (e.g. "download the NDWR "(2)" page",
+"review as a close match", or "no confident match -- keep unresolved"),
+replacing the earlier one-off conversation-driven writeup per batch:
 
-Because none of the 7 real logs cleared the bar for a confident identity
-match, each is registered as its own **provisional** `Wells` row (see
-`register_provisional_well_logs()` in `scripts/ingest/ingest_well_logs.R`)
-so the real coordinate/depth/construction data is visible and mappable
-rather than stranded in the staging table -- clearly named and flagged
-as unconfirmed, not silently merged into any named well:
+```{r well-log-match-candidates}
+cand_path <- file.path("data", "derived", "well_log_match_candidates.csv")
+if (!file.exists(cand_path)) cand_path <- file.path("..", "data", "derived", "well_log_match_candidates.csv")
+if (file.exists(cand_path)) read.csv(cand_path) else cat("No candidates report found.")
+```
+
+No identity is written to `well_log_document_map.csv` for any unmatched
+log without a human confirming it first -- both remaining candidates
+above are left unresolved deliberately (one, log `80672`, sits 4.5 km
+from its nearest named well -- far too distant to treat as a match).
+
+Because none of the newly-processed logs cleared the bar for a confident
+identity match, each with a real coordinate is registered as its own
+**provisional** `Wells` row (see `register_provisional_well_logs()` in
+`scripts/ingest/ingest_well_logs.R`) so the real coordinate/depth/
+construction data is visible and mappable rather than stranded in the
+staging table -- clearly named and flagged as unconfirmed, not silently
+merged into any named well:
 
 ```{r provisional-wells}
 dbGetQuery(con, "
   SELECT well_id, well_name, latitude, longitude, total_depth,
-         top_perforation, bottom_perforation, coordinate_source, coordinate_uncertainty_m
+         top_perforation, bottom_perforation, diameter_in, coordinate_source, coordinate_uncertainty_m
   FROM Wells
   WHERE well_name LIKE 'Unidentified Well%'
   ORDER BY well_id
@@ -181,6 +245,12 @@ if (file.exists(disc_path)) read.csv(disc_path) else cat("No discrepancy report 
 ```
 
 These gaps are large relative to this project's usual ~50-75 m NBMG/
+ArcGIS uncertainty and are worth a manual look -- NDOM is the official
+permit-of-record coordinate. As of 2026-09-12, the discrepancy report
+also includes `existing_coordinate_source`/`existing_coordinate_
+uncertainty_m` (all 6 current discrepancies trace back to
+`nbmg_geothermal_wells`), so a reviewer can immediately see where the
+currently-stored point came from without a separate lookup.
 ArcGIS uncertainty and are worth a manual look -- NDOM is the official
 permit-of-record coordinate.
 
@@ -236,6 +306,7 @@ reason.
 |---|---|
 | 2026-09-05 | Notebook created. Data availability chart built for the first time (and the `Sampling_Events.date` dual-epoch bug discovered while building it). 7 Steamboat well logs cross-checked against NBMG by location *and* completion date together (previously only location had been checked); `123802` conclusively rejected as a match to `43-33`; `27731`/"Injection Well No. 3" flagged as the tightest remaining lead but judged more likely a distinct well. All 7 registered as provisional `Wells` rows. |
 | 2026-09-12 | Added NDOM well-permit cross-validation section (49 wells, 6 coordinate discrepancies flagged, elevation_m feet-vs-meters bug found and fixed project-wide) and NDWR spring/stream flow section (4 Whites Creek sites, daily discharge back to 2017). |
+| 2026-09-12 (session 24-25) | Session 24: 64 new NDWR log numbers (112 files) ingested -- PLSS lat/lon fallback, work-type/proposed-use/diameter extraction, primary/alt-scan merge-by-confidence, `Well_Work_Events` (well status history), `Well_Lithology` populated for the first time, repeatable match-candidates report with recommendations. Session 25: `146403`'s OCR longitude digit error corrected; derived `display_status` (adds Plugged & Abandoned) added to `vw_wells_gis`/website maps; `ndom_coordinate_discrepancies.csv` now includes the existing coordinate's source. |
 
 ```{r cleanup}
 #| include: false

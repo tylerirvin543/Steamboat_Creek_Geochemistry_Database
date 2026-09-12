@@ -33,12 +33,12 @@ library(dplyr)
 #' coordinate, find the nearest existing Wells row and the nearest
 #' existing Locations row, with distance in meters. Written to
 #' out_csv every run (not appended) -- always reflects current state.
-qc_well_log_matches <- function(con, out_csv = "data/derived/well_log_match_candidates.csv") {
+qc_well_log_matches <- function(con, out_csv = "data/derived/well_log_match_candidates.csv", close_match_threshold_m = 200) {
 
   message("---- QC: well-log spatial match candidates ----")
 
   docs <- dbGetQuery(con, "
-    SELECT document_id, file_path, log_number, well_name_parsed,
+    SELECT document_id, file_path, alt_file_path, log_number, well_name_parsed,
            latitude, longitude, match_method, plss_latlon_method,
            work_type, proposed_use, flags
     FROM Well_Log_Documents
@@ -60,10 +60,36 @@ qc_well_log_matches <- function(con, out_csv = "data/derived/well_log_match_cand
     list(id = ref[[id_col]][i], name = ref[[name_col]][i], dist_m = round(d[i], 1))
   }
 
+  #' Build a plain-English "what to do next" recommendation for one
+  #' candidate row. More than one reason can apply (joined with " | ").
+  #' close_match_threshold_m is deliberately a named, tunable argument
+  #' (not a silent magic number) -- see qc_well_log_matches()'s own
+  #' argument of the same name.
+  .recommend <- function(has_alt, dist_m, log_number, close_match_threshold_m) {
+    reasons <- character(0)
+    if (!has_alt) {
+      reasons <- c(reasons, paste0(
+        "Consider downloading NDWR's reformatted/streamlined PDF page for log #",
+        log_number, " and saving it as '", log_number, "(2).pdf' for easier parsing/cross-checking."
+      ))
+    }
+    if (!is.na(dist_m) && dist_m < close_match_threshold_m) {
+      reasons <- c(reasons, paste0(
+        "Nearest candidate is within ", round(dist_m), " m -- review and consider adding to well_log_document_map.csv."
+      ))
+    } else {
+      reasons <- c(reasons, "No confident match found (nearest candidate is far) -- keep unresolved for now.")
+    }
+    paste(reasons, collapse = " | ")
+  }
+
   out <- lapply(seq_len(nrow(docs)), function(i) {
     d <- docs[i, ]
     nw <- nearest(d$latitude, d$longitude, wells, "well_id", "well_name")
     nl <- nearest(d$latitude, d$longitude, locs, "location_id", "name")
+    best_dist <- suppressWarnings(min(nw$dist_m, nl$dist_m, na.rm = TRUE))
+    if (!is.finite(best_dist)) best_dist <- NA_real_
+    has_alt <- !is.na(d$alt_file_path)
     data.frame(
       document_id = d$document_id,
       log_number = d$log_number,
@@ -73,8 +99,10 @@ qc_well_log_matches <- function(con, out_csv = "data/derived/well_log_match_cand
       plss_latlon_method = d$plss_latlon_method,
       work_type = d$work_type,
       proposed_use = d$proposed_use,
+      has_alt_scan = has_alt,
       nearest_well_name = nw$name, nearest_well_dist_m = nw$dist_m,
       nearest_location_name = nl$name, nearest_location_dist_m = nl$dist_m,
+      recommendation = .recommend(has_alt, best_dist, d$log_number, close_match_threshold_m),
       flags = d$flags,
       stringsAsFactors = FALSE
     )

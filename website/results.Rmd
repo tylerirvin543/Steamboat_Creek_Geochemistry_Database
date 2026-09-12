@@ -9,6 +9,9 @@ library(readr)
 library(dplyr)
 library(ggplot2)
 library(plotly)
+library(ggdist)
+library(ggbeeswarm)
+library(ggalluvial)
 ```
 
 ## What the Data Show So Far
@@ -38,12 +41,12 @@ if (file.exists(temp_path)) {
 
 Two things stand out in that record. First, individual temperature loggers hold distinct, persistent temperature ranges rather than converging on one system-wide value, a strong indication that the field is spatially heterogeneous, with different monitoring points sitting on different flow paths, at different depths, or at different distances from the main upflow zones. Second, within any single logger's record there is real short-term variability that a quarterly or even monthly chemistry sample would average away entirely; that variability is exactly the kind of signal this project's monitoring-frequency question (below) is trying to characterize rigorously rather than just observe qualitatively.
 
-```{r temp-boxplot, fig.cap="Distribution of temperature readings by temperature logger, showing how much thermal ranges differ across monitoring locations."}
+```{r temp-raincloud, fig.cap="Distribution of temperature readings by temperature logger (a ggdist half-eye plot: density on top, median + 66%/95% intervals below), showing how much thermal ranges differ across monitoring locations."}
 if (file.exists(temp_path)) {
   temp2 <- read_csv(temp_path, show_col_types = FALSE) %>% filter(!is.na(temperature))
-  ggplot(temp2, aes(x = factor(logger_id), y = temperature)) +
-    geom_boxplot(fill = "#c65d2e", alpha = 0.85) +
-    labs(title = "Temperature Variability by Temperature Logger", x = "Temperature Logger", y = "Temperature (\u00b0C)") +
+  ggplot(temp2, aes(x = temperature, y = factor(logger_id))) +
+    stat_halfeye(fill = "#c65d2e", alpha = 0.85, .width = c(0.66, 0.95), point_interval = "median_qi") +
+    labs(title = "Temperature Variability by Temperature Logger", x = "Temperature (\u00b0C)", y = "Temperature Logger") +
     theme_minimal(base_size = 13)
 }
 ```
@@ -59,11 +62,29 @@ temp_logger_path <- "../docs/data/temp_logger_locations.csv"
 cond_logger_path <- "../docs/data/cond_logger_locations.csv"
 if (file.exists(well_path)) {
   wells <- read_csv(well_path, show_col_types = FALSE) |>
-    mutate(label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name))
+    mutate(
+      label = ifelse(is.na(well_name) | well_name == "", paste("Well", well_id), well_name),
+      status_label = case_when(
+        display_status == "production" ~ "Production",
+        display_status == "injection" ~ "Injection",
+        display_status == "monitor" ~ "Monitoring",
+        display_status == "domestic" ~ "Domestic",
+        display_status == "plugged_abandoned" ~ "Plugged & Abandoned",
+        TRUE ~ "Unknown"
+      ),
+      role_color = case_when(
+        display_status == "production" ~ "#d95f02",
+        display_status == "injection" ~ "#1b9e77",
+        display_status == "monitor" ~ "#7570b3",
+        display_status == "domestic" ~ "#66a61e",
+        display_status == "plugged_abandoned" ~ "#b3b3b3",
+        TRUE ~ "#999999"
+      )
+    )
   m <- leaflet() |> addTiles() |>
     addCircleMarkers(data = wells, lng = ~longitude, lat = ~latitude,
-      radius = 5, color = "#2b8cbe", fillOpacity = 0.7,
-      popup = ~paste0("<b>", label, "</b><br>Role: ", well_role), group = "Wells")
+      radius = 5, color = ~role_color, fillOpacity = 0.7,
+      popup = ~paste0("<b>", label, "</b><br>Status: ", status_label), group = "Wells")
   if (file.exists(loc_path)) {
     locs <- read_csv(loc_path, show_col_types = FALSE) |> filter(site_type != "well")
     m <- m |> addCircleMarkers(data = locs, lng = ~longitude, lat = ~latitude,
@@ -85,13 +106,120 @@ if (file.exists(well_path)) {
       popup = ~paste0("<b>Conductivity logger ", logger_name, "</b><br>Role: ", role, "<br>Status: ", status, "<br>Site: ", location_name),
       group = "Conductivity Loggers")
   }
-  m |> addLayersControl(
+  m |> addLegend(position = "bottomright",
+      colors = c("#d95f02", "#1b9e77", "#7570b3", "#66a61e", "#b3b3b3", "#999999"),
+      labels = c("Production well", "Injection well", "Monitoring well", "Domestic well", "Plugged & Abandoned", "Well (status unknown)"),
+      title = "Well status") |>
+    addLayersControl(
     overlayGroups = c("Wells", "Springs / Seeps / Other", "Temperature Loggers", "Conductivity Loggers"),
     options = layersControlOptions(collapsed = FALSE))
 } else {
   cat("Spatial data will appear after export.")
 }
 ```
+
+
+## Chemistry, Geothermometry, and the Well Network
+
+The plots above use a `ggdist` half-eye display rather than a plain box-and-whisker for the temperature record -- with 10 loggers and hundreds of thousands of readings each, showing the actual estimated density (not just five summary numbers) makes it much easier to see, for example, that logger 5's spread is genuinely bimodal-looking rather than just "wide." The three charts below extend that same spirit to chemistry and geothermometry, using new per-sample exports (`chem_by_site.csv`, `geothermometer_by_site.csv`) that previously did not exist on this site -- only aggregate counts did.
+
+```{r chem-beeswarm, fig.cap="Chloride concentration by site type (log scale). Points are individual samples (ggbeeswarm), with a boxplot overlay for reference."}
+chem_path <- "../docs/data/chem_by_site.csv"
+if (file.exists(chem_path)) {
+  cl <- read_csv(chem_path, show_col_types = FALSE) |>
+    filter(analyte == "Cl", !is.na(site_type), value > 0)
+  ggplot(cl, aes(x = site_type, y = value, color = site_type)) +
+    geom_quasirandom(alpha = 0.5, size = 1.6) +
+    geom_boxplot(width = 0.25, alpha = 0, outlier.shape = NA, color = "black") +
+    scale_y_log10() +
+    labs(title = "Chloride Concentration by Site Type", x = "Site type", y = "Cl (mg/L, log scale)") +
+    theme_minimal(base_size = 13) + theme(legend.position = "none")
+} else {
+  cat("Chemistry data will appear after export.")
+}
+```
+
+Background creek/well samples span a wide, mostly-dilute chloride range (roughly 1-100 mg/L); the handful of real thermal fumarole, seep, and spring samples sit tightly around 600-800 mg/L, and wells are the most variable group of all -- consistent with individual wells intersecting the outflow plume to very different degrees depending on depth and location.
+
+```{r geothermometer-comparison, fig.cap="Geothermometer estimates vs. measured discharge temperature for the real thermal samples. Quartz equilibrium temperature sits systematically below measured temperature; Na/K sits systematically above it."}
+geo_path <- "../docs/data/geothermometer_by_site.csv"
+if (file.exists(geo_path)) {
+  geo <- read_csv(geo_path, show_col_types = FALSE) |>
+    select(location_name, measured_temp_c, T_NaK_gigg_activity, T_quartz_C) |>
+    tidyr::pivot_longer(cols = c(measured_temp_c, T_NaK_gigg_activity, T_quartz_C),
+                         names_to = "method", values_to = "temp_c") |>
+    mutate(method = factor(method,
+      levels = c("T_quartz_C", "measured_temp_c", "T_NaK_gigg_activity"),
+      labels = c("Quartz geothermometer", "Measured discharge", "Na/K geothermometer (Giggenbach)")))
+
+  ggplot(geo, aes(x = temp_c, y = reorder(location_name, temp_c), color = method)) +
+    geom_line(aes(group = location_name), color = "grey60") +
+    geom_point(size = 3) +
+    labs(title = "Geothermometer Estimates vs. Measured Discharge Temperature",
+         x = "Temperature (\u00b0C)", y = NULL, color = NULL) +
+    theme_minimal(base_size = 12) + theme(legend.position = "bottom")
+} else {
+  cat("Geothermometer data will appear after export.")
+}
+```
+
+This is the same Na/K-above, quartz-below-measured-temperature divergence described in the PHREEQC discussion below, made directly visible rather than only narrated: consistent with a deep, Na/K-equilibrated reservoir fluid whose silica signature has partly re-equilibrated toward a cooler, more dilute end-member on its way to discharge.
+
+```{r well-network-alluvial, fig.cap="Production well to port to injection well network (Dhakal et al. 2025, Figure 5). Widths reflect link COUNTS -- how many wells share a connection -- not measured flow rates.", fig.width=10, fig.height=7}
+p2p_path <- "../docs/data/production_to_port.csv"
+p2i_path <- "../docs/data/port_to_injection.csv"
+if (file.exists(p2p_path) && file.exists(p2i_path)) {
+  p2p <- read_csv(p2p_path, show_col_types = FALSE)
+  p2i <- read_csv(p2i_path, show_col_types = FALSE)
+  combo <- p2p |> select(production_well_name, port_name) |>
+    inner_join(p2i |> select(port_name, injection_well_name), by = "port_name", relationship = "many-to-many") |>
+    count(production_well_name, port_name, injection_well_name, name = "n_links")
+
+  ggplot(combo, aes(axis1 = production_well_name, axis2 = port_name, axis3 = injection_well_name, y = n_links)) +
+    geom_alluvium(aes(fill = port_name), width = 1/8) +
+    geom_stratum(width = 1/8, fill = "grey90", color = "grey40") +
+    geom_text(stat = "stratum", aes(label = after_stat(stratum)), size = 2.3) +
+    scale_x_discrete(limits = c("Production Well", "Port", "Injection Well"), expand = c(.05, .05)) +
+    labs(title = "Production Well \u2192 Port \u2192 Injection Well Network",
+         y = "Number of well-to-well links", fill = "Port") +
+    theme_minimal(base_size = 11) + theme(legend.position = "none")
+} else {
+  cat("Well network data will appear after export.")
+}
+```
+
+Real kg/s flow-rate values from Dhakal et al. (2025)'s Figure 5 (e.g. 615 kg/s for Galena 1) exist only in project session notes today, not the database itself -- this diagram deliberately shows link counts rather than presenting invented flow-weighted widths as if they were real measurements.
+
+```{r chem-heatmap, fig.cap="Sample x analyte concentration heatmap (log-transformed, z-scored by analyte), row-annotated by site type and hierarchically clustered on both axes.", fig.width=9, fig.height=7}
+if (file.exists(chem_path)) {
+  suppressPackageStartupMessages(library(ComplexHeatmap))
+  chem_wide <- read_csv(chem_path, show_col_types = FALSE) |>
+    filter(!is.na(site_type), site_type != "background") |>
+    group_by(sample_id, location_name, site_type, analyte) |>
+    summarise(value = mean(value, na.rm = TRUE), .groups = "drop") |>
+    tidyr::pivot_wider(names_from = analyte, values_from = value) |>
+    as.data.frame()
+
+  if (nrow(chem_wide) >= 3) {
+    rownames(chem_wide) <- paste0(chem_wide$location_name, " (", chem_wide$sample_id, ")")
+    site_types <- chem_wide$site_type
+    mat_num <- as.matrix(chem_wide[, !(names(chem_wide) %in% c("sample_id", "location_name", "site_type"))])
+    mat_scaled <- scale(log1p(mat_num))
+    mat_scaled[is.nan(mat_scaled)] <- 0
+    site_colors <- c(well = "#7570b3", spring = "#1b9e77", seep = "#d95f02", fumarole = "#e7298a", transect = "#66a61e")
+    row_anno <- ComplexHeatmap::rowAnnotation(`Site type` = site_types, col = list(`Site type` = site_colors))
+    ComplexHeatmap::draw(ComplexHeatmap::Heatmap(mat_scaled, name = "z-score\n(log conc.)",
+      right_annotation = row_anno,
+      column_title = "Analyte", row_title = "Sample",
+      row_names_gp = grid::gpar(fontsize = 8),
+      column_names_gp = grid::gpar(fontsize = 10)))
+  }
+} else {
+  cat("Chemistry data will appear after export.")
+}
+```
+
+The thermal samples (fumarole, seep, spring) cluster tightly on the Na/Cl/K-rich, Ca/Mg-poor side; the domestic wells cluster oppositely -- the same signal as the chloride-by-site-type chart above, but now visible across all six major ions simultaneously and with the clustering computed rather than assumed.
 
 Taken together, these first-order patterns (persistent, location-specific thermal regimes; short-term variability layered on top of them; and a monitoring network that is spatially uneven by necessity, concentrated where access and prior study made it possible) describe a system that genuinely requires integrated, multi-scale observation to characterize well. No single well, and no single data type, tells the whole story on its own.
 

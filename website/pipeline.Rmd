@@ -34,7 +34,8 @@ Field    [label=\"Field\\n(Excel)\"]
 Lab      [label=\"Lab\\n(CSV/XLSX)\"]
 TempLog  [label=\"Temperature\\nLoggers\"]
 CondLog  [label=\"Conductivity\\nLoggers\"]
-NDWR     [label=\"NDWR\\n(wells, logs)\"]
+NDWR     [label=\"NDWR\n(sites, water\nlevels, well logs)\"]
+NDOM     [label=\"NDOM\n(well permits)\"]
 USGS     [label=\"USGS\"]
 Weather  [label=\"NOAA\"]
 Iso      [label=\"Isotopes\"]
@@ -47,7 +48,8 @@ ing_field   [label=\"ingest_field\"]
 ing_lab     [label=\"ingest_lab\"]
 ing_temp    [label=\"ingest_temperature_loggers\"]
 ing_cond    [label=\"ingest_conductivity\"]
-ing_ndwr    [label=\"ingest_ndwr /\\ningest_well_logs\"]
+ing_ndwr    [label=\"ingest_ndwr /\ningest_well_logs\"]
+ing_ndom    [label=\"ingest_ndom_wells\"]
 ing_usgs    [label=\"ingest_usgs\"]
 ing_weather [label=\"ingest_noaa_weather\"]
 ing_iso     [label=\"ingest_isotopes\"]
@@ -61,7 +63,8 @@ Samples [label=\"{Samples|PK sample_id|FK location_id\\nFK event_id|time}\"]
 LabAnalyses [label=\"{Lab_Analyses|FK sample_id|analyte|value}\"]
 TempObs [label=\"{Temperature_Observations|FK logger_id|timestamp|temperature}\"]
 CondObs [label=\"{Conductivity_Observations|FK logger_id|timestamp|sc_25c}\"]
-Wells [label=\"{Wells|PK well_id|role, depth}\"]
+Wells [label=\"{Wells|PK well_id|role, status, depth}\"]
+WellWorkEvents [label=\"{Well_Work_Events|FK well_id|work_type, event_date}\"]
 WaterLevels [label=\"{Water_Level_Observations|FK well_id|timestamp|level}\"]
 Isotopes [label=\"{Isotope_Analyses|FK sample_id|d18O|d2H}\"]
 
@@ -80,8 +83,8 @@ node [shape = ellipse, style=filled, fillcolor=\"#FEE391\"]
 ModelInputs [label=\"Model Inputs\"]
 Modeling    [label=\"PHREEQC / Cl-SC\\nCalibration / Interpolation\"]
 
-{rank=same; NDEP Field Lab TempLog CondLog NDWR USGS Weather Iso Photos WellNet}
-{rank=same; ing_ndep ing_field ing_lab ing_temp ing_cond ing_ndwr ing_usgs ing_weather ing_iso ing_photos ing_wellnet}
+{rank=same; NDEP Field Lab TempLog CondLog NDWR NDOM USGS Weather Iso Photos WellNet}
+{rank=same; ing_ndep ing_field ing_lab ing_temp ing_cond ing_ndwr ing_ndom ing_usgs ing_weather ing_iso ing_photos ing_wellnet}
 {rank=same; Locations Events Wells}
 {rank=same; Samples WaterLevels TempObs CondObs}
 
@@ -91,6 +94,7 @@ Lab -> ing_lab
 TempLog -> ing_temp
 CondLog -> ing_cond
 NDWR -> ing_ndwr
+NDOM -> ing_ndom
 USGS -> ing_usgs
 Weather -> ing_weather
 Iso  -> ing_iso
@@ -111,6 +115,8 @@ ing_cond -> CondObs
 Locations -> TempObs
 Locations -> CondObs
 ing_ndwr -> Wells
+ing_ndom -> Wells
+ing_ndwr -> WellWorkEvents
 Wells -> WaterLevels
 ing_usgs -> Gradients
 ing_iso  -> Isotopes
@@ -132,6 +138,7 @@ LabAnalyses -> QC
 TempObs -> QC
 CondObs -> QC
 Isotopes -> QC
+WellWorkEvents -> QC
 
 QC -> GeoPkg
 QC -> Website
@@ -151,5 +158,10 @@ The same pipeline code runs in two different modes depending on the situation. *
 ## What the Pipeline Actually Has to Deal With
 
 In practice, most of the engineering effort goes into handling the ways real-world environmental data misbehaves: file formats that vary release to release, column names that drift between one field season's spreadsheet and the next, timestamps recorded in at least three different conventions depending on the source, coordinate systems that need reprojecting before anything can be mapped together, and the occasional literal duplicate record that has to be caught before it inflates a summary statistic. Temperature and conductivity logger ingestion is a good example of all of this at once: each deployment can arrive as a slightly different Excel export, with its own timestamp formatting and its own column layout, and the ingestion script has to normalize all of that into one consistent shape before a single row reaches the database. Solving that class of problem once, carefully, is what lets every later step (the QC checks, the GIS export, the eventual geochemical models) assume clean, consistent data rather than re-solving the same formatting problems over and over.
+
+
+## Adding a New Well-Log Batch
+
+The NDWR well-log pathway (`NDWR -> ing_ndwr` in the diagram above) is a good illustration of the "one more script, same five stages" idea: as of 2026-09-12 it has processed 76 NDWR "Well Driller's Report" PDFs across two batches without any change to its overall shape, only extensions to what it extracts. Most of these scans have no machine-readable text at all, so each PDF is OCR'd (falling back through a labeled field, an unlabeled scan, a UTM conversion, and finally a Bureau of Land Management PLSS section lookup, in that order of decreasing confidence) for location, depth, perforation interval, type of work, proposed use, and hole/casing diameter. A well's status history -- new, deepened, abandoned -- is tracked as its own time series (`Well_Work_Events`) rather than a single overwritten snapshot, and no log is ever silently linked to a named well without a human confirming the match first; unmatched-but-located logs still get a clearly-flagged provisional `Wells` row so the real data stays visible rather than stranded in staging. Anyone adding a future batch of logs just drops the PDFs into `data/raw/ndwr/Ormat_well_logs/` and re-runs the pipeline -- see that folder's own `README.md` for where to search NDWR's public tools and the exact filename convention the ingestion script expects.
 
 Once ingestion and validation are complete, a final post-processing stage updates spatial geometry for every location and well, rebuilds the GIS-ready views the GeoPackage export depends on, and reruns the full suite of quality-control checks across the database. The result is a set of outputs (a GeoPackage ready to drop into ArcGIS, a rendered website, and validated tables ready for the next stage of modeling) that are always freshly regenerated from whatever is currently in the database, and never hand-maintained separately from it.

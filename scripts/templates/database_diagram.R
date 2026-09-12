@@ -46,7 +46,8 @@ Laboratory [
 Loggers [
   label='Temperature\nLoggers'
 ]
-NDWR       [label='NDWR Wells']
+NDWR       [label='NDWR Wells,\nWater Levels &\nWell-Log PDFs']
+NDOM       [label='NDOM Well\nPermits']
 USGS       [label='USGS Streamflow']
 
 # ==================================================
@@ -100,6 +101,13 @@ WaterLevels [
   style=filled,
   fillcolor='#6BAED6',
   label='Groundwater Levels'
+]
+
+Wells [
+  shape=box,
+  style=filled,
+  fillcolor='#6BAED6',
+  label='Wells &\nWell-Log Records'
 ]
 
 Streamflow [
@@ -217,12 +225,12 @@ PHREEQC [
 # RANKS
 # ==================================================
 
-{rank=same; Field Laboratory Loggers NDWR USGS}
+{rank=same; Field Laboratory Loggers NDWR NDOM USGS}
 
 {rank=same;
  Locations Samples
  Chemistry TempObs
- WaterLevels Streamflow}
+ WaterLevels Streamflow Wells}
 
 {rank=same;
  Thermal Geochem Hydrology}
@@ -241,6 +249,8 @@ Laboratory -> Isotopes
 Loggers -> TempObs
 
 NDWR -> WaterLevels
+NDWR -> Wells
+NDOM -> Wells
 USGS -> Streamflow
 
 Locations -> Samples
@@ -256,6 +266,7 @@ Isotopes  -> Geochem
 
 WaterLevels -> Hydrology
 Streamflow  -> Hydrology
+Wells       -> Hydrology
 
 Thermal   -> Research
 Geochem   -> Research

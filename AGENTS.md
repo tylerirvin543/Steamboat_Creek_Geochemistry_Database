@@ -2724,6 +2724,129 @@ database. Extended the existing well-log pipeline (built in Sessions
   files and the rest of the raw batch remain untracked/gitignored like
   other `data/raw/` sources.
 
+## Session 25 updates (2026-09-12, continued): well-log doc/viz pass, P&A status, new visualization packages, full verification
+
+Large follow-up to Session 24, covering documentation, a derived well
+status field, new chemistry/geothermometer visualizations (ggdist,
+ggbeeswarm, ggalluvial, ComplexHeatmap), two data fixes, and an
+end-to-end verification pass (database -> website -> GeoPackage).
+
+- **Data fixes**: log `146403`'s OCR longitude corrected from
+  `-719.422608` to `-119.422608` (leading-digit misread; confirmed still
+  a Gerlach-area, non-Steamboat well before and after). `qc_well_log_
+  matches.R` gained a `recommendation` column (download the NDWR "(2)"
+  page if missing; review as a close match if <200m; else "keep
+  unresolved" -- log `80672`/"Greg Street" candidate explicitly left
+  unresolved per user instruction). `ndom_coordinate_discrepancies.csv`
+  gained `existing_coordinate_source`/`existing_coordinate_uncertainty_m`
+  columns (all 6 current discrepancies trace to `nbmg_geothermal_wells`).
+- **Derived well status for mapping**: `vw_wells_gis` gained a
+  `display_status` column (`'plugged_abandoned'` if any `Well_Work_
+  Events` row has `work_type='abandonment'`, else falls back to
+  `well_role`) -- deliberately NOT a change to `Wells.well_role` itself
+  (P&A is a status, not a role). 17 wells currently qualify, all
+  provisional "Unidentified Well (NDWR Log ...)" rows from Session 24's
+  batch. **Documented limitation**: wells known P&A only from earlier
+  sessions' free-text prose (`64-32`, `IW-3`) do NOT show as P&A unless a
+  `Well_Work_Events` row is added for them -- not guess-parsed from notes,
+  to avoid false positives. Both website leaflet maps (`data.Rmd`,
+  `results.Rmd`) now color/legend by this 5-way status
+  (production/injection/monitoring/domestic/P&A), replacing `results.Rmd`'s
+  previous fixed-color map and adding P&A to both.
+- **Documentation**: `notebooks/05_data_inventory_and_well_network.qmd`'s
+  well-log section rewritten to cover the full 3-table structure
+  (`Well_Log_Documents`/`Well_Work_Events`/`Well_Lithology`), the Session
+  24 batch, PLSS fallback, and status derivation, with live queries and a
+  changelog row. `website/pipeline.Rmd`'s live DiagrammeR architecture
+  diagram gained an `NDOM` source node, a `Wells` record box, and edges
+  for both the well-log and NDOM ingestion pathways (verified by
+  evaluating the DOT string directly, not just visually) plus a new
+  prose section on adding future well-log batches. `scripts/templates/
+  database_diagram.R` (a separate, standalone poster-style diagram,
+  renders to `steamboat_poster_workflow.png`) similarly updated and
+  regenerated -- required installing `DiagrammeRsvg`/`rsvg` (previously
+  absent, silently never rendered before). **Note**: the two PNGs named
+  in this file's own "Key Figures" section
+  (`steamboat_database_architecture_diagram.png`/
+  `steamboat_poster_database_diagram.png`) are dated July 7 and are not
+  produced by any current script in this repo -- likely orphaned
+  manually-made images from before this project's current schema;
+  left as-is rather than hand-edited.
+- **New chemistry/geothermometer exports** (`export_website_data_files()`):
+  `chem_by_site.csv` (per-sample major-ion long format, joined to
+  `site_type`, from `vw_major_ions`) and `geothermometer_by_site.csv`
+  (Na/K activity-based + quartz/chalcedony temperature-sweep-derived
+  geothermometer estimates -- the latter computed via linear
+  interpolation to the temperature-sweep's zero-SI-crossing, a new
+  calculation, restricted to the 8 samples with measured discharge
+  temperature >50C per Session 15's established caveat that this method
+  isn't meaningful for dilute cold water). Also added
+  `production_to_port.csv`/`port_to_injection.csv` exports (previously
+  DB-only) to back the new alluvial diagram.
+- **New visualization packages installed and used on the website**:
+  `ggdist`, `ggbeeswarm`, `ggalluvial` (CRAN) and `ComplexHeatmap`
+  (Bioconductor, via `BiocManager` -- installed cleanly in this sandbox,
+  no fallback needed). Specific uses, each tested against real data
+  before committing to it:
+  - `results.Rmd`'s temperature-by-logger boxplot replaced with a
+    `ggdist::stat_halfeye()` half-eye/raincloud plot (handles the
+    ~193K-row temperature table fine since it's density-based, not
+    per-point).
+  - New chloride-by-site-type chart: `ggbeeswarm::geom_quasirandom()` +
+    a transparent boxplot overlay, log-scaled -- shows background creek
+    samples spanning ~1-100 mg/L vs. real thermal fumarole/seep/spring
+    samples tightly clustered ~600-800 mg/L.
+  - New geothermometer comparison chart (paired-point/slope plot, plain
+    ggplot2 -- only 7-8 real thermal samples, not a distributional
+    case): visually confirms the Na/K-above-measured,
+    quartz-below-measured divergence already described in prose.
+  - New `ggalluvial` production-well -> port -> injection-well diagram:
+    deliberately uses **link counts, not flow volumes** -- real kg/s
+    values from Dhakal et al. (2025) Figure 5 exist only in session
+    notes, not the database, and the chart's own caption says so
+    explicitly rather than presenting invented widths as real
+    measurements.
+  - New `ComplexHeatmap` sample x analyte heatmap (log-transformed,
+    z-scored, row-annotated by `site_type`, hierarchically clustered
+    both axes): a genuinely different, clearly informative view --
+    thermal samples (fumarole/seep/spring) cluster tightly on the
+    high-Na/Cl/K, low-Ca/Mg side; domestic wells cluster oppositely.
+- **New GeoPackage layers**: `well_log_documents` (every
+  `Well_Log_Documents` row with a coordinate, including
+  provisional/unmatched logs -- 53 rows) and `well_work_events` (joined
+  to `Wells` for coordinates, one point per status-history event -- 42
+  rows), added to `export_geopackage.R`'s standard `layers` list
+  (reuses the existing `safe_write_layer()` lat/lon path, no new export
+  logic needed).
+- **Full verification pass, all against the real `geochem_operational.sqlite`**:
+  schema/view rebuild (`create_analysis_views(con)`), `ingest_ndom_wells()`
+  re-run (staging table cleared and rebuilt -- pure re-derivation from the
+  source xlsx, no data loss -- to regenerate the discrepancy CSV with its
+  new columns), `qc_well_log_matches()` re-run, `export_website_data_files()`,
+  `build_website()` (the literature-folder-protected wrapper -- confirmed
+  `docs/literature/` intact at 39 files afterward), `export_geopackage()`
+  (18 layers, all succeeding except a pre-existing, not-newly-introduced
+  `temperature_timeseries` geometry gap -- see Session 12 notes on view
+  build order -- which left a stale-but-valid layer from a prior run
+  rather than failing), and `run_qc_checks()` (0 PHREEQC run failures, 0
+  logger outliers). **Real, re-discovered gotcha**: `render_site()`'s
+  `docs/data/*.csv` cleanup (documented since Session 12) fired again
+  during this session's manual testing since `export_website_data_files()`
+  was only called once before `build_website()` in that test sequence --
+  re-ran it after, per the established double-call pattern; `run_pipeline.R`
+  itself already calls it both before and after, so this is a
+  testing-order artifact, not a pipeline bug.
+- **Final counts**: 65 `Well_Log_Documents`, 187 `Wells` (180 with
+  coordinates), 42 `Well_Work_Events`, 5 `Well_Lithology` rows, 17 wells
+  showing `display_status='plugged_abandoned'`, 49 `NDOM_Well_Records`.
+- **Not done this session**: this session's changes are not yet
+  committed/pushed to git (touches many CRLF files, all edited via the
+  established `readLines()`/`writeLines(sep="\n")` round-trip); the
+  pre-existing `temperature_timeseries` GeoPackage-layer geometry gap
+  (Session 12) was newly re-observed but not fixed (out of this
+  session's scope); DEMO database not rebuilt with any of this session's
+  changes.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

@@ -114,14 +114,27 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # INTEGRATED PRODUCTS
     # -------------------------
     sample_flow = "SELECT * FROM vw_sample_hydrochem_flux",
-    temp_flow = "SELECT * FROM temp_flow"
+    temp_flow = "SELECT * FROM temp_flow",
+
+    # -------------------------
+    # WELL-LOG PIPELINE (added 2026-09-12, session 25)
+    # -------------------------
+    # Every Well_Log_Documents row with a coordinate -- including
+    # provisional/unmatched logs -- so OCR-derived locations can be
+    # visually cross-checked against known wells directly in ArcGIS.
+    well_log_documents = "SELECT document_id, log_number, well_id, well_name_parsed, latitude, longitude, match_method, plss_latlon_method, work_type, proposed_use, hole_diameter_in, casing_diameter_in, completion_date_raw, flags FROM Well_Log_Documents WHERE latitude IS NOT NULL AND longitude IS NOT NULL",
+    # A well's status history (new/deepened/abandoned/etc.) as its own
+    # point layer, joined to the well's coordinate -- one point per
+    # event, so the same well can carry multiple dated status points.
+    well_work_events = "SELECT e.event_id, e.well_id, w.well_name, w.latitude, w.longitude, e.work_type, e.proposed_use, e.event_date, e.hole_diameter_in, e.casing_diameter_in, e.notes FROM Well_Work_Events e JOIN Wells w ON e.well_id = w.well_id WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL"
   )
   
   # ============================================================
   # EXPORT STANDARD LAYERS
   # ============================================================
   
-  requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow")
+  requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow",
+                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events")
 
   for (layer_name in names(layers)) {
     

@@ -970,13 +970,83 @@ export_website_data_files <- function(con) {
         w.longitude,
         w.mid_screen_depth,
         w.total_depth,
-        w.basin_name
+        w.basin_name,
+        CASE WHEN EXISTS (
+          SELECT 1 FROM Well_Work_Events e WHERE e.well_id = w.well_id AND e.work_type = 'abandonment'
+        ) THEN 'plugged_abandoned' ELSE w.well_role END AS display_status
       FROM Wells w
       WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL
     "),
     "docs/data/well_sample.csv",
     row.names = FALSE
   )
+
+  # Session 25 (2026-09-12): per-sample major-ion chemistry and
+  # PHREEQC-derived geothermometer estimates, joined to site_type --
+  # previously nothing beyond aggregate counts (chem_summary.csv) was
+  # exported for the website, so no per-sample chemistry/geothermometer
+  # plot was possible. Long format (one row per sample x analyte) so
+  # a website chart can facet/group freely without a fixed column set.
+  write.csv(
+    dbGetQuery(con, "
+      SELECT mi.sample_id, l.name AS location_name, l.site_type, mi.analyte, mi.value, mi.units
+      FROM vw_major_ions mi
+      LEFT JOIN Locations l ON mi.location_id = l.location_id
+    "),
+    "docs/data/chem_by_site.csv",
+    row.names = FALSE
+  )
+
+  # Na/K (activity-based) and quartz/chalcedony (temperature-sweep,
+  # zero-SI-crossing) geothermometer estimates, restricted to samples
+  # with a measured discharge temperature > 50C -- this method is only
+  # physically meaningful for genuinely thermal water (see AGENTS.md
+  # session 15: applying it to dilute, cold background samples gives
+  # nonsensical 300+C results). Currently ~8 real thermal samples.
+  if (exists("calculate_activity_geothermometers")) {
+    geo_temps <- dbGetQuery(con, "SELECT sample_id, value AS measured_temp_c FROM PHREEQC_Results WHERE parameter = 'temp'")
+    nak <- tryCatch(calculate_activity_geothermometers(con), error = function(e) NULL)
+    if (!is.null(nak) && nrow(nak) > 0) {
+      nak_thermal <- nak |>
+        dplyr::left_join(geo_temps, by = "sample_id") |>
+        dplyr::filter(!is.na(measured_temp_c), measured_temp_c > 50)
+
+      sweep <- dbGetQuery(con, "SELECT sample_id, temperature_C, parameter, value FROM PHREEQC_Temp_Sweep WHERE parameter IN ('SI_Quartz','SI_Chalcedony')")
+      .interp_zero_crossing <- function(temps, sis) {
+        ord <- order(temps); temps <- temps[ord]; sis <- sis[ord]
+        for (i in seq_len(length(temps) - 1)) {
+          if (!is.na(sis[i]) && !is.na(sis[i + 1]) && sign(sis[i]) != sign(sis[i + 1])) {
+            frac <- sis[i] / (sis[i] - sis[i + 1])
+            return(temps[i] + frac * (temps[i + 1] - temps[i]))
+          }
+        }
+        NA_real_
+      }
+      quartz_t <- sweep |> dplyr::filter(parameter == "SI_Quartz") |>
+        dplyr::group_by(sample_id) |>
+        dplyr::summarise(T_quartz_C = .interp_zero_crossing(temperature_C, value), .groups = "drop")
+      chalcedony_t <- sweep |> dplyr::filter(parameter == "SI_Chalcedony") |>
+        dplyr::group_by(sample_id) |>
+        dplyr::summarise(T_chalcedony_C = .interp_zero_crossing(temperature_C, value), .groups = "drop")
+
+      geothermo <- nak_thermal |>
+        dplyr::left_join(quartz_t, by = "sample_id") |>
+        dplyr::left_join(chalcedony_t, by = "sample_id")
+
+      write.csv(geothermo, "docs/data/geothermometer_by_site.csv", row.names = FALSE)
+    }
+  }
+
+  # Production well -> port -> injection well link tables, for the
+  # website's ggalluvial diagram (link counts only -- see that chunk's
+  # own caption for why real kg/s flow values aren't shown).
+  if (dbExistsTable(con, "vw_production_to_port")) {
+    write.csv(dbGetQuery(con, "SELECT * FROM vw_production_to_port"), "docs/data/production_to_port.csv", row.names = FALSE)
+  }
+  if (dbExistsTable(con, "vw_port_to_injection")) {
+    write.csv(dbGetQuery(con, "SELECT * FROM vw_port_to_injection"), "docs/data/port_to_injection.csv", row.names = FALSE)
+  }
+
   
   # 2026-09-05 (session 11): the website leaflet maps previously showed
   # only Wells with a bare "Well: <id>" popup, and had no springs/seeps/
