@@ -149,13 +149,17 @@
 148,"STMGID MW10","NDWR_087N18E1925DBBD1","well",39.395714,-119.796467
 149,"STMGID 11 MWA","NDWR_087N18E2019BABA1","well",39.418533,-119.783454
 150,"STMGID MW3","NDWR_087N18E2019DDAA1","well",39.407588,-119.771611
-151,"Boyd Domestic Well","NDEP_Boyd_Dom","well",39.38325,-119.73992
-152,"Jeppson Geothermal Well","NDEP_Jeppson_Dom","well",39.35931,-119.7685
-153,"Rogers Domestic Well","NDEP_Rogers_Well","well",39.36248,-119.7646
-154,"Soccer Field Monitoring Well","NDEP_Soccer_Field","well",39.40187,-119.7594
-155,"Eich Well","NDEP_Eich_Well","well",39.409083,-119.744088
-156,"Herz Domestic Well","KLEIN_Herz_Dom","well",39.405472,-119.753255
-157,"DiMonte Well","KLEIN_DeMonte","well",39.412694,-119.744366
-158,"Zolezzi Well (near Zolezzi Spr)","KLEIN_Zolezzi_Well","well",39.416306,-119.762423
-159,"Curti Domestic Well","KLEIN_Curti_Dom","well",39.394361,-119.7396
-160,"Curti Barn Well (geothermal)","KLEIN_Curti_Barn","well",39.394361,-119.7396
+151,"Whites Creek Diversion to Mt. Rose WTP (MRWTP)","NDWR_SF_087N18E1935ABAC1","creek",39.38837,-119.81474
+152,"Whites Creek Below Mt. Rose WTP","NDWR_SF_087N18E1935ABAC2","creek",39.38846,-119.81467
+153,"Whites Creek Above MRWTP","NDWR_SF_087N18E1935ABAC3","creek",39.38837,-119.81474
+154,"Whites Creek at I580","NDWR_SF_087N18E2017DAAC1","creek",39.42423,-119.7547
+155,"Boyd Domestic Well","NDEP_Boyd_Dom","well",39.37371,-119.7453
+156,"Jeppson Geothermal Well","NDEP_Jeppson_Dom","well",39.35931,-119.7685
+157,"Rogers Domestic Well","NDEP_Rogers_Well","well",39.36248,-119.7646
+158,"Soccer Field Monitoring Well","NDEP_Soccer_Field","well",39.40187,-119.7594
+159,"Eich Well","NDEP_Eich_Well","well",39.409083,-119.744088
+160,"Herz Domestic Well","KLEIN_Herz_Dom","well",39.405472,-119.753255
+161,"DiMonte Well","KLEIN_DeMonte","well",39.412694,-119.744366
+162,"Zolezzi Well (near Zolezzi Spr)","KLEIN_Zolezzi_Well","well",39.416306,-119.762423
+163,"Curti Domestic Well","KLEIN_Curti_Dom","well",39.394361,-119.7396
+164,"Curti Barn Well (geothermal)","KLEIN_Curti_Barn","well",39.394361,-119.7396

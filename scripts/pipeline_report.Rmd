@@ -57,7 +57,9 @@ tables <- c(
   "Hydraulic_Gradients",
   "PHREEQC_Solutions",
   "PHREEQC_Results",
-  "QC_Issues"
+  "QC_Issues",
+  "NDOM_Well_Records",
+  "Stream_Flow_Observations"
 )
 
 counts <- do.call(rbind, lapply(tables, function(t) {

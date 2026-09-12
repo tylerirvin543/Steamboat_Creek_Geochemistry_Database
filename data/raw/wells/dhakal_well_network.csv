@@ -12,6 +12,7 @@ PW 3-2,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate
 PW 3-3,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
 PW 3-4,production,SB2/3,,,"Dhakal et al. (2025) Figure 5 and Table 1; coordinate from ArcGIS satellite-overlay digitization","Lower Steamboat / SB2/3 group. Same port correction as PW 2-3."
 14A-33,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group (586 kg/s total production; 454 kg/s reported downstream to injection -- see 23-33RD/43-33 notes on the ~132 kg/s unaccounted difference).
+14-33,production,Galena 3,,,"Dhakal et al. (2025) Table 1 (Middle Steamboat production well classification)","Distinct well from 14A-33 (confirmed: Table 1 lists both separately) -- NOT itself pictured in Figure 5's 2024 flow snapshot, and NDOM permit 0708 records it as Shut-In (completed 9/15/2007, three months after sibling 14A-33). Grouped with 14A-33/Galena 3 by Table 1's own classification; revisit if/when a more current source shows otherwise."
 34-32,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group.
 44-32,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group.
 44A-32,production,Galena 3,,,"Dhakal et al. (2025) Figure 5",Middle Steamboat / Galena 3 group.

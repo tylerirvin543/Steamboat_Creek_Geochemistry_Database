@@ -684,6 +684,58 @@ source types (each with its own idempotent ingest script, wired into
 | ArcGIS-digitized point/polygon layers (satellite-overlay wells, facility footprints) | `data/raw/arcgis/*.shp` | `register_facility_areas.R` |
 | Field photos **and now videos** (mp4/mov/m4v) for EXIF GPS extraction | `data/raw/images/image_drop/*` (+ `image_location_map.csv`) | `ingest_image_locations.R` (as of 2026-09-06; most videos checked so far carry no embedded GPS at all, so they still need a manual coordinate/station code in the mapping file, same as any un-geotagged photo) |
 | Literature PDFs for citation (never re-hosted, never committed) | `docs/literature/*` (gitignored) | none -- read manually for citation details, see `website/references.Rmd` |
+| NDOM (Nevada Division of Minerals) well-permit records (permit #, API #, BLM lease #, well type, status, spud/completion dates, total depth, elevation, UTM coordinates) | `data/raw/ndom/Ormat Steamboat Wells.xlsx` | `ingest_ndom_wells.R` (cross-validates existing coordinates -- see "NDOM Well-Permit Cross-Validation" below) |
+| NDWR spring/stream flow (daily discharge, cfs) | any directory with a `SiteData`/`SpringAndStreamFlow`-shaped two-sheet xlsx pair, e.g. `data/raw/ndwr/TM_Spring_Stream_Flowdata_*_files/` | `ingest_ndwr_stream_flow.R` |
+
+**Note on `data/raw/ndwr/` layout:** the NDWR SiteData/WaterLevelData xlsx
+files live *inside* their corresponding `*_WellLogQuery_..._files/`
+companion folders (that's simply where the NDWR "Web Page, Filtered"
+export puts them) -- `run_pipeline.R`'s `ingest_ndwr()` calls point there
+directly, not at `data/raw/ndwr/` itself. If these files move again,
+update the two paths in the `RUN_INGEST$ndwr` step.
+
+## NDOM Well-Permit Cross-Validation
+
+NDOM (Nevada Division of Minerals) publishes the official state permit
+record for every geothermal well -- a genuinely independent source from
+the NBMG/ArcGIS-digitized coordinates this project relied on previously.
+`ingest_ndom_wells.R` converts each record's UTM coordinate (NAD83 UTM
+Zone 11N) to lat/lon and, per well, either fills a gap (coordinate,
+elevation, total depth, well role, or the new identifier columns --
+`ndom_permit`, `api_number`, `blm_lease_number`, `well_status`,
+`spud_date`, `completion_date`, `field_name`, `land_type` -- whichever of
+these `Wells` currently has as `NULL`) or, if a coordinate already exists
+and disagrees with NDOM's by more than 100 m, logs the discrepancy to
+`data/derived/ndom_coordinate_discrepancies.csv` instead of silently
+overwriting it. The full raw record is staged verbatim in
+`NDOM_Well_Records` regardless of match outcome. Two names are
+deliberately NOT auto-merged with a similarly-named existing well without
+a human decision: `14-33` vs. `14A-33` (two distinct real NDOM permits,
+independently confirmed as separate wells by Dhakal et al. 2025's own
+Table 1) and the two bare `"1"`/`"3"` thermal-gradient holes (renamed
+`TG-1`/`TG-3` before registration, since a literal well_name of `"1"` is
+too generic to be safe going forward).
+
+This ingestion also surfaced a real, pre-existing unit bug: `elevation_m`
+on both `Wells` and `Locations` had been storing raw feet (from
+`ingest_ndwr.R`) despite its name -- fixed at the source (`ingest_ndwr.R`
+now converts feet to meters on insert) plus a one-time retroactive
+migration (`database/schema/09_ndom_wells_schema.R`) for any
+already-populated rows.
+
+## NDWR Spring/Stream Flow
+
+`ingest_ndwr_stream_flow.R` loads daily manual discharge readings (cfs)
+from NDWR's spring/stream flow exports -- first supplied 2026-09-12 as 4
+gauged sites on Whites Creek (Truckee Meadows basin, going back to 2017).
+Each site is registered as an ordinary `Locations` row
+(`site_type = 'creek'`) so it slots into the same GIS/website map
+machinery as every other location, with the time series itself in the
+new `Stream_Flow_Observations` table. Matching is keyed on
+`external_station_code`, not `coord_key` -- two of the four real sites
+in this dataset share an identical rounded lat/lon (e.g. a diversion
+structure and its "above"/"below" companion points), so coordinates
+alone are not a safe identity key here.
 
 ## Data Availability Reporting
 
@@ -749,6 +801,14 @@ and matching individual well logs to named wells has so far only
 produced leads, not confirmed identities (a lat/lon-only match can be
 misleadingly close -- e.g. one log initially looked like an 18 m match
 to a known production well, but its completion date was 8 years off).
+
+**NDOM well-permit data** (see "NDOM Well-Permit Cross-Validation" above)
+closed several of these gaps directly -- 30 wells got a coordinate for
+the first time, 24 previously-unrecorded wells (mostly 1980s-90s
+observation/production wells) were added as provisional `Wells` rows,
+and `14-33` was added to the network CSV (Middle Steamboat / Galena 3,
+matching sibling `14A-33`) once Dhakal et al. (2025)'s Table 1 confirmed
+them as two distinct, separately-classified wells.
 
 
 

@@ -102,7 +102,7 @@ ingest_ndwr <- function(con, site_file, wl_file, basin_label = NULL) {
       latitude,
       longitude,
       coord_key,
-      elevation_m = elevation,
+      elevation_m = elevation * 0.3048,  # NDWR source Elev column is in feet
       site_type = "well",
       crs = "EPSG:4326"
     )
@@ -147,7 +147,7 @@ ingest_ndwr <- function(con, site_file, wl_file, basin_label = NULL) {
   wells <- site_clean |>
     left_join(locations_db, by = "coord_key") |>
     mutate(
-      elevation_m = elevation,
+      elevation_m = elevation * 0.3048,  # NDWR source Elev column is in feet
       top_perforation = perfs_from,
       bottom_perforation = perfs_to
     ) |>

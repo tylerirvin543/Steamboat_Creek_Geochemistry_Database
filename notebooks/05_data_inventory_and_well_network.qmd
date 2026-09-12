@@ -151,11 +151,91 @@ dbGetQuery(con, "
 ")
 ```
 
+## 4. NDOM Well-Permit Cross-Validation
+
+NDOM (Nevada Division of Minerals) supplied the official state permit
+record for every Ormat Steamboat well -- an independent source from the
+NBMG/ArcGIS-digitized coordinates used elsewhere in this project.
+`ingest_ndom_wells.R` matches each of the 49 permitted wells to an
+existing `Wells` row (exact name, a confirmed spelling variant, or an
+existing alias), or registers it as a new provisional well when no match
+exists.
+
+```{r ndom-match-summary}
+dbGetQuery(con, "
+  SELECT match_method, COUNT(*) n
+  FROM NDOM_Well_Records
+  GROUP BY match_method
+  ORDER BY n DESC
+")
+```
+
+**Coordinate cross-validation:** where a well already had a coordinate
+from an earlier source, NDOM's is compared against it -- disagreements
+over 100 m are never auto-applied, only logged for manual review:
+
+```{r ndom-discrepancies}
+disc_path <- file.path("data", "derived", "ndom_coordinate_discrepancies.csv")
+if (!file.exists(disc_path)) disc_path <- file.path("..", "data", "derived", "ndom_coordinate_discrepancies.csv")
+if (file.exists(disc_path)) read.csv(disc_path) else cat("No discrepancy report found.")
+```
+
+These gaps are large relative to this project's usual ~50-75 m NBMG/
+ArcGIS uncertainty and are worth a manual look -- NDOM is the official
+permit-of-record coordinate.
+
+**A real, pre-existing unit bug was found via this ingestion**:
+`elevation_m` on both `Wells` and `Locations` had been storing raw feet
+(inherited from `ingest_ndwr.R`) despite its name -- e.g. "Sky Tavern Ski
+Resort" recorded as 7619, when Steamboat's true elevation is
+~1450-1750 m. Fixed at the source (`ingest_ndwr.R` now converts on
+insert) plus a one-time retroactive migration for already-populated
+rows:
+
+```{r elevation-check}
+dbGetQuery(con, "
+  SELECT 'Wells' AS tbl, MIN(elevation_m) min_m, MAX(elevation_m) max_m FROM Wells WHERE elevation_m IS NOT NULL
+  UNION ALL
+  SELECT 'Locations', MIN(elevation_m), MAX(elevation_m) FROM Locations WHERE elevation_m IS NOT NULL
+")
+```
+
+**Literature cross-check:** reading Dhakal et al. (2025) Table 1
+("Steamboat Production Well classification") directly confirmed that
+`14-33` and `14A-33` are genuinely distinct wells (both listed
+separately under Middle Steamboat) -- independent corroboration of the
+decision not to merge them, and the basis for adding `14-33` to the
+well/port network CSV (Galena 3, matching its sibling).
+
+## 5. NDWR Spring/Stream Flow
+
+Daily manual discharge readings (cfs) at NDWR-monitored spring/stream
+sites -- first supplied 2026-09-12 for 4 sites on Whites Creek (Truckee
+Meadows basin, part of this project's broader hydrologic context rather
+than the Steamboat outflow system itself).
+
+```{r stream-flow-sites}
+dbGetQuery(con, "
+  SELECT l.name, l.latitude, l.longitude, l.elevation_m,
+         COUNT(*) n_obs, MIN(s.date) start_date, MAX(s.date) end_date
+  FROM Stream_Flow_Observations s
+  JOIN Locations l ON l.location_id = s.location_id
+  GROUP BY l.location_id
+  ORDER BY l.name
+")
+```
+
+Two of the four sites share an identical rounded lat/lon (a diversion
+structure and its "above"/"below" companion points) -- registration is
+keyed on `external_station_code`, not `coord_key`, for exactly this
+reason.
+
 ## Changelog
 
 | Date | Change |
 |---|---|
 | 2026-09-05 | Notebook created. Data availability chart built for the first time (and the `Sampling_Events.date` dual-epoch bug discovered while building it). 7 Steamboat well logs cross-checked against NBMG by location *and* completion date together (previously only location had been checked); `123802` conclusively rejected as a match to `43-33`; `27731`/"Injection Well No. 3" flagged as the tightest remaining lead but judged more likely a distinct well. All 7 registered as provisional `Wells` rows. |
+| 2026-09-12 | Added NDOM well-permit cross-validation section (49 wells, 6 coordinate discrepancies flagged, elevation_m feet-vs-meters bug found and fixed project-wide) and NDWR spring/stream flow section (4 Whites Creek sites, daily discharge back to 2017). |
 
 ```{r cleanup}
 #| include: false

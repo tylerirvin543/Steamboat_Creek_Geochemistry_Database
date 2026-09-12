@@ -2334,6 +2334,263 @@ console-UX session.
   bibliography and its rendered outputs are intentionally NOT
   committed (gitignored, per the reasoning above).
 
+## Session 21 updates (2026-09-12): NDOM permitted-well data ingested (cross-validation + gap-filling)
+
+User received a new source from Keith Hayes (NDOM, Nevada Division of
+Minerals) -- `data/raw/ndom/Ormat Steamboat Wells.xlsx`, 49 rows: the
+official state permit record for every Ormat Steamboat well (Permit #,
+API #, BLM Lease Number, Well Type [Obs/Ind-Prod/Ind-Inj/TG],
+Status [In Use/Shut-In], Spud/Completion dates, Total Depth, UTM
+Easting/Northing, Elevation). Planned in Plan mode with the user (4
+explicit decisions confirmed via AskUser before implementing) and then
+built and applied end-to-end.
+
+- **UTM assumed NAD83 UTM Zone 11N (EPSG:26911)**, matching the
+  convention already used elsewhere in this project (the well-log OCR
+  parser's `.extract_utm_latlon()`) -- confirmed correct by spot-
+  checking 9 already-coordinated wells before writing any code: most
+  converted coordinates landed within ~15-50 m of the existing NBMG/
+  ArcGIS-sourced value, consistent with existing `coordinate_uncertainty_m`.
+- **New schema file**: `database/schema/09_ndom_wells_schema.R` (sourced
+  after 01-08, both at initial connection and in the DEMO reset block).
+  Adds 8 new `Wells` columns (`ndom_permit`, `api_number`,
+  `blm_lease_number`, `well_status`, `spud_date`, `completion_date`,
+  `field_name`, `land_type`) and a new `NDOM_Well_Records` staging table
+  (mirrors `Well_Log_Documents`/`Staging_NDEP_WQ` -- full raw row
+  preserved verbatim, unique on `Permit`, records `match_method` and
+  `matched_well_id`).
+- **Real, pre-existing unit bug found and fixed while scoping this**:
+  `Wells.elevation_m` had been storing raw FEET since first populated by
+  `ingest_ndwr.R` (e.g. "Sky Tavern Ski Resort" = 7619, "Galena Creek
+  Park" = 6017 -- Steamboat's true elevation is ~1450-1750 m, nowhere
+  close to those numbers even accounting for surrounding peaks). All 73
+  then-populated rows were confirmed 100% feet (not a per-row mix)
+  before writing a fix. **User explicitly chose the broad fix**: a
+  one-time migration in `09_ndom_wells_schema.R` converts every
+  `Wells.elevation_m > 3000` to true meters (`* 0.3048`) -- naturally
+  idempotent, since post-conversion Steamboat elevations top out
+  ~2325 m, safely under the 3000 threshold. NDOM's own elevations (also
+  feet in the source file) are converted correctly on ingest using the
+  same factor, so the column is now consistent both retroactively and
+  going forward.
+- **New ingest script**: `scripts/ingest/ingest_ndom_wells.R` /
+  `ingest_ndom_wells(con)`. Per row: converts UTM, resolves the well
+  name to an existing `Wells` row via (a) exact `well_name` match, (b) 7
+  hardcoded confirmed spelling-variant matches (`21-5`->`21-5R`,
+  `13-5`->`13-5R`, `21B-5`->`21B-5R`, `83B-6`->`83B-6R`,
+  `83C(82)-6`->`83C-6ST1`, `23-33`->`23-33RD`, `46-28-2`->`46-28` --
+  each independently corroborated by spelling-variant notes already in
+  this file from earlier sessions), or (c) an existing `Well_Aliases`
+  row; else creates a new provisional `Wells` row (no coordinate
+  conflict possible for a brand-new row). Fills `well_role` (from Well
+  Type: Obs/TG -> `monitor`, Ind-Prod -> `production`, Ind-Inj ->
+  `injection`), coordinates, elevation, total_depth, and the 8 new
+  identifier columns **only when the existing Wells field is currently
+  NULL** -- never overwrites. **User explicitly chose never-overwrite +
+  flag-for-review** for coordinate conflicts: existing coordinates >100 m
+  from NDOM's are left untouched and logged to
+  `data/derived/ndom_coordinate_discrepancies.csv` instead. Idempotent
+  on `NDOM_Well_Records.permit` (verified: a second run finds 0 new rows
+  and changes nothing).
+- **Two names deliberately NOT auto-merged**, per user-approved plan:
+  `"14-33"` (NDOM permit 0708) vs. existing `"14A-33"` (permit 0669) --
+  two distinct real NDOM permits, kept as separate wells with a `notes`
+  flag for manual review, not guessed as the same well. `"1"`/`"3"`
+  (both Well Type `TG`, thermal-gradient holes, permits 0273/0275,
+  **and the only 2 of the 49 rows with no UTM coordinate at all** in
+  the source file, along with `"11-12-TG"`) -- renamed to `"TG-1"`/
+  `"TG-3"` before matching per user's explicit choice, since a literal
+  well_name of `"1"`/`"3"` is too generic/collision-prone.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_ndom_<timestamp>.sqlite`,
+  verified identically against a scratch copy first): 18 exact-name
+  matches, 7 alias/variant matches, 24 new provisional wells created
+  (Wells count 119 -> 143); 30 coordinates filled, 38 elevations filled,
+  47 total_depths filled, 25 well_roles filled, 49 identifier sets
+  filled. **6 real coordinate discrepancies found and logged** (existing
+  values left untouched, per the user's chosen never-overwrite policy) --
+  `24-5` (555 m), `34-32` (573 m), `14A-33` (476 m), `21-32` (211 m),
+  `64A-32` (228 m), `41-5` (166 m) -- all in
+  `data/derived/ndom_coordinate_discrepancies.csv`, worth a manual look
+  since NDOM is the official permit-of-record coordinate and these gaps
+  are large relative to this project's usual ~50-75 m NBMG/ArcGIS
+  uncertainty.
+- **Wired into `run_pipeline.R`**: new `RUN_INGEST$ndom_wells` flag
+  (`TRUE` in profiles 1/2, `FALSE` in 3), sourcing
+  `09_ndom_wells_schema.R` alongside 01-08 and calling
+  `ingest_ndom_wells(con)` as its own `run_step()`-wrapped stage, placed
+  right after the existing "WELL LOG PDFs" stage. Edited via the
+  established `readLines()`/binary-write-with-explicit-"\r\n"-join
+  round-trip (the `edit` tool's exact-string matching failed
+  intermittently against this CRLF file, same recurring caveat as many
+  prior sessions) -- verified with `parse()` afterward and a `grep -U
+  $'\r\r'` check to confirm no doubled-CR corruption was introduced.
+- **Not done this session**: DEMO database not rebuilt with this stage;
+  the 6 flagged coordinate discrepancies are logged but not resolved
+  (deliberately left for the user); `data/raw/ndom/` is untracked/
+  gitignored like other raw sources (xlsx not `git add -f`'d); this
+  session's file changes are not yet committed/pushed to git.
+
+## Session 22 updates (2026-09-12, continued): Dhakal Table 1 cross-check, DEMO idempotency test, second elevation-unit bug (Locations)
+
+Follow-up to Session 21. User attached an image (a zoomed map with fault
+lines + surface-manifestation/mineralization legend matching Dhakal et
+al. 2025 Figure 1's own caption almost exactly -- i.e. this appears to
+literally be that figure) asking whether Dhakal confirms 34-32 = Middle
+Steamboat, 14-33/14A-33 as distinct-but-adjacent wells, and 24-5's
+position; also asked for an idempotent DEMO-mode test of the new NDOM
+stage.
+
+- **Read `docs/literature/Dhakal.pdf` directly (Table 1, "Steamboat
+  Production Well classification")** -- confirms all three user
+  observations from an independent, authoritative source (not just the
+  image): Upper Steamboat = `13-5RD, 21-5, 21-5R, 21B-5R, 23-5, 24-5,
+  41-5, 83A-6, 83B-6RD, 83C-6`; Middle Steamboat = `14-33, 14A-33, 28-32,
+  34-32, 44-32, 44A-32`; Lower Steamboat = `78-29, HA-4, PW-1, PW-2,
+  PW-3, PW2-1, PW2-3, PW2-5, PW3-1, PW3-2, PW3-3, PW3-4`. This
+  independently corroborates the Session 20/21 decision to keep `14-33`
+  and `14A-33` as separate wells (Dhakal's own table lists them
+  separately too).
+- **`14-33` added to `data/raw/wells/dhakal_well_network.csv`**
+  (`well_role=production`, `port_name=Galena 3`, matching sibling
+  `14A-33`) -- the one well from Table 1 that was a literature-confirmed
+  gap in the network CSV. Noted in its own row that it's NOT in Figure
+  5's 2024 flow snapshot and NDOM records it Shut-In (permit 0708,
+  completed 9/15/2007, three months after 14A-33) -- grouped by Table 1's
+  classification, not by an active-flow claim.
+- **Deliberately NOT mapped**: `28-32` (Table 1 lists it as Middle
+  Steamboat, but NDOM confirms Shut-In and it's absent from Figure 5 --
+  consistent, no action needed, same pattern as `IW-2`/`IW-3`); `28A-32`
+  (NDOM permit 1605, completed 8/6/2026 -- too new for Dhakal 2025 or any
+  literature checked so far; no port assignment guessed).
+- **Full DEMO-mode pipeline rebuild run end-to-end** (all ingest sources
+  including the new `RUN_INGEST$ndom_wells` stage) for the first time --
+  0 stage failures, NDOM stage completed in 3.3-3.4 sec with the same 6
+  coordinate discrepancies as the operational-DB run (expected, same
+  source file). Re-running `ingest_ndom_wells()` a second time against
+  the same DEMO database confirmed clean idempotency (0 new rows, 0
+  fields changed).
+- **Second elevation-unit bug found via this idempotency test, not
+  previously caught**: re-running `09_ndom_wells_schema.R`'s migration a
+  second time against the DEMO database (after the full pipeline run)
+  unexpectedly found 73 more `Wells.elevation_m` rows > 3000 to convert.
+  Root cause: within a single fresh-DEMO pipeline run, the schema
+  migration sources (and runs its one-time feet->meters fix) *before*
+  `ingest_ndwr.R` runs later in the same INGEST STAGE -- so on a brand
+  -new database, the migration finds 0 rows (Wells is still empty), then
+  NDWR ingestion populates 73 more elevation_m rows in raw feet,
+  uncorrected for the rest of that run. (This is why Session 21's fix
+  looked complete against the already-populated operational DB but
+  didn't fully close the loop for a from-scratch DEMO rebuild.)
+  **Also discovered while chasing this**: the exact same bug independently
+  affects **`Locations.elevation_m`** (72 rows, e.g. "Sky Tavern Ski
+  Resort" = 7619, same NDWR source) -- missed by Session 21's fix, which
+  only touched `Wells`. **Fixed at the actual root cause this time**:
+  `ingest_ndwr.R` now converts `elevation * 0.3048` at insert time for
+  *both* `Locations.elevation_m` and `Wells.elevation_m` (previously
+  inserted the raw NDWR feet value directly into both), so this can't
+  recur on any future ingest, DEMO rebuild, or new NDWR site added.
+  `09_ndom_wells_schema.R`'s one-time retroactive migration extended to
+  also cover `Locations.elevation_m > 3000`, so it's a real project-wide
+  fix now, not just `Wells`. Verified three ways: (1) DEMO database's 72
+  bad `Locations` rows fixed by re-running the migration; (2) a from-
+  scratch scratch database running only `ingest_ndwr.R` fresh (both
+  PV and TM basin files) confirmed new rows arrive already correct
+  (elevation range 1345-2322 m for both `Locations` and `Wells`, no
+  retroactive fix needed); (3) applied the same retroactive
+  `Locations.elevation_m` fix to the real
+  `geochem_operational.sqlite` (backed up first to
+  `database/archive/geochem_operational_pre_locations_elev_fix_<timestamp>.sqlite`)
+  -- 72 rows corrected, 0 remain > 3000 in either table.
+- **Not done this session**: the DEMO database itself was not re-run a
+  third time end-to-end to confirm the `ingest_ndwr.R` source fix holds
+  up inside a full fresh pipeline run (only verified via the isolated
+  scratch-db test above) -- worth doing on the next full DEMO rebuild;
+  git commit/push still pending for all of Sessions 20-22's changes.
+
+## Session 23 updates (2026-09-12, continued): NDWR file reorganization fix, NDWR spring/stream flow ingestion, docs pass
+
+Follow-up to Sessions 21-22 (NDOM ingestion, Dhakal Table 1 confirmation).
+User reorganized `data/raw/ndwr/` (moved the PV/TM `SiteData`/
+`WaterLevelData` xlsx files out of the folder root and into their
+respective `*_WellLogQuery_..._files/` companion folders) and supplied a
+new source, `data/raw/ndwr/TM_Spring_Stream_Flowdata_2026_09_12_files/`
+(2 files: `SiteData.xls.xlsx`, `SpringAndStreamFlow.xls.xlsx` -- daily
+manual discharge in cfs at 4 gauged sites on Whites Creek, Truckee
+Meadows basin, back to 2017).
+
+- **Fixed `run_pipeline.R`'s hardcoded NDWR paths** (`RUN_INGEST$ndwr`
+  step) to point inside the `_files` subfolders where the xlsx files now
+  live -- confirmed via `find` that the `sheet001.htm` companion files
+  `ingest_well_logs.R` reads were already inside those folders (the
+  NDWR "Web Page, Filtered" export always puts them there), so only the
+  `ingest_ndwr()` call's two direct file-path arguments needed updating,
+  not that script. Verified by re-running `ingest_ndwr()` against the
+  real database with the new paths (idempotent, 0 new rows since already
+  ingested under the old paths).
+- **New source ingested**: `scripts/ingest/ingest_ndwr_stream_flow.R` /
+  `ingest_ndwr_stream_flow(con)`, new schema
+  `database/schema/10_ndwr_stream_flow_schema.R`
+  (`Stream_Flow_Observations`: `location_id`, `date`, `discharge_cfs`,
+  `method`, `measured_by`, `remarks`, `source`, unique on
+  `(location_id, date, method)`). Each of the 4 sites is registered as
+  an ordinary `Locations` row (`site_type = 'creek'`) so it slots into
+  the same GIS/website map machinery as every other location -- no new
+  spatial concept needed, only the time series table itself is new.
+  Wired into `run_pipeline.R` as `RUN_INGEST$ndwr_stream_flow` (`TRUE` in
+  profiles 1/2, `FALSE` in 3), right after the `NDWR WELLS + WATER
+  LEVELS` step.
+- **Real bug caught and fixed while building this**: two of the four
+  real sites (`087 N18 E19 35ABAC1` "Whites Creek Diversion to Mt. Rose
+  WTP" and `087 N18 E19 35ABAC3` "Whites Creek Above MRWTP") share an
+  **identical rounded lat/lon** in the source file -- matching/
+  deduplicating Locations on `coord_key` (the pattern `ingest_ndwr.R`
+  uses for wells) collapsed them into one row and broke the
+  `External_Location_Map` unique constraint downstream. This is the same
+  class of bug flagged in Session 1 for `ingest_field.R` (coord_key is
+  not always a safe identity key). Fixed by matching/deduplicating on
+  `external_station_code` (`"NDWR_SF_" + cleaned site name`) instead --
+  each of the 4 sites now gets its own correct `Locations` row despite
+  the coordinate collision. A second, unrelated bug (`ifelse()` returning
+  the wrong type -- logical instead of character -- when its test vector
+  has zero rows, hit on the very first idempotent re-run when
+  `Stream_Flow_Observations` was still empty) was fixed by switching the
+  dedup-key construction from `ifelse(is.na(x), "", as.character(x))` to
+  `coalesce(as.character(x), "")`, which doesn't have this zero-length
+  quirk.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_streamflow_<timestamp>.sqlite`,
+  verified against a scratch copy first): 4 new `Locations` rows, 4929
+  new `Stream_Flow_Observations` rows (2017-12-30 through 2026-06-30
+  across the 4 sites). Idempotent re-run confirmed (0 new rows).
+- **Full DEMO-mode pipeline rebuild re-run** (all sources except the slow
+  `well_logs` OCR stage, to save time) with both the path fix and the new
+  stream-flow stage active -- 0 stage failures, ~4.2 min total.
+- **Documentation pass**: `README.md` (new-data-drop-locations table row
+  for both NDOM and NDWR stream flow, a note explaining the `_files`
+  subfolder path convention, new "NDOM Well-Permit Cross-Validation" and
+  "NDWR Spring/Stream Flow" sections, and a summary paragraph added to
+  the existing "Well & Facility Flow Network" section); notebook
+  `05_data_inventory_and_well_network.qmd` (new "4. NDOM Well-Permit
+  Cross-Validation" and "5. NDWR Spring/Stream Flow" sections with live
+  queries against the real database, re-rendered successfully; new
+  changelog row); `scripts/pipeline_report.Rmd` (added `NDOM_Well_Records`
+  and `Stream_Flow_Observations` to the table-row-count list, test-
+  rendered successfully). All three CRLF files edited via the
+  established `readLines()`/binary-write-with-explicit-`"\r\n"`-join
+  round-trip (the `edit` tool's exact-string matching failed
+  intermittently against them, same recurring caveat as many prior
+  sessions) -- verified with a `grep -U $'\r\r'` check on each
+  afterward to confirm no doubled-CR corruption was introduced.
+- **Not done this session**: DEMO database's `well_logs` (OCR) stage was
+  skipped in this session's rebuild to save ~12 minutes -- worth a full
+  rebuild including it next time there's time; `data/raw/ndwr/` is
+  untracked/gitignored like other raw sources (new xlsx files not
+  `git add -f`'d); the flow-data `Accuracy` column (all-`NA` in the
+  source file so far) and the small number of unit-mismatch/NA-discharge
+  rows in the raw file were left as-is (stored/skipped respectively, not
+  investigated further -- see `ingest_ndwr_stream_flow.R`'s warnings).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

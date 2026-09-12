@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -213,6 +213,8 @@ source("database/schema/05_well_network_schema.R")
 source("database/schema/06_facility_areas_schema.R")
 source("database/schema/07_well_logs_schema.R")
 source("database/schema/08_phreeqc_schema.R")
+source("database/schema/09_ndom_wells_schema.R")
+source("database/schema/10_ndwr_stream_flow_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -290,6 +292,8 @@ source("database/schema/05_well_network_schema.R")
 source("database/schema/06_facility_areas_schema.R")
 source("database/schema/07_well_logs_schema.R")
 source("database/schema/08_phreeqc_schema.R")
+source("database/schema/09_ndom_wells_schema.R")
+source("database/schema/10_ndwr_stream_flow_schema.R")
 }
 
 # ============================================================
@@ -363,20 +367,37 @@ run_step(RUN_INGEST$conductivity, "CONDUCTIVITY LOGGERS", {
   ingest_conductivity(con)
 })
 
+# 2026-09-12: paths below point inside the WellLogQuery "_files"
+# subfolders because the user reorganized data/raw/ndwr/ (moving the
+# SiteData/WaterLevelData xlsx files out of the folder root and into
+# their respective WellLogQuery _files companion folders). Update these
+# two paths again if the raw files move a third time.
 run_step(RUN_INGEST$ndwr, "NDWR WELLS + WATER LEVELS", {
   source("scripts/ingest/ingest_ndwr.R")
   
   ingest_ndwr(
     con,
-    "data/raw/ndwr/PV_NDWR_SiteData_2026_05_31.xlsx",
-    "data/raw/ndwr/PV_NDWR_WaterLevelData_2026_05_31.xlsx"
+    "data/raw/ndwr/PV_NDWR_WellLogQuery_all_2026_05_31_files/PV_NDWR_SiteData_2026_05_31.xlsx",
+    "data/raw/ndwr/PV_NDWR_WellLogQuery_all_2026_05_31_files/PV_NDWR_WaterLevelData_2026_05_31.xlsx"
   )
   
   ingest_ndwr(
     con,
-    "data/raw/ndwr/TM_NDWR_SiteData_2026_05_31.xlsx",
-    "data/raw/ndwr/TM_NDWR_WaterLevelData_2026_05_31.xlsx"
+    "data/raw/ndwr/TM_NDWR_WellLogQuery_all_2026_05_31_files/TM_NDWR_SiteData_2026_05_31.xlsx",
+    "data/raw/ndwr/TM_NDWR_WellLogQuery_all_2026_05_31_files/TM_NDWR_WaterLevelData_2026_05_31.xlsx"
   )
+})
+
+run_step(RUN_INGEST$ndwr_stream_flow, "NDWR SPRING/STREAM FLOW", {
+  # Daily manual discharge readings (cfs) at 4 NDWR-monitored
+  # spring/stream sites on Whites Creek (Truckee Meadows basin),
+  # supplied 2026-09-12 (data/raw/ndwr/TM_Spring_Stream_Flowdata_2026_09_12_files/).
+  # Registers each site as a Locations row (site_type = 'creek') and
+  # loads the daily discharge time series into Stream_Flow_Observations.
+  # Idempotent on (location_id, date, method). See
+  # scripts/ingest/ingest_ndwr_stream_flow.R.
+  source("scripts/ingest/ingest_ndwr_stream_flow.R")
+  ingest_ndwr_stream_flow(con)
 })
 
 run_step(RUN_INGEST$lab, "LAB", {
@@ -499,6 +520,24 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # each a provisional Wells row so it's visible/mappable while staying
   # unambiguous that it isn't a confirmed identity match.
   register_provisional_well_logs(con)
+})
+
+run_step(RUN_INGEST$ndom_wells, "NDOM WELL-PERMIT DATA", {
+  # Ingests NDOM (Nevada Division of Minerals) permitted-well data for
+  # Ormat's Steamboat wells (data/raw/ndom/Ormat Steamboat Wells.xlsx,
+  # supplied by Keith Hayes/NDOM 2026-09) -- the official state permit
+  # record used to cross-validate existing NBMG/ArcGIS-sourced well
+  # coordinates and fill gaps for wells never previously matched to any
+  # coordinate. Never overwrites an existing Wells field; coordinate
+  # conflicts > 100 m are logged to
+  # data/derived/ndom_coordinate_discrepancies.csv for manual review
+  # rather than applied automatically. See
+  # scripts/ingest/ingest_ndom_wells.R and
+  # database/schema/09_ndom_wells_schema.R (also contains a one-time
+  # fix for a pre-existing Wells.elevation_m feet-vs-meters unit bug,
+  # found while scoping this ingestion).
+  source("scripts/ingest/ingest_ndom_wells.R")
+  ingest_ndom_wells(con)
 })
 
 # ============================================================
