@@ -120,7 +120,7 @@ crossref <- tribble(
   "IW-1, IW-2, IW-3 (SB GEO)", "well (injection)", "Resolved", "IW-1 alias -> 45-28; IW-2/IW-3 exact canonical names",
   "OW-1, OW-2 (SB GEO observation)", "well (monitor)", "Partial", "OW-2 exact match (well_id 110); OW-1 not found",
   "28-32", "well", "Resolved", "Exact Wells.well_name match (well_id 125)",
-  "Strat wells 2, 5, 6, 7, 9, 13, 14", "well (stratigraphic test)", "Unresolved", "No 'strat #'-style Wells rows exist",
+  "Strat wells 2, 5, 6, 7, 8, 9, 13, 14", "well (stratigraphic test)", "Registered, no coordinate (2026-09-12)", "Real provisional Wells rows with depth/formation/temperature/water-level data (Table 8, Section 4.2); no coordinate -- see proximity notes for strat 13 (near 23-5) and strats 2/5/9 (near Cox I-1)",
   "Well GS-58, Spring GS-59", "well/seep (pre-Ormat)", "Resolved (2026-09-12)", "Both are OCR artifacts of well GS-5 (see Section 4.1) -- exact NBMG match, API 27-031-80055",
   "Hot spring 6 (main terrace ACEC)", "spring", "Unresolved", "Coordinate-less provisional Locations row; no modern counterpart identified",
   "Steamboat Creek at Rhodes Road", "surface water", "Resolved (independently)", "Locations 'SB5'/'SB6' -- same site this project's SBRR conductivity logger occupies",
@@ -128,8 +128,14 @@ crossref <- tribble(
   "Boyd Well", "domestic well", "Resolved (independently)", "NDEP-promoted Locations row 'Boyd Domestic Well'",
   "Rogers Well", "domestic well", "Resolved (independently)", "NDEP-promoted Locations row 'Rogers Domestic Well'",
   "Jeppson Well", "geothermal well", "Resolved (independently)", "NDEP-promoted Locations row 'Jeppson Geothermal Well'",
-  "Steinhardt Well, MacKay Well, Woods Well, Tangen Well, PTR-1/2, Bianco, Brown School, STMGID Went",
-    "domestic/monitor well", "Unresolved", "Consistent with prior sessions' independent 'unresolved' flags for several of these"
+  "Steinhardt Well", "domestic well", "Resolved (2026-09-12)", "Exact NBMG name match ('Steinhardt Geothermal Well')",
+  "Brown School Well", "domestic well", "Resolved (2026-09-12)", "Exact NBMG owner-name match ('Brown Elementary School')",
+  "Bianco Well", "domestic well", "Tentative (2026-09-12)", "NDWR owner-name match ('BIANCO, U J'); PLSS-section coordinate only, and a flagged depth discrepancy (232 ft vs. Table 3's 400 ft)",
+  "Herz-2 (geothermal)", "well", "Inconclusive (2026-09-12)", "Could be either of NBMG's two ambiguous 'Harold Herz Geothermal Well 1/2' candidates (flagged since Session 3); Table 3's own OCR is too garbled to disambiguate -- not guessed",
+  "PTR-1, PTR-2 (Pine Tree Ranch)", "domestic well", "Still unresolved (re-checked 2026-09-12)", "Registered as provisional Wells rows with real depth/chloride/water-level data; fresh NDWR/NBMG owner-name search found nothing",
+  "STMGID MW-3, MW-4", "monitor well", "Still unresolved (re-checked 2026-09-12)", "Registered as provisional Wells rows; NBMG's only STMGID-named record ('Well 4 Shadowridge') is a production well, not this monitor-well pair -- not used",
+  "MacKay Well, Woods Well, Tangen Well, STMGID Went",
+    "domestic/monitor well", "Unresolved", "Consistent with prior sessions' independent 'unresolved' flags for these"
 )
 crossref
 ```
@@ -144,11 +150,11 @@ is independent confirmation that these are the *same*, real,
 multi-decade monitoring locations -- not a coincidence of common
 surnames in a small area.
 
-The remaining "Unresolved" rows (the stratigraphic test wells,
-Steinhardt, MacKay, Woods, Tangen, PTR-1/2, Bianco, Brown School) are a
-concrete follow-up list, consistent with (and in several cases literally
-the same names as) gaps already flagged in `AGENTS.md` from unrelated
-well-matching sessions. None are guessed here.
+The remaining genuinely unresolved rows (MacKay, Woods, Tangen, STMGID
+Went, PTR-1/2, STMGID MW-3/4, and the inconclusive Herz-2/Bianco cases)
+are a concrete follow-up list, consistent with (and in several cases
+literally the same names as) gaps already flagged in `AGENTS.md` from
+unrelated well-matching sessions. None are guessed here.
 
 ### 4.1 Resolving 83A-6, Cox 1-1, and the "GS-58"/"GS-59" OCR artifact (2026-09-12)
 
@@ -204,6 +210,122 @@ currently-dormant Lower Sinter Terrace spring this thesis's own
 spring-remapping fieldwork is specifically designed to find and
 re-evaluate. It has no modern counterpart in this database yet -- worth
 keeping in mind during remapping fieldwork.
+
+### 4.2 Table 3: South Truckee Meadows ground-water wells (2026-09-12)
+
+Table 3 ("Data for selected wells completed in the ground-water system
+of South Truckee Meadows and Pleasant Valley") ties directly to the
+report's own conclusion that 80-95% of the ACEC spring decline traces to
+regional shallow ground-water decline. It gives real depth/temperature/
+chloride-range/water-level-decline data for PTR-1, PTR-2, STMGID MW-3,
+MW-4, Bianco, Boyd, Steinhardt, Brown School, and Herz-2 -- but, like
+Table 8, has **no coordinates of its own**. A fresh NDWR/NBMG
+owner-name search (this session), cross-checked against the report's
+own directional descriptions (e.g. Steinhardt "northeast of the ACEC"),
+found:
+
+- **Steinhardt** and **Brown School**: exact NBMG name matches
+  ("Steinhardt Geothermal Well", "Brown School Geothermal Well" --
+  the latter owned by "Brown Elementary School", an unambiguous
+  identity confirmation). Both directions check out against the
+  report's own description. Now real, coordinate-having `Wells` rows.
+- **Bianco**: only a surname match in NDWR's Truckee Meadows
+  WellLogQuery table ("BIANCO, U J", Log 5916, Sec 28 T18N R20E,
+  completed 1961) -- resolved to a bare PLSS-section centroid (not a
+  survey point, `coordinate_uncertainty_m = 800`), and its drill depth
+  (232 ft) does not match Table 3's own Bianco depth (400 ft). Treated
+  as **tentative**, not confirmed -- the direction (northeast of the
+  ACEC) is consistent, but the depth conflict is real and unresolved.
+- **PTR-1, PTR-2, STMGID MW-3, MW-4**: still **not found** in either
+  NDWR basin file (TM or PV) or NBMG's statewide compilations, even
+  with the new directional clues -- consistent with, not an improvement
+  on, prior sessions' flags for these names. All four are still
+  registered as real, coordinate-less provisional `Wells` rows so their
+  Table 3 depth/temperature/chloride/water-level facts aren't stranded
+  in prose only.
+- **Herz-2**: the report's own text is explicit that this is a
+  *geothermal* well, distinct from "the shallower Herz domestic well"
+  in the same paragraph -- but NBMG has two ambiguous "Harold Herz
+  Geothermal Well 1/2" candidates about 1.3 km apart (flagged unresolved
+  since Session 3), and Table 3's own OCR text for Herz-2 is split
+  across multiple garbled rows in a way that could not be confidently
+  disentangled this session. Left inconclusive rather than guessed.
+
+```{r table3-check}
+dbGetQuery(con, "
+  SELECT well_name, well_role, latitude, longitude, coordinate_source, coordinate_uncertainty_m
+  FROM Wells
+  WHERE well_name IN ('Steinhardt Geothermal Well', 'Brown School Geothermal Well', 'Bianco',
+                       'Pine Tree Ranch-1', 'Pine Tree Ranch-2', 'STMGID MW-3', 'STMGID MW-4')
+  ORDER BY well_name
+")
+```
+
+### 4.3 Table 8: stratigraphic test wells (2026-09-12)
+
+Table 8 ("Selected data for stratigraphic test wells in the Steamboat
+Hills area") gives perforated depth, formation, bottom-hole temperature,
+and 1987-1989 water-level change for strat wells 2, 5, 6, 7, 8, 9, 13,
+and 14 -- the wells behind the "Strat wells... Unresolved" cross-
+reference gap. Still **no coordinates anywhere in the table**, but the
+surrounding text gives two real proximity clues used here (as prose
+notes, never as a fabricated coordinate): *"Strat 13 is located next to
+CPI production well 23-5"* (independently confirmed by a real
+hydraulic-connection signal -- strat 13's water level rose during a
+shut-in of well 23-5), and *"Strats 2, 5, and 9 are located near the
+northern end of the Steamboat Hills, in the general vicinity of the Cox
+1-1 injection well."* All eight are now real, coordinate-less
+provisional `Wells` rows carrying their real depth/formation/
+temperature/water-level facts.
+
+```{r table8-check}
+dbGetQuery(con, "
+  SELECT well_name, well_role, notes
+  FROM Wells WHERE well_name LIKE 'strat %'
+  ORDER BY well_name
+")
+```
+
+Two things worth noting from the table: strat 5's bottom-hole
+temperature (44 C) is far cooler than strats 2 and 9 (171-179 C) despite
+a similar depth range -- the report attributes this to strat 5 tapping a
+distinct, non-thermal zone, not the same reservoir. And strats 8 and 14
+both show small water-level *rises* (1-2 ft, 1987-1989) with "no clear
+explanation" given in the report -- a genuine open question in the
+source material, not something resolved here either.
+
+### 4.4 Tables 6/7: well-completion data fills a currently-empty field (2026-09-12)
+
+`Wells.top_perforation`/`bottom_perforation` were NULL for every one of
+the CPI/SB GEO wells already resolved in this database, even though
+Tables 6 and 7 ("CPI well-completion information", "SB GEO well
+completion information") report real casing-depth and open-hole-
+interval data for most of them. The table's own OCR layout has visible
+column-alignment slippage, so each well's numbers were individually
+cross-checked (casing depth + open-hole thickness = total depth,
+confirmed to reconcile exactly for every SB GEO well and for 83A-6) before
+being trusted:
+
+```{r table67-check}
+dbGetQuery(con, "
+  SELECT well_name, total_depth, top_perforation, bottom_perforation
+  FROM Wells
+  WHERE well_name IN ('83A-6','Cox I-1','PW-1','PW-2','PW-3','21-5R','IW-3','23-5','IW-2')
+  ORDER BY well_name
+")
+```
+
+**Two real, deliberately-unfilled conflicts**: `23-5`'s 1990-era report
+depth (2422 ft) is 19% shallower than the 3001 ft already on record
+(NDOM-sourced), and `IW-2`'s 1990 report depth (1403 ft) is less than a
+third of the 4700 ft on record -- both almost certainly explained by
+subsequent deepening of these still-active wells, not a data error.
+Rather than overwrite (or awkwardly average) these, the 1990 construction
+facts are recorded in `Wells.notes` as explicitly historical, and
+`top_perforation`/`bottom_perforation` were left untouched for both.
+Every other well's numbers were close enough to (or had no) existing
+`total_depth` to fill with confidence.
+
 
 ## Newly ingested chemistry: Table 1 (1950-1991)
 
@@ -346,6 +468,66 @@ magnitude, matters when reading this chart -- White (1968) and Collar
 (1990)'s methods and gauge locations are not identical to Sorey &
 Spielman's.
 
+## Appendix G and Table 9: what's behind the discharge/reservoir numbers (2026-09-12)
+
+### Appendix G: the raw synoptic Cl-flux surveys behind Table 2
+
+Appendix G ("Stream Discharge and Chloride Flux") documents the real
+method behind the Collar (1990) discharge estimates already used in the
+discharge-through-time chart above: chloride treated as a conservative
+tracer, an 820 mg/L thermal / 6 mg/L non-thermal end-member split, and
+gaining/losing-reach mass-balance equations -- methodologically almost
+identical to this project's own SBRR/SBBV Cl mass-balance approach, just
+predating it by ~35 years. Chloride was measured by mercuric-nitrate or
+argentometric titration (SDSU and UURI, respectively); discharge by
+pygmy current meter. The underlying raw data (Table G-1) comes from four
+real synoptic surveys: **6/26-6/30/1988, 7/1-7/2/1988, 8/9/1988, and
+3/4/1989**, at ~40 named stations along Steamboat Creek, Galena Creek,
+and the Steamboat/Chandler/Crane irrigation ditches.
+
+**Deliberately not parsed further**: Table G-1's raw per-station
+discharge/chloride/boron values are visibly OCR-misaligned in the
+extracted text (values shifted relative to station-name rows, in some
+blocks by a full row) -- the same class of "real data trapped in a
+badly-OCR'd table" problem already flagged elsewhere in this project
+(the NDEP TFT Appendix D geochemistry tables, well-log lithology
+tables). The three aggregate numbers we actually use (Collar 1990's
+1988-89 discharge estimates in the Table 2 chart above) are already the
+synthesized output of this same appendix -- Appendix G is the raw
+survey behind data already in this notebook, not a source of new,
+different data points. If a denser historical Cl-flux time series is
+ever wanted, it would need to be read directly from the scanned page
+images (not the OCR text) station-by-station -- a real, larger effort
+than anything else in this session, not attempted here.
+
+### Table 9: reservoir parameters (transmissivity, storage coefficient)
+
+Table 9 ("Reservoir parameters determined for the geothermal system in
+the Steamboat Hills area from well test analyses and spring
+hydrographs") gives real aquifer-test results from four dated tests:
+
+```{r table9-reference}
+table9 <- tibble::tribble(
+  ~well_and_year, ~injection, ~transmissivity_ft2_day, ~storage_coefficient, ~observation_well, ~source,
+  "Steamboat No.1, 1980", "no", "3270-9500", "1.2e-3 (calc.)", "strat 2", "Collar (1990)",
+  "Steamboat No.1, Mar-May 1986", "no", "nd", "nd", "23-5?", "Berkeley Group (1987)",
+  "Steamboat No.1, Mar-May 1987", "no", "nd", "1.2e-3 (calc.)", "strat 5", "Berkeley Group (1987)",
+  "23-5/Cox 1-1, May-June 1987", "yes", "7930-9500", "7.8e-4 to 9.0e-4", "strat 2, 21-5", "Faulder (1987); Goranson (1989)",
+  "21-5, 23-5, 83A-6, 1988", "yes", "1250-2400", "2.5e-3", "strat 9", "Collar (1990)",
+  "21-5, 23-5, 83A-6, 1988 (spring response)", "yes", "nd", "2.8e-3", "spring 12, spring 42w", "Collar (1990)"
+)
+table9
+```
+
+No table in the current schema models a dated aquifer/interference
+test -- this is kept as reference documentation only, not a new
+database table, since there is no immediate analytical use for it beyond
+the qualitative reservoir-drawdown narrative already summarized above
+("What the 1992 report says"). Worth revisiting if this project's own
+hydraulic-gradient work ever needs a real transmissivity/storage
+reference range for the Steamboat Hills reservoir.
+
+
 ## Table 10 monitoring network vs. this project's Locations
 
 ```{r table10-check}
@@ -472,6 +654,7 @@ gap rather than an unrecognized one.
 |---|---|
 | 2026-09-12 | Notebook created. Sorey & Colvard (1992) read directly (`pdftotext -layout`); Table 1 chemistry (9 samples, 1950-1991) ingested for the first time via `ingest_historical_sorey1992.R`; well/site cross-reference built against `Wells`/`Well_Aliases`/`Locations`; Cl/B ratio confirmed consistent between 1990-91 and 2024-2026 real thermal samples; discharge-through-time table assembled (White 1968 through this project's 2026 poster); barometric efficiency documented as a recommended, not-yet-runnable capability (no barometric-pressure parameter exists in this database yet). |
 | 2026-09-12 (follow-up) | Resolved `83A-6` and `Cox 1-1` via exact NBMG Geothermal_Wells name matches; discovered and resolved that `"GS-58"`/`"GS-59"` are OCR artifacts of well `GS-5` (its own table footnote superscripts fused onto the name); all four now have real coordinates in `Locations`/`Wells`. Also found and fixed a 2-digit-year date-parsing bug in `ingest_well_logs.R`'s `.safe_completion_date()` that had produced one malformed `Water_Level_Observations` timestamp (`"7-07-10"`, corrected to `2007-07-10`). |
+| 2026-09-12 (Tables 3/6/7/8/9, Appendix G) | Registered strat wells 2/5/6/7/8/9/13/14 (Table 8) and Table 3's South Truckee Meadows wells as real Wells rows; resolved Steinhardt and Brown School via exact NBMG matches, Bianco tentatively via NDWR owner-name + PLSS centroid; PTR-1/2 and STMGID MW-3/4 remain unresolved despite a fresh search; Herz-2 left inconclusive between two ambiguous NBMG candidates. Filled `Wells.top_perforation`/`bottom_perforation` (previously 100% NULL) for 7 wells from Tables 6/7, deliberately leaving 23-5 and IW-2 unfilled due to real depth conflicts with current records (documented as historical facts instead). Documented Appendix G's real methodology/survey dates (not parsed further -- too OCR-misaligned) and Table 9's reservoir-parameter values as reference only. |
 
 ```{r cleanup}
 #| include: false

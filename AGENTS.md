@@ -3155,6 +3155,140 @@ notebook.
   pre-existing files -- worth remembering for any brand-new file, not
   just edits to old ones.
 
+## Session 28 continued (2026-09-12): Sorey & Colvard (1992) Tables 3, 6-9, and Appendix G mined
+
+Follow-up to the same session's 83A-6/Cox 1-1/GS-5 resolution work, per
+explicit user request to "touch all of" Table 8 (stratigraphic test
+wells), Appendix G (stream discharge/chloride flux), Table 3 (South
+Truckee Meadows wells), and to scope Tables 4-7/9 -- read directly via
+`pdftotext -layout` again, not guessed.
+
+- **Table 8 (stratigraphic test wells) registered as real, coordinate-less
+  provisional `Wells` rows** (strat 2, 5, 6, 7, 8, 9, 13, 14;
+  `well_role='monitor'`) via new rows appended to
+  `data/raw/wells/sorey1992_nbmg_resolved_wells.csv`. No coordinates exist
+  anywhere in the source table; two real proximity clues from the report's
+  own text are preserved as prose notes only, never converted into a
+  fabricated coordinate: strat 13 "located next to CPI production well
+  23-5" (independently corroborated by a real hydraulic-connection signal
+  -- strat 13's water level rose during a 23-5 shut-in), and strats 2/5/9
+  "in the general vicinity of the Cox 1-1 injection well". Real
+  depth/formation/temperature/water-level-change facts captured in
+  `notes` for all eight.
+- **Table 3 (South Truckee Meadows ground-water wells) -- two new exact
+  NBMG matches, one tentative, several still unresolved.** `Steinhardt`
+  and `Brown School` are exact NBMG Geothermal_Wells name matches
+  ("Steinhardt Geothermal Well"; "Brown School Geothermal Well", owned by
+  "Brown Elementary School" -- an unambiguous identity confirmation), both
+  independently corroborated by the report's own directional description
+  (NE / N of the ACEC respectively) matching their real coordinates. `Bianco`
+  is only a **surname match** in NDWR's Truckee Meadows WellLogQuery table
+  ("BIANCO, U J", Log 5916, Sec 28 T18N R20E, completed 1961) --
+  resolved to a bare PLSS-section centroid via the BLM PLSS REST service
+  (`.convert_plss_to_latlon()`, reused from the well-log parser,
+  `coordinate_uncertainty_m=800`), and flagged as **tentative, not
+  confirmed**: its NDWR drill depth (232 ft) does not match Table 3's own
+  Bianco depth (400 ft). `PTR-1`, `PTR-2`, `STMGID MW-3`, `STMGID MW-4`
+  remain genuinely unresolved after a fresh NDWR/NBMG owner-name search
+  (NBMG's only STMGID-named record, "STMGID Well 4 Shadowridge", is a
+  production well, not this monitor-well pair, and was explicitly NOT
+  used) -- all four registered as real, coordinate-less provisional
+  `Wells` rows anyway, carrying their Table 3 depth/temperature/
+  chloride-range/water-level-decline facts in `notes` rather than leaving
+  them stranded in prose only. `Herz-2` (explicitly a *geothermal* well
+  per the report's text, distinct from "the shallower Herz domestic
+  well") could be either of NBMG's two already-ambiguous "Harold Herz
+  Geothermal Well 1/2" candidates (flagged since Session 3, ~1.3 km
+  apart) -- Table 3's own OCR for this well is split across multiple
+  garbled rows and could not be confidently disentangled; left
+  inconclusive, not guessed.
+- **Tables 6/7 (CPI/SB GEO well-completion information) filled a
+  currently-100%-empty field.** `Wells.top_perforation`/
+  `bottom_perforation` were NULL for every CPI/SB GEO well in this
+  database, even the already-coordinate-resolved ones. New
+  `data/raw/wells/sorey1992_perforation_data.csv` +
+  `register_sorey1992_perforation_data()` (in
+  `ingest_historical_sorey1992.R`) fills them, but only after real,
+  well-by-well verification -- the source table's OCR layout has visible
+  column-alignment slippage across rows, so each well's casing-depth +
+  open-hole-thickness was checked to reconcile exactly against its
+  stated total depth before being trusted (confirmed for every SB GEO
+  well and for 83A-6). Filled for `83A-6`, `Cox I-1`, `PW-1`, `PW-2`,
+  `PW-3`, `21-5R`, `IW-3` (7 wells, 18 fields total) -- per-field,
+  fill-only-if-NULL, never overwriting an existing value (mirrors
+  `register_well_coordinates.R`'s idiom). **Two real, deliberately
+  unfilled conflicts**: `23-5`'s 1990-era report depth (2422 ft) is 19%
+  shallower than the 3001 ft already on record (NDOM-sourced), and
+  `IW-2`'s 1990 report depth (1403 ft) is less than a third of the
+  4700 ft on record -- both almost certainly explained by subsequent
+  deepening of these still-active wells, not a data error or misread.
+  Rather than overwrite or awkwardly average, the 1990 construction facts
+  are recorded in `Wells.notes` as explicitly historical, and
+  `top_perforation`/`bottom_perforation` were left NULL for both.
+- **Appendix G (stream discharge and chloride flux) -- documented, not
+  parsed further.** Confirms the real 1988-89 methodology behind the
+  already-used Collar (1990) discharge numbers: chloride as a
+  conservative tracer, an 820 mg/L thermal / 6 mg/L non-thermal
+  end-member split, gaining/losing-reach mass-balance equations --
+  methodologically almost identical to this project's own SBRR/SBBV Cl
+  mass-balance approach, predating it by ~35 years. Four real synoptic
+  survey dates identified (6/26-6/30/1988, 7/1-7/2/1988, 8/9/1988,
+  3/4/1989) across ~40 named stream/ditch stations. **Deliberately not
+  parsed further**: the raw per-station table (Table G-1) is visibly
+  OCR-misaligned (values shifted relative to station-name rows, in some
+  blocks by a full row) -- the same class of "real data trapped in a
+  badly-OCR'd table" problem already flagged for the NDEP TFT Appendix D
+  tables and well-log lithology tables. The aggregate numbers actually
+  used in the discharge-timeline chart are already the synthesized
+  output of this same appendix, so nothing new was lost by not parsing
+  it further; a denser historical Cl-flux series would require reading
+  the scanned page images directly, not the OCR text -- flagged as a
+  much larger, separate effort, not attempted.
+- **Table 9 (reservoir parameters) -- reference-only, no schema change.**
+  Four dated aquifer/interference-test results (1980, 1986, 1987, 1988)
+  with real transmissivity (~1,250-9,500 ft2/day) and storage-coefficient
+  (~10^-4-10^-3) values, added as a plain reference table in the notebook
+  since no table in the current schema models a dated aquifer test and
+  no immediate analytical use was identified; worth revisiting if
+  hydraulic-gradient work ever needs a real transmissivity/storage
+  reference range.
+- **Tables 4/5 (CPI/SB GEO production intervals since 1986) --
+  deliberately NOT built.** Real, structured, dated on/off production
+  intervals with net production rates exist in the source, but modeling
+  them properly would need a new table distinct from the current
+  `Production_Port_Links`/`well_role` (which model the *current*,
+  2024-Dhakal-diagram flow network, not a historical day-by-day
+  production record) -- flagged as a candidate future addition, not a
+  quick add, and out of scope for this pass.
+- **The 40 figures**: re-confirmed out of scope -- line-plot hydrographs
+  with no accompanying data table, not extractable without digitizing
+  pixel positions from scanned page images.
+- **`notebooks/07_historical_context_sorey1992.qmd` substantially
+  extended**: new subsections 4.2 (Table 3), 4.3 (Table 8), 4.4 (Tables
+  6/7), a new "Appendix G and Table 9" section, updated cross-reference
+  table/prose reflecting all of the above, and a new changelog row.
+  Rendered successfully end-to-end against the real operational
+  database (all new query chunks execute cleanly).
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_sorey_tables368_<timestamp>.sqlite`,
+  verified against a scratch copy first): 15 new provisional/resolved
+  `Wells` rows, 18 `top_perforation`/`bottom_perforation` fields filled
+  across 7 wells, 9 historical-construction notes appended. Idempotent
+  re-run confirmed (0 new rows/fields on a second pass).
+  `export_geopackage()` re-run cleanly afterward (13 layers, `wells`
+  186 rows up from 180, `locations` 171 up from 167, `major_ions` 2822
+  up from 2805 -- no NULL-geometry regressions from the new
+  coordinate-less rows, since none of them feed a GIS layer with an
+  unconditional `geom_wkt` build). QC re-run clean (0 PHREEQC failures).
+- **Not done this session**: no attempt to disambiguate `Herz-2` further
+  (would need the actual scanned Table 3 page image, not just OCR text);
+  Tables 4/5 not modeled; Appendix G's raw station-level data not
+  digitized. This session's file changes are committed and pushed to
+  git (see commit history) -- includes a `git add -f` for the new
+  gitignored `data/raw/wells/sorey1992_perforation_data.csv`, per this
+  project's standing convention for hand-maintained CSVs under the
+  blanket-ignored `data/raw/`.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

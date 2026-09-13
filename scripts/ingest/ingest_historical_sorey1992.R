@@ -111,6 +111,75 @@ register_sorey1992_resolved_wells <- function(
   invisible(list(wells_created = wells_created))
 }
 
+
+# ============================================================
+# register_sorey1992_perforation_data()
+#
+# 2026-09-12 (follow-up session): Tables 6/7 (CPI/SB GEO well-completion
+# information) give real casing-depth / open-hole-interval data for
+# several already-resolved wells. Wells.top_perforation/bottom_perforation
+# are currently NULL for every one of these wells, so this fills them --
+# but ONLY when the CSV supplies a value AND the target field is
+# currently NULL (per-field, never overwrites), and ONLY for wells where
+# the report's own total depth doesn't substantially conflict with an
+# existing Wells.total_depth (two real conflicts -- 23-5 and IW-2, both
+# almost certainly explained by deepening since 1990 -- are deliberately
+# NOT numerically filled; see data/raw/wells/sorey1992_perforation_data.csv
+# for the reasoning). Every row's notes are appended to Wells.notes
+# (idempotent: skipped if the '[Sorey1992 Table 6/7 perforation data]'
+# marker is already present) regardless of whether any numeric field
+# actually got filled, so the historical fact is recorded either way.
+# ============================================================
+register_sorey1992_perforation_data <- function(
+    con,
+    csv_path = "data/raw/wells/sorey1992_perforation_data.csv") {
+
+  if (!file_exists(csv_path)) {
+    message("[sorey1992] No perforation-data file at ", csv_path, " -- skipping.")
+    return(invisible(NULL))
+  }
+
+  perf <- read_csv(csv_path, show_col_types = FALSE)
+  fields_filled <- 0L
+  notes_appended <- 0L
+
+  for (i in seq_len(nrow(perf))) {
+    r <- perf[i, ]
+    well <- dbGetQuery(con, "SELECT well_id, total_depth, top_perforation, bottom_perforation, notes FROM Wells WHERE well_name = ?",
+                        params = list(r$well_name))
+    if (nrow(well) == 0) {
+      warning("[sorey1992 perforation] well_name '", r$well_name, "' not found in Wells -- skipped.")
+      next
+    }
+    well_id <- well$well_id[1]
+
+    if (!is.na(r$total_depth_ft) && is.na(well$total_depth[1])) {
+      dbExecute(con, "UPDATE Wells SET total_depth = ? WHERE well_id = ?", params = list(r$total_depth_ft, well_id))
+      fields_filled <- fields_filled + 1L
+    }
+    if (!is.na(r$top_perforation_ft) && is.na(well$top_perforation[1])) {
+      dbExecute(con, "UPDATE Wells SET top_perforation = ? WHERE well_id = ?", params = list(r$top_perforation_ft, well_id))
+      fields_filled <- fields_filled + 1L
+    }
+    if (!is.na(r$bottom_perforation_ft) && is.na(well$bottom_perforation[1])) {
+      dbExecute(con, "UPDATE Wells SET bottom_perforation = ? WHERE well_id = ?", params = list(r$bottom_perforation_ft, well_id))
+      fields_filled <- fields_filled + 1L
+    }
+
+    existing_notes <- well$notes[1]
+    marker <- "[Sorey1992 Table 6/7 perforation data]"
+    already_noted <- !is.na(existing_notes) && grepl(marker, existing_notes, fixed = TRUE)
+    if (!already_noted) {
+      new_notes <- if (is.na(existing_notes) || existing_notes == "") r$notes else paste(existing_notes, r$notes)
+      dbExecute(con, "UPDATE Wells SET notes = ? WHERE well_id = ?", params = list(new_notes, well_id))
+      notes_appended <- notes_appended + 1L
+    }
+  }
+
+  message("[sorey1992] Perforation data: ", fields_filled, " field(s) filled, ", notes_appended, " note(s) appended.")
+  invisible(list(fields_filled = fields_filled, notes_appended = notes_appended))
+}
+
 ingest_historical_sorey1992 <- function(
     con,
     csv_path = "data/raw/historical/sorey1992_table1_chemistry.csv") {

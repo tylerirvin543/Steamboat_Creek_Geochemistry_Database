@@ -563,6 +563,7 @@ run_step(RUN_INGEST$historical_sorey1992, "SOREY & COLVARD 1992 HISTORICAL CHEMI
   # notebooks/07_historical_context_sorey1992.qmd.
   source("scripts/ingest/ingest_historical_sorey1992.R")
   register_sorey1992_resolved_wells(con)
+  register_sorey1992_perforation_data(con)
   ingest_historical_sorey1992(con)
 })
 
