@@ -100,11 +100,33 @@ source("scripts/ingest/helpers/parse_well_log_pdf.R")
 #' found by inspecting the data-availability chart (scripts/analysis/
 #' data_availability.R), which showed an implausible "most recent water
 #' level observation: today" data point traced back to this.
+#' 2026-09-12 (session 28) bug fix: a second, independent failure mode
+#' found while investigating a malformed "7-07-10" Water_Level_Observations
+#' timestamp (document 104216, "WELL DRILLER'S PLUGGING REPORT",
+#' completion_date_raw = "7/10/07"). as.Date(x, format = "%m/%d/%Y")
+#' does NOT reject a 2-digit year the way this function's design assumed
+#' it would -- R's %Y silently accepts "07" as a literal, unpadded year
+#' value (year 7 CE), so the very first format in the loop "succeeded"
+#' with a nonsensical date instead of failing through to a better match.
+#' Fixed two ways: (1) added an explicit "%m/%d/%y" attempt (2-digit
+#' year, R's usual 1969-2068 pivot rule -- correctly reads "07" as 2007);
+#' (2) every candidate parse is now sanity-checked against a plausible
+#' year range (1900 to next calendar year) before being accepted, so any
+#' future 2-digit-year-shaped or otherwise out-of-range false match
+#' falls through to the next format / the final bare-4-digit-year
+#' fallback instead of being silently accepted. Confirmed this doesn't
+#' change the result for any of the other 60+ real completion_date_raw
+#' values already in Well_Log_Documents (all either already 4-digit-year
+#' or unparseable OCR noise that still correctly returns NA).
 .safe_completion_date <- function(raw) {
   if (is.na(raw) || trimws(raw) == "") return(NA_character_)
-  for (fmt in c("%Y-%m-%d", "%m/%d/%Y", "%B %d, %Y", "%b %d, %Y", "%b. %d, %Y")) {
+  this_year <- as.integer(format(Sys.Date(), "%Y"))
+  plausible <- function(d) {
+    !is.na(d) && as.integer(format(d, "%Y")) >= 1900 && as.integer(format(d, "%Y")) <= (this_year + 1)
+  }
+  for (fmt in c("%Y-%m-%d", "%m/%d/%Y", "%m/%d/%y", "%B %d, %Y", "%b %d, %Y", "%b. %d, %Y")) {
     d <- tryCatch(as.Date(trimws(raw), format = fmt), error = function(e) NA)
-    if (!is.na(d)) return(as.character(d))
+    if (plausible(d)) return(as.character(d))
   }
   # last resort: a bare 4-digit year somewhere in the text (e.g. OCR
   # noise "92 2018" -- keep only the year, dated to Jan 1 as a clearly

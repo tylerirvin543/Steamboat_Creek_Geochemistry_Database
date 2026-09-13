@@ -223,6 +223,31 @@ The thermal samples (fumarole, seep, spring) cluster tightly on the Na/Cl/K-rich
 
 Taken together, these first-order patterns (persistent, location-specific thermal regimes; short-term variability layered on top of them; and a monitoring network that is spatially uneven by necessity, concentrated where access and prior study made it possible) describe a system that genuinely requires integrated, multi-scale observation to characterize well. No single well, and no single data type, tells the whole story on its own.
 
+## A Longer Baseline: Sorey (1992) and 70 Years of Discharge Estimates
+
+A 297-page 1992 USGS administrative report (Sorey and Colvard, listed in full on the [References](references.html) page) documents the 1986-1990 decline and eventual 1987 cessation of natural hot-spring flow at the same Lower Sinter Terrace this project's own spring-remapping fieldwork covers, attributing 80-95% of that decline to regional shallow ground-water decline (increased pumping plus a run of below-normal precipitation years) and only 5-20% to geothermal well-field production. Its Table 1 -- dated major-ion chemistry for CPI and SB GEO wells and hot spring 6, back to 1950 -- has now been transcribed directly into this project's database, and its Table 2 gives a 1955-1989 timeline of thermal-water discharge estimates that predates, and extends directly into, the Sorey and Spielman (2008, 2017) baseline already cited above.
+
+```{r sorey-discharge-timeline}
+discharge_hist <- tibble::tribble(
+  ~period, ~year_mid, ~Ls,
+  "White (1968), 1955",                      1955,   70,
+  "White (1968), 1964",                      1964,   87,
+  "Shump (1985), 1981-82 avg",               1981.5, 82,
+  "Collar (1990), Jun 1988",                 1988.5, 33,
+  "Collar (1990), Mar 1989",                 1989.2, 42,
+  "Sorey & Spielman (2008), 2007-08",         2007.5, 61,
+  "Sorey & Spielman (2017), 2008-2016 avg",   2012,   60,
+  "Irvin & Lindsey (2026 poster), post-eruption", 2026, 27
+)
+ggplot(discharge_hist, aes(x = year_mid, y = Ls)) +
+  geom_line(alpha = 0.4) +
+  geom_point(size = 3) +
+  labs(x = NULL, y = "Thermal-water discharge (L/s)",
+       title = "Thermal-water discharge to Steamboat Creek, 1955-2026")
+```
+
+Discharge estimates sat mostly in the 40-90 L/s range from 1955 through the 2008-2016 Sorey and Spielman baseline (the two 1988-89 Collar values are lower in part because they explicitly exclude net CPI well-field production, not because they used a directly comparable method to the others). This project's own post-eruption ~27 L/s estimate sits below every prior point in this 70-year record, which is consistent with -- but does not by itself prove -- the reactivation/redistribution interpretation below rather than a genuinely new source. A second, independent check strengthens the case for continuity rather than a chemically new system: this project's own 2024-2026 real thermal-water samples give a chloride-to-boron ratio of roughly 20-23, closely matching the 19.3 +/- 1.7 value Sorey and Colvard measured across the CPI and SB GEO reservoirs in 1990-91 -- the same conservative-element chemical signature, essentially unchanged 35 years later. See the [Historical Context notebook](notebooks/07_historical_context_sorey1992.html) for the full well-by-well cross-reference, the newly ingested 1950-1991 chemistry, and why this project cannot yet reproduce Sorey's own barometric-pressure-correction method (it requires paired continuous water-level and barometric-pressure data this database does not currently have).
+
 ## A First Answer: Reactivation, Not a New Source
 
 A poster presented at the 2026 Geothermal Rising Conference (Irvin and Lindsey, 2026, listed in full on the [References](references.html) page) used this database directly to ask the question the eruption raised in the first place: is the 2025 Lower Sinter Terrace event a chemically distinct new geothermal source, or a reactivation and redistribution of flow within the hydrothermal system that was already there? A chloride mass balance across the USGS Rhodes Road (SBRR) and Bella Vista (SBBV) stations on Steamboat Creek,

@@ -112,7 +112,20 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # -------------------------
     # GEOCHEMISTRY (CURATED)
     # -------------------------
-    major_ions = "SELECT * FROM vw_major_ions",
+    # geom_wkt IS NOT NULL filter added 2026-09-12: the Sorey & Colvard
+    # (1992) historical-chemistry ingest (ingest_historical_sorey1992.R)
+    # created several new Locations rows with no coordinate (83A-6, Cox
+    # 1-1, GS-58, GS-59, hot spring 6 -- none resolved to a real
+    # lat/lon), and their Cl/Ca/Na/K/etc. values flow into vw_major_ions
+    # via vw_sample_master. That view's geom_wkt is built unconditionally
+    # ('POINT(' || longitude || ' ' || latitude || ')'), so a NULL
+    # coordinate produces a NULL geom_wkt -- and sf::st_as_sf(wkt=...)
+    # fails for the ENTIRE layer the moment even one row has a NULL WKT
+    # string, not just those rows. Same bug class already fixed for
+    # temperature_timeseries (see above) and vw_wells_gis; latent here
+    # until this ingest was the first to put a NULL-coordinate Locations
+    # row into major-ion chemistry.
+    major_ions = "SELECT * FROM vw_major_ions WHERE geom_wkt IS NOT NULL",
     isotopes = "SELECT * FROM vw_isotopes_gis",
     
     # -------------------------

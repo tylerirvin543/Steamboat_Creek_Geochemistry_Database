@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -546,6 +546,24 @@ run_step(RUN_INGEST$ndom_wells, "NDOM WELL-PERMIT DATA", {
   # found while scoping this ingestion).
   source("scripts/ingest/ingest_ndom_wells.R")
   ingest_ndom_wells(con)
+})
+
+run_step(RUN_INGEST$historical_sorey1992, "SOREY & COLVARD 1992 HISTORICAL CHEMISTRY", {
+  # Ingests the ~10 dated 1950-1991 major-ion chemistry analyses from
+  # Table 1 of Sorey & Colvard (1992), USGS Administrative Report for
+  # the BLM (docs/literature/Sorey_StmbtSprgsHSActivity_1992.pdf) --
+  # this project's earliest and most detailed pre-Ormat-era chemistry
+  # record (well GS-5, 1950; hot spring 6, 1977; CPI/SB GEO wells,
+  # 1981-1990). Resolved-well rows (21-5, PW-1/2/3, and as of
+  # 2026-09-12 also 83A-6, Cox 1-1, and the OCR-artifact "GS-58"/"GS-59"
+  # -- both really well GS-5) attach to real Wells rows; "hot spring 6"
+  # remains a genuinely unresolved, coordinate-less provisional
+  # Locations row rather than being dropped. See
+  # scripts/ingest/ingest_historical_sorey1992.R and
+  # notebooks/07_historical_context_sorey1992.qmd.
+  source("scripts/ingest/ingest_historical_sorey1992.R")
+  register_sorey1992_resolved_wells(con)
+  ingest_historical_sorey1992(con)
 })
 
 # ============================================================

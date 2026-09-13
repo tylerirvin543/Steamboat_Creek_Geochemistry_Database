@@ -2910,6 +2910,251 @@ flagged as "pre-existing, not fixed" at the end of Session 25.
   `scripts/ingest/create_gis_views.R`, `scripts/ingest/export_geopackage.R`)
   not yet committed/pushed to git.
 
+## Session 27 updates (2026-09-12, continued): Sorey & Colvard (1992) integrated as a historical baseline
+
+User added `docs/literature/Sorey_StmbtSprgsHSActivity_1992.pdf` (a
+297-page USGS Administrative Report for the BLM, Sorey & Colvard 1992,
+never previously cited anywhere in this project) and asked for a
+thorough review of its figures/tables/text and how it could extend this
+project's own long-run record and documentation.
+
+- **Confirmed the PDF has a real, OCR'd text layer** (extracted directly
+  with `pdftotext -layout`, not guessed) despite being a large scanned
+  volume -- readable in full via `bash`/`pdftotext`, unlike the more
+  limited toolset an explore-subagent first tried this with.
+- **Table 1 chemistry (1950-1991, 9 features) ingested for the first
+  time**: new `data/raw/historical/sorey1992_table1_chemistry.csv` +
+  `scripts/ingest/ingest_historical_sorey1992.R`
+  (`RUN_INGEST$historical_sorey1992`, `TRUE` in profiles 1/2). Resolved
+  features (`21-5`->`21-5R` via existing alias, `PW-1/2/3` exact
+  matches) reuse existing `Wells` coordinates; unresolved features
+  (`83A-6`, `Cox 1-1`, `GS-58`, `GS-59`, "hot spring 6") get new,
+  coordinate-less provisional `Locations` rows rather than being
+  dropped -- same posture as the well-log/NDOM provisional-entity
+  patterns. Stores HCO3 under the project's standard `Alkalinity` code
+  (already true HCO3-mass basis, no CaCO3 conversion needed here);
+  keeps SiO2 under a **new, distinct `SiO2` code** (not this project's
+  `Si` element code) since the mass-basis equivalence between the two
+  was not independently confirmed -- flagged, not assumed. TWH
+  (wellhead, a real measurement) -> `temperature`; TDH and the Na-K-Ca
+  geothermometer estimate are stored as separate, clearly-derived codes
+  (`temperature_downhole`, `temperature_geothermometer_nakca`) so they
+  can never be mistaken for a field measurement downstream.
+- **Real bug caught and fixed while testing this**: `readr::read_csv()`
+  auto-parsed the `sample_date` column into a real `Date` object, which
+  RSQLite/DBI then silently stored as a numeric day-since-epoch value
+  rather than the intended `"YYYY-MM-DD"` text -- the exact same bug
+  class already flagged project-wide for `Sampling_Events.date`. Fixed
+  with an explicit `col_types = cols(sample_date = col_character())`;
+  caught by testing against a scratch DB copy before ever touching the
+  real database.
+- **A second real bug found and fixed while running the full pipeline
+  after this ingest**: the new provisional Locations rows (no
+  coordinate) fed into `vw_major_ions` (via `vw_sample_master`, which
+  builds `geom_wkt` unconditionally) produced `geom_wkt = NULL` for
+  several rows, which made `export_geopackage()`'s `major_ions` layer
+  fail **entirely** (`sf::st_as_sf()` errors on the whole layer if even
+  one row has a NULL WKT string) -- the exact same bug class already
+  fixed for `temperature_timeseries`/`vw_wells_gis` in Sessions 7/26,
+  latent here only because no major-ion sample had ever had a
+  NULL-coordinate Locations row before. Fixed the same way: added
+  `WHERE geom_wkt IS NOT NULL` to the `major_ions` export query in
+  `export_geopackage.R`. Verified: `major_ions` now exports 2,805 rows.
+- **Well/site cross-reference against `Wells`/`Well_Aliases`/
+  `Locations`**: most named wells/springs in Table 1 and Table 10 were
+  checked. Several names were found **already independently resolved
+  from unrelated sources**, months before this 1992 report was read --
+  `Boyd Well`/`Rogers Well`/`Jeppson Well` (NDEP), `Curti Barn`/`Curti
+  Domestic Well` (Klein 2007), and "Steamboat Creek at Rhodes Road"
+  (this project's own SBRR conductivity-logger site, plus existing
+  Locations `SB5`/`SB6`) -- a genuine, independent validation that
+  these are the same real, multi-decade monitoring locations. Still
+  unresolved (consistent with, and in several cases literally the same
+  names as, gaps already flagged in earlier sessions): `83A-6`, `Cox
+  1-1`/`COX-1`, stratigraphic test wells (`strat 2/5/6/7/9/13/14`),
+  GS-numbered pre-Ormat wells (`GS-58`, `GS-59`), `Steinhardt`,
+  `MacKay`, `Woods`, `Tangen`, `PTR-1/2`, `Bianco`, `Brown School`,
+  `STMGID Went`. None guessed or fabricated. "Hot spring 6" (sampled
+  1977, ceased flowing entirely by 1987 per this same report) is
+  flagged as thematically important: exactly the class of
+  historically-active-now-dormant Lower Sinter Terrace spring this
+  thesis's own spring-remapping fieldwork is designed to find.
+- **Cl/B and Cl/Li ratio cross-check, a real quantitative "then vs.
+  now" finding**: Sorey & Colvard's 1990-91 Cl/B = 19.3 +/- 1.7 is
+  closely matched by this project's own real 2024-2026 thermal FIELD
+  samples (Cl/B ~20-23) -- the same conservative-element geochemical
+  signature, essentially unchanged 35 years later. NDEP
+  domestic/background wells (Boyd, Jeppson, Rogers) show much noisier
+  ratios, consistent with their B values sitting near a plausible
+  analytical detection limit (0.05-0.18 mg/L) -- read as DL noise, not
+  a real signal, matching this project's established dilute/background
+  classification for those wells.
+- **Discharge-through-time table assembled** (White 1968's 1955/1964
+  estimates, Shump 1985, Collar 1990's 1988-89 values, Sorey & Spielman
+  2008/2017, this project's own 2026 poster ~27 L/s) -- a single
+  ~70-year view, presented explicitly as transcribed literature values
+  (not a live query) in both the new notebook and on the website.
+- **Barometric efficiency documented as a recommended, not-yet-runnable
+  capability, not implemented against real data**: Sorey's method
+  (linear regression of spring water level against Reno Airport
+  barometric pressure; BE = 0.42-0.45 for springs 6/12, White 1968's
+  0.2-1.18 across other vents) is described precisely, and a
+  `compute_barometric_efficiency()` stub with only a synthetic
+  self-test is included in the notebook (`#| eval: false`, not wired
+  into `run_pipeline.R`) -- confirmed via a live query that this
+  database has **no barometric/station-pressure parameter anywhere**
+  (`Weather_Observations` only has PRCP/TMAX/TMIN/TAVG/SNOW/SNWD), so
+  there is nothing real to run this against yet. Mirrors the existing
+  "build the capability, wait for real overlapping data" posture
+  already used for PHREEQC mixing/inverse/gas-phase.
+- **New notebook**: `notebooks/07_historical_context_sorey1992.qmd` --
+  the living reference for this thread (mirrors `01`/`05`/`06`'s
+  convention). Rendered successfully end-to-end against the real
+  operational database. A pre-existing, unrelated data-quality
+  artifact was noticed (not fixed) while building this: one
+  `Water_Level_Observations.timestamp` value is the malformed string
+  `"7-07-10"`.
+- **Documentation updated**: `website/references.Rmd` and
+  `docs/literature/annotated_bibliography.qmd` gained a full citation
+  and annotation for Sorey & Colvard (1992) (previously cited nowhere);
+  `website/results.Rmd` gained a new "A Longer Baseline" section (the
+  discharge-timeline chart + Cl/B cross-check, with a link to the new
+  notebook) placed just before the existing 27 L/s poster-finding
+  section; `website/project.Rmd` got a one-sentence tie-in linking
+  "Michael Sorey's classic studies" to this specific 1992 report.
+- **Full pipeline run (profile 3, skip-ingestion, `MODE="OPERATIONAL"`,
+  `BUILD_WEBSITE=TRUE`) completed with 0 stage failures** after the
+  `major_ions` fix; `docs/literature/` confirmed intact (43 files,
+  including the new Sorey PDF) after `build_website()`'s
+  literature-folder-protection wrapper ran (one harmless "Permission
+  denied" warning on a file that was already present and unchanged,
+  same benign pattern noted in Session 19).
+- **Known pre-existing gap, not fixed this session (out of scope)**:
+  website pages link to `notebooks/0N_*.html` (e.g. the new
+  `notebooks/07_historical_context_sorey1992.html` link added this
+  session), but nothing in `run_pipeline.R` or `build_website()` copies
+  rendered notebook HTML (`output/reports/notebooks/`, gitignored) into
+  `docs/notebooks/` -- these links are very likely already broken on
+  the live GitHub Pages site for `06` and now `07` too, not something
+  introduced this session.
+- Backed up first to
+  `database/archive/geochem_operational_pre_sorey1992_<timestamp>.sqlite`;
+  verified against a scratch copy before applying to the real database.
+  This session's file changes are **not yet committed/pushed to git**.
+
+## Session 28 updates (2026-09-12, continued): 83A-6/Cox 1-1/GS-5 resolved, well-log date-parsing bug fixed
+
+Follow-up to Session 27, per explicit user request to (1) try to resolve
+`83A-6`, `Cox 1-1`, or the GS-numbered wells against NDWR/NBMG records,
+and (2) dig into the malformed `"7-07-10"` `Water_Level_Observations`
+timestamp flagged (not chased down) while building the Session 27
+notebook.
+
+- **`83A-6` and `Cox 1-1` resolved via exact NBMG name matches**, found
+  directly in `data/raw/nbmg/Geothermal_Wells.csv`/`GEOTHERM06102019.csv`:
+  `Well No. 83A-6` (API 27-031-90080, CPI production well, drilled 1987,
+  P&A 2003, Sec 6 T17N R20E) and `Cox I-1` (API 27-031-90051, CPI
+  injection well, originally drilled as observation well "Cox No. 1" for
+  Phillips Petroleum in 1981, Sec 32 T18N R20E -- explicitly distinct
+  from the nearby, differently-permitted `Well No. 65-32`/formerly
+  "Cox I-2"). New `data/raw/wells/sorey1992_nbmg_resolved_wells.csv` +
+  `register_sorey1992_resolved_wells()` (in
+  `scripts/ingest/ingest_historical_sorey1992.R`) creates real `Wells`
+  rows with these coordinates; `Cox I-1` also got `Well_Aliases` rows for
+  `Cox 1-1`/`COX-1`/`Cox1-1`/`Cox well` (the spellings used in this
+  report and flagged unresolved under those names in prior sessions).
+- **"GS-58" and "GS-59" turned out not to be real well names at all --
+  an OCR artifact, not a missing well.** Re-reading Table 1's own
+  footnote list (`8From White (1968).` / `9New seep adjacent to well
+  GS-5, analysis by Nevada Division of Health Laboratory.`) shows both
+  are superscript footnote markers ("8" and "9") that the PDF's OCR
+  layer fused directly onto a single real well name, **GS-5** --
+  producing "GS-58" (= "GS-5" + footnote 8) and "GS-59" (= "GS-5" +
+  footnote 9). Confirmed two independent ways: NBMG's statewide
+  compilation has real wells `GS-1` through `GS-8` (the pre-Ormat USGS
+  1950-51 thermal-gradient/chemistry test-hole program, White 1968 Plate
+  1) but nothing numbered `GS-58`/`GS-59`; and GS-5's own NBMG record
+  (API 27-031-80055, Sec 33 T18N R20E, drilled 1950-1951, chemistry
+  suite including Cl) matches both the "Well GS-58" row's 1950 sample
+  date and footnote 9's literal "new seep adjacent to well GS-5" text
+  for the "Spring GS-59" row. Both `sorey1992_table1_chemistry.csv` rows
+  now carry `matched_well_name = "GS-5"` and were renamed/recategorized
+  accordingly (the GS-58 row -> "Well GS-5, 1950 sample (White 1968)";
+  the GS-59 row -> "New seep adjacent to well GS-5 (1991)", stored as a
+  `seep`-type Location, not `spring`, since that's literally what the
+  footnote calls it).
+- **`ingest_historical_sorey1992.R` extended with a coordinate/identity
+  backfill path**: previously, once a Locations row existed (even with a
+  NULL coordinate), a re-run would never touch it again. Now, for any
+  `SOREY1992_*` Locations row with `latitude IS NULL`, a re-run
+  re-attempts the `matched_well_name` lookup and -- only if it now
+  resolves -- fills the coordinate AND corrects `name`/`site_type`
+  (mirrors `register_well_coordinates.R`'s "only fill if currently NULL,
+  never overwrite" idiom, extended here to also cover identity fields
+  for this one well-justified correction event). Verified idempotent
+  (0 further changes on a second re-run) on a scratch copy before
+  applying to the real database.
+- **Real, independent bug found and fixed while investigating the
+  malformed timestamp**: `ingest_well_logs.R`'s `.safe_completion_date()`
+  tries `as.Date(x, format = "%m/%d/%Y")` first, and R's `%Y` silently
+  accepts a 2-digit year as a literal, unpadded year value (year 7 CE)
+  rather than rejecting the format mismatch the way the function's
+  design assumed -- so well-log document 104216's
+  `completion_date_raw = "7/10/07"` "matched" this format immediately,
+  producing the nonsensical `Water_Level_Observations.timestamp` value
+  `"7-07-10"` instead of falling through to a better parse. Fixed by (1)
+  adding an explicit `%m/%d/%y` format attempt, and (2) a
+  plausible-year-range sanity check (1900 to next calendar year) that
+  every candidate parse must pass before being accepted -- confirmed
+  this doesn't change the result for any of the other 60+ real
+  `completion_date_raw` values already in `Well_Log_Documents` (all
+  either already 4-digit-year or unparseable OCR noise that still
+  correctly returns `NA`). The one bad row (observation_id 153437) was
+  corrected directly to `2007-07-10` (plausible: document 104216 is a
+  "WELL DRILLER'S PLUGGING REPORT," i.e. an abandonment report, dated
+  July 2007) -- this is now the only real `driller_report`-source
+  timestamp correction needed database-wide; confirmed no other
+  malformed timestamps exist in `Water_Level_Observations`.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_sorey_resolve_<timestamp>.sqlite`,
+  verified against a scratch copy first): 3 new `Wells` rows (`83A-6`,
+  `Cox I-1`, `GS-5`), 4 aliases added for `Cox I-1`, 4 Locations rows'
+  coordinates/identities backfilled (`83A-6`, `Cox 1-1`, and both
+  GS-5-derived rows), 1 `Water_Level_Observations` timestamp corrected.
+  `notebooks/07_historical_context_sorey1992.qmd` updated with a new
+  "4.1 Resolving 83A-6, Cox 1-1, and the GS-58/GS-59 OCR artifact"
+  section and an updated timestamp-bug aside; re-rendered successfully
+  against the real database.
+- **Still unresolved, not attempted this session** (consistent with
+  prior sessions' flags, none guessed): the stratigraphic test wells
+  (`strat 2/5/6/7/9/13/14`), `Steinhardt`, `MacKay`, `Woods`, `Tangen`,
+  `PTR-1/2`, `Bianco`, `Brown School`, `STMGID Went`, `OW-1`. "Hot spring
+  6" also remains genuinely unresolved (no modern counterpart identified
+  in this database) -- unchanged from Session 27, still flagged as
+  thematically important for the thesis's own spring-remapping work.
+- **Incidental catch-up noticed while re-running `register_well_network()`**
+  to pick up the new `Cox I-1` aliases: a `14-33 -> Galena 3`
+  `Production_Port_Links` row from Session 22's `dhakal_well_network.csv`
+  edit had apparently never actually been applied to the real operational
+  database until now (link_id 25) -- a harmless, idempotent catch-up, not
+  a new decision.
+- This session's file changes (`scripts/ingest/ingest_historical_sorey1992.R`,
+  `scripts/ingest/ingest_well_logs.R`, `scripts/run_pipeline.R`,
+  `data/raw/historical/sorey1992_table1_chemistry.csv`,
+  `data/raw/wells/sorey1992_nbmg_resolved_wells.csv` [new],
+  `data/raw/wells/well_aliases.csv`,
+  `notebooks/07_historical_context_sorey1992.qmd`) are **not yet
+  committed/pushed to git**. Several CRLF files (`ingest_historical_sorey1992.R`,
+  `ingest_well_logs.R`, `run_pipeline.R`) were edited via the established
+  `readLines()`/`writeLines()` round-trip since the `edit` tool's
+  exact-string matching intermittently failed against them, same
+  recurring caveat as many prior sessions -- notably, this session also
+  found that a file freshly created by the `write` tool itself
+  (`ingest_historical_sorey1992.R`, `07_historical_context_sorey1992.qmd`)
+  can already come out CRLF-terminated on this Windows setup, not just
+  pre-existing files -- worth remembering for any brand-new file, not
+  just edits to old ones.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

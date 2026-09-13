@@ -10,3 +10,7 @@ PW 3-1,PW3-1,other,"Mariner & Janik (1995), GRC Transactions v.19, Table 1/Table
 PW 3-2,PW3-2,other,"Mariner & Janik (1995), GRC Transactions v.19, Table 1/Table 2/Fig. 3","Same spacing-mismatch alias as PW 2-1 above."
 PW 3-3,PW3-3,other,"Mariner & Janik (1995), GRC Transactions v.19, Table 1/Table 2/Fig. 3","Same spacing-mismatch alias as PW 2-1 above."
 PW 3-4,PW3-4,other,"Mariner & Janik (1995), GRC Transactions v.19, Table 1/Table 2/Fig. 3","Same spacing-mismatch alias as PW 2-1 above."
+Cox I-1,Cox 1-1,other,"Sorey & Colvard (1992), USGS Admin Report, Table 1","Sorey & Colvard spell the well with an Arabic '1' rather than NBMG's Roman numeral 'I'; same well (API 27-031-90051)."
+Cox I-1,COX-1,other,"Prior-session shorthand (flagged unresolved in AGENTS.md Sessions 4/19/20/24/25 as 'COX-1'/'Cox1-1')","Resolved 2026-09-12 via NBMG exact-name match; alias added for continuity with earlier sessions' naming."
+Cox I-1,Cox1-1,other,"Prior-session shorthand (flagged unresolved in AGENTS.md Sessions 4/19/20/24/25 as 'COX-1'/'Cox1-1')","Resolved 2026-09-12 via NBMG exact-name match; alias added for continuity with earlier sessions' naming."
+Cox I-1,Cox well,other,"Sorey & Colvard (1992), USGS Admin Report, Table 1 discussion text ('Cox well')","Informal name used in the report's discussion text alongside the table's 'Cox 1-1'."

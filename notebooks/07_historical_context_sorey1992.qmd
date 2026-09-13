@@ -1,0 +1,479 @@
+---
+title: "Historical Context: Sorey & Colvard (1992) and the Long-Run Steamboat Record"
+subtitle: "Cross-referencing a 1988-1992 USGS study against this project's database"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose and scope
+
+`docs/literature/Sorey_StmbtSprgsHSActivity_1992.pdf` -- Sorey, M.L. and
+Colvard, E.M. (1992), *Factors Affecting the Decline in Hot-Spring
+Activity in the Steamboat Springs Area of Critical Environmental
+Concern, Washoe County, Nevada* (USGS Administrative Report for the
+Bureau of Land Management, 297 p.) -- was added to this project's
+literature folder on 2026-09-12. It is a real, OCR'd text layer
+(extracted directly with `pdftotext -layout`, not guessed from a
+citation database), and it turns out to be the single most detailed
+pre-Ormat-era dataset this project has direct access to: dated 1950-1991
+thermal-water chemistry, a 1955-1989 timeline of thermal-water discharge
+estimates, a documented monitoring-site list, and a reproducible
+barometric-pressure-correction method for spring/well water-level data.
+
+This notebook does four things, mirroring the living-reference-notebook
+convention established by `01`/`05`/`06`:
+
+1. Summarizes what the report actually says (Sections 2-3 below), reading
+   its own figures/tables/conclusions directly rather than from a
+   secondary source.
+2. Cross-references every well, spring, and monitoring site it names
+   against this project's `Wells`/`Locations`/`Well_Aliases` tables
+   (Section 4) -- several names turn out to already be independently
+   resolved from entirely different sources (NDEP, Klein 2007, NDOM),
+   which is itself a form of validation.
+3. Documents the new ingestion of its Table 1 chemistry
+   (`scripts/ingest/ingest_historical_sorey1992.R`,
+   `data/raw/historical/sorey1992_table1_chemistry.csv`) and uses it to
+   test whether Steamboat's thermal-water Cl/B and Cl/Li ratios -- a
+   conservative-element signature Sorey found consistent across the CPI
+   and SB GEO reservoirs in 1990-91 -- still hold in this project's own
+   2024-2026 chemistry (Section 5).
+4. Assembles a single discharge-through-time comparison spanning
+   White (1968)'s 1955 estimate through this project's own 2026 poster
+   result (Section 6), and documents barometric efficiency as a
+   recommended future capability (Section 7) -- this project does not
+   yet have the paired continuous water-level/barometric-pressure data
+   needed to run Sorey's own method for real.
+
+```{r setup}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
+con <- dbConnect(SQLite(), db_path)
+```
+
+## What the 1992 report says
+
+**Study design.** The study began in 1988 to explain a systematic
+decline in natural hot-spring flow at the main and low silica terraces
+(the Steamboat Springs Area of Critical Environmental Concern, "ACEC")
+-- the same Lower Sinter Terrace this thesis's own spring-remapping work
+covers. Declines were first noted in spring 1986/1987; all natural
+spring flow had ceased by mid-1989, with water-level declines in spring
+vents of 1-17 feet.
+
+**Conclusions (its own numbered list, p. 100-101, paraphrased):**
+
+- ~80-95% of the head decline beneath the ACEC is attributed to decline
+  in the regional shallow ground-water system (increased South Truckee
+  Meadows General Improvement District pumping, plus below-normal
+  precipitation beginning water-year 1986-87).
+- ~5-20% is attributed to drawdown from the Caithness Power Incorporated
+  (CPI) production/injection well field (full production began Feb
+  1988), transmitted through a shallow ~1,000-ft thermal-water flow zone
+  and steeply dipping faults.
+- SB GEO well-field influence (full production began Jan 1987, 0.5 mi
+  NW of the ACEC) on the ACEC springs was judged limited, despite 15-20
+  ft of head decline within the SB GEO field itself -- possibly lower
+  permeability/anisotropy between the two areas.
+
+**Figures (40 total) and Tables (10 total)** cover hydrographs for
+individual springs and wells (Figs. 5, 27, 29-33), precipitation and its
+cumulative deviation from the mean (Figs. 15-18), a stable-isotope
+altitude/boiling diagram (Fig. 9), electrical-resistivity mapping (Fig.
+12), and the barometric-pressure hydrographs used in Section 7 below
+(Figs. 39-40). Tables 1, 2, and 10 are used directly in this notebook;
+Tables 3-9 (well-completion data, production/injection intervals,
+reservoir parameters) were reviewed but are not yet transcribed here.
+
+## Well and monitoring-site cross-reference
+
+Every well/spring name in Table 1 (chemistry), the surrounding
+discussion text, and Table 10 (monitoring sites) was checked against
+this project's `Wells`, `Well_Aliases`, and `Locations` tables. Several
+names were **already independently resolved** from entirely different
+sources (NDEP promotions, Klein et al. 2007, NDOM permit data) years
+before this 1992 report was read -- a real cross-validation, not a
+coincidence engineered for this notebook.
+
+```{r crossref-table}
+crossref <- tribble(
+  ~sorey_name, ~feature_type, ~status, ~note,
+  "21-5 (CPI)", "well", "Resolved", "Well_Aliases '21-5' -> canonical 21-5R (well_id 94)",
+  "23-5 (CPI)", "well", "Resolved", "Exact Wells.well_name match (well_id 96)",
+  "83A-6 (CPI)", "well", "Resolved (2026-09-12)", "Exact NBMG Geothermal_Wells name match ('Well No. 83A-6', API 27-031-90080)",
+  "Cox 1-1 / Cox well", "well (injection)", "Resolved (2026-09-12)", "Exact NBMG match ('Cox I-1', API 27-031-90051); previously flagged unresolved as COX-1/Cox1-1",
+  "PW-1, PW-2, PW-3 (SB GEO)", "well", "Resolved", "Exact Wells.well_name matches (well_id 79/80/81)",
+  "IW-1, IW-2, IW-3 (SB GEO)", "well (injection)", "Resolved", "IW-1 alias -> 45-28; IW-2/IW-3 exact canonical names",
+  "OW-1, OW-2 (SB GEO observation)", "well (monitor)", "Partial", "OW-2 exact match (well_id 110); OW-1 not found",
+  "28-32", "well", "Resolved", "Exact Wells.well_name match (well_id 125)",
+  "Strat wells 2, 5, 6, 7, 9, 13, 14", "well (stratigraphic test)", "Unresolved", "No 'strat #'-style Wells rows exist",
+  "Well GS-58, Spring GS-59", "well/seep (pre-Ormat)", "Resolved (2026-09-12)", "Both are OCR artifacts of well GS-5 (see Section 4.1) -- exact NBMG match, API 27-031-80055",
+  "Hot spring 6 (main terrace ACEC)", "spring", "Unresolved", "Coordinate-less provisional Locations row; no modern counterpart identified",
+  "Steamboat Creek at Rhodes Road", "surface water", "Resolved (independently)", "Locations 'SB5'/'SB6' -- same site this project's SBRR conductivity logger occupies",
+  "Curti Barn Well, Curti Domestic Well", "domestic/geothermal well", "Resolved (independently)", "Klein et al. (2007)-sourced Locations rows",
+  "Boyd Well", "domestic well", "Resolved (independently)", "NDEP-promoted Locations row 'Boyd Domestic Well'",
+  "Rogers Well", "domestic well", "Resolved (independently)", "NDEP-promoted Locations row 'Rogers Domestic Well'",
+  "Jeppson Well", "geothermal well", "Resolved (independently)", "NDEP-promoted Locations row 'Jeppson Geothermal Well'",
+  "Steinhardt Well, MacKay Well, Woods Well, Tangen Well, PTR-1/2, Bianco, Brown School, STMGID Went",
+    "domestic/monitor well", "Unresolved", "Consistent with prior sessions' independent 'unresolved' flags for several of these"
+)
+crossref
+```
+
+**Reading this table:** the "Resolved (independently)" rows are the
+most interesting -- this project matched Boyd, Rogers, Jeppson (via
+NDEP), Curti (via Klein 2007), and Rhodes Road (via its own SBRR
+conductivity-logger siting) to real coordinates in entirely separate
+sessions, months before anyone here had read this 1992 report. Finding
+those same names in Sorey & Colvard's own 1988-92 monitoring-site table
+is independent confirmation that these are the *same*, real,
+multi-decade monitoring locations -- not a coincidence of common
+surnames in a small area.
+
+The remaining "Unresolved" rows (the stratigraphic test wells,
+Steinhardt, MacKay, Woods, Tangen, PTR-1/2, Bianco, Brown School) are a
+concrete follow-up list, consistent with (and in several cases literally
+the same names as) gaps already flagged in `AGENTS.md` from unrelated
+well-matching sessions. None are guessed here.
+
+### 4.1 Resolving 83A-6, Cox 1-1, and the "GS-58"/"GS-59" OCR artifact (2026-09-12)
+
+A direct search of NBMG's statewide `Geothermal_Wells.csv` and
+`GEOTHERM06102019.csv` compilations (`data/raw/nbmg/`) found exact
+well-name matches for `83A-6` (API 27-031-90080, a CPI production well
+drilled 1987) and `Cox I-1` (API 27-031-90051, a CPI injection well,
+previously drilled as observation well "Cox No. 1" for Phillips
+Petroleum in 1981) -- both are now real `Wells` rows with NBMG-sourced
+coordinates (`data/raw/wells/sorey1992_nbmg_resolved_wells.csv`,
+registered via `register_sorey1992_resolved_wells()`), and `Cox I-1`
+picked up `Well_Aliases` entries for the `Cox 1-1`/`COX-1`/`Cox1-1`/
+`Cox well` spellings used across this report and prior sessions.
+
+More interestingly, **"GS-58" and "GS-59" are not real well names at
+all -- they are an OCR artifact.** Re-reading Table 1's own footnote
+list resolves this precisely:
+
+> `8From White (1968).`
+> `9New seep adjacent to well GS-5, analysis by Nevada Division of Health Laboratory.`
+
+Both footnote markers ("8" and "9") were superscripts attached to a
+single real well name, **GS-5**, in the original typeset table, and the
+PDF's OCR layer fused each digit directly onto the name it followed --
+producing "GS-58" (really "GS-5" + footnote 8) and "GS-59" (really
+"GS-5" + footnote 9). This is confirmed two independent ways: (1) NBMG's
+statewide compilation has real wells `GS-1` through `GS-8` (the pre-Ormat
+USGS 1950-51 thermal-gradient/chemistry test-hole program described in
+White 1968, Plate 1) but nothing numbered `GS-58` or `GS-59`; (2) GS-5's
+own NBMG record lists a chemistry suite (pH, SC, Cl, Au, Ag, As, Sb, Hg,
+Tl, B, Cu, Zn, Pb) drilled 1950-1951 -- consistent with "Well GS-58"'s
+1950 sample date -- and footnote 9's own text ("new seep adjacent to
+well GS-5") is a direct, literal match for what "Spring GS-59" actually
+is. Both rows in `sorey1992_table1_chemistry.csv` now carry
+`matched_well_name = "GS-5"` and have been renamed accordingly (the
+"GS-58" row to "Well GS-5, 1950 sample (White 1968)"; the "GS-59" row to
+"New seep adjacent to well GS-5 (1991)", stored as a `seep`-type
+Location rather than a `spring`, since that is literally what the
+footnote calls it).
+
+```{r resolved-wells-check}
+dbGetQuery(con, "
+  SELECT external_station_code, name, latitude, longitude, site_type
+  FROM Locations WHERE external_station_code LIKE 'SOREY1992%'
+  ORDER BY external_station_code
+")
+```
+
+**A thematically important find:** "Hot spring 6" on the main terrace,
+sampled by USGS in 1977 and again described here as *ceasing to flow
+entirely by 1987*, is exactly the class of historically-active,
+currently-dormant Lower Sinter Terrace spring this thesis's own
+spring-remapping fieldwork is specifically designed to find and
+re-evaluate. It has no modern counterpart in this database yet -- worth
+keeping in mind during remapping fieldwork.
+
+## Newly ingested chemistry: Table 1 (1950-1991)
+
+`ingest_historical_sorey1992.R` (wired into `run_pipeline.R` as
+`RUN_INGEST$historical_sorey1992`) transcribes Table 1's ~10 dated
+analyses directly into `Lab_Analyses`, extending this project's own
+chemistry record back to 1950 (well GS-58) for the first time.
+
+```{r sorey-chem-table}
+sorey_chem <- dbGetQuery(con, "
+  SELECT l.name AS feature, s.collection_time AS sample_date,
+         la.analyte, la.value, la.units
+  FROM Lab_Analyses la
+  JOIN Samples s ON s.sample_id = la.sample_id
+  JOIN Locations l ON l.location_id = s.location_id
+  WHERE l.external_station_code LIKE 'SOREY1992%'
+  ORDER BY s.collection_time, l.name
+")
+sorey_chem_wide <- sorey_chem %>%
+  select(feature, sample_date, analyte, value) %>%
+  pivot_wider(names_from = analyte, values_from = value)
+sorey_chem_wide
+```
+
+### Cl/B and Cl/Li ratio check against modern chemistry
+
+Sorey & Colvard found Cl/B = 19.3 +/- 1.7 and Cl/Li = 122.5 +/- 9.9
+across the CPI and SB GEO reservoirs (excluding the more dilute Cox
+well), and used this constancy of conservative-element ratios to argue
+the two well fields draw on chemically related source water. Recomputing
+the same ratios from the newly-ingested 1950-1991 values, and comparing
+against this project's own real 2024-2026 thermal-water samples (the
+FIELD spring/well/seep samples, and the NDEP-promoted domestic wells),
+is a direct test of whether that same geochemical signature has
+persisted for over three decades.
+
+```{r ratio-check}
+hist_ratios <- sorey_chem %>%
+  filter(analyte %in% c("Cl", "B", "Li")) %>%
+  pivot_wider(id_cols = c(feature, sample_date), names_from = analyte, values_from = value) %>%
+  filter(!is.na(Cl), !is.na(B)) %>%
+  mutate(Cl_B = Cl / B, Cl_Li = Cl / Li, era = "1950-1991 (Sorey & Colvard 1992)")
+
+modern_ratios <- dbGetQuery(con, "
+  SELECT s.sample_id, l.name AS feature, l.site_type, la.analyte, la.value
+  FROM Lab_Analyses la
+  JOIN Samples s ON s.sample_id = la.sample_id
+  JOIN Locations l ON l.location_id = s.location_id
+  WHERE la.analyte IN ('Cl','B','Li')
+    AND s.data_source != 'Sorey & Colvard 1992'
+") %>%
+  pivot_wider(id_cols = c(sample_id, feature, site_type), names_from = analyte,
+              values_from = value, values_fn = mean) %>%
+  filter(!is.na(Cl), !is.na(B)) %>%
+  mutate(Cl_B = Cl / B, Cl_Li = Cl / Li,
+         era = if_else(site_type %in% c("fumarole", "seep", "spring"),
+                        "2024-2026 real thermal (FIELD)",
+                        "2024-2026 NDEP domestic/background wells"))
+
+ratio_compare <- bind_rows(
+  hist_ratios %>% select(feature, era, Cl, B, Li, Cl_B, Cl_Li),
+  modern_ratios %>% select(feature, era, Cl, B, Li, Cl_B, Cl_Li)
+)
+ratio_compare
+```
+
+```{r ratio-plot}
+#| fig-width: 8
+#| fig-height: 5
+ggplot(ratio_compare %>% filter(!is.na(Cl_B)), aes(x = Cl_B, y = era)) +
+  geom_point(size = 2.5, alpha = 0.7) +
+  geom_vline(xintercept = 19.3, linetype = "dashed") +
+  annotate("text", x = 19.3, y = 0.55, label = "Sorey & Colvard (1992)\nmean Cl/B = 19.3", size = 3, hjust = -0.05) +
+  labs(x = "Cl / B (mass ratio)", y = NULL,
+       title = "Chloride-to-boron ratio: 1950-1991 vs. present-day chemistry",
+       subtitle = "Real thermal samples cluster near Sorey's 1990-91 value; dilute domestic/background wells scatter widely near their B detection limit")
+```
+
+**Reading this:** this project's own 2024-2026 real thermal FIELD
+samples (fumarole/seep/spring) give Cl/B roughly 20-23, closely matching
+Sorey & Colvard's 1990-91 CPI/SB GEO value of 19.3 +/- 1.7 -- a genuine,
+quantitative "then vs. now" consistency check, not just a qualitative
+one. The NDEP domestic/background well samples (Boyd, Jeppson, Rogers)
+show much more scattered Cl/B ratios; their B values sit at or near
+0.05-0.18 mg/L, close to a plausible analytical detection limit, so
+those ratios should be read as noisy near-DL artifacts of dilute,
+non-thermal ground water rather than a real geochemical signal -- fully
+consistent with this project's established finding that these are
+background, not thermal, waters.
+
+## Discharge-through-time: extending Sorey's Table 2
+
+Table 2 of the 1992 report tabulates dated estimates of thermal-water
+discharge to Steamboat Creek from 1955 through 1989. These values are
+**transcribed literature numbers, not live database queries** -- they
+predate any table this project's own pipeline builds -- assembled here
+alongside the already-cited Sorey & Spielman (2008, 2017) follow-up
+estimates and this project's own 2026 poster result to give a single,
+~70-year view.
+
+```{r discharge-timeline}
+discharge_hist <- tribble(
+  ~period, ~year_mid, ~gpm, ~Ls, ~source,
+  "White (1968), Apr 1955",         1955, 1110, 1110 * 0.0630902, "White (1968), chloride-flux method",
+  "White (1968), Apr 1964",         1964, 1385, 1385 * 0.0630902, "White (1968), chloride-flux method",
+  "Shump (1985), 1981-82 avg",      1981.5, 1300, 1300 * 0.0630902, "Shump (1985), specific-conductance method (less reliable per Sorey & Colvard)",
+  "Collar (1990), Jun 1988",        1988.5, 523, 523 * 0.0630902, "Collar (1990) via Sorey & Colvard (1992) Table 2",
+  "Collar (1990), Aug 1988",        1988.6, NA, NA, "Not counting net CPI production; unseen seepage component only reported",
+  "Collar (1990), Mar 1989",        1989.2, 663, 663 * 0.0630902, "Collar (1990) via Sorey & Colvard (1992) Table 2",
+  "Sorey & Spielman (2008), 2007-08", 2007.5, NA, mean(c(730, 1214)) * 0.0630902, "Chloride-flux, SBRR/SBBV sites",
+  "Sorey & Spielman (2017), 2008-2016 avg", 2012, NA, 60, "Chloride-flux, SBRR/SBBV sites, 24 sampling events",
+  "Irvin & Lindsey (2026 poster), post-eruption", 2026, NA, 27, "This project's own chloride mass-balance estimate"
+)
+discharge_hist
+```
+
+```{r discharge-plot}
+#| fig-width: 8
+#| fig-height: 5
+ggplot(discharge_hist %>% filter(!is.na(Ls)), aes(x = year_mid, y = Ls)) +
+  geom_point(size = 3) +
+  geom_line(alpha = 0.4) +
+  labs(x = "Year", y = "Thermal-water discharge (L/s)",
+       title = "Thermal-water discharge to Steamboat Creek, 1955-2026",
+       subtitle = "White (1968) through this project's own 2026 poster estimate")
+```
+
+**Reading this:** discharge estimates were broadly 45-90 L/s
+(660-1,385 gpm-equivalent) from 1955 through the 2008-2016 Sorey &
+Spielman baseline, with the 1988-89 Collar (1990) values sitting at the
+low end even before accounting for that they explicitly exclude net CPI
+well-field production. This project's own post-eruption ~27 L/s estimate
+sits below every prior estimate in this 70-year record -- consistent
+with the poster's own conclusion (conduit reactivation/redistribution,
+not necessarily a new source) but worth treating as one point in a
+long, variable record rather than a single before/after comparison.
+None of the pre-2007 methods used the same sites (SBRR/SBBV) as the
+modern chloride-flux estimates, so method consistency, not just
+magnitude, matters when reading this chart -- White (1968) and Collar
+(1990)'s methods and gauge locations are not identical to Sorey &
+Spielman's.
+
+## Table 10 monitoring network vs. this project's Locations
+
+```{r table10-check}
+dbGetQuery(con, "
+  SELECT location_id, external_station_code, name, site_type,
+         latitude, longitude, coordinate_source
+  FROM Locations
+  WHERE name LIKE '%Boyd%' OR name LIKE '%Curti%' OR name LIKE '%Rogers%'
+     OR name LIKE '%Jeppson%' OR name LIKE '%Herz%' OR name LIKE '%Zolezzi%'
+     OR external_station_code IN ('SB5','SB6')
+  ORDER BY name
+")
+```
+
+Sorey & Colvard's Table 10 ("Current monitoring sites for CPI and SBG
+geothermal developments") describes exactly this same set of domestic
+wells and the Rhodes Road creek-monitoring point as the active 1988-92
+monitoring network -- confirming this project's own SBRR site and its
+NDEP/Klein-resolved domestic wells sit at genuinely long-monitored
+locations, not newly-chosen ones. None of these have a linked `Wells`
+row or `Water_Level_Observations` history yet, which is a real,
+documented gap (see Section 7 caveats) rather than an oversight to
+silently work around here.
+
+**Aside (found and fixed, 2026-09-12): the malformed `"7-07-10"`
+timestamp.** `Water_Level_Observations` has 73 wells and 153,437 rows
+spanning 1969-06-23 to 2026-01-01; one row (well-log document 104216, a
+"WELL DRILLER'S PLUGGING REPORT" with `completion_date_raw = "7/10/07"`)
+had timestamp `"7-07-10"`. Root cause: `ingest_well_logs.R`'s
+`.safe_completion_date()` tries `as.Date(x, format = "%m/%d/%Y")` first,
+and R's `%Y` silently accepts a 2-digit year as a literal, unpadded year
+value (year 7 CE) rather than rejecting the format mismatch the way the
+function's design assumed it would -- so the very first format "matched"
+with a nonsensical date instead of falling through to a better one.
+Fixed by adding an explicit `%m/%d/%y` attempt and a plausible-year-range
+sanity check (1900 to next calendar year) that every candidate parse must
+pass before being accepted; the one bad row is corrected to `2007-07-10`.
+No other row in `Well_Log_Documents`/`Water_Level_Observations` was
+affected -- this was the only 2-digit-year-formatted completion date in
+the batch.
+
+## Barometric efficiency: a documented, not-yet-implemented capability
+
+Sorey & Colvard (p. 85-88, Figs. 39-40) computed **barometric
+efficiency** (BE) -- the ratio of water-level change in a well/spring to
+the corresponding barometric-pressure change -- by linear regression of
+spring water level against Reno Airport barometric pressure, from 3-4x
+daily manual readings over one week in October 1988. Reported values:
+BE = 0.42 for spring 6 (r = 0.79) and 0.45 for spring 12 (r = 0.44);
+White (1968) found BE 0.2-1.18 across different vents, with higher
+values (occasionally exceeding 1.0) where the spring vent's fluid column
+is at or near boiling.
+
+**Why this project can't run this for real yet:** it requires
+*continuous* barometric pressure paired with *continuous* water level at
+the same site. Checking both:
+
+```{r barometric-check}
+dbGetQuery(con, "SELECT DISTINCT parameter, unit FROM Weather_Observations")
+```
+
+NOAA's ingested weather parameters are precipitation and air temperature
+only -- **no barometric/station pressure parameter currently exists
+anywhere in this database.** `Water_Level_Observations` itself is
+discrete manual/transducer readings, not always continuous, and none of
+the wells in Section 4's cross-reference table currently overlap in time
+with any pressure record anyway.
+
+This mirrors the same "build the capability, wait for real overlapping
+data" pattern already used for PHREEQC's mixing/inverse/gas-phase
+modules (`06_phreeqc_geochemical_modeling.qmd`): a stub function with
+only a synthetic self-test, not wired into `run_pipeline.R`.
+
+```{r barometric-stub}
+#| eval: false
+# Not run by default -- synthetic self-test only, requires real paired
+# continuous barometric-pressure + water-level data to be meaningful.
+compute_barometric_efficiency <- function(water_level, barometric_pressure) {
+  fit <- lm(water_level ~ barometric_pressure)
+  list(
+    BE = unname(coef(fit)[2]),
+    r_squared = summary(fit)$r.squared,
+    model = fit
+  )
+}
+
+demo_barometric_efficiency <- function(seed = 4172) {
+  set.seed(seed)
+  n <- 168 # one week, hourly
+  baro <- 30 + cumsum(rnorm(n, 0, 0.02))          # synthetic barometric pressure, inHg
+  wl <- 5 - 0.4 * (baro - mean(baro)) + rnorm(n, 0, 0.02)  # synthetic BE ~ 0.4
+  compute_barometric_efficiency(wl, baro)
+}
+demo_barometric_efficiency()
+```
+
+**Recommendation, not a request for new instrumentation decisions here:**
+if a future logger deployment or manual monitoring effort pairs
+continuous water level at a spring/well with continuous (or even just
+synchronized 3-4x/day manual) barometric pressure, this function is
+ready to compute a real, Sorey-comparable BE immediately.
+
+## Why this matters for the project
+
+Sorey & Colvard (1992) does three things no other single source in this
+project's literature folder does at once: it gives this project's
+chemistry record a **35-40 year deeper baseline** (Table 1, now
+ingested), it gives the chloride-discharge thesis question a **~70-year
+timeline** instead of just the 2008-2026 window (Section 6), and it
+independently corroborates several of this project's own
+well/site-identity resolutions made from entirely unrelated sources in
+earlier sessions (Section 4) -- itself a form of validation this
+project didn't have before. It also demonstrates, with real 1988-era
+field methods, that this project's own instrumentation program (SBRR/SBGG
+conductivity loggers, temperature loggers, NDEP-resolved domestic wells)
+sits on genuinely decades-old monitoring ground, not a newly invented
+network. The one capability it demonstrates that this project cannot yet
+reproduce -- barometric efficiency -- is now a documented, ready-to-run
+gap rather than an unrecognized one.
+
+## Changelog
+
+| Date | Change |
+|---|---|
+| 2026-09-12 | Notebook created. Sorey & Colvard (1992) read directly (`pdftotext -layout`); Table 1 chemistry (9 samples, 1950-1991) ingested for the first time via `ingest_historical_sorey1992.R`; well/site cross-reference built against `Wells`/`Well_Aliases`/`Locations`; Cl/B ratio confirmed consistent between 1990-91 and 2024-2026 real thermal samples; discharge-through-time table assembled (White 1968 through this project's 2026 poster); barometric efficiency documented as a recommended, not-yet-runnable capability (no barometric-pressure parameter exists in this database yet). |
+| 2026-09-12 (follow-up) | Resolved `83A-6` and `Cox 1-1` via exact NBMG Geothermal_Wells name matches; discovered and resolved that `"GS-58"`/`"GS-59"` are OCR artifacts of well `GS-5` (its own table footnote superscripts fused onto the name); all four now have real coordinates in `Locations`/`Wells`. Also found and fixed a 2-digit-year date-parsing bug in `ingest_well_logs.R`'s `.safe_completion_date()` that had produced one malformed `Water_Level_Observations` timestamp (`"7-07-10"`, corrected to `2007-07-10`). |
+
+```{r cleanup}
+#| include: false
+dbDisconnect(con)
+```
