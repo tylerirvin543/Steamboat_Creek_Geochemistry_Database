@@ -4122,6 +4122,142 @@ previously-latent structural bugs.
   (disposable/regenerable QC output, consistent with existing
   convention).
 
+## Session 35 (2026-09-25/26, continued): real well-log transcriptions, Boyd Domestic Well link, outreach docs, sampling proposal, Sorey (2000) elevated
+
+Follow-up to Session 34, covering real user-transcribed well-log data
+for 5 NDWR logs (one with an attached lithology-table image), continued
+human-confirmed well mapping from published figures, two new outreach
+documents, a calibration-sampling cost-benefit mini-proposal, and
+elevating Sorey (2000) to a critical reference.
+
+- **New, broader well-log manual-transcription tooling**:
+  `apply_well_log_manual_transcriptions()` (a sibling of Session 34's
+  water-level-only override) reads
+  `data/raw/ndwr/well_log_manual_transcriptions.csv` (total depth,
+  hole/casing diameter, cased-to depth, perforation interval, static
+  AND pumping water level, lat/lon corrections, free-text notes for
+  first-water depth/max temperature) and
+  `well_log_lithology_manual.csv` (mirrors Well_Lithology's own
+  schema) -- a human-transcribed value from directly reading a scan
+  always overwrites whatever OCR did or didn't produce, logged either
+  way. Water_Level_Observations gets a NEW `method='driller_report_pumping'`
+  row for pumping-level readings (no schema change needed --
+  `method`/`method_type` are free text, no CHECK constraint). Wired
+  into `run_pipeline.R` right after the Session 34 override call.
+- **Real transcribed data applied to the real database** for logs
+  5711 (48 ft, 8"/6" hole/casing, static WL 10 ft, first water 30 ft,
+  lithology 0-10 black sandy loam/10-40 fine sand/40-48 coarse sand),
+  5731 (300 ft, static WL taken as 26 ft [first water, no separate
+  static value given], chief aquifer 120-180 ft, reported temperature
+  up to 360 deg F/~182 C, full 8-interval lithology from the user's
+  attached 'Log of Formations' image), 8188 (56 ft, perf 32-52 ft,
+  static WL 19 ft), 8771 (cased to 90 ft, perf 55-84 ft, static WL
+  8 ft, pumping WL 68 ft), and 21796 (300 ft, static AND pumping WL
+  both reported as 215 ft -- recorded as-given, flagged not assumed
+  to be a slip). 16 Well_Log_Documents field updates, 5
+  Water_Level_Observations rows, 11 Well_Lithology intervals; verified
+  on a scratch copy first, then applied to the real, backed-up
+  `geochem_operational.sqlite` (backup:
+  `geochem_operational_pre_well_log_transcriptions_<timestamp>.sqlite`).
+  21796's water-level rows were skipped (garbled OCR completion date,
+  same `.safe_completion_date()` guard as always) -- the raw values are
+  still recorded on `Well_Log_Documents`/notes.
+- **Real identity resolved, and a genuine mistake caught mid-session**:
+  log 8188 is `Boyd Domestic Well`. Initially misidentified this as a
+  `Wells.well_id=151` "merge" case (mirroring the 61248->23-5 pattern
+  from Session 34) based on a garbled recollection of an earlier bash
+  query's two-query output -- re-checking directly found `Wells.well_id=151`
+  is actually an unrelated `Unidentified Well (NDWR Log 138974)`, and
+  "Boyd Domestic Well" is really `Locations.location_id=151` (already
+  sourced from this exact log per Session 4/5's own notes -- coordinate
+  39.38325/-119.73992 vs. this document's 39.38325/-119.74, and owner
+  cross-reference "BOYD, VERNON D"). Fixed correctly by *linking* (not
+  merging) -- `Wells.well_id=186` (the provisional well created from
+  log 8188's OCR/crossref data) got `location_id=151` and
+  `well_name='Boyd Domestic Well'` via a plain `UPDATE`, confirmed no
+  other well already claimed that `location_id`. A real reminder that
+  `Wells` and `Locations` are different ID spaces and a coincidentally-
+  matching integer from an earlier query needs re-verifying before
+  acting on it, not just recalling from context.
+- **8188/8771's coordinates needed no correction** -- the user's own
+  independent re-derivation of "-119.74" for both (after doubting an
+  implausible-looking value on the original 1960s scan) matches what
+  was already on file from the NDWR cross-reference for each.
+- **Continued human-confirmed well mapping from Klein (2007)/White
+  (1968)'s already-rendered figures** (read directly via the image
+  tool, not from memory): both are schematic maps with a scale bar and
+  north arrow but no coordinate grid, so **no new coordinates were
+  written** -- reading a position off a flat scan without a real
+  georeferencing tool would be a visual guess, against this project's
+  standing rule. Real outcomes anyway: a genuinely new historic name
+  spotted on White (1968) Plate 1 ("Steamboat Resort," adjacent to
+  "Steamboat wells"/"Steamboat Cold Spring" -- distinct from the
+  user's own SBW_0001/0002 sample series, which the user confirmed IS
+  what "resort well" meant for the sampling-proposal work below);
+  visual confirmation (not new resolution) that PTR#1, Trans Sierra
+  #3/#4, Johnson/Woods, Flame, Mackay Geoth/Geoth B/Dom, Stuart Dom,
+  Peigh Pool New/Peigh Pool/Peigh Dom, STMGID 3/4, ST-1/2/4/5, and
+  several named springs are all real, clearly labeled, and spatially
+  clustered near the already-resolved Herz/Curti/Soccer Field/NDOT
+  group. Documented in `notebooks/07` with the concrete recommended
+  next step: georeference these two scans directly in ArcGIS using
+  already-known-coordinate wells as control points (the same "ArcGIS
+  out, ArcGIS back in" workflow already scoped for fault digitizing).
+- **New outreach documents**: `docs/outreach/ndep_data_request.qmd`
+  and `ormat_data_request.qmd` (+ rendered PDFs) -- real, ready-to-send
+  letters reusing content already assembled in
+  `docs/action_items_for_user.md` and Session 4's drafted-email notes.
+  NDEP's asks are chemistry/water-level/location-focused (the standing
+  monitoring-network requests); Ormat's are well-identity/location-
+  focused (the still-unmatched Dhakal-network wells, their own
+  production/injection/monitor well water levels, and fissure-site
+  access) -- deliberately different content per party, not a shared
+  template.
+- **New `manuscript/06_calibration_sampling_proposal.qmd`** -- a
+  decision-facing mini-proposal, deliberately separate from
+  `notebooks/09`'s raw statistics per explicit user request: a reasoned
+  (not power-analysis-computed, since no real Cl-EC paired data exists
+  yet to compute one against) n=15-20 minimum / n=30-40
+  seasonally-defensible calibration-sample-count target; real
+  discussion of pairing Cl with major ions (mixing-model cross-check,
+  already used in `notebooks/06`) and isotopes (the only way to
+  distinguish evaporation from conservative mixing); cost/benefit of
+  adding the active fissure (Ormat-access-gated) and SBW_0001/0002 (the
+  "resort" wells, already known/sampled, low incremental cost) as
+  sites; a tiered 20/40/60+ total-analyses-per-year table with an
+  explicit Tier-2 (~40) recommendation as the realistic one-person-
+  thesis target.
+- **Sorey (2000) elevated to a critical reference**, not just a
+  bibliography entry: a `callout-important` added directly above its
+  `docs/literature/annotated_bibliography.qmd` entry, and a new,
+  substantive discussion paragraph added to
+  `notebooks/07_historical_context_sorey1992.qmd`'s discharge-through-
+  time section framing its real 2000 finding (spring flow had not
+  resumed even after the groundwater-decline driver partly blamed for
+  its cessation had itself reversed) as the direct historical baseline
+  for asking whether the 2025 eruption is a genuine reawakening of the
+  *same* system or a mechanistically different event -- tied explicitly
+  to this project's own poster conclusion (conduit reactivation, not a
+  new source).
+- **Verified**: `ingest_well_logs.R`/`run_pipeline.R` still parse and
+  have no CRLF corruption; `notebooks/06`/`07` and
+  `manuscript/06_calibration_sampling_proposal.qmd` all re-render
+  cleanly standalone after these edits; QC re-run clean on the real
+  database (0 new PHREEQC failures introduced by this session's
+  changes).
+- **Committed and pushed** to `origin/main` (commit `22b8ff5`) --
+  includes this session's work plus Session 34's still-uncommitted
+  `ROADMAP.md`/`manuscript/` skeleton/`notebooks/09`/well-log-override
+  tooling, all in one batch. The three new well-log CSVs under
+  `data/raw/ndwr/` needed the usual `git add -f` treatment (gitignored
+  directory).
+- **Not done this session**: no new coordinates were added for any of
+  the still-unresolved named wells (PTR#1, Trans Sierra #3/#4, etc.) --
+  genuinely blocked on a real georeferencing step, not attempted as a
+  guess; the DEMO database was not rebuilt with any of this session's
+  changes; `manuscript/01`/`04`/`05` remain stubs/partial drafts as
+  explicitly scoped in Session 34.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
