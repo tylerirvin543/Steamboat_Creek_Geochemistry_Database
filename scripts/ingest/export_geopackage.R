@@ -166,7 +166,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # A-2 (added 2026-09-26) -- directly usable in ArcGIS/Leapfrog as
     # collar/interval-style point data without any georeferencing step,
     # since the source table is already UTM-coordinate-tagged.
-    geophysical_depth_points = "SELECT point_id, utm_e, utm_n, latitude, longitude, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m, source_document, coordinate_uncertainty_m, notes FROM Geophysical_Depth_Model_Points WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
+    geophysical_depth_points = "SELECT point_id, utm_e, utm_n, latitude, longitude, surface_elevation_m, elevation_source, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m, source_document, coordinate_uncertainty_m, notes FROM Geophysical_Depth_Model_Points WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
   )
   
   # ============================================================

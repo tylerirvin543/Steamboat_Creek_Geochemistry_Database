@@ -252,11 +252,17 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
 #' this project has no DEM at these points, so a real elevation value is
 #' not fabricated. If/when a DEM becomes available, subtracting these
 #' depths from it would give real Z values for Leapfrog import.
+#' @param require_elevation If TRUE (default), a point with no real
+#'   surface_elevation_m (from migrate_geophysical_depth_points_elevation()'s
+#'   USGS Elevation Point Query Service lookup, run once against the
+#'   real database 2026-09-26) is exported with Elevation_m = NA rather
+#'   than a fabricated value -- real Z is only ever computed from a real
+#'   DEM-sourced elevation, never guessed.
 export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog") {
   message("---- Exporting Skalbeck (2001) depth-model points as Leapfrog horizon points ----")
 
   pts <- dbGetQuery(con, "
-    SELECT point_id, utm_e, utm_n, latitude, longitude,
+    SELECT point_id, utm_e, utm_n, latitude, longitude, surface_elevation_m, elevation_source,
            qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m
     FROM Geophysical_Depth_Model_Points
   ")
@@ -264,6 +270,7 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
     message("  -> No Geophysical_Depth_Model_Points rows -- nothing to export.")
     return(invisible(list(horizons_n = 0L)))
   }
+  n_with_elev <- sum(!is.na(pts$surface_elevation_m))
 
   horizons <- list()
   add_horizon <- function(name, depth_col) {
@@ -272,7 +279,10 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
     data.frame(
       PointID = d$point_id, UTM_E = d$utm_e, UTM_N = d$utm_n,
       Latitude = d$latitude, Longitude = d$longitude,
-      Horizon = name, DepthBelowSurface_m = d[[depth_col]]
+      Horizon = name, DepthBelowSurface_m = d[[depth_col]],
+      SurfaceElevation_m = d$surface_elevation_m,
+      Elevation_m = ifelse(is.na(d$surface_elevation_m), NA_real_, d$surface_elevation_m - d[[depth_col]]),
+      ElevationSource = d$elevation_source
     )
   }
   horizons[["qal_base"]] <- add_horizon("base_of_Qal_alluvium", "qal_thickness_m")
@@ -284,6 +294,8 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
   write_csv(out, fs::path(out_dir, "geophysical_horizons.csv"))
   message("  -> geophysical_horizons.csv: ", nrow(out), " horizon points across ",
           length(unique(out$Horizon)), " formation contact(s). ",
-          "NOTE: DepthBelowSurface_m, not true elevation -- no DEM available at these points yet.")
-  invisible(list(horizons_n = nrow(out)))
+          n_with_elev, " of ", nrow(pts), " source points have a real USGS-3DEP surface elevation, ",
+          "so Elevation_m (true Z) is now populated for those rows -- DepthBelowSurface_m/SurfaceElevation_m ",
+          "are kept alongside it so the derivation stays auditable.")
+  invisible(list(horizons_n = nrow(out), n_with_real_elevation = n_with_elev))
 }

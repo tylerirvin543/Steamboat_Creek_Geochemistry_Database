@@ -36,3 +36,20 @@ create_geophysical_depth_points_schema <- function(con) {
   ")
   invisible(NULL)
 }
+
+# Additive migration (2026-09-26, continued): real ground-surface
+# elevation at each depth-model point, from the USGS Elevation Point
+# Query Service (a real DEM source, queried point-by-point via its
+# public REST API -- no raster download/processing needed). Lets
+# Leapfrog horizon exports report true Z elevation instead of only
+# depth-below-surface.
+migrate_geophysical_depth_points_elevation <- function(con) {
+  cols <- dbGetQuery(con, "PRAGMA table_info(Geophysical_Depth_Model_Points)")$name
+  if (!"surface_elevation_m" %in% cols) {
+    dbExecute(con, "ALTER TABLE Geophysical_Depth_Model_Points ADD COLUMN surface_elevation_m REAL")
+  }
+  if (!"elevation_source" %in% cols) {
+    dbExecute(con, "ALTER TABLE Geophysical_Depth_Model_Points ADD COLUMN elevation_source TEXT")
+  }
+  invisible(NULL)
+}

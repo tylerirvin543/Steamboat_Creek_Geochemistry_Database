@@ -729,6 +729,12 @@ run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", 
   ingest_skalbeck2001_depth_points(con)
   ingest_skalbeck2001_well_completions(con)
   ingest_skalbeck2001_table_b1(con)
+  ingest_skalbeck2001_table_b2_brownschool(con)
+  # Real ground-surface elevation (USGS 3DEP, via its public point-query
+  # API) at each depth-model point, added 2026-09-26 so Leapfrog horizon
+  # exports can report true Z instead of only depth-below-surface.
+  # Idempotent -- only queries points still missing an elevation.
+  fetch_skalbeck2001_point_elevations(con)
 })
 
 # ============================================================

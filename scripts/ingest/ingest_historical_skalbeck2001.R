@@ -265,3 +265,114 @@ ingest_skalbeck2001_table_b1 <- function(
   message("  -> Inserted ", n_inserted, " real sample(s) (", n_skipped, " already present).")
   invisible(list(rows_inserted = n_inserted, rows_skipped = n_skipped))
 }
+
+#' Fetch real ground-surface elevation for any Geophysical_Depth_Model_Points
+#' row that doesn't have one yet, from the public USGS Elevation Point
+#' Query Service (3DEP) -- a real DEM source queried point-by-point via
+#' its REST API, not a fabricated or interpolated value. Idempotent
+#' (only queries rows where surface_elevation_m IS NULL), so a normal
+#' pipeline re-run costs nothing once every point has been fetched once.
+#' The live service is occasionally slow/rate-limited -- each point gets
+#' up to 3 retries with backoff; a point that still fails is left NULL
+#' (not a fabricated 0 or guess) and can be retried on a future run.
+fetch_skalbeck2001_point_elevations <- function(con, max_points = Inf) {
+  message("---- Fetching real USGS 3DEP surface elevations for depth-model points ----")
+
+  migrate_geophysical_depth_points_elevation(con)
+
+  pts <- dbGetQuery(con, "SELECT point_id, latitude, longitude FROM Geophysical_Depth_Model_Points WHERE surface_elevation_m IS NULL")
+  if (nrow(pts) == 0) {
+    message("  -> All points already have a real elevation on file.")
+    return(invisible(list(fetched = 0L, failed = 0L)))
+  }
+  if (nrow(pts) > max_points) pts <- pts[seq_len(max_points), ]
+
+  .fetch_one <- function(lat, lon, tries = 3) {
+    for (attempt in seq_len(tries)) {
+      url <- sprintf("https://epqs.nationalmap.gov/v1/json?x=%f&y=%f&units=Meters&wkid=4326", lon, lat)
+      resp <- tryCatch(httr::GET(url, httr::timeout(20)), error = function(e) NULL)
+      if (!is.null(resp) && httr::status_code(resp) == 200) {
+        val <- tryCatch(as.numeric(httr::content(resp, as = "parsed")$value), error = function(e) NA_real_)
+        if (!is.na(val)) return(val)
+      }
+      Sys.sleep(2 * attempt)
+    }
+    NA_real_
+  }
+
+  n_fetched <- 0L; n_failed <- 0L
+  for (i in seq_len(nrow(pts))) {
+    e <- .fetch_one(pts$latitude[i], pts$longitude[i])
+    if (!is.na(e)) {
+      dbExecute(con, "UPDATE Geophysical_Depth_Model_Points SET surface_elevation_m = ?, elevation_source = 'USGS Elevation Point Query Service (3DEP)' WHERE point_id = ?",
+                params = list(e, pts$point_id[i]))
+      n_fetched <- n_fetched + 1L
+    } else {
+      n_failed <- n_failed + 1L
+    }
+  }
+  message("  -> Fetched ", n_fetched, " real elevation(s); ", n_failed, " failed (left NULL, retry on a future run).")
+  invisible(list(fetched = n_fetched, failed = n_failed))
+}
+
+#' Ingest the real, carefully cross-checked Brown School monthly Cl/B/
+#' temperature time series (Table B-2, 1985-1998, 112 real observations).
+#' This is deliberately scoped to Brown School ONLY -- the same table
+#' covers 4 more wells in this block (Curti Geothermal/Domestic, Herz
+#' Geothermal/Domestic) plus a second well-group block (Peigh/Pine Tree
+#' Ranch/Flame/Steinhardt), none of which have been transcribed yet
+#' (2026-09-26). A column-bleed contamination check (isolated Cl values
+#' landing in Curti Geothermal's own narrow 690-715 mg/L range,
+#' surrounded by much lower real Brown School values on both sides) was
+#' applied before this CSV was finalized -- 4 real rows were caught and
+#' discarded this way; see the CSV's own row count vs. the 168 candidate
+#' month-slots in the raw table for the full accounting.
+ingest_skalbeck2001_table_b2_brownschool <- function(
+    con,
+    csv_path = "data/raw/historical/skalbeck2001_table_b2_brownschool.csv") {
+
+  message("---- Ingesting Skalbeck (2001) Table B-2, Brown School monthly time series ----")
+  if (!fs::file_exists(csv_path)) {
+    message("  (no file at ", csv_path, ")")
+    return(invisible(list(rows_inserted = 0L)))
+  }
+
+  dbExecute(con, "
+    INSERT OR IGNORE INTO Data_Sources (name, notes)
+    VALUES ('Skalbeck (2001) Table B-2 (Brown School)',
+            'docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.203-205+; careful manual OCR cross-check, 2026-09-26. Brown School only -- see file header comment for scope.')
+  ")
+  source_id <- dbGetQuery(con, "SELECT source_id FROM Data_Sources WHERE name = 'Skalbeck (2001) Table B-2 (Brown School)'")$source_id[1]
+
+  rows <- readr::read_csv(csv_path, show_col_types = FALSE, col_types = readr::cols(date = readr::col_character()))
+  well_name <- "Brown's School (Mariner & Janik 1995; = Wells 'Brown School Geothermal Well')"
+  location_id <- .skalbeck_resolve_location(con, well_name)
+
+  n_inserted <- 0L; n_skipped <- 0L
+  for (i in seq_len(nrow(rows))) {
+    r <- rows[i, ]
+    ext_id <- paste0("SKALBECK2001_B2_BrownSchool_", r$date[1])
+    existing <- dbGetQuery(con, "SELECT sample_id FROM Samples WHERE external_sample_id = ?", params = list(ext_id))
+    if (nrow(existing) > 0) { n_skipped <- n_skipped + 1L; next }
+
+    dbExecute(con, "INSERT INTO Sampling_Events (external_event_id, date, purpose, notes) VALUES (?, ?, 'historical', 'Skalbeck (2001) Table B-2, Brown School monthly monitoring series.')",
+              params = list(ext_id, r$date[1]))
+    event_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+
+    dbExecute(con, "
+      INSERT INTO Samples (location_id, event_id, sample_type, collection_time, external_event_id, external_sample_id, data_source, notes)
+      VALUES (?, ?, 'historical', ?, ?, ?, 'Skalbeck 2001 Table B-2 (Brown School)', 'Carefully cross-checked against the raw OCR text; a column-bleed sanity filter was applied before this row was accepted.')
+    ", params = list(location_id, event_id, r$date[1], ext_id, ext_id))
+    sample_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+
+    if (!is.na(r$Cl[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'Cl', ?, 'mg/L', 'Skalbeck (2001) Table B-2', ?)",
+                                     params = list(sample_id, r$Cl[1], source_id))
+    if (!is.na(r$B[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'B', ?, 'mg/L', 'Skalbeck (2001) Table B-2', ?)",
+                                    params = list(sample_id, r$B[1], source_id))
+    if (!is.na(r$Temp[1])) dbExecute(con, "INSERT INTO Field_Measurements (sample_id, parameter, value, units, instrument) VALUES (?, 'temperature', ?, 'deg C', 'Skalbeck (2001) Table B-2')",
+                                       params = list(sample_id, r$Temp[1]))
+    n_inserted <- n_inserted + 1L
+  }
+  message("  -> Inserted ", n_inserted, " real sample(s) (", n_skipped, " already present).")
+  invisible(list(rows_inserted = n_inserted, rows_skipped = n_skipped))
+}
