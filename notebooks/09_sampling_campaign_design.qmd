@@ -1,0 +1,191 @@
+---
+title: "SBRR/SBGG Calibration Sampling Campaign Design"
+subtitle: "A field-ready recommendation for the next year of chloride sampling, informed by the real conductivity record"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+  pdf:
+    toc: true
+    number-sections: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose
+
+This notebook answers a concrete field-planning question directly: **given
+one year before writing the thesis, how often should chloride be sampled
+at SBRR and SBGG to properly calibrate the conductivity-as-Cl-proxy
+relationship, and should an initial daily/intensive campaign be run
+first?** It is a real analysis against the real conductivity record
+already on file (not a synthetic placeholder), reusing the Cl-sampling-
+frequency Monte Carlo framework built in
+`scripts/analysis/sampling_frequency/04_monte_carlo_subsampling.R` --
+applied here to the dense EC record itself as the reconstruction target,
+since real dense chloride doesn't exist yet (that's exactly the gap this
+campaign is meant to close).
+
+```{r setup-09}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(ggplot2)
+
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
+con <- dbConnect(SQLite(), db_path)
+
+mc_script <- file.path("scripts", "analysis", "sampling_frequency", "04_monte_carlo_subsampling.R")
+if (!file.exists(mc_script)) mc_script <- file.path("..", mc_script)
+source(mc_script)
+```
+
+## 1. How much does real EC actually vary day to day?
+
+```{r ec-pull}
+ec <- dbGetQuery(con, "
+  SELECT l.external_station_code AS site, o.timestamp, o.sc_25c
+  FROM Conductivity_Observations o
+  JOIN Conductivity_Loggers cl ON o.logger_id = cl.logger_id
+  JOIN Locations l ON cl.location_id = l.location_id
+  WHERE l.external_station_code IN ('SBRR', 'SBGG') AND o.sc_25c IS NOT NULL
+")
+ec$timestamp <- as.POSIXct(ec$timestamp, tz = "UTC")
+ec$date <- as.Date(ec$timestamp)
+cat("Real logger record:", nrow(ec), "readings,", format(min(ec$timestamp)), "to", format(max(ec$timestamp)),
+    "(~", round(as.numeric(diff(range(ec$timestamp)), units = "days")), "days)\n")
+
+ec_summary <- ec %>% group_by(site) %>% summarise(mean_ec = mean(sc_25c), sd_ec = sd(sc_25c), n = n())
+knitr::kable(ec_summary, digits = 1, caption = "Real specific-conductance summary, both sites")
+
+daily_range <- ec %>% group_by(site, date) %>% summarise(daily_range = max(sc_25c) - min(sc_25c), .groups = "drop")
+knitr::kable(
+  daily_range %>% group_by(site) %>%
+    summarise(mean_daily_range = mean(daily_range), median_daily_range = median(daily_range),
+              max_daily_range = max(daily_range)),
+  digits = 1, caption = "Real daily EC range (uS/cm) -- median is the more representative summary; a few very large single-day ranges reflect known field-visit disturbance events, not the underlying diurnal cycle"
+)
+```
+
+```{r ec-plot}
+#| fig-width: 8
+#| fig-height: 4.5
+ggplot(ec, aes(x = timestamp, y = sc_25c)) +
+  geom_line(linewidth = 0.3) +
+  facet_wrap(~ site, scales = "free_y", ncol = 1) +
+  labs(x = NULL, y = "Specific conductance (uS/cm, 25C)",
+       title = "Real SBRR/SBGG conductivity record used for this analysis")
+```
+
+**Reading**: the real, typical (median) day-to-day EC swing is ~36 uS/cm at
+SBRR (~10% of its mean) and ~52 uS/cm at SBGG (~5% of its mean) -- a real,
+modest diurnal signal, consistent with `notebooks/01`'s own harmonic-fit
+and ACF findings. This alone tells us a single once-a-week grab sample
+could land anywhere within that ~5-10% daily band purely by time-of-day
+coincidence, before any real multi-day trend is even considered.
+
+## 2. Monte Carlo: how much reconstruction error does each candidate sampling interval produce?
+
+Reusing the existing Monte Carlo subsampling framework, applied to the
+real EC series itself (standing in for the dense reference a real Cl-EC
+regression would eventually predict from): repeatedly subsample at
+1/2/3/7/14-day intervals (varying the random start offset 200 times per
+interval), linearly reconstruct the full series from just those points,
+and measure the reconstruction error against the real, fully-resolved
+record.
+
+```{r monte-carlo-real}
+run_mc_for_site <- function(site_code) {
+  df <- ec %>% filter(site == site_code) %>% arrange(timestamp) %>%
+    transmute(time = timestamp, chloride_mgL = sc_25c)  # EC stands in as the dense-proxy target
+  mc <- monte_carlo_sampling_frequency(df, frequencies_days = c(1, 2, 3, 7, 14), n_draws = 200, seed = 7391)
+  out <- summarize_sampling_frequency(mc)
+  out$pct_of_mean <- 100 * out$rmse_mean / ec_summary$mean_ec[ec_summary$site == site_code]
+  out
+}
+
+sbrr_mc <- run_mc_for_site("SBRR")
+sbgg_mc <- run_mc_for_site("SBGG")
+
+knitr::kable(sbrr_mc[, c("frequency_days", "n_draws", "rmse_mean", "rmse_p95", "pct_of_mean")],
+             digits = 2, caption = "SBRR: EC reconstruction error by candidate sampling interval")
+knitr::kable(sbgg_mc[, c("frequency_days", "n_draws", "rmse_mean", "rmse_p95", "pct_of_mean")],
+             digits = 2, caption = "SBGG: EC reconstruction error by candidate sampling interval")
+```
+
+```{r monte-carlo-plot}
+#| fig-width: 7
+#| fig-height: 4.5
+mc_combined <- bind_rows(
+  cbind(sbrr_mc, site = "SBRR"),
+  cbind(sbgg_mc, site = "SBGG")
+)
+ggplot(mc_combined, aes(x = frequency_days, y = pct_of_mean, color = site)) +
+  geom_line() + geom_point(size = 2) +
+  labs(x = "Candidate sampling interval (days)", y = "Reconstruction RMSE (% of mean EC)",
+       title = "Real error-vs-sampling-frequency curve, SBRR and SBGG",
+       subtitle = "Computed from the real ~5-week 2026 conductivity record; steeper for SBGG's already-noisier record")
+```
+
+**Reading**: daily sampling keeps reconstruction error under ~5% of the
+mean at both sites; weekly sampling roughly doubles that error (~6-8%);
+by biweekly, error reaches ~8-13%. There's no sharp "cliff" -- error grows
+smoothly -- which means the choice of interval is a real cost/precision
+trade-off, not a hard threshold.
+
+## 3. Recommendation: a two-tier campaign
+
+**Tier 1 -- short, intensive calibration window (2-4 weeks, early field
+season):** Daily (or, resources permitting, sub-daily/every-other-day)
+chloride grab samples at both SBRR and SBGG, run concurrently with the
+already-active conductivity loggers. Purpose: this is the *only* way to
+finally get enough real, temporally-overlapping Cl-EC pairs to fit a real
+calibration relationship (Section 3 of `01_conductivity_temporal_structure.qmd`,
+`03_chloride_models.R`, is already built and waiting for exactly this
+data) and to directly test whether short-term Cl variability tracks EC's
+own real diurnal signal (Section 1/2 above) or behaves differently.
+
+**Tier 2 -- lower-frequency campaign for the rest of the year (biweekly to
+monthly):** Once Tier 1 establishes the calibration relationship, routine
+monitoring can drop to biweekly-or-monthly grab samples with a
+quantified (not guessed) reconstruction-error cost (Section 2 above) --
+**plus targeted extra samples bracketing any large storm or spring-runoff
+event**, since `notebooks/07`/`notebooks/08` already found a real,
+detectable water-level response to large storms (the Dec-2025 event at
+STMGID MW10) -- the same logic likely applies to Cl/EC at SBRR/SBGG and is
+worth testing directly with real paired data once Tier 1 samples exist.
+
+**Why not just do one long daily campaign for the whole year?** The
+Section 2 error curve shows diminishing returns below about a week's
+interval once the initial calibration is established -- the real payoff of
+daily sampling is in *establishing the relationship itself* (Tier 1), not
+in sustaining it indefinitely. A full year of daily sampling would be the
+most statistically ideal choice but is very unlikely to be logistically
+realistic for a one-person thesis field campaign; the two-tier design is
+the pragmatic compromise, explicitly justified rather than assumed.
+
+## 4. What this does and doesn't tell us yet
+
+- This analysis uses **EC as a stand-in for chloride** because no dense
+  real Cl record exists yet -- exactly the gap Tier 1 above is designed to
+  close. Once Tier 1 samples exist, this same Monte Carlo framework should
+  be re-run on the *real* Cl series (via the fitted `03_chloride_models.R`
+  relationship), not just EC, for a final, fully-real recommendation.
+- The ~5-week record used here (mid-July to late-August 2026) does not yet
+  span a full season -- the daily-range/diurnal-amplitude numbers above may
+  not hold in winter/spring; this is itself a reason to keep sampling
+  through Tier 2 rather than assuming summer behavior generalizes.
+- This document is deliberately reproducible (a live notebook, not a
+  static writeup) so it can be re-run and refined as real Tier 1 data
+  starts arriving.
+
+```{r cleanup-09}
+#| echo: false
+dbDisconnect(con)
+```

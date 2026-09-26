@@ -1,0 +1,32 @@
+---
+title: "Discussion and Future Work"
+subtitle: "Chapter 5 -- Steamboat Hills Geothermal Outflow (stub -- not yet drafted)"
+date: today
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
+---
+
+::: {.callout-warning}
+## Status: stub, not yet drafted
+
+This chapter should synthesize `ROADMAP.md` into manuscript prose once
+Chapter 4 (Results) is written in full. Key threads to weave together:
+
+- What the real findings (Chapter 4) do and don't yet settle about
+  long-term thermal-water discharge trends.
+- The chemistry-first, spatial-connectivity-second modeling principle
+  (Chapter 2) and how it should shape any future Leapfrog/MODFLOW-
+  informed remodeling.
+- The concrete roadblocks and their sequencing from `ROADMAP.md` Sections
+  2-3 (real overlapping Cl/EC samples, in-field well water levels,
+  digitized faults, a MODFLOW-ready hydrostratigraphic model).
+- Whether this thesis's own 2026 spring-remapping fieldwork confirms or
+  overturns Sorey (2000)'s [@sorey2000] finding that natural spring flow
+  had not resumed even after the groundwater-decline driver partly
+  blamed for its 1987-89 cessation had itself reversed by 2000 -- a real,
+  directly testable question raised while preparing this manuscript
+  (Chapter 1).
+:::

@@ -1,0 +1,42 @@
+---
+title: "Data Request: Ormat Technologies -- Steamboat Hills Field"
+subtitle: "Steamboat Hills Geothermal Outflow Monitoring -- UNR Thesis Project"
+date: today
+format:
+  pdf:
+    toc: false
+    number-sections: false
+---
+
+## Project background
+
+This request supports a University of Nevada, Reno thesis project
+studying changes in geothermal outflow at Steamboat Hills, Nevada,
+following the June 2025 Lower Sinter Terrace eruption -- including
+remapping springs Ormat reports as inactive, and comparing current
+chloride discharge to Michael Sorey's historic (1988-2017) estimates. We
+have built a consolidated well/chemistry/monitoring database for the
+field from public sources (NDEP, NDWR, NDOM, NBMG, USGS) and Dhakal et
+al. (2025)'s own published flow-network diagram, but several real gaps
+remain that only Ormat, as the field operator, would be positioned to
+fill.
+
+## What we are requesting
+
+| # | Request | Why it matters |
+|---|---|---|
+| 1 | Real coordinates and/or confirmed identities for the following wells named in Dhakal et al. (2025)'s Figure 5 flow diagram or Table 1, currently unresolved in our database: **PW2-2, PW2-4, IW-2, IW-3, 21-5R, 13-5R, 21B-5R, 83B-6R, COX-1** | These are named, real wells in Ormat's own published flow network -- we have exhausted public NBMG/NDWR records trying to locate them (a naming-scheme coincidence with an unrelated Ormat well field in Churchill County has already been ruled out for PW-1/2/3). |
+| 2 | Current or historic water levels for Ormat's own production, injection, and monitor wells within the field | The single biggest blocker to a real potentiometric surface for the Steamboat field -- public records (NDEP, NDWR) do not carry this for actively-operated wells. |
+| 3 | Whether Ormat would permit, or already collects, any chemistry/temperature sampling at the capped Lower Sinter Terrace wellhead and the adjacent steaming fissure (active since June 2025) | This is a genuinely novel, real end-member close to the active eruption vent -- directly relevant to whether the 2025 event represents a change in the deep upflow itself, not just a surface reconfiguration. |
+| 4 | Confirmation of which port(s) (Galena 1/2/3, SB2/3, SBHR) feed which of the still-ambiguous injection wells not shown in the 2024 Figure 5 snapshot (e.g. IW-2, IW-3, both reported Idle/Plugged & Abandoned) | Needed to keep our production -> port -> injection flow-network model current and accurate as operations change. |
+
+## What we can offer in return
+
+A copy of the consolidated database export (GeoPackage, suitable for
+direct use in ArcGIS) covering the public well/chemistry/monitoring
+record we have already assembled for the field, and any results from our
+own spring-remapping and Cl-discharge fieldwork this thesis produces.
+
+## Contact
+
+Please direct any response to [Tyler Irvin / UNR contact information].

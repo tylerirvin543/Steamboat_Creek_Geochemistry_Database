@@ -1,0 +1,201 @@
+---
+title: "Geochemical Background and Methods"
+subtitle: "Chapter 2 -- Steamboat Hills Geothermal Outflow"
+date: today
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
+---
+
+## Chloride as a conservative thermal-water tracer
+
+Steamboat Hills' thermal water is a Na-Cl-dominated fluid; meteoric
+(background) water in the same area is dilute and comparatively richer in
+Ca and Mg. Chloride behaves conservatively in this system -- it is not
+appreciably removed or added by mineral precipitation/dissolution or gas
+loss during ascent and mixing -- which is what makes it usable as a
+tracer of thermal-water fraction in any sample, and, by mass balance
+against stream discharge, as an estimate of total thermal-water discharge
+from the system [@sorey1992; @sorey2008; @sorey2017]. This project's
+entire conductivity-logger workstream (Chapter 3) exists because specific
+conductance is a cheap, continuous, field-deployable proxy for chloride
+concentration -- not because conductance is itself the quantity of
+scientific interest.
+
+## Major-ion chemistry: what each analyte tells us
+
+| Analyte | Role in this system |
+|---|---|
+| Cl | The primary conservative tracer (above). |
+| Na, K | Track with Cl in the real thermal end-member (strong positive correlation, r >= 0.89 in this project's own data); also the basis of Na/K geothermometry (below). |
+| SO4 | Also strongly correlated with Cl/Na/K here -- a secondary conservative-ish tracer, though sulfate can be affected by anhydrite/gypsum equilibria at high enough concentration (tracked via saturation index, below). |
+| Ca, Mg | Behave oppositely to the Cl/Na/K group in this system (negative correlation) -- generally track a separate, more dilute/rock-reacted water-rock interaction signature (e.g. the Ca-Na-Cl "diluted and reacted" hydrochemical facies identified in this project's own clustering work). |
+| Alkalinity (as HCO3) | Drives carbonate mineral saturation (calcite/dolomite/aragonite SI, below); a genuine, project-wide unit-consistency effort (documented in `AGENTS.md` Sessions 15-16) was needed to put every source's alkalinity on the same HCO3-mass basis before this was usable. |
+| B, Li, F | Minor conservative-ish tracers used for cross-checks (e.g. the Cl/B ratio stability test in Chapter 4) rather than as primary tracers themselves. |
+| SiO2 | The basis of quartz/chalcedony geothermometry (below); behaves less conservatively than Na/K on the ascent-to-discharge path in this system (see the geothermometer-divergence discussion, Chapter 4). |
+
+## Charge balance and saturation index
+
+Every water analysis used in this project's PHREEQC modeling is first
+screened for internal consistency via the standard charge-balance-error
+statistic:
+
+$$
+\text{CBE\%} = \frac{\sum z_i m_i^{\text{cation}} - \sum |z_i| m_i^{\text{anion}}}
+{\sum z_i m_i^{\text{cation}} + \sum |z_i| m_i^{\text{anion}}} \times 100
+$$
+
+A sample passing within +/-5% is treated as analytically reliable enough
+to model further. Real charge-balance-error work in this project (see
+`notebooks/06_phreeqc_geochemical_modeling.qmd`, `notebooks/08_statistical_synthesis.qmd`)
+found this number was initially dominated by a missing-alkalinity data gap
+rather than real analytical error -- median imbalance dropped from ~60% to
+~0.7% once alkalinity was correctly ingested project-wide.
+
+The mineral saturation index quantifies how far a water is from
+equilibrium with a given mineral:
+
+$$
+SI = \log_{10}\left(\frac{IAP}{K_{sp}}\right)
+$$
+
+where $IAP$ is the ion activity product computed from the sample's real
+speciated chemistry and $K_{sp}$ is that mineral's temperature-dependent
+solubility product. $SI = 0$ is equilibrium; $SI > 0$ implies
+supersaturation (a tendency to precipitate, i.e. scale); $SI < 0$ implies
+undersaturation (a tendency to dissolve). This project's real thermal
+samples sit near quartz/chalcedony equilibrium and mildly-to-moderately
+supersaturated with respect to calcite/dolomite -- a real, geologically
+meaningful, not merely numerical, result.
+
+## PHREEQC and its thermodynamic databases
+
+**PHREEQC** [@phreeqc] is a widely-used, open-source geochemical modeling
+program that solves aqueous speciation, mineral saturation, mixing, and
+inverse mass-balance problems from a water analysis and a chosen
+thermodynamic database. This project runs the real, standalone PHREEQC 3
+executable (not an R re-implementation) via `system2()`, so every result
+is exactly what the reference software itself would produce.
+
+Five thermodynamic databases are registered in this project
+(`scripts/phreeqc/utils_phreeqc.R`), each with different strengths, and
+one is auto-recommended per sample based on its temperature and total
+dissolved solids:
+
+| Database | When it's used here |
+|---|---|
+| `llnl.dat` | The default for real, high-temperature (>100C) Steamboat thermal samples -- has the broadest high-temperature mineral/aqueous-species coverage of the five. |
+| `sit.dat` (SIT) | Used as a fallback for large batches of dilute, low-temperature background samples (e.g. the 225 NDEP wells) when `llnl.dat` fails to converge on that population -- this fallback logic was built specifically because it was needed in practice, not speculatively. |
+| `pitzer.dat` | Registered for high-ionic-strength brines; not yet exercised by this project's real samples, which are not brine-strength. |
+| `phreeqc.dat` | The minimal/default PHREEQC database; used mainly in this project's synthetic self-tests. |
+| `wateq4f.dat` | Registered as an alternative for trace-metal-focused speciation; not yet the primary choice for any real batch here. |
+
+## Geothermometry: two independent, and divergent, temperature estimates
+
+**Activity-based Na/K geothermometers** estimate the deep reservoir
+temperature a water last equilibrated with, from the ratio of sodium to
+potassium activity (not raw concentration -- PHREEQC's own computed
+activities are used):
+
+Giggenbach (1988) [@giggenbach1988]:
+$$
+T_{\text{Gigg}}(^\circ C) = \frac{1390}{1.75 + \log_{10}(a_{Na}/a_K)} - 273.15
+$$
+
+Fournier (1979) [@fournier1979]:
+$$
+T_{\text{Four}}(^\circ C) = \frac{1217}{1.483 + \log_{10}(a_{Na}/a_K)} - 273.15
+$$
+
+**Silica (quartz/chalcedony) geothermometry** instead uses dissolved
+SiO2's own temperature-dependent solubility, computed here via a real
+PHREEQC temperature sweep (25-300C by 25C steps) rather than a fixed
+empirical equation, so the crossing temperature where SI = 0 for each
+mineral is read directly from real modeled equilibria.
+
+For this project's real thermal samples, Na/K estimates (154-256C)
+systematically and substantially exceed quartz/chalcedony estimates
+(52-127C). This is not treated as a contradiction to explain away: silica
+re-equilibrates toward ambient conditions faster than the Na/K ratio does
+as water cools and dilutes on its way to discharge, so the two
+geothermometers are expected to diverge exactly this way for a cooling,
+diluting outflow path -- the divergence itself is evidence for that
+process, not a modeling error.
+
+## Two-end-member mixing and inverse modeling
+
+The simplest defensible model of how a sample's chemistry relates to a
+real thermal and a real meteoric end-member is conservative linear
+mixing on a tracer (chloride):
+
+$$
+f_{\text{thermal}} = \frac{C_{\text{obs}} - C_{\text{meteoric}}}{C_{\text{thermal}} - C_{\text{meteoric}}}
+$$
+
+This project computes this fraction directly, then builds a real PHREEQC
+`MIX` block combining the two end-member solutions at that fraction and
+compares PHREEQC's full predicted speciation/SI (which is not required to
+behave conservatively) against the sample's own observed chemistry -- a
+genuine test of the two-end-member hypothesis, not just an arithmetic
+ratio. See Chapter 4 for the real result of this run against real
+Steamboat samples.
+
+PHREEQC's `INVERSE_MODELING` keyword goes further, solving simultaneously
+for mixing fractions *and* mineral mass transfer (e.g. how much calcite
+would need to dissolve or precipitate along a flow path) within stated
+elemental uncertainty bounds. **A methodological note, in the interest of
+transparency**: this project's automated parser for PHREEQC's inverse-
+modeling text output has a known, real gap (discovered while preparing
+this manuscript) -- it correctly finds that a real run produced a feasible
+solution, but has not yet correctly extracted that solution's actual
+mineral-mass-transfer numbers from the raw output text. This is flagged
+explicitly in `ROADMAP.md` as a concrete near-term fix, and no invented or
+placeholder numbers are presented here in its place.
+
+## An important modeling principle: chemistry first, spatial connectivity second
+
+A recurring design decision in this project is worth stating explicitly,
+since it will matter more once a 3D geologic model (Leapfrog) and
+groundwater flow model (MODFLOW) exist: **a defensible mixing or
+reaction-path model is built from real, conservative-tracer chemistry --
+which samples are genuinely distinct, credible end-members -- not from map
+proximity.** Two samples that are spatially close are not necessarily
+hydraulically connected, and two that are far apart are not necessarily
+unconnected. Independent spatial/structural evidence (fault traces,
+hydraulic heads, a 3D lithologic model) should be used to *test or refine*
+which chemically-plausible end-members are worth pairing, not to define
+the chemistry itself. The real mixing model already run in this project
+(Chapter 4) follows this logic: its two end-members were chosen because
+they are chemically distinct (Cl = 815 vs. 45 mg/L), not because they are
+near each other on a map.
+
+## Gas geochemistry (built, not yet run on real Steamboat gas samples)
+
+A multicomponent CO2-H2-H2S-CH4 gas geothermometer following D'Amore &
+Panichi (1980) [@damore1980] is implemented and cross-validated against
+real, published Mariner & Janik (1995) values for well 23-5 (agreement
+within 0.3C across all four of their sampling dates) -- confirming the
+implementation is correct, independent of whether this project has its
+own real gas chemistry to apply it to yet (it does not, as of this
+writing).
+
+## R statistical methods used throughout this work
+
+Beyond PHREEQC itself, this project uses standard, appropriately-chosen
+statistical methods rather than a single default test everywhere:
+Shapiro-Wilk normality testing and `fitdistrplus`-based distribution
+comparison for PHREEQC output distributions; Welch/Student two-sample
+t-tests and Kruskal-Wallis/pairwise Wilcoxon rank tests depending on
+whether normality holds; a significance-tested Pearson correlation matrix
+and PCA for multivariate ion relationships; hierarchical (Ward) clustering
+cross-checked against a Gaussian-mixture fit for hydrochemical facies;
+linear mixed-effects models (`lme4`) where repeated sampling of the same
+well/location needs to be accounted for rather than pooled naively; and
+nonparametric bootstrap confidence intervals where a real sample size is
+too small (n = 7-8) to trust a classical CLT-based interval. See
+`notebooks/07_historical_context_sorey1992.qmd` and
+`notebooks/08_statistical_synthesis.qmd` for every real result these
+methods have produced against this project's actual data, paired with the
+exact code that computed each one.

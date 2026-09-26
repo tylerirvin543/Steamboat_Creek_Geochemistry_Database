@@ -1,0 +1,55 @@
+---
+title: "Methods"
+subtitle: "Chapter 3 -- Steamboat Hills Geothermal Outflow (partial draft)"
+date: today
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
+---
+
+## Sampling design
+
+See `notebooks/09_sampling_campaign_design.qmd` for the full, reproducible
+analysis behind the SBRR/SBGG calibration campaign design; condensed here:
+
+::: {.callout-note}
+A two-tier design is recommended: a short (2-4 week), daily-to-sub-daily
+intensive chloride-sampling window at both SBRR and SBGG early in the
+field season (to establish a real Cl-EC calibration relationship for the
+first time), followed by a lower-frequency (biweekly-to-monthly) campaign
+for the remainder of the year, with extra samples deliberately bracketing
+large storms/spring runoff. A real Monte Carlo subsampling analysis on
+the existing conductivity record shows daily sampling keeps reconstruction
+error under ~5% of the mean specific conductance at both sites, growing
+smoothly (not sharply) as the interval lengthens -- see the notebook for
+the full error-vs-interval curve and its caveats.
+:::
+
+## Field and laboratory methods
+
+::: {.callout-warning}
+Stub -- to be drafted: field sampling protocol (locations, sampling
+events, field measurements per `scripts/ingest/ingest_field.R`), lab
+chemistry methods (major ions, alkalinity, trace elements per
+`scripts/ingest/ingest_lab.R`), isotope analysis methods, temperature/
+conductivity logger deployment methods.
+:::
+
+## Statistical methods
+
+See Chapter 2's closing section for a summary of which statistical method
+was used where and why. Full statistical reporting (test statistic,
+effect size, confidence interval, assumption checks) for every real test
+run in this project lives in `notebooks/07_historical_context_sorey1992.qmd`
+and `notebooks/08_statistical_synthesis.qmd`.
+
+## PHREEQC modeling methods
+
+See Chapter 2 for the full background on charge balance, saturation
+index, the five thermodynamic databases used and why, and the two
+geothermometry approaches. Real speciation/saturation-index results exist
+for 233 eligible real samples; a real two-end-member mixing run and one
+real (partially-parsed, see Chapter 2's caveat) inverse-modeling run have
+also been completed.

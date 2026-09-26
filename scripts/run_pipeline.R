@@ -611,6 +611,21 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # See scripts/ingest/ingest_well_logs.R.
   source("scripts/ingest/ingest_well_logs.R")
   ingest_well_logs(con, source_batch = "NDWR ArcGIS public well-log export, 2026-09-12")
+  # 2026-09-26: several older (1950s-1960s) NDWR form variants have a
+  # real static water level visible on the scanned image that OCR
+  # simply never locates (a genuinely empty field, not a misread) --
+  # data/raw/ndwr/well_log_water_level_overrides.csv lets a human who
+  # read the scan directly supply the real value; always applied
+  # before promotion so both functions below pick it up automatically.
+  apply_well_log_water_level_overrides(con)
+  # 2026-09-26: broader sibling of the water-level override above --
+  # data/raw/ndwr/well_log_manual_transcriptions.csv +
+  # well_log_lithology_manual.csv let a human who read a scanned log
+  # directly supply total depth, hole/casing diameter, perforation
+  # interval, static AND pumping water level, and real lithology
+  # intervals -- always preferred over whatever OCR did or didn't
+  # produce.
+  apply_well_log_manual_transcriptions(con)
   # Promotion to Wells/Water_Level_Observations requires a human-
   # confirmed log_number -> well_name mapping (identity is NOT
   # guessed from an NDWR cross-references bare "ORMAT" owner name) --

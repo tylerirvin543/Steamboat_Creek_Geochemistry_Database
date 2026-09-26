@@ -1,0 +1,21 @@
+project:
+  type: default
+  output-dir: ../output/reports/manuscript
+
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    theme: cosmo
+    embed-resources: true
+    number-sections: true
+  pdf:
+    toc: true
+    number-sections: true
+    fig-pos: "H"
+
+bibliography: references.bib
+
+execute:
+  freeze: auto
+  warning: true

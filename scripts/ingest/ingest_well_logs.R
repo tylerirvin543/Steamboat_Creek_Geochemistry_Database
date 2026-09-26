@@ -495,6 +495,247 @@ ingest_well_logs <- function(
                  text_layer = n_text_layer, crossref = n_crossref, lithology = n_lithology))
 }
 
+#' Apply human-transcribed static-water-level (and, optionally,
+#' completion-date) corrections to Well_Log_Documents BEFORE
+#' promote_well_log_documents()/register_provisional_well_logs() run,
+#' so both of those functions pick up the corrected value automatically
+#' with no changes to their own logic. This exists because OCR
+#' genuinely does not locate a "static water level" field at all on
+#' several older (1950s-1960s) NDWR form variants -- confirmed for
+#' logs 5711/5731/8188/8771/21796 (2026-09-26) -- so the value is
+#' simply NULL, not misread; the fix has to come from a human reading
+#' the scanned image directly, the same posture as this project's
+#' well_log_document_map.csv (identity) and staged_ndep_location_map.csv
+#' (location) human-confirmation files.
+#'
+#' @param overrides_csv data/raw/ndwr/well_log_water_level_overrides.csv --
+#'   columns: log_number, static_water_level_ft, completion_date_override
+#'   (optional; only used if the OCR'd completion_date_raw doesn't already
+#'   parse), source, notes. A row's static_water_level_ft ALWAYS overwrites
+#'   whatever is currently in Well_Log_Documents for that log_number --
+#'   unlike this project's usual "fill only if NULL" convention, since a
+#'   human directly reading the scan is more reliable than an OCR guess
+#'   even when OCR did produce *some* value. Every application is logged
+#'   to the console (old value -> new value) so a silent overwrite never
+#'   happens invisibly.
+apply_well_log_water_level_overrides <- function(
+    con,
+    overrides_csv = "data/raw/ndwr/well_log_water_level_overrides.csv") {
+
+  message("---- Applying human-supplied well-log water-level overrides ----")
+
+  if (!fs::file_exists(overrides_csv)) {
+    message("[apply_well_log_water_level_overrides] No overrides file at ", overrides_csv, " -- nothing to apply.")
+    return(invisible(list(applied = 0L)))
+  }
+
+  ov <- readr::read_csv(overrides_csv, show_col_types = FALSE,
+                         col_types = readr::cols(log_number = readr::col_character())) %>%
+    dplyr::mutate(log_number = trimws(log_number)) %>%
+    dplyr::filter(!is.na(log_number), log_number != "", !is.na(static_water_level_ft))
+
+  if (nrow(ov) == 0) {
+    message("  -> Overrides file has no usable rows yet.")
+    return(invisible(list(applied = 0L)))
+  }
+
+  n_applied <- 0L
+  for (i in seq_len(nrow(ov))) {
+    row <- ov[i, ]
+    doc <- dbGetQuery(con, "SELECT document_id, log_number, static_water_level_ft, completion_date_raw FROM Well_Log_Documents WHERE log_number = ?",
+                       params = list(row$log_number))
+    if (nrow(doc) == 0) {
+      warning("[apply_well_log_water_level_overrides] log_number '", row$log_number, "' not found in Well_Log_Documents -- skipped.")
+      next
+    }
+    old_val <- doc$static_water_level_ft[1]
+    new_val <- row$static_water_level_ft[1]
+    new_date <- doc$completion_date_raw[1]
+    if (!is.null(row$completion_date_override) && !is.na(row$completion_date_override) &&
+        is.na(suppressWarnings(.safe_completion_date(doc$completion_date_raw[1])))) {
+      new_date <- row$completion_date_override[1]
+    }
+    if (isTRUE(is.na(old_val)) || !isTRUE(old_val == new_val) || !identical(new_date, doc$completion_date_raw[1])) {
+      dbExecute(con, "UPDATE Well_Log_Documents SET static_water_level_ft = ?, completion_date_raw = ? WHERE document_id = ?",
+                params = list(new_val, new_date, doc$document_id[1]))
+      message("  log #", row$log_number, ": static_water_level_ft ",
+              if (is.na(old_val)) "NULL" else old_val, " -> ", new_val,
+              " (source: ", if (!is.null(row$source)) row$source[1] else "user-transcribed", ")")
+      n_applied <- n_applied + 1L
+    }
+  }
+
+  message("  -> Applied ", n_applied, " water-level override(s).")
+  invisible(list(applied = n_applied))
+}
+
+
+#' Apply a broader set of human-transcribed well-log fields (total
+#' depth, hole/casing diameter, cased-to depth, perforation interval,
+#' first-water depth, static AND pumping water level, a max-temperature
+#' note, and lat/lon corrections) directly from
+#' data/raw/ndwr/well_log_manual_transcriptions.csv -- a broader sibling
+#' of apply_well_log_water_level_overrides() above (which only ever
+#' handled static water level). Every field a human read directly off
+#' the scanned image always overwrites whatever OCR did or didn't
+#' produce, logged to the console either way, never silently.
+#'
+#' Lithology intervals go through a separate companion CSV
+#' (well_log_lithology_manual.csv, columns matching Well_Lithology
+#' directly) since cramming a variable number of depth intervals into
+#' one wide CSV cell would be unreadable and hard to maintain -- each
+#' inserted row gets well_id = NULL and
+#' confidence='user_transcribed_from_scan' (distinct from the existing
+#' 'ocr_heuristic_unvalidated' tag used elsewhere in this table, since
+#' these are real human-read values, not OCR guesses) until a human
+#' promotes the log to a confirmed well identity the same way
+#' well_log_document_map.csv already works.
+apply_well_log_manual_transcriptions <- function(
+    con,
+    transcriptions_csv = "data/raw/ndwr/well_log_manual_transcriptions.csv",
+    lithology_csv = "data/raw/ndwr/well_log_lithology_manual.csv") {
+
+  message("---- Applying human-transcribed well-log field data ----")
+
+  n_fields_applied <- 0L
+  n_wl_applied <- 0L
+  n_lith_applied <- 0L
+
+  if (fs::file_exists(transcriptions_csv)) {
+    tr <- readr::read_csv(transcriptions_csv, show_col_types = FALSE,
+                           col_types = readr::cols(log_number = readr::col_character())) %>%
+      dplyr::mutate(log_number = trimws(log_number)) %>%
+      dplyr::filter(!is.na(log_number), log_number != "")
+
+    for (i in seq_len(nrow(tr))) {
+      row <- tr[i, ]
+      doc <- dbGetQuery(con, "
+        SELECT document_id, log_number, well_id, depth_drilled_ft, hole_diameter_in,
+               casing_diameter_in, cased_depth_ft, slot_from_ft, slot_to_ft,
+               static_water_level_ft, latitude, longitude, notes
+        FROM Well_Log_Documents WHERE log_number = ?
+      ", params = list(row$log_number))
+      if (nrow(doc) == 0) {
+        warning("[apply_well_log_manual_transcriptions] log_number '", row$log_number, "' not found -- skipped.")
+        next
+      }
+      doc <- doc[1, ]
+
+      field_map <- list(
+        total_depth_ft = "depth_drilled_ft",
+        hole_diameter_in = "hole_diameter_in",
+        casing_diameter_in = "casing_diameter_in",
+        cased_to_ft = "cased_depth_ft",
+        perforation_top_ft = "slot_from_ft",
+        perforation_bottom_ft = "slot_to_ft",
+        static_water_level_ft = "static_water_level_ft",
+        latitude_override = "latitude",
+        longitude_override = "longitude"
+      )
+      for (csv_col in names(field_map)) {
+        db_col <- field_map[[csv_col]]
+        new_val <- row[[csv_col]][1]
+        if (is.null(new_val) || is.na(new_val)) next
+        old_val <- doc[[db_col]][1]
+        if (isTRUE(is.na(old_val)) || !isTRUE(isTRUE(all.equal(old_val, new_val)))) {
+          dbExecute(con, paste0("UPDATE Well_Log_Documents SET ", db_col, " = ? WHERE document_id = ?"),
+                    params = list(new_val, doc$document_id[1]))
+          message("  log #", row$log_number, ": ", db_col, " ",
+                  if (is.na(old_val)) "NULL" else old_val, " -> ", new_val)
+          n_fields_applied <- n_fields_applied + 1L
+        }
+      }
+
+      # Free-text facts with no dedicated column (first-water depth, max
+      # temperature) go into notes, appended once (checked for the exact
+      # marker text to stay idempotent across re-runs).
+      extra_notes <- c()
+      if (!is.null(row$first_water_depth_ft[1]) && !is.na(row$first_water_depth_ft[1])) {
+        extra_notes <- c(extra_notes, paste0("First water at ", row$first_water_depth_ft[1], " ft (user-transcribed)."))
+      }
+      if (!is.null(row$max_temperature_f[1]) && !is.na(row$max_temperature_f[1])) {
+        extra_notes <- c(extra_notes, paste0("Reported temperature up to ", row$max_temperature_f[1], " deg F (user-transcribed)."))
+      }
+      if (length(extra_notes) > 0) {
+        marker <- paste(extra_notes, collapse = " ")
+        current_notes <- doc$notes[1]
+        if (is.na(current_notes) || !grepl(marker, current_notes, fixed = TRUE)) {
+          new_notes <- if (is.na(current_notes)) marker else paste(current_notes, marker)
+          dbExecute(con, "UPDATE Well_Log_Documents SET notes = ? WHERE document_id = ?",
+                    params = list(new_notes, doc$document_id[1]))
+          message("  log #", row$log_number, ": appended note -- ", marker)
+        }
+      }
+
+      # Water-level observations: static (existing convention) and, when
+      # supplied, a separate pumping-level row -- distinguished by
+      # `method`, not a schema change, since Water_Level_Observations.method
+      # is free text with no CHECK constraint.
+      well_id <- doc$well_id[1]
+      completion_date <- .safe_completion_date(dbGetQuery(con, "SELECT completion_date_raw FROM Well_Log_Documents WHERE document_id = ?", params = list(doc$document_id[1]))$completion_date_raw[1])
+      if (!is.na(well_id) && !is.na(completion_date)) {
+        add_wl <- function(value, method, label) {
+          if (is.null(value) || is.na(value)) return(invisible(NULL))
+          already <- dbGetQuery(con, "
+            SELECT observation_id FROM Water_Level_Observations
+            WHERE well_id = ? AND method = ? AND timestamp = ?
+          ", params = list(well_id, method, completion_date))
+          if (nrow(already) == 0) {
+            dbExecute(con, "
+              INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes)
+              VALUES (?, ?, ?, ?, 'driller_report', ?)
+            ", params = list(well_id, completion_date, value, method,
+                     paste0(label, " from NDWR well log #", row$log_number, " (user-transcribed from scan).")))
+            n_wl_applied <<- n_wl_applied + 1L
+          }
+        }
+        add_wl(row$static_water_level_ft[1], "driller_report", "Static water level")
+        add_wl(row$pumping_water_level_ft[1], "driller_report_pumping", "Pumping water level")
+      } else if (!is.na(well_id) && is.na(completion_date) &&
+                 (!is.null(row$static_water_level_ft[1]) && !is.na(row$static_water_level_ft[1]) ||
+                  !is.null(row$pumping_water_level_ft[1]) && !is.na(row$pumping_water_level_ft[1]))) {
+        message("  (log #", row$log_number, ": water-level value(s) supplied but no parseable completion date -- skipping Water_Level_Observations row, value still recorded on Well_Log_Documents/notes above.)")
+      }
+    }
+  } else {
+    message("[apply_well_log_manual_transcriptions] No transcriptions file at ", transcriptions_csv, " -- nothing to apply.")
+  }
+
+  # Lithology intervals
+  if (fs::file_exists(lithology_csv)) {
+    lith <- readr::read_csv(lithology_csv, show_col_types = FALSE,
+                             col_types = readr::cols(log_number = readr::col_character())) %>%
+      dplyr::mutate(log_number = trimws(log_number))
+    for (i in seq_len(nrow(lith))) {
+      row <- lith[i, ]
+      doc <- dbGetQuery(con, "SELECT document_id FROM Well_Log_Documents WHERE log_number = ?", params = list(row$log_number))
+      if (nrow(doc) == 0) {
+        warning("[apply_well_log_manual_transcriptions] lithology row for log_number '", row$log_number, "' -- document not found, skipped.")
+        next
+      }
+      document_id <- doc$document_id[1]
+      already <- dbGetQuery(con, "
+        SELECT lithology_id FROM Well_Lithology
+        WHERE source_document_id = ? AND depth_from_ft = ? AND depth_to_ft = ?
+      ", params = list(document_id, row$depth_from_ft[1], row$depth_to_ft[1]))
+      if (nrow(already) == 0) {
+        dbExecute(con, "
+          INSERT INTO Well_Lithology (well_id, depth_from_ft, depth_to_ft, description, source_document_id, notes)
+          VALUES (NULL, ?, ?, ?, ?, ?)
+        ", params = list(
+          row$depth_from_ft[1], row$depth_to_ft[1], row$description[1], document_id,
+          paste0("confidence=user_transcribed_from_scan; well_id NULL until log #", row$log_number, " is promoted to a confirmed well.")
+        ))
+        n_lith_applied <- n_lith_applied + 1L
+      }
+    }
+  }
+
+  message("  -> Applied ", n_fields_applied, " field update(s), ", n_wl_applied, " water-level observation(s), ", n_lith_applied, " lithology interval(s).")
+  invisible(list(fields = n_fields_applied, water_levels = n_wl_applied, water_levels_applied = n_wl_applied, lithology = n_lith_applied))
+}
+
+
 #' Promote Well_Log_Documents rows to Wells/Water_Level_Observations/
 #' Well_Work_Events once a human has confirmed which well a log_number
 #' corresponds to.

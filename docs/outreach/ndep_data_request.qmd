@@ -1,0 +1,44 @@
+---
+title: "Data Request: Nevada Division of Environmental Protection"
+subtitle: "Steamboat Hills Geothermal Outflow Monitoring -- UNR Thesis Project"
+date: today
+format:
+  pdf:
+    toc: false
+    number-sections: false
+---
+
+## Project background
+
+This request supports a University of Nevada, Reno thesis project
+studying changes in geothermal outflow at Steamboat Hills, Nevada,
+following the June 2025 Lower Sinter Terrace eruption. The project
+maintains a consolidated database and pipeline integrating historic and
+current chemistry, water levels, and continuous conductivity/temperature
+monitoring at the Steamboat field, cross-referenced against NDEP's own
+Steamboat monitoring program and the Temporary UIC Permit
+UNEV2007204T2025-1 REVISED (June 2025).
+
+## What we are requesting
+
+| # | Request | Why it matters |
+|---|---|---|
+| 1 | Daily water-level (or pressure) records for wells **43-33-1, 21-32-1, 21-32-2** | These are the deepest, most centrally-located wells named in the UIC permit itself. Currently only 2-3 wells inside the Steamboat field proper have any usable current water-level record at all -- this is the single largest blocker to building a real potentiometric surface for the field. |
+| 2 | Fumarole inspection logs referenced in the UIC permit | Direct evidence of surface thermal-manifestation change over time, complementing this project's own 2025-2026 spring/fissure field observations. |
+| 3 | Water levels for observation wells **OW-1, OW-2, OW-3** and the stratigraphic test wells (**strat 2, 5, 6, 7, 8, 9, 13, 14**) | These wells are already registered in our database (from Sorey & Colvard, 1992) but have zero water-level history on file. |
+| 4 | Current chemistry (major ions, at minimum chloride) for the standing NDEP monitoring network -- **NDOT, Herz, Boyd, Soccer Field, Eich, Jeppson, Rogers** | A current round of chemistry at these already-located wells lets us test whether the historical monitoring signal (chloride, geochemical facies) has changed since the 2025 eruption. |
+| 5 | More precise surveyed coordinates for any of the above wells, if available | Most well coordinates in our current database come from NBMG/ArcGIS digitization (50-800 m uncertainty), not a real survey. |
+
+## A specific, time-sensitive ask
+
+We are also planning a real Cl-conductivity calibration sampling campaign
+at two continuous-conductivity monitoring sites (upstream/downstream on
+Steamboat Creek) over the coming year. If NDEP has any standing chemistry
+sampling planned at nearby locations during this window, coordinating
+sample timing would benefit both programs.
+
+## Contact
+
+Please direct any response to [Tyler Irvin / UNR contact information],
+referencing this request and the Temporary UIC Permit
+UNEV2007204T2025-1 REVISED for context.

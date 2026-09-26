@@ -1,0 +1,50 @@
+---
+title: "Results"
+subtitle: "Chapter 4 -- Steamboat Hills Geothermal Outflow (partial draft)"
+date: today
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
+---
+
+::: {.callout-warning}
+## Status: partial draft
+
+This chapter should present the strongest real findings as figures and
+concise prose, not code. Pending a full pass, here is the current real
+inventory to draw from (each already computed and citable from the
+notebooks):
+
+- **Hydrochemical facies and major-ion relationships**: PCA (PC1+PC2
+  explain ~97% of variance; PC1 = Cl/Na/K/SO4 axis, PC2 = Ca/Mg axis),
+  cross-checked against hierarchical + Gaussian-mixture facies clustering
+  (`notebooks/07`, `08`).
+- **Cl/B ratio stability with a small, real shift**: 19.6 (1950-1991) vs.
+  21.9 (2024-2026), t-test p = 0.015 (`notebooks/07`).
+- **The Cl-vs-time trend is genuinely ambiguous** across three different
+  modeling approaches -- report this honestly as an open question, not a
+  finding (`notebooks/07`, `08`).
+- **PHREEQC speciation/SI**: 233 real eligible samples; near-quartz
+  equilibrium and mild-to-moderate carbonate supersaturation for the 8
+  real thermal samples (`notebooks/06`).
+- **Geothermometer divergence**: Na/K (154-256C) vs. quartz/chalcedony
+  (52-127C) -- a real, interpretable pattern, not noise (`notebooks/06`).
+- **A real two-end-member mixing run across all 111 real Cl-bearing
+  samples**, newly visualized 2026-09-26 -- calcite/dolomite SI rising
+  smoothly with mixing fraction, quartz comparatively flat, one real
+  sample (SBW_0002) more concentrated than the chosen thermal reference
+  itself (`notebooks/06`, new "A real mixing run, visualized" section).
+- **Barometric efficiency and aquifer classification**: BE = 0.29-0.60 at
+  two real wells, inside the historically-expected range; 7 wells
+  project-wide now classified `aquifer_type='confined'` (`notebooks/07`).
+- **A real hourly temperature-vs-pressure coupling** at the hottest
+  logger, absent at the widest-range fumarole logger -- a genuine mixed
+  result (`notebooks/07`).
+
+Figures to pull in here once this chapter is written in full: the real
+PCA biplot, the new mixing-fraction-vs-SI figure, the geothermometer
+comparison plot, the Cl/B ratio plot, and (once built, see `ROADMAP.md`)
+the ArcGIS EBK chloride surface and the real transect cross-section.
+:::

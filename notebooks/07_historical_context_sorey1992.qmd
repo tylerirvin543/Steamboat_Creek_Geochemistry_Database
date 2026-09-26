@@ -545,6 +545,28 @@ analysis once more paired Cl+discharge dates exist in the database (a
 single day, as computed here, cannot separate a real seasonal signal
 from ordinary day-to-day variability).
 
+**Sorey (2000)'s reawakening baseline -- a critical reference, cited
+directly, not just added to the bibliography (2026-09-26).** Sorey
+(2000, World Geothermal Congress) is the direct, real historical
+follow-up to Sorey & Colvard (1992) that this discharge-through-time
+chart itself does not otherwise carry: by 2000, precipitation had
+returned to normal-or-above levels and South Truckee Meadows groundwater
+levels had risen back to nearly their late-1980s levels, **but Sorey
+(2000) reports no evidence of any renewed natural spring flow on the
+main terrace despite that recovery.** This is the direct historical
+baseline against which the 2025 Lower Sinter Terrace eruption should be
+read: if the pre-2025 hydrologic system had genuinely not "reawakened"
+even once one of its own documented drivers (regional groundwater
+decline) reversed, then the 2025 event raises a real, specific question
+this thesis's own spring-remapping fieldwork can help answer -- is 2025
+a delayed reawakening of the *same* system Sorey tracked, or evidence of
+a mechanistically different process (e.g. a discrete conduit
+reactivation, consistent with this project's own 2026 poster
+conclusion, rather than a broad system-wide recovery)? Framed this way,
+the discharge-through-time chart above and the 27-42 L/s post-2025
+estimates are one data point in that specific, testable question, not
+just a continuation of the same 70-year record.
+
 ## Appendix G and Table 9: what's behind the discharge/reservoir numbers (2026-09-12)
 
 ### Appendix G: the raw synoptic Cl-flux surveys behind Table 2
@@ -1693,6 +1715,44 @@ Sessions 30-31) remains a candidate fault-trace source alongside
 Collar & Huntley (1990) Figure 1, though Collar & Huntley's is still
 the better digitizing candidate since it shows faults over a modern,
 better-controlled base map.
+
+## Continued human-confirmed well mapping from these two figures (2026-09-26)
+
+Re-reading both figures directly (not from memory) with the specific goal
+of continuing the human-confirmed well-mapping thread: both maps use a
+scale bar and north arrow but **no coordinate grid**, so no new
+coordinate is written to the database from this pass -- reading a
+position off a flat scanned image without a real georeferencing tool
+would be a visual guess, not a confirmed match, and this project's
+standing rule is not to guess coordinates that way (the same caution
+already applied to every other map-based lead in earlier sessions).
+
+Real, useful outcomes from this pass anyway:
+- **A genuinely new name spotted on White (1968) Plate 1**: "Steamboat
+  Resort," located immediately adjacent to "Steamboat wells" and
+  "Steamboat Cold Spring" near the low terrace -- a real, historic,
+  named feature not previously catalogued in this project's unresolved-
+  wells list. Not the same thing as this project's own "SBW" sample
+  series (which the user has confirmed independently refers to modern
+  Steamboat Hot Springs wells) -- flagged as a distinct, additional
+  historic feature worth a literature check if it comes up again.
+- **Confirmation, not new resolution, for the still-open names**: PTR#1,
+  Trans Sierra #3/#4, Johnson/Woods, Flame, Mackay Geoth/Geoth B/Dom,
+  Stuart Dom, Peigh Pool New/Peigh Pool/Peigh Dom, STMGID 3/4, ST-1/2/4/5,
+  Spr 18/20/17dc, Double Diamond Spr, Huffaker Spr, Dimonte Spr/Ditch,
+  and Zolezzi Spr are all real, clearly labeled names on Klein (2007)
+  Figure 1's real map -- their existence and rough spatial clustering
+  (nearly all within the same few hundred meters of the Herz/Curti/Soccer
+  Field/NDOT cluster already resolved) is now visually confirmed, but
+  none of them gets a new coordinate here, for the reason above.
+- **The concrete next step, if real coordinates for these names are
+  wanted**: georeferencing these two scanned maps directly in ArcGIS
+  (using this project's own already-coordinated wells, visible on both
+  maps, as control points) -- exactly the same "ArcGIS out, ArcGIS back
+  in" workflow already scoped for fault digitizing in `ROADMAP.md`. Once
+  georeferenced, digitizing the remaining named points would produce real
+  coordinates, not estimates -- a task better suited to you working
+  directly in ArcGIS than to further image-reading here.
 
 ## PHREEQC: next steps, concretely
 

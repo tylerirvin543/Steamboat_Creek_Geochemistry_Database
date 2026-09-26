@@ -1,0 +1,12 @@
+log_number,depth_from_ft,depth_to_ft,description,source
+5711,0,10,Black sandy loam,user_scan_read
+5711,10,40,Fine sand,user_scan_read
+5711,40,48,Coarse sand,user_scan_read
+5731,0,4,Broken rock,user_scan_read
+5731,4,20,Soft broken rock,user_scan_read
+5731,20,30,Solid rock,user_scan_read
+5731,30,70,Rock,user_scan_read
+5731,70,120,Cracked rock,user_scan_read
+5731,120,180,Hard fractured rock,user_scan_read
+5731,180,220,Very hard fractured rock,user_scan_read
+5731,220,300,Hard rock,user_scan_read

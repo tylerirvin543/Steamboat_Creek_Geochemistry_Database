@@ -1,0 +1,34 @@
+---
+title: "Introduction and Study Objectives"
+subtitle: "Chapter 1 -- Steamboat Hills Geothermal Outflow (STUB -- not yet drafted)"
+date: today
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
+---
+
+::: {.callout-warning}
+## Status: stub, not yet drafted
+
+This chapter is a placeholder. Real content to write here (drawing on
+material already assembled across the project rather than starting from
+nothing):
+
+- Study area and setting: Steamboat Hills geothermal field, operated by
+  Ormat Technologies, the Lower Sinter Terrace eruption context that
+  motivates this thesis's spring-remapping fieldwork.
+- Chloride discharge as a tracer of geothermal outflow -- Sorey's own
+  framing [@sorey1992; @sorey2008; @sorey2017], extended in this project
+  via continuous conductivity monitoring (SBRR/SBGG loggers) as a Cl
+  proxy.
+- The three stated thesis objectives (see `README.md`'s "Scientific
+  Context and Purpose"): outflow characterization, Cl-conductivity
+  calibration, and potentiometric/transport mapping.
+- What has changed since Sorey & Colvard (1992) [@sorey1992] and Sorey
+  (2000) [@sorey2000] -- both document a spring-flow cessation that had,
+  as of 2000, not reversed even after the groundwater-level driver
+  partly blamed for it did reverse; whether this remains true in 2026 is
+  a live, testable question this thesis's own fieldwork can answer.
+:::

@@ -1,0 +1,101 @@
+---
+title: "Calibration Sampling Proposal: SBRR/SBGG Chloride-Conductivity Program"
+subtitle: "A mini-proposal, separate from the raw statistical analysis"
+date: today
+format:
+  html:
+    toc: true
+  pdf:
+    toc: true
+---
+
+## Purpose
+
+This is a decision-facing proposal, distinct from the reproducible
+statistical analysis in `notebooks/09_sampling_campaign_design.qmd`
+(which it cites, not repeats): given roughly one year before thesis
+writing, what should a real chloride sampling program at SBRR and SBGG
+actually look like, at what cost, and what does each tier of effort
+answer?
+
+## How many calibration pairs (n) are actually needed?
+
+There is no real Cl-EC paired dataset yet to run a formal power analysis
+against -- that is exactly the gap this campaign is meant to close, so
+any number offered here is a reasoned target, not a computed certainty.
+Standard practical guidance for a simple linear calibration regression:
+
+- **n = 15-20** real paired samples is the conventional practical
+  minimum for a stable slope/intercept estimate in a simple linear
+  regression, assuming the relationship is close to linear across the
+  sampled range.
+- **n = 30-40** is a more defensible target once seasonal variation is
+  considered -- a single season's worth of pairs risks fitting a
+  relationship that doesn't generalize to winter/spring conditions (a
+  real, stated limitation of the current ~5-week summer-only EC record
+  used in `notebooks/09`).
+- Once a first real regression exists, its own residual variance can be
+  used to compute an actual power/precision target for any further
+  refinement -- a genuine next step, not possible to pre-compute now.
+
+## Should calibration samples also carry other analytes/isotopes?
+
+**Yes, and the marginal cost is worth it.** Chloride alone cannot
+distinguish simple dilution/mixing from evaporative concentration, and
+cannot independently confirm that a sample is behaving conservatively.
+Two real, complementary additions:
+
+- **Major ions (Na, K, Ca, Mg, SO4, alkalinity)**: the same real
+  chemistry this project's own mixing-fraction analysis
+  (`notebooks/06`) already uses to test whether a sample's SI/speciation
+  is consistent with conservative mixing. Adding these to every
+  calibration sample turns each one into a real mixing-model data point,
+  not just a Cl-EC pair.
+- **Delta-18O/delta-D isotopes**: the one analysis that can distinguish
+  evaporative concentration (which would shift isotopes along an
+  evaporation trend line) from simple conservative mixing (which would
+  not) -- neither Cl nor major ions alone can make this distinction.
+  Isotopes cost meaningfully more per sample than major ions and should
+  be prioritized for a subset of samples (e.g. the Tier 1 intensive
+  window below), not necessarily every single sample.
+
+## Additional candidate sampling sites
+
+- **The active steaming fissure / capped wellhead** (Lower Sinter
+  Terrace, active since June 2025): a genuinely novel end-member close
+  to the eruption vent itself. Real benefit: directly tests whether the
+  2025 event reflects a change in the deep upflow chemistry, not just a
+  surface reconfiguration. Real cost: site access and safety depend on
+  Ormat's permission and current site conditions (see
+  `docs/outreach/ormat_data_request.qmd`) -- not purely a lab-cost
+  decision.
+- **SBW_0001/SBW_0002 (the Steamboat Hot Springs "resort" wells)**:
+  already real, already-sampled locations in this database (per
+  `notebooks/06`'s real mixing-fraction analysis, which already includes
+  these). Adding them to the *ongoing* calibration campaign (not just a
+  one-time 2026 sample) is low-incremental-cost since they are already
+  known, accessible sampling points -- a strong candidate for inclusion
+  at essentially every tier below.
+
+## Tiered proposal: 20 / 40 / 60+ total lab analyses across the year
+
+| Tier | Total analyses/year | What it buys | What it can't answer |
+|---|---|---|---|
+| **20** | ~20 Cl-only or Cl+major-ion analyses | A bare-minimum first Cl-EC calibration point per site, likely just for the intensive summer window | No seasonal resolution; can't test whether the calibration holds in winter/spring; no isotope cross-check |
+| **40** | ~40 analyses, Cl+major ions on all, isotopes on a subset | Real seasonal resolution (Tier 1 intensive window + Tier 2 biweekly/monthly follow-through, per `notebooks/09`); a real mixing-model check on every sample | Isotope coverage still partial; fissure/resort sites only lightly sampled |
+| **60+** | 60+ analyses, isotopes on most/all, includes SBW_0001/0002 routinely and the fissure site if access is granted | The most complete real dataset: seasonal Cl-EC calibration, mixing-model validation, isotope-based evaporation/mixing discrimination, and a real fissure/resort-well comparison | Cost and lab-turnaround logistics become the real constraint, not the science |
+
+**Recommendation**: Tier 2 (~40 analyses) is the realistic target for a
+one-person thesis field campaign within a year -- it is the smallest
+tier that actually closes the calibration-and-seasonality gap this whole
+project's Cl-EC-proxy premise depends on. Tier 3 is worth pursuing
+opportunistically (e.g. if Ormat grants fissure access, or lab budget
+allows) rather than being a hard requirement.
+
+## Cross-references
+
+- `notebooks/09_sampling_campaign_design.qmd` -- the full, reproducible
+  Monte Carlo analysis behind the two-tier temporal design cited above.
+- `manuscript/02_geochemical_background.qmd` -- background on why Cl,
+  major ions, and isotopes each carry distinct information.
+- `docs/outreach/ormat_data_request.qmd` -- the fissure-access ask.

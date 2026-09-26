@@ -506,6 +506,77 @@ quirk, not a flaw in this project's input generation — reported honestly as
 a syntax/execution smoke test, not a numerical-accuracy proof.
 :::
 
+### A real mixing run, visualized (2026-09-25/26)
+
+Session 30 ran a real (not synthetic) two-end-member mixing calculation --
+thermal end-member = sample 816 (SBF_0001, Cl = 815 mg/L), meteoric
+end-member = sample 829 (Boyd Domestic Well, Cl = 45 mg/L) -- across every
+real Cl-bearing sample in the database, storing PHREEQC's predicted
+speciation/SI *at each sample's own observed mixing fraction* in
+`PHREEQC_Mixing_Results` (1,443 rows, 111 distinct real samples x 13
+parameters each). This has never been plotted before -- doing that now:
+
+```{r mixing-real-pull}
+mix_real <- dbGetQuery(con, "
+  SELECT r.sample_id, r.mixing_fraction_thermal, r.parameter, r.predicted_value,
+         l.name AS location_name, l.site_type
+  FROM PHREEQC_Mixing_Results r
+  JOIN Samples sm ON r.sample_id = sm.sample_id
+  JOIN Locations l ON sm.location_id = l.location_id
+  WHERE r.parameter IN ('SI_Calcite', 'SI_Dolomite', 'SI_Quartz', 'SI_Halite')
+")
+cat("Real mixing-result rows for these 4 minerals:", nrow(mix_real), "across",
+    length(unique(mix_real$sample_id)), "real samples\n")
+```
+
+```{r mixing-real-plot}
+#| fig-width: 8
+#| fig-height: 6
+ggplot(mix_real, aes(x = mixing_fraction_thermal, y = predicted_value)) +
+  geom_point(aes(color = site_type), alpha = 0.6, size = 1.6) +
+  geom_smooth(se = FALSE, color = "grey30", linewidth = 0.6, method = "loess") +
+  geom_vline(xintercept = c(0, 1), linetype = "dashed", color = "grey50") +
+  facet_wrap(~ parameter, scales = "free_y") +
+  labs(
+    x = "Mixing fraction thermal (f = 0 meteoric, f = 1 thermal end-member)",
+    y = "PHREEQC-predicted saturation index",
+    color = "Site type",
+    title = "Predicted mineral saturation across the real conservative-mixing gradient",
+    subtitle = "Each point is a real sample's own PHREEQC MIX-block prediction at its observed Cl-derived mixing fraction",
+    caption = "End-members: SBF_0001 (thermal, Cl=815 mg/L) / Boyd Domestic Well (meteoric, Cl=45 mg/L). Points beyond f=1 (dashed line) are samples MORE concentrated than the chosen thermal reference itself (e.g. SBW_0002, f=1.04) -- a real finding, not an error."
+  ) +
+  theme(legend.position = "bottom")
+```
+
+**Reading**: calcite and dolomite SI both rise smoothly with mixing
+fraction (more thermal water carries more dissolved carbonate potential),
+while quartz SI is comparatively flat across the gradient (silica behaves
+less conservatively -- consistent with the Na/K-vs-quartz-geothermometer
+divergence already documented above) and halite stays far undersaturated
+everywhere, as expected at these total dissolved-solids levels. This is
+exactly the kind of "does conservative mixing alone explain the real
+saturation pattern" check the mixing framework is designed for -- and it's
+now visualized directly from real data rather than only described in
+prose.
+
+**A real, documented gap found while building this**: the paired
+real-inverse-model result (Session 30, target = Soccer Field Monitoring
+Well, end-members 816+829, candidate phases Calcite+Quartz) does **not**
+have usable mineral mass-transfer figures to show here. Inspecting
+`PHREEQC_Inverse_Results` directly shows every stored `component` is a
+solution-composition echo (temp, pH, Ca, Mg, Na, K, Cl, ...) or a redox-
+species label (`As(3)`, `Cl(-1)`, ...) -- **not** an actual mineral name
+(`Calcite`, `Quartz`) with a real moles-transferred amount. This confirms,
+with a concrete example, the caveat already on record in this notebook's
+"Known limitations" section below:
+`parse_phreeqc_inverse_output()` is a best-effort regex parser of PHREEQC's
+free-text inverse-modeling output, and it evidently never captured the real
+"Phase mole transfers" block for this run. Fixing this needs someone to
+open the run's raw `.pqo` file directly and extend the parser to the real
+section header PHREEQC actually uses there -- flagged in `ROADMAP.md` as a
+concrete near-term item, not attempted as a quick fix here (a wrong chart
+built from a mis-parsed table would be worse than no chart).
+
 ### Gas-phase equilibria (`12_run_phreeqc_gas_phase.R`)
 
 Models CO2/H2S degassing along the ascent-to-discharge path via PHREEQC's
