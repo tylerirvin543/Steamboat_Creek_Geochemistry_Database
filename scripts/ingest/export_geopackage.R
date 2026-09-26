@@ -155,7 +155,11 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # A well's status history (new/deepened/abandoned/etc.) as its own
     # point layer, joined to the well's coordinate -- one point per
     # event, so the same well can carry multiple dated status points.
-    well_work_events = "SELECT e.event_id, e.well_id, w.well_name, w.latitude, w.longitude, e.work_type, e.proposed_use, e.event_date, e.hole_diameter_in, e.casing_diameter_in, e.notes FROM Well_Work_Events e JOIN Wells w ON e.well_id = w.well_id WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL"
+    well_work_events = "SELECT e.event_id, e.well_id, w.well_name, w.latitude, w.longitude, e.work_type, e.proposed_use, e.event_date, e.hole_diameter_in, e.casing_diameter_in, e.notes FROM Well_Work_Events e JOIN Wells w ON e.well_id = w.well_id WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL",
+    # Persisted hydrochemical facies-cluster assignments (added 2026-09-25,
+    # session 33) -- latest run only (see vw_facies_clusters_gis), for
+    # overlay against digitized fault traces once those exist.
+    facies_clusters = "SELECT * FROM vw_facies_clusters_gis WHERE geom_wkt IS NOT NULL"
   )
   
   # ============================================================
@@ -163,7 +167,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # ============================================================
   
   requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow",
-                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events")
+                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments")
 
   for (layer_name in names(layers)) {
     

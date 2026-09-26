@@ -222,6 +222,82 @@ run_barometric_efficiency <- function(con, min_days = 60, prefer_steamboat = TRU
 
   list(table = results, plot_overlay = p_overlay, eligible_wells = eligible)
 }
+#' Classify each well's aquifer type (confined / unconfined /
+#' semi-confined_leaky) from its own real barometric-efficiency
+#' result, and write the label to Wells.aquifer_type (never guessed
+#' for a well with no real BE evidence -- see
+#' database/schema/14_aquifer_classification_schema.R).
+#'
+#' Thresholds are grounded in this exact system's own historical data
+#' (White 1968's real BE range of 0.2-1.18 for confined vents at
+#' Steamboat), not an arbitrary textbook cutoff:
+#'   - BE >= 0.2 and statistically significant (p < 0.05) -> "confined"
+#'   - BE <  0.1                                          -> "unconfined"
+#'   - 0.1 <= BE < 0.2                                     -> "semi-confined_leaky"
+#'   - not significant, or method disagreement spans the boundary   -> "unknown" (not guessed)
+#'
+#' Uses the first-difference ("diff") method's BE as primary (the more
+#' defensible estimate for a full-year daily series, per this script's
+#' own header) and the level method as corroborating evidence recorded
+#' in aquifer_type_basis, not as a second vote that can override the
+#' primary classification.
+classify_aquifer_type <- function(con, be_result, overwrite_prior_be_label = TRUE) {
+  tbl <- be_result$table
+  if (is.null(tbl) || nrow(tbl) == 0) {
+    message("[aquifer_type] No barometric-efficiency results to classify.")
+    return(invisible(NULL))
+  }
+
+  diff_rows <- tbl[tbl$method == "diff", ]
+  level_rows <- tbl[tbl$method == "level", ]
+
+  n_labeled <- 0L
+  for (i in seq_len(nrow(diff_rows))) {
+    d <- diff_rows[i, ]
+    lvl <- level_rows[level_rows$well_id == d$well_id, ]
+    lvl_txt <- if (nrow(lvl) == 1) {
+      sprintf("level-method BE=%.2f (R2=%.2f) as corroboration", lvl$barometric_efficiency, lvl$r_squared)
+    } else {
+      "no corroborating level-method estimate"
+    }
+
+    if (is.na(d$p_value) || d$p_value >= 0.05) {
+      label <- "unknown"
+      reason <- "diff-method BE not statistically significant (p >= 0.05)"
+    } else if (d$barometric_efficiency >= 0.2) {
+      label <- "confined"
+      reason <- sprintf("diff-method BE=%.2f >= 0.2 (White 1968's own confined-vent range at this site is 0.2-1.18), p=%.2g", d$barometric_efficiency, d$p_value)
+    } else if (d$barometric_efficiency < 0.1) {
+      label <- "unconfined"
+      reason <- sprintf("diff-method BE=%.2f < 0.1 (near-zero, consistent with an unconfined/water-table response), p=%.2g", d$barometric_efficiency, d$p_value)
+    } else {
+      label <- "semi-confined_leaky"
+      reason <- sprintf("diff-method BE=%.2f in the 0.1-0.2 intermediate band, p=%.2g", d$barometric_efficiency, d$p_value)
+    }
+
+    basis <- paste0("barometric_efficiency: ", reason, "; ", lvl_txt, ". n=", d$n,
+                     ", period ", d$date_min, " to ", d$date_max, ".")
+
+    existing <- dbGetQuery(con, sprintf("SELECT aquifer_type, aquifer_type_basis FROM Wells WHERE well_id = %d", d$well_id))
+    can_write <- nrow(existing) == 1 && (
+      is.na(existing$aquifer_type) || existing$aquifer_type == "unknown" ||
+      (overwrite_prior_be_label && !is.na(existing$aquifer_type_basis) && grepl("^barometric_efficiency", existing$aquifer_type_basis))
+    )
+
+    if (can_write) {
+      dbExecute(con, "UPDATE Wells SET aquifer_type = ?, aquifer_type_basis = ? WHERE well_id = ?",
+                params = list(label, basis, d$well_id))
+      n_labeled <- n_labeled + 1L
+      message("[aquifer_type] well_id ", d$well_id, " (", d$well_name, ") -> '", label, "' (", reason, ")")
+    } else {
+      message("[aquifer_type] well_id ", d$well_id, " (", d$well_name,
+              ") already has a non-barometric aquifer_type on record -- left untouched.")
+    }
+  }
+
+  invisible(n_labeled)
+}
+
 
 #' Synthetic self-test, kept alongside the real function for anyone
 #' debugging without a real database connection -- NOT used for any

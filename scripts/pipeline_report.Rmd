@@ -59,7 +59,11 @@ tables <- c(
   "PHREEQC_Results",
   "QC_Issues",
   "NDOM_Well_Records",
-  "Stream_Flow_Observations"
+  "Stream_Flow_Observations",
+  "Earthquake_Events",
+  "Facies_Cluster_Runs",
+  "Facies_Cluster_Assignments",
+  "Well_Deviation_Surveys"
 )
 
 counts <- do.call(rbind, lapply(tables, function(t) {

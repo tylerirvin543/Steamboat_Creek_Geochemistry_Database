@@ -52,7 +52,8 @@ create_analysis_views <- function(con) {
     "vw_isotope_pairs",
     "vw_temperature_timeseries",
     "vw_weather_metric",
-    "vw_sc_discharge_daily"
+    "vw_sc_discharge_daily",
+    "vw_facies_clusters_gis"
   )
   
   for (v in views_to_drop) {
@@ -403,6 +404,26 @@ WHERE parameter_code = '60'
   ")
   
   message("✅ GIS ready")
+  dbExecute(con, "
+  CREATE VIEW vw_facies_clusters_gis AS
+  SELECT
+    fca.run_id,
+    fca.sample_id,
+    fca.location_id,
+    fca.facies_cluster,
+    fca.facies_cluster_mclust,
+    l.name AS location_name,
+    l.site_type,
+    l.latitude,
+    l.longitude,
+    'POINT(' || l.longitude || ' ' || l.latitude || ')' AS geom_wkt
+  FROM Facies_Cluster_Assignments fca
+  JOIN Locations l ON l.location_id = fca.location_id
+  WHERE fca.run_id = (SELECT MAX(run_id) FROM Facies_Cluster_Runs)
+    AND l.latitude IS NOT NULL
+  ")
+  message("✅ Facies clusters GIS view ready")
+
   
   # -------------------------------------------------
   # COMPLETE

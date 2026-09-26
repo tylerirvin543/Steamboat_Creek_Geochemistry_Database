@@ -3756,6 +3756,154 @@ in `notebooks/07_historical_context_sorey1992.qmd`.
   this commit despite earlier session notes claiming they'd been
   pushed -- swept in now rather than left stranded again.
 
+## Session 33 (2026-09-25, continued): Facies_Clusters persistence, BE-based aquifer classification, real deviation survey/lithology, Leapfrog extension, historic figures
+
+Implemented via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-09-26-2002-plan.md`). Covers a persisted
+facies-clustering table + GeoPackage layer, a barometric-efficiency-
+derived aquifer-type label per well, the project's first real (not
+assumed-vertical) well deviation survey, a Leapfrog export extension,
+two more historic comparison figures, and PHREEQC/statistics/
+potentiometric-surface write-ups -- all landing in
+`notebooks/07_historical_context_sorey1992.qmd`.
+
+- **`Facies_Cluster_Runs`/`Facies_Cluster_Assignments`** (new schema,
+  `database/schema/13_facies_clusters_schema.R`) persist
+  `run_facies_clustering()`'s result for the first time (previously
+  console-only) -- one row per run with method/k/silhouette/mclust-
+  agreement metadata, one row per clustered sample per run. New
+  `scripts/analysis/register_facies_clusters.R`. New
+  `vw_facies_clusters_gis` view + `facies_clusters` GeoPackage layer
+  (132 real points, latest run only) so cluster assignments can be
+  overlaid against digitized fault traces in ArcGIS. Wired into
+  `run_pipeline.R` as `RUN_ANALYSIS$facies_clusters` (opt-in). Real
+  run persisted: k=4, mclust agreement 70.1%, 157 samples.
+- **Aquifer type classification from real barometric efficiency**
+  (`Wells.aquifer_type`/`aquifer_type_basis`,
+  `database/schema/14_aquifer_classification_schema.R`,
+  `classify_aquifer_type()` in `barometric_efficiency.R`). Thresholds
+  grounded in this exact site's own historical BE range (White 1968:
+  0.2-1.18 for confined vents at Steamboat), not an arbitrary generic
+  cutoff -- BE >= 0.2 (diff-method, p<0.05) -> "confined"; <0.1 ->
+  "unconfined"; 0.1-0.2 -> "semi-confined_leaky"; not significant ->
+  "unknown" (never guessed). Applied project-wide (every well with
+  real BE evidence, not just the 2 Steamboat-field wells): **7 wells
+  classified "confined"**, including both real Steamboat-field wells
+  (STMGID MW10, MW3). Wired into `run_pipeline.R` as
+  `RUN_ANALYSIS$aquifer_classification` (opt-in).
+- **First real (non-assumed-vertical) well deviation survey**: a
+  project-wide keyword search of all 65 `Well_Log_Documents` OCR
+  texts (`DEVIATION`/`AZIMUTH`/`INCLINATION`/`DIRECTIONAL`/`DOGLEG`)
+  confirmed, again, zero real hits -- NDWR public driller's reports
+  genuinely never carry directional data for this field. Real data
+  instead came from literature: the user added (then, after
+  confirming the pipeline had already handled it correctly, deleted)
+  a `docs/literature/well_logs/` folder -- 12 of 14 files turned out
+  to be exact-duplicate NDWR PDFs already ingested; the other 2 were
+  not well logs at all. One (`1033641.pdf`) was an exact duplicate of
+  an already-known literature PDF. The other, **`1034459.pdf`**
+  (Akerley et al. 2021, GRC Transactions Vol. 45, "Drilling Challenge
+  and Pumping Innovations for the Steamboat Hills Enhancement"), was
+  genuinely new and turned out to describe a real directional well --
+  **83C-6ST1** (well_id 98, total depth 3000 ft, an exact match to
+  this project's on-record depth): vertical to a ~1600 ft kick-off
+  point, then built toward the NE at up to 4.75°/100ft, intersecting a
+  target fracture at 2687 ft MD before reaching 3000 ft TD. New
+  `Well_Deviation_Surveys` table
+  (`database/schema/15_well_deviation_surveys_schema.R`, self-seeding
+  4 real rows for 83C-6ST1 on schema load) -- 2 rows are real, precise
+  `surveyed_station`s (vertical 0-1600 ft); 2 are `narrative_derived`
+  with `azimuth_deg`/`inclination_deg` deliberately left `NULL`
+  (the paper gives the target fracture's own orientation and a build
+  *rate*, not the wellbore's own station-by-station survey -- computing
+  a specific final inclination would fabricate precision the source
+  doesn't support). Real lithology for the same well also added to
+  `Well_Lithology`: Gardnerville formation grading into schist/
+  conglomerate/quartzite (whole-hole generalization, flagged as such)
+  plus a precisely-bounded 1960-2031 ft swelling-clay interval that
+  caused real drilling problems -- the file the citation came from was
+  deleted by the user after the excerpt needed was already captured in
+  conversation; only what was already read could be transcribed
+  (flagged to the user as a real limitation, not silently worked
+  around). **`docs/literature/well_logs/` folder deleted by the user**
+  after this was extracted -- confirmed nothing else of value was lost
+  (the 12 well-log duplicates were already ingested; `1033641.pdf` is
+  still on file at the top level of `docs/literature/`).
+- **A second, real lithology find deliberately NOT promoted to a named
+  well**: re-reading well-log `61248` (rather than trusting its
+  original OCR-heuristic parse) found a genuinely legible lithologic
+  table (basaltic andesite 0-72 ft, metamorphosed volcanic rock 72-125
+  ft, metamorphosed sedimentary rock 125-3001 ft) with strong
+  circumstantial evidence it's well **23-5** (coordinates ~160 m apart,
+  an exact 3001 ft total-depth match, owner "Phillips Petroleum Co." --
+  a documented historic pre-Ormat operator) -- stored in
+  `Well_Lithology` with `well_id = NULL` and a flag for human
+  confirmation, per this project's standing rule against guessing an
+  identity from circumstantial evidence alone. Promoting it would set
+  `well_id = 96`.
+- **A related lead checked and self-corrected in the same session**:
+  well-log `104216` (owner "N.D.O.T.") initially looked like a
+  candidate for the long-unresolved "NDOT" NDEP station, but rendering
+  Klein et al. (2007) Figure 1 directly confirmed the real NDOT sits
+  ~2.5 km north of this log's coordinate, in the Herz/Curti/Soccer
+  Field cluster -- so it's a different, real N.D.O.T.-owned well.
+  Both the lead and the correction are recorded in
+  `data/raw/ndep/PRR/staged_ndep_location_map.csv`'s notes for the
+  `NDOT` row.
+- **`scripts/leapfrog/export_leapfrog.R` extended**: `survey.csv` now
+  checks `Well_Deviation_Surveys` first per well, falling back to the
+  assumed-vertical two-point trace only when no real survey exists
+  (109 of 110 collar-ready wells still fall back; 83C-6ST1 is the one
+  real exception). New `lithology.csv` output includes only
+  `well_id`-confirmed `Well_Lithology` rows (candidate/pending rows
+  like log 61248's correctly excluded). Verified end-to-end against
+  the real database: 110 collar-ready, 95 incomplete, 222 survey rows,
+  2 real lithology intervals, 74 completion intervals.
+- **Two more historic comparison figures** rendered on demand into
+  `output/figures/literature_reference/` (disposable/regenerable, like
+  the Sorey Figures 39-40 from the prior session): **Klein et al.
+  (2007) Figure 1** (labeled production/injection/monitor-well map
+  with the sinter-deposit extent -- independently confirms several
+  already-resolved names: NDOT, STMGID 3/4, Zolezzi, Peigh, Mackay,
+  Stuart, Johnson/Woods, ST-1/2/4/5) and **White (1968) Plate 1**
+  (generalized geologic map -- sinter/alluvium/basaltic-andesite/
+  granitic-metamorphic units, mapped faults, GS-1 through GS-8 drill
+  holes) -- both embedded directly in `notebooks/07_historical_context_sorey1992.qmd`.
+- **New "known issue" tracking, not fixed**: the user noticed some
+  GeoPackage well coordinates don't exactly match satellite imagery.
+  No automated fix attempted (pixel-level satellite matching is out of
+  scope) -- new `data/derived/well_coordinate_review.csv` scaffold +
+  a README.md note under "GIS Export and Spatial Integration" for
+  logging confirmed mismatches by hand as they're found.
+- **New notebook sections, all rendered and verified**: PHREEQC
+  next-steps table (5 real directions, each with what real data is
+  still missing to run it), a potentiometric-surface-mapping
+  feasibility + software recommendation (checked real coverage
+  directly: only 2-3 wells inside the field itself have usable water
+  level, vs. 21 in the wider-but-different South Truckee Meadows
+  basin; recommended ArcGIS Pro Geostatistical Analyst/EBK as primary,
+  with an R `gstat` cross-check and QGIS as a free alternative; noted
+  Leapfrog would inform *which wells get kriged together*, not the 2D
+  interpolation itself), and a master statistics-summary table
+  consolidating every real test run anywhere in the notebook.
+- **Full notebook rendered successfully end-to-end** (`quarto render`,
+  confirmed clean) against the real operational database, including
+  all new chunks (facies persistence, aquifer classification,
+  deviation survey, lithology, both new historic figures,
+  potentiometric coverage query). `scripts/pipeline_report.Rmd`
+  extended with the 4 new tables and test-rendered cleanly.
+  `qc_data_integrity_checks.R` re-run clean (0 PHREEQC failures, 0
+  logger outliers). GeoPackage re-exported cleanly (`facies_clusters`
+  layer confirmed, 132 rows).
+- **Not done this session**: real fault traces still not digitized
+  (unchanged, blocked on the user's ArcGIS work); the deeper
+  production/injection/monitor wells' water levels are still not on
+  file (Session 4's NDEP request remains the concrete blocker for any
+  real potentiometric surface); no gas-phase-vs-pressure PHREEQC run
+  attempted (needs a real dissolved-gas sample first, per the
+  next-steps table). This session's file changes are committed and
+  pushed to git (see commit history).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

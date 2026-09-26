@@ -121,13 +121,88 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
   }
 
   # ------------------------------------------------------------
-  # SURVEY TABLE (assumed vertical -- no deviation data exists)
+  # SURVEY TABLE -- real deviation surveys where they exist
+  # (Well_Deviation_Surveys, added Session 33 after a project-wide
+  # keyword search confirmed zero real directional data in any NDWR
+  # driller's-report PDF; the one real exception on file, 83C-6ST1,
+  # comes from Akerley et al. 2021's published drilling narrative, not
+  # a well log), falling back to the assumed-vertical two-point trace
+  # only for wells with no real survey rows.
   # ------------------------------------------------------------
-  survey <- bind_rows(
-    collar %>% transmute(HoleID, Depth = 0, Azimuth = 0, Dip = -90),
-    collar %>% transmute(HoleID, Depth = MaxDepth, Azimuth = 0, Dip = -90)
-  ) %>% arrange(HoleID, Depth)
+  real_surveys <- tryCatch(
+    dbGetQuery(con, "
+      SELECT w.well_name AS HoleID, ds.depth_ft, ds.azimuth_deg, ds.inclination_deg,
+             ds.data_quality, ds.notes
+      FROM Well_Deviation_Surveys ds
+      JOIN Wells w ON w.well_id = ds.well_id
+    "),
+    error = function(e) NULL
+  )
+  if (!is.null(real_surveys)) real_surveys <- real_surveys %>% filter(HoleID %in% collar$HoleID)
+
+  wells_with_real_survey <- if (!is.null(real_surveys) && nrow(real_surveys) > 0) unique(real_surveys$HoleID) else character(0)
+
+  survey_real <- if (length(wells_with_real_survey) > 0) {
+    real_surveys %>%
+      transmute(
+        HoleID,
+        Depth = round(depth_ft * FT_TO_M, 2),
+        # Leapfrog convention: Dip = -90 (vertical) to 0 (horizontal);
+        # this project's inclination_deg is degrees FROM vertical (0 =
+        # vertical), so Dip = inclination_deg - 90. Left NA when the
+        # source doesn't give a real station inclination (see notes).
+        Azimuth = azimuth_deg,
+        Dip = ifelse(is.na(inclination_deg), NA_real_, inclination_deg - 90),
+        DataQuality = data_quality,
+        Notes = notes
+      )
+  } else {
+    tibble::tibble()
+  }
+
+  survey_assumed_vertical <- collar %>%
+    filter(!(HoleID %in% wells_with_real_survey)) %>%
+    { bind_rows(
+        transmute(., HoleID, Depth = 0, Azimuth = 0, Dip = -90),
+        transmute(., HoleID, Depth = MaxDepth, Azimuth = 0, Dip = -90)
+      )
+    } %>%
+    mutate(DataQuality = "assumed_vertical", Notes = "No real deviation survey on file -- exported as a straight vertical trace.") %>%
+    arrange(HoleID, Depth)
+
+  survey <- bind_rows(survey_real, survey_assumed_vertical) %>% arrange(HoleID, Depth)
   write_csv(survey, path(out_dir, "survey.csv"))
+
+  # ------------------------------------------------------------
+  # LITHOLOGY TABLE -- real Well_Lithology rows only (well_id NOT
+  # NULL, i.e. confidently matched to a named well; candidate/pending
+  # rows like log 61248's, awaiting human confirmation, are correctly
+  # excluded here, NOT silently included).
+  # ------------------------------------------------------------
+  lithology_real <- tryCatch(
+    dbGetQuery(con, "
+      SELECT w.well_name AS HoleID, wl.depth_from_ft, wl.depth_to_ft, wl.description, wl.notes
+      FROM Well_Lithology wl
+      JOIN Wells w ON w.well_id = wl.well_id
+      WHERE wl.well_id IS NOT NULL
+    "),
+    error = function(e) NULL
+  )
+  if (!is.null(lithology_real) && nrow(lithology_real) > 0) {
+    lithology_out <- lithology_real %>%
+      filter(HoleID %in% collar$HoleID) %>%
+      transmute(
+        HoleID,
+        From = round(depth_from_ft * FT_TO_M, 2),
+        To = round(depth_to_ft * FT_TO_M, 2),
+        Description = description,
+        IntervalType = "lithology",
+        Notes = notes
+      )
+    if (nrow(lithology_out) > 0) write_csv(lithology_out, path(out_dir, "lithology.csv"))
+  } else {
+    lithology_out <- tibble::tibble()
+  }
 
   # ------------------------------------------------------------
   # COMPLETION INTERVAL TABLE (NOT lithology -- see header comment)
@@ -147,7 +222,16 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
 
   message("  -> collar.csv: ", nrow(collar), " wells (fully collar-ready)")
   message("  -> collar_incomplete.csv: ", nrow(incomplete), " wells (reference only)")
-  message("  -> survey.csv: ", nrow(survey), " rows (all vertical -- no deviation data exists)")
+  if (length(wells_with_real_survey) > 0) {
+    message("  -> survey.csv: ", nrow(survey), " rows -- ", length(wells_with_real_survey),
+            " well(s) now have a REAL (non-vertical) deviation survey (", paste(wells_with_real_survey, collapse = ", "),
+            "); the remaining ", nrow(collar) - length(wells_with_real_survey),
+            " are still exported as an assumed-vertical two-point trace (no real survey on file).")
+  } else {
+    message("  -> survey.csv: ", nrow(survey), " rows (all vertical -- no real deviation data exists for any collar-ready well yet)")
+  }
+  message("  -> lithology.csv: ", nrow(lithology_out), " real interval(s) (well_id-confirmed Well_Lithology rows only -- ",
+          "candidate/pending rows awaiting human identity confirmation are correctly excluded)")
   message("  -> completion_interval.csv: ", nrow(interval),
           " wells (casing/perforation interval, NOT lithology)")
   message("Leapfrog export complete: ", out_dir)
@@ -155,6 +239,8 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
   invisible(list(
     collar_n = nrow(collar),
     incomplete_n = nrow(incomplete),
-    interval_n = nrow(interval)
+    interval_n = nrow(interval),
+    lithology_n = nrow(lithology_out),
+    wells_with_real_survey = wells_with_real_survey
   ))
 }

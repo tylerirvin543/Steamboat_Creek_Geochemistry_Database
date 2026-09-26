@@ -761,6 +761,19 @@ Gradients, temperature data, wells, and sampling locations can all be
 explored spatially, enabling interpretation of the hydrothermal system
 in a geographic context.
 
+**Known issue (2026-09-25, flagged for later correction, not yet
+fixed):** visually comparing the GeoPackage's well points against
+satellite imagery shows some wells' coordinates are not exactly on
+their real surface location -- expected, since most come from
+NBMG/NDWR/ArcGIS-digitization matching rather than a survey-grade
+fix (each layer's `coordinate_uncertainty_m` column already records
+this). `data/derived/well_coordinate_review.csv` is a scaffold for
+logging specific, confirmed mismatches as they're found (well_id,
+current vs. suggested coordinate, who reviewed it, when) so real
+corrections aren't lost between sessions -- fill it in by hand as you
+spot real discrepancies; nothing currently populates it automatically
+(pixel-level satellite matching is out of scope for this pipeline).
+
 ------------------------------------------------------------------------
 
 ------------------------------------------------------------------------

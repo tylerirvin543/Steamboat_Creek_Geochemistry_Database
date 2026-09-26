@@ -1491,6 +1491,309 @@ Every number above is reproducible directly from this notebook's own
 code chunks against the live `geochem_operational.sqlite` -- none are
 transcribed by hand from a prior console session.
 
+## Hydrochemical facies clustering is now persisted (ready for ArcGIS fault overlay)
+
+`scripts/analysis/cluster_hydrochemical_facies.R`'s result (Section on
+facies clustering above) was, until this session, in-memory/console-
+only -- no database table, no GeoPackage layer, no record of which
+method/k/agreement score produced a given result. Both gaps are now
+closed:
+
+```{r facies-persist}
+facies_schema <- file.path("database", "schema", "13_facies_clusters_schema.R")
+if (!file.exists(facies_schema)) facies_schema <- file.path("..", facies_schema)
+source(facies_schema)
+register_script <- file.path("scripts", "analysis", "register_facies_clusters.R")
+if (!file.exists(register_script)) register_script <- file.path("..", register_script)
+source(register_script)
+run_id <- register_facies_clusters(con, fc)
+dbGetQuery(con, "SELECT * FROM Facies_Cluster_Runs ORDER BY run_id DESC LIMIT 1")
+```
+
+`Facies_Cluster_Runs`/`Facies_Cluster_Assignments` (new tables) keep
+every run's method/k/silhouette/mclust-agreement metadata alongside
+its per-sample labels, and a new `facies_clusters` GeoPackage layer
+(latest run only) makes the clusters overlayable in ArcGIS -- directly
+against the fault traces once those are digitized. Wired into
+`run_pipeline.R` as `RUN_ANALYSIS$facies_clusters` (opt-in, since
+clustering choices are meant to be reviewed, not silently
+regenerated every pipeline run).
+
+## Aquifer type: confined vs. unconfined, from real barometric efficiency
+
+Barometric efficiency is itself a real, physically grounded signal
+for aquifer confinement: an ideal unconfined (water-table) well shows
+BE near 0, because atmospheric pressure loads the well and the water
+table equally and the two effects cancel; a confined well shows a
+real, non-zero BE because its confining layer isolates the aquifer
+from directly equilibrating with the atmosphere. Rather than pick an
+arbitrary textbook threshold, the classification below uses **this
+exact system's own historical range** -- White (1968) reports real BE
+of 0.2-1.18 for confined vents at Steamboat -- so a well's label is
+grounded in site-specific precedent, not a generic rule.
+
+```{r aquifer-classify}
+aquifer_schema <- file.path("database", "schema", "14_aquifer_classification_schema.R")
+if (!file.exists(aquifer_schema)) aquifer_schema <- file.path("..", aquifer_schema)
+source(aquifer_schema)
+classify_aquifer_type(con, be_result)
+dbGetQuery(con, "
+  SELECT well_id, well_name, aquifer_type, aquifer_type_basis
+  FROM Wells WHERE aquifer_type != 'unknown'
+  ORDER BY well_name
+")
+```
+
+Applying this project-wide (every well with >= 60 days of real
+water-level/pressure overlap, not just the two Steamboat-field wells)
+finds **7 real confined-aquifer wells**, including both of the
+Steamboat-field wells discussed above (STMGID MW10, MW3) -- consistent
+with the earlier finding that both sit well inside White's 0.2-1.18
+range. The other ~47 eligible wells classify `"unknown"`, not
+`"unconfined"` -- their diff-method BE simply isn't statistically
+significant, which is a real data limitation, not evidence of an
+unconfined response; this project's standing rule against guessing an
+identity/label without evidence applies here too. `Wells.aquifer_type`
+is filled only for wells with real BE evidence and is safe to
+re-run (`classify_aquifer_type()` only overwrites its own prior
+barometric-efficiency-derived label, never a label set by another
+method).
+
+## A real (not assumed) deviation survey: 83C-6ST1
+
+Every prior session assumed every well in this database is vertical,
+because a project-wide keyword search of all 65 `Well_Log_Documents`
+OCR texts (`DEVIATION`/`AZIMUTH`/`INCLINATION`/`DIRECTIONAL`/`DOGLEG`)
+found **zero real hits** -- confirmed again this session, not just
+carried forward. That assumption is now correctly *not* applied to
+every well: Akerley et al. (2021, GRC Transactions Vol. 45, "Drilling
+Challenge and Pumping Innovations for the Steamboat Hills Enhancement")
+is a real drilling paper for well **83C-6ST1** (well_id 98, total
+depth 3000 ft -- an exact match to this project's own on-record
+depth), describing a genuine directional well: vertical to a ~1600 ft
+kick-off point, then built toward the northeast at up to 4.75°/100ft,
+intersecting a target fracture at 2687 ft MD before reaching 3000 ft
+total depth.
+
+```{r deviation-survey}
+deviation_schema <- file.path("database", "schema", "15_well_deviation_surveys_schema.R")
+if (!file.exists(deviation_schema)) deviation_schema <- file.path("..", deviation_schema)
+source(deviation_schema)
+dbGetQuery(con, "SELECT well_id, depth_ft, azimuth_deg, inclination_deg, data_quality FROM Well_Deviation_Surveys")
+```
+
+Two of the four stations are real, precise (`surveyed_station`): the
+paper explicitly states the well is vertical from 0 to the ~1600 ft
+kick-off point. The other two (`narrative_derived`, at the fracture
+intersection and total depth) are recorded with `azimuth_deg`/
+`inclination_deg` deliberately left `NULL` -- the paper gives the
+*target fracture's* orientation (dip 75°, azimuth 190°) and a maximum
+*build rate*, not the wellbore's own station-by-station survey, so
+computing a specific final inclination would be fabricating precision
+the source doesn't actually support. Real lithology for the same well
+is genuinely available too -- Gardnerville formation grading into
+schist/conglomerate/quartzite, with a precisely-bounded 1960-2031 ft
+swelling-clay interval that caused real drilling problems:
+
+```{r lithology-83c6}
+dbGetQuery(con, "SELECT depth_from_ft, depth_to_ft, description FROM Well_Lithology WHERE well_id = 98")
+```
+
+`scripts/leapfrog/export_leapfrog.R` was extended to use this real
+data automatically: `survey.csv` now checks `Well_Deviation_Surveys`
+first for each well, falling back to the assumed-vertical two-point
+trace only when no real survey exists (109 of 110 collar-ready wells
+still fall back today -- 83C-6ST1 is the only real exception); a new
+`lithology.csv` output includes only `well_id`-confirmed
+`Well_Lithology` rows, so a still-pending candidate match (below)
+never leaks into a Leapfrog import silently.
+
+**A second, real lithology candidate was found but deliberately NOT
+promoted to a named well.** Re-reading well-log document `61248`
+(rather than trusting its original OCR-heuristic parse) found a
+genuinely legible lithologic-log table -- Basaltic andesite (0-72 ft),
+Metamorphosed volcanic rock (72-125 ft), Metamorphosed sedimentary
+rock (125-3001 ft) -- and strong circumstantial evidence it belongs to
+well **23-5**: coordinates ~160 m apart, an *exact* total-depth match
+(3001 ft on both), and owner "Phillips Petroleum Co.," a documented
+historic pre-Ormat operator at this field. Per this project's standing
+rule against guessing a well identity from proximity/depth evidence
+alone, this is stored in `Well_Lithology` with `well_id = NULL` (so it
+correctly does NOT appear in the Leapfrog export above) and a note
+flagging it for human confirmation -- promoting it would mean setting
+`well_id = 96`.
+
+**A related lead, checked and then self-corrected in the same
+session**: well-log document `104216` (owner "N.D.O.T.") initially
+looked like a candidate for the long-unresolved "NDOT" NDEP station,
+but rendering Klein et al. (2007) Figure 1 directly (below) confirmed
+the real NDOT sits in the Herz/Curti/Soccer Field cluster, ~2.5 km
+north of this log's coordinate -- so it's a different, real
+N.D.O.T.-owned well, not a match for that row. Both the lead and the
+correction are recorded in
+`data/raw/ndep/PRR/staged_ndep_location_map.csv`'s notes.
+
+## Historic maps for comparison: Klein (2007) and White (1968)
+
+Two more real historic figures, rendered on demand (not committed --
+`output/figures/literature_reference/` is disposable/regenerable like
+the Sorey Figures 39-40 above) for direct visual "then vs. now"
+comparison against this project's current `Wells`/`Locations` map.
+
+```{r klein-figure}
+#| fig-width: 9
+#| fig-height: 11
+klein_pdf <- file.path("docs", "literature", "Klein_Johnson_Spielman_2007_resourceexploitation_steamboat.pdf")
+if (!file.exists(klein_pdf)) klein_pdf <- file.path("..", klein_pdf)
+lit_fig_dir <- file.path("output", "figures", "literature_reference")
+if (!file.exists(dirname(lit_fig_dir))) lit_fig_dir <- file.path("..", lit_fig_dir)
+dir.create(lit_fig_dir, showWarnings = FALSE, recursive = TRUE)
+
+klein_fig1 <- file.path(lit_fig_dir, "klein2007_fig1_wellmap.png")
+if (!file.exists(klein_fig1)) {
+  pdftools::pdf_convert(klein_pdf, format = "png", pages = 3, dpi = 200, filenames = klein_fig1)
+}
+knitr::include_graphics(klein_fig1)
+```
+
+Klein et al. (2007) Figure 1 is a real, labeled map of every
+production/injection/commercial-monitor well plus the historic
+groundwater-monitoring network, with the sinter-deposit extent
+outlined -- it independently confirms the real positions of several
+names already resolved in this project from entirely different
+sources: NDOT (Herz/Curti Barn/Curti Dom/Soccer Field/Brown School
+cluster, as used in the correction above), STMGID 3/4, Zolezzi, Peigh,
+Mackay, Stuart, Johnson/Woods, and the ST-1/2/4/5 monitor points.
+
+```{r white-figure}
+#| fig-width: 9
+#| fig-height: 7
+white_pdf <- file.path("docs", "literature", "White papers and plates", "White (1968) plate-1.pdf")
+if (!file.exists(white_pdf)) white_pdf <- file.path("..", white_pdf)
+white_plate1 <- file.path(lit_fig_dir, "white1968_plate1_geologicmap.png")
+if (!file.exists(white_plate1)) {
+  pdftools::pdf_convert(white_pdf, format = "png", dpi = 150, filenames = white_plate1)
+}
+knitr::include_graphics(white_plate1)
+```
+
+White (1968)'s Plate 1 generalized geologic map -- sinter, alluvium,
+basaltic andesite of the Lousetown Formation, and granitic/
+metamorphic basement, with mapped faults and the GS-numbered
+pre-Ormat drill holes (GS-1 through GS-8) already cross-referenced in
+earlier sessions -- is the most useful real geologic-unit reference
+this project has for the eventual Leapfrog/lithology work, and (per
+Sessions 30-31) remains a candidate fault-trace source alongside
+Collar & Huntley (1990) Figure 1, though Collar & Huntley's is still
+the better digitizing candidate since it shows faults over a modern,
+better-controlled base map.
+
+## PHREEQC: next steps, concretely
+
+Consolidating every real PHREEQC direction already scoped across
+prior sessions but not yet run against real data, with what's
+specifically still missing to make each one real:
+
+| Direction | What it would test | What's missing to run it for real |
+|---|---|---|
+| Gas-phase (`GAS_PHASE`) vs. real MSLP range | Whether PHREEQC's own pressure-equilibrium chemistry predicts the real inverse temperature-pressure coupling found at A009 above | A real sample with measured dissolved-gas chemistry (CO2/H2S) at or near A009's location -- none identified yet |
+| SI tracking across a real recharge event | Whether the MW10 Dec-2025 storm response (above) is accompanied by a real shift in calcite/quartz saturation | A well with real major-ion chemistry sampled both before AND after a real precipitation event -- doesn't exist yet |
+| Real (non-synthetic) mixing refinement | A tighter two-end-member Cl mixing estimate than the current typical/representative pair (sample 816 vs. 829) | More real, time-paired thermal/meteoric end-member samples closer to the conductivity-logger deployment window |
+| Real inverse modeling with a confirmed mineral suite | Mass-transfer estimates for a real water-rock reaction path | A confirmed calcite/dolomite/quartz-bearing target sample with full major-ion + alkalinity data (a handful now qualify per Session 15-17's fixes) |
+| Boron-alkalinity double-count check (Session 17) | Whether lab-titrated alkalinity for boron-rich samples already implicitly includes borate | Not a PHREEQC run at all -- a lab-methodology question, flagged but not resolved |
+
+None of these were run this session -- this is a planning pass, not
+new PHREEQC code.
+
+## Shallow potentiometric surface mapping: do we have enough data, and what software?
+
+**Checked directly, not assumed: not yet, for the Steamboat field
+itself.** Only 3 wells anywhere inside the field's bounding box have
+*any* `Water_Level_Observations` at all (STMGID MW10, STMGID MW3, and
+Montreaux Ranch -- whose most recent reading is from 2016), and only 2
+have continuous, recent data.
+
+```{r potentiometric-coverage}
+dbGetQuery(con, "
+  SELECT w.well_id, w.well_name, COUNT(*) n_obs, MIN(wl.timestamp) mn, MAX(wl.timestamp) mx
+  FROM Water_Level_Observations wl JOIN Wells w ON w.well_id = wl.well_id
+  WHERE w.longitude BETWEEN -119.80 AND -119.71 AND w.latitude BETWEEN 39.355 AND 39.415
+    AND wl.water_level_elevation IS NOT NULL
+  GROUP BY w.well_id ORDER BY n_obs DESC
+")
+```
+
+Only **one** driller-report static water level exists project-wide at
+all, and its `water_level_elevation` value is `NULL` (depth was
+recorded, not converted to an elevation) -- so "point source from well
+logs and drilling reports" is not currently a usable supplementary
+data source either, though the pipeline (`Water_Level_Observations`,
+`method = 'driller_report'`) is ready the moment a usable one exists.
+Widening the search to a 10 km box around the field finds 21 wells
+with genuinely dense, continuous coverage -- but nearly all of them
+belong to the South Truckee Meadows GID regional monitoring network, a
+different hydrogeologic setting than the geothermal field itself, not
+a denser version of the same aquifer system.
+
+**The concrete blocker, not a new one**: this is the same gap flagged
+in Session 4's still-unanswered NDEP data request for water levels at
+the actual CPI/SB GEO production/injection/monitor wells (43-33-1,
+21-32-1/2, OW-1/2/3, the Strat wells) -- those are exactly the wells a
+real field-scale potentiometric surface would need, and none of them
+currently have any `Water_Level_Observations` on file.
+
+**Software recommendation, for when that data exists:**
+
+- **Primary: ArcGIS Pro Geostatistical Analyst (Empirical Bayesian
+  Kriging).** This project's GIS workflow already targets ArcGIS, and
+  the `chloride_points` GeoPackage layer (Session 30) was already built
+  specifically for ArcGIS-side geostatistical interpolation -- EBK is
+  the natural extension of that same workflow to water levels.
+- **Secondary, reproducible cross-check: R (`gstat`/`sf`).** Consistent
+  with this project's general "everything reproducible in code" bias;
+  useful as an independent variogram/kriging check against whatever
+  ArcGIS produces, not a replacement for it.
+- **Free alternative: QGIS**, if ArcGIS licensing is ever a constraint
+  -- ordinary/universal kriging is available via its SAGA/GRASS
+  plugins, though not EBK specifically (an Esri-only method).
+
+**Should it be informed by Leapfrog?** Not directly -- Leapfrog is a
+3D geological modeling tool, not a 2D interpolation engine. But its
+eventual 3D zonation (once real lithology like 83C-6ST1's exists for
+more wells) *should* determine which wells get kriged together: only
+wells screened in the same hydrostratigraphic unit belong in the same
+2D surface. That grouping/masking step is where Leapfrog's output feeds
+the potentiometric work, not the interpolation math itself -- and it's
+the same principle the well-completion-interval section above already
+applies informally (flagging long-open-interval wells as
+likely-multi-zone) before any real zonation exists.
+
+## Master statistics summary (whole notebook)
+
+Every real statistical test run anywhere in this notebook, consolidated
+in one place rather than left scattered across 1500+ lines:
+
+| Section | Test | Statistic | p-value | n |
+|---|---|---|---|---|
+| Chloride trend, naive (all thermal-influenced) | Linear regression, Cl ~ year | -- | 0.0099 (weakens to 0.099 excluding 2 intermediate wells) | -- |
+| Cl/B ratio, 1990-91 vs. 2024-2026 | Two-sample t-test | 19.6 vs. 21.9 | 0.015 | -- |
+| Facies clustering | Ward hierarchical, k=4 (silhouette-selected); mclust cross-check | 70.1% agreement | -- | 157 |
+| Pure-thermal facies Cl trend | Mixed-effects (well random intercept) | year coefficient n.s. | > 0.05 | -- |
+| STMGID MW10 barometric efficiency | OLS, level & diff | BE=0.58 (R²=0.28) / 0.34 (R²=0.25) | both << 0.001 | 364/363 |
+| STMGID MW3 barometric efficiency | OLS, level & diff | BE=0.60 (R²=0.12) / 0.29 (R²=0.38) | both << 0.001 | 364/363 |
+| A009 (hot well) temp vs. pressure, daily | Pearson, level | r=+0.35 | 0.0045 | 63 |
+| A009 temp vs. pressure, hourly, diff | Pearson | r=-0.17 | 1.0e-10 | ~1400 |
+| A005 (fumarole) temp vs. pressure, hourly | Pearson, level & diff | r=+0.08 / +0.04 | 0.001 / 0.07 | ~1800 |
+| A010 (spring) temp vs. pressure, daily | Pearson, level | r=+0.55 | <1e-11 | 134 |
+| Nearby earthquakes vs. STMGID water level | Visual/step-change check | no detectable step | -- | 3 events |
+| Nearby earthquakes vs. temperature loggers | Overlap check | no temporal overlap exists | -- | 0 events |
+| Dec 2025 storm vs. MW10/MW3 water level | Visual comparison | MW10 +0.27 ft; MW3 none | -- | 1 event |
+| Project-wide aquifer classification | BE >= 0.2 threshold (White 1968 range) | 7 wells "confined" | (see per-well p-values above) | 54 eligible |
+
+Every number above is reproducible directly from this notebook's own
+live code chunks against `geochem_operational.sqlite` -- none are
+hand-transcribed from an earlier console session.
+
 ## Why this matters for the project
 
 Sorey & Colvard (1992) does three things no other single source in this
@@ -1513,6 +1816,7 @@ gap rather than an unrecognized one.
 
 | Date | Change |
 |---|---|
+| 2026-09-25 (session 4) | Persisted hydrochemical facies clustering into `Facies_Cluster_Runs`/`Facies_Cluster_Assignments` + a new GeoPackage `facies_clusters` layer, for ArcGIS overlay against digitized fault traces. Added a project-wide aquifer-type classification (`Wells.aquifer_type`) derived from real barometric efficiency, grounded in White (1968)'s own confined-vent BE range at this site (0.2-1.18) -- 7 wells classified 'confined' project-wide, including both real Steamboat-field wells (STMGID MW10/MW3). Found and added the first REAL (non-assumed-vertical) well deviation survey, for 83C-6ST1, from Akerley et al. (2021)'s published drilling narrative -- confirmed zero real directional data exists in any of the 65 NDWR well-log OCR texts, so this had to come from literature, not a well log. Extended `export_leapfrog.R` to use real `Well_Deviation_Surveys`/`Well_Lithology` data automatically. Found (and correctly did NOT promote) a strong circumstantial lithology match for log 61248 to well 23-5; found and self-corrected an NDOT lead after rendering Klein (2007) Figure 1 directly. Added Klein (2007) Figure 1 and White (1968) Plate 1 as on-demand historic comparison figures. Added a consolidated PHREEQC-next-steps table, a potentiometric-surface-mapping feasibility/software-recommendation section (checked real coverage: only 2-3 wells in the field itself have usable water level, still blocked on Session 4's NDEP data request), and a master statistics-summary table covering the whole notebook.
 | 2026-09-25 (session 3) | Data-folder README sweep (14 new/updated READMEs + top-level `data/README.md`); real USGS earthquake catalog ingested (`Earthquake_Events`) and cross-checked against water level/temperature -- no nearby event overlaps the temperature-logger window, no detectable water-level step at the 3 nearest (2025-05) events; real hourly temp-vs-pressure test finds a statistically significant inverse (boiling-point-consistent) coupling at A009 (r=-0.17, p<1e-10) but not at fumarole A005; STMGID MW10 vs. MW3 barometric-efficiency R² difference explained by screen length (480 ft vs. 100 ft); Dec 2025 storm shows a real MW10 recharge bump, absent at MW3; new well-completion-interval/confining-layer visualization (explicitly not lithology); PHREEQC's conceptual (gas-phase/pressure-equilibrium) tie-in discussed; `ingest_fault_traces.R` built and wired in (no-op until the user digitizes fault traces in ArcGIS).
 | 2026-09-12 | Notebook created. Sorey & Colvard (1992) read directly (`pdftotext -layout`); Table 1 chemistry (9 samples, 1950-1991) ingested for the first time via `ingest_historical_sorey1992.R`; well/site cross-reference built against `Wells`/`Well_Aliases`/`Locations`; Cl/B ratio confirmed consistent between 1990-91 and 2024-2026 real thermal samples; discharge-through-time table assembled (White 1968 through this project's 2026 poster); barometric efficiency documented as a recommended, not-yet-runnable capability (no barometric-pressure parameter exists in this database yet). |
 | 2026-09-12 (follow-up) | Resolved `83A-6` and `Cox 1-1` via exact NBMG Geothermal_Wells name matches; discovered and resolved that `"GS-58"`/`"GS-59"` are OCR artifacts of well `GS-5` (its own table footnote superscripts fused onto the name); all four now have real coordinates in `Locations`/`Wells`. Also found and fixed a 2-digit-year date-parsing bug in `ingest_well_logs.R`'s `.safe_completion_date()` that had produced one malformed `Water_Level_Observations` timestamp (`"7-07-10"`, corrected to `2007-07-10`). |

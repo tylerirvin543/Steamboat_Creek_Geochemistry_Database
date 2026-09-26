@@ -182,6 +182,8 @@ if (is.null(RUN_ANALYSIS$phreeqc_mixing)) RUN_ANALYSIS$phreeqc_mixing <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_inverse)) RUN_ANALYSIS$phreeqc_inverse <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_gas_phase)) RUN_ANALYSIS$phreeqc_gas_phase <- FALSE
 if (is.null(RUN_ANALYSIS$leapfrog_export)) RUN_ANALYSIS$leapfrog_export <- FALSE
+if (is.null(RUN_ANALYSIS$facies_clusters)) RUN_ANALYSIS$facies_clusters <- FALSE
+if (is.null(RUN_ANALYSIS$aquifer_classification)) RUN_ANALYSIS$aquifer_classification <- FALSE
 
 message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
 
@@ -218,6 +220,9 @@ source("database/schema/09_ndom_wells_schema.R")
 source("database/schema/10_ndwr_stream_flow_schema.R")
 source("database/schema/11_fault_traces_schema.R")
 source("database/schema/12_earthquake_schema.R")
+source("database/schema/13_facies_clusters_schema.R")
+source("database/schema/14_aquifer_classification_schema.R")
+source("database/schema/15_well_deviation_surveys_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -299,6 +304,9 @@ source("database/schema/09_ndom_wells_schema.R")
 source("database/schema/10_ndwr_stream_flow_schema.R")
 source("database/schema/11_fault_traces_schema.R")
 source("database/schema/12_earthquake_schema.R")
+source("database/schema/13_facies_clusters_schema.R")
+source("database/schema/14_aquifer_classification_schema.R")
+source("database/schema/15_well_deviation_surveys_schema.R")
 }
 
 # ============================================================
@@ -706,6 +714,32 @@ if (isTRUE(RUN_ANALYSIS$phreeqc)) {
   message("  before sourcing this file. Mixing/inverse/gas-phase runs are defined in data/raw/phreeqc/*.csv (auto-created, header-only, on first use) -- toggle individual rows with their own 'enabled' column, no code editing needed.")
   .log_stage("PHREEQC", .phreeqc_stage_start, status = "SKIPPED (RUN_ANALYSIS$phreeqc = FALSE)")
 }
+
+run_step(RUN_ANALYSIS$facies_clusters, "HYDROCHEMICAL FACIES CLUSTERING (PERSISTED)", {
+  # Persists cluster_hydrochemical_facies.R's result (previously
+  # in-memory/console-only) into Facies_Cluster_Runs /
+  # Facies_Cluster_Assignments, so a run's method/k/agreement
+  # metadata and per-sample labels survive between sessions and can
+  # be exported to the GeoPackage (facies_clusters layer) for ArcGIS
+  # overlay against digitized fault traces once those exist. Opt-in
+  # (not run by default) since clustering choices are meant to be
+  # reviewed, not silently regenerated on every pipeline run.
+  source("scripts/analysis/cluster_hydrochemical_facies.R")
+  source("scripts/analysis/register_facies_clusters.R")
+  .fc <- run_facies_clustering(con)
+  register_facies_clusters(con, .fc)
+})
+
+run_step(RUN_ANALYSIS$aquifer_classification, "AQUIFER TYPE CLASSIFICATION (BAROMETRIC EFFICIENCY)", {
+  # Labels Wells.aquifer_type (confined/unconfined/semi-confined_leaky)
+  # from each well's own real barometric-efficiency result -- never
+  # guessed for a well with no real BE evidence. Thresholds grounded
+  # in White (1968)'s own real BE range for confined vents at this
+  # site (0.2-1.18). See scripts/analysis/barometric_efficiency.R.
+  source("scripts/analysis/barometric_efficiency.R")
+  .be <- run_barometric_efficiency(con, min_days = 60)
+  classify_aquifer_type(con, .be)
+})
 
 
 # ============================================================
