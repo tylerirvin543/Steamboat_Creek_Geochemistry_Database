@@ -3,9 +3,9 @@
 "invalid_detection_limit","ERROR",838
 "invalid_solution","WARN",666
 "missing_coordinates","ERROR",28
-"missing_field_parameters","WARN",1087
-"missing_major_ions","WARN",773
+"missing_field_parameters","WARN",1154
+"missing_major_ions","WARN",840
 "negative_value","ERROR",162
-"no_active_logger","WARN",1094
+"no_active_logger","WARN",1161
 "no_observations","WARN",1
 "phreeqc_convergence_failure","WARN",2

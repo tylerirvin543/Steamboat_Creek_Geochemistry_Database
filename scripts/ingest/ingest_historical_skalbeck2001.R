@@ -376,3 +376,81 @@ ingest_skalbeck2001_table_b2_brownschool <- function(
   message("  -> Inserted ", n_inserted, " real sample(s) (", n_skipped, " already present).")
   invisible(list(rows_inserted = n_inserted, rows_skipped = n_skipped))
 }
+
+#' Generic ingester for a single well's Table B-2 monthly Cl/B/temperature
+#' series, once a careful, cross-checked CSV exists for it (mirrors
+#' ingest_skalbeck2001_table_b2_brownschool()'s exact approach -- kept
+#' as a separate, explicit per-well entry point rather than a silent
+#' loop, so each well's real transcription/validation work stays
+#' individually documented and auditable).
+.ingest_skalbeck2001_b2_well <- function(con, csv_path, location_name, source_name, source_notes) {
+  if (!fs::file_exists(csv_path)) {
+    message("  (no file at ", csv_path, ")")
+    return(invisible(list(rows_inserted = 0L)))
+  }
+  dbExecute(con, "INSERT OR IGNORE INTO Data_Sources (name, notes) VALUES (?, ?)",
+            params = list(source_name, source_notes))
+  source_id <- dbGetQuery(con, "SELECT source_id FROM Data_Sources WHERE name = ?", params = list(source_name))$source_id[1]
+
+  rows <- readr::read_csv(csv_path, show_col_types = FALSE, col_types = readr::cols(date = readr::col_character()))
+  location_id <- .skalbeck_resolve_location(con, location_name)
+
+  n_inserted <- 0L; n_skipped <- 0L
+  for (i in seq_len(nrow(rows))) {
+    r <- rows[i, ]
+    ext_id <- paste0("SKALBECK2001_B2_", gsub("[^A-Za-z0-9]", "", location_name), "_", r$date[1])
+    existing <- dbGetQuery(con, "SELECT sample_id FROM Samples WHERE external_sample_id = ?", params = list(ext_id))
+    if (nrow(existing) > 0) { n_skipped <- n_skipped + 1L; next }
+
+    dbExecute(con, "INSERT INTO Sampling_Events (external_event_id, date, purpose, notes) VALUES (?, ?, 'historical', ?)",
+              params = list(ext_id, r$date[1], paste0(source_name, " monthly monitoring series.")))
+    event_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+
+    dbExecute(con, "
+      INSERT INTO Samples (location_id, event_id, sample_type, collection_time, external_event_id, external_sample_id, data_source, notes)
+      VALUES (?, ?, 'historical', ?, ?, ?, ?, 'Carefully cross-checked against the raw OCR text with an ordered, range-based token parser; ambiguous/anomalous months were excluded rather than guessed.')
+    ", params = list(location_id, event_id, r$date[1], ext_id, ext_id, source_name))
+    sample_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+
+    if (!is.na(r$Cl[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'Cl', ?, 'mg/L', ?, ?)",
+                                     params = list(sample_id, r$Cl[1], source_name, source_id))
+    if (!is.na(r$B[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'B', ?, 'mg/L', ?, ?)",
+                                    params = list(sample_id, r$B[1], source_name, source_id))
+    if (!is.na(r$Temp[1])) dbExecute(con, "INSERT INTO Field_Measurements (sample_id, parameter, value, units, instrument) VALUES (?, 'temperature', ?, 'deg C', ?)",
+                                       params = list(sample_id, r$Temp[1], source_name))
+    n_inserted <- n_inserted + 1L
+  }
+  message("  -> Inserted ", n_inserted, " real sample(s) (", n_skipped, " already present).")
+  invisible(list(rows_inserted = n_inserted, rows_skipped = n_skipped))
+}
+
+#' Ingest the real, cross-checked Curti Barn Geothermal monthly Cl/B/
+#' temperature series (Table B-2, 1987-1998, 36 real observations, no
+#' exclusions needed -- a smooth, internally consistent 670-844 mg/L Cl
+#' record matching Table 2's already-known 660-844 mg/L summary range).
+ingest_skalbeck2001_table_b2_curtigeothermal <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_curtigeothermal.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Curti Barn Geothermal monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Curti Barn Well (geothermal)",
+    "Skalbeck (2001) Table B-2 (Curti Barn Geothermal)",
+    "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.203-205+; careful manual cross-check with an ordered, range-based token parser, 2026-09-26."
+  )
+}
+
+#' Ingest the real, cross-checked Curti Domestic monthly Cl/B/temperature
+#' series (Table B-2, 1987-1998, 31 real observations). 9 rows
+#' (Nov-1989 through Jun-1990, plus an isolated Feb-1991 value of
+#' 0.2 mg/L) were deliberately EXCLUDED as an unresolved, alternating
+#' low/high pattern that could not be confidently attributed to Curti
+#' Domestic vs. a neighboring well (Herz Geothermal's real Cl range
+#' overlaps Curti Domestic's) -- flagged, not guessed.
+ingest_skalbeck2001_table_b2_curtidomestic <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_curtidomestic.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Curti Domestic monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Curti Domestic Well",
+    "Skalbeck (2001) Table B-2 (Curti Domestic)",
+    "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.203-205+; careful manual cross-check with an ordered, range-based token parser, 2026-09-26. 9 ambiguous rows (Nov-1989 through Jun-1990, plus Feb-1991) deliberately excluded -- see AGENTS.md."
+  )
+}
