@@ -2,9 +2,9 @@
 "extreme_gradient","WARN",10
 "invalid_detection_limit","ERROR",838
 "invalid_solution","WARN",655
-"missing_coordinates","ERROR",2
-"missing_field_parameters","WARN",839
-"missing_major_ions","WARN",595
-"negative_value","ERROR",12
-"no_active_logger","WARN",846
+"missing_coordinates","ERROR",15
+"missing_field_parameters","WARN",914
+"missing_major_ions","WARN",600
+"negative_value","ERROR",162
+"no_active_logger","WARN",921
 "no_observations","WARN",1

@@ -35,11 +35,10 @@ library(readr)
 library(fs)
 library(purrr)
 
-ingest_usgs <- function(con) {
+ingest_usgs <- function(con, base_dir = "data/raw/usgs/input") {
   
   message("---- Starting USGS ingest ----")
   
-  base_dir <- "data/raw/usgs/input"
   
   message("[USGS] Looking in: ", normalizePath(base_dir, mustWork = FALSE))
   

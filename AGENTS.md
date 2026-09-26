@@ -3479,6 +3479,283 @@ documents and a real, previously-undetected data-quality fix.
   ready, no data); this session's file changes are committed and pushed
   to git (see commit history).
 
+## Session 31 (2026-09-25, continued): README setup guide, barometric-pressure ingestion + real BE calculation, facies-clustering/fault-overlay Q&A
+
+Follow-up covering three user requests: a deeper README setup/run
+guide (written, no build needed); scoping a real barometric-pressure
+source (answered: NOAA LCD or IEM ASOS for Reno Airport, no live web
+fetch available this session); and, once the user supplied real IEM
+ASOS pressure data, building the actual ingestion + a real barometric-
+efficiency calculation. Also answered direct questions about the
+existing facies-clustering work and fault-trace overlay status.
+
+- **README.md**: new top-level "Setup and Running the Pipeline"
+  section (prerequisites incl. optional feature-specific packages and
+  the PHREEQC executable, first-time setup, non-interactive/scripted
+  invocation with a real `RUN_INGEST`/`RUN_ANALYSIS` example, typical
+  workflows, where outputs land) inserted right after Overview, plus a
+  matching TOC entry. Edited via `readLines()`/`writeLines()` (default
+  `"\n"` separator) since this is a CRLF file.
+- **Facies clustering / fault-trace overlay -- answered, nothing new
+  built** (direct answers to the user's questions, confirmed by reading
+  the actual scripts): `scripts/analysis/cluster_hydrochemical_facies.R`
+  and `facies_depth_map.R` are pure in-R/ggplot analyses -- cluster
+  assignments are **not** written to any database table, have **no**
+  GeoPackage layer, and there is **no** flag/metadata table recording
+  which clustering method (Ward hierarchical, k, silhouette score,
+  mclust cross-check agreement %) produced a given result -- all of that
+  currently only exists as console messages and in-memory objects when
+  `run_facies_clustering()` is called from the notebook. Real fault
+  traces do NOT exist yet from any source, including Dhakal: the only
+  Dhakal-sourced spatial data on disk (`data/raw/arcgis/dhakal .shp/`)
+  is well points and power-plant polygons, not fault lines -- the
+  best real fault-trace candidate remains Collar & Huntley (1990)
+  Figure 1 (already flagged in Session 30, still not digitized). The
+  `Fault_Traces`/`Alteration_Zones` schema (`11_fault_traces_schema.R`,
+  Session 30) is structure-only and would receive Collar & Huntley
+  traces once digitized in ArcGIS, per the Session 29 "ArcGIS out,
+  ArcGIS back in" loop already scoped in README. Recommended next step
+  if the user wants this taken further: (1) digitize Collar & Huntley
+  Figure 1 in ArcGIS using this project's own well coordinates as
+  control points, ingest via a new `ingest_fault_traces.R`; (2) add a
+  small persisted `Facies_Clusters`/`Facies_Cluster_Assignments` table
+  (method, k, silhouette/agreement metadata + per-sample cluster
+  label) and a GeoPackage layer, so the clustering result can be
+  overlaid against the digitized faults in ArcGIS the same way
+  `chloride_points` already supports ArcGIS-side interpolation --
+  neither built this session, both flagged as concrete next steps only.
+- **Barometric pressure source scoping** (before the user supplied real
+  data): recommended NOAA NCEI Local Climatological Data (LCD) for the
+  same Reno Airport station already in `Weather_Stations`
+  (`USW00023185`) as primary, with the Iowa Environmental Mesonet (IEM)
+  ASOS archive (mesonet.agron.iastate.edu) flagged as a quicker
+  bulk-download fallback -- explicitly caveated as not live-verified
+  since web search/fetch was unavailable this session. The user then
+  supplied real IEM ASOS data directly, matching the fallback recommendation.
+- **New real barometric-pressure ingestion**:
+  `data/raw/airpressure/README.md` (source, download process, file
+  format, database landing spot, known limitations) +
+  `scripts/ingest/ingest_barometric_pressure.R`
+  (`ingest_barometric_pressure(con, base_dir = "data/raw/airpressure")`).
+  Deliberately reuses the existing generic `Weather_Observations`/
+  `Weather_Stations` tables (no new schema) -- `parameter = "MSLP"`,
+  `unit = "hPa"`, `date` holds a full hourly timestamp (the table's PK
+  is `(station_id, date, parameter)`, which tolerates this fine).
+  Reuses station_id `USW00023185` (the same physical Reno Airport
+  already used for NOAA GHCN daily temperature/precipitation) rather
+  than registering a second station, even though IEM's own reported
+  ASOS coordinate differs by ~2.7 km from the existing GHCN coordinate
+  on file (both real points on/near the same airport; the existing
+  coordinate is left untouched, per this project's "never overwrite an
+  existing field" convention -- only logged to the console). Any file
+  anywhere under `data/raw/airpressure/` whose header matches the IEM
+  export's column signature is auto-detected, mirroring the existing
+  NOAA-weather "new file just works" convention. Idempotent via
+  `Weather_Files_Processed` + an anti_join on `(station_id, date,
+  parameter)`. Wired into `run_pipeline.R` as
+  `RUN_INGEST$barometric_pressure` (`TRUE` in profiles 1/2).
+- **New real barometric-efficiency calculation**
+  (`scripts/analysis/barometric_efficiency.R`,
+  `run_barometric_efficiency()`), replacing the Session 27/29
+  synthetic-only stub in `notebooks/07_historical_context_sorey1992.qmd`
+  now that real paired data exists. Computes BE two ways per eligible
+  well -- Sorey's original level-vs-pressure regression, and a
+  first-differenced change-vs-change regression that removes any
+  secular trend (a full calendar year of daily transducer data is not
+  the same situation as Sorey's own one-week synoptic campaign, where a
+  trend has no time to matter; both forms are reported side by side,
+  neither presented as simply "more correct"). Deliberately prefers a
+  Steamboat Hills-area well (reusing `facies_depth_map.R`'s own
+  bounding box) for the overlay plot over whichever well has the most
+  overlapping days region-wide, since most of this database's
+  `Water_Level_Observations` network is the much wider South Truckee
+  Meadows/Reno basin, not Steamboat-specific.
+- **Real result**: only two wells qualify as both continuous
+  (2025 daily transducer) AND inside the Steamboat field AND
+  overlapping the new pressure record -- **STMGID MW10** and
+  **STMGID MW3** (South Truckee Meadows GID monitoring wells, resolved
+  in Session 4). BE = 0.58/0.60 (level method) and 0.34/0.29 (diff
+  method) -- inside White (1968)'s 0.2-1.18 range and the same order
+  of magnitude as Sorey & Colvard's own 0.42/0.45 for springs 6/12. Read
+  as a real methodological validation that the calculation behaves
+  sensibly on real data, explicitly **not** a claim that Steamboat's
+  actual thermal springs share this BE -- neither well is a thermal
+  spring, and getting a real spring-specific BE still needs continuous
+  water level at an actual spring/CPI/SB GEO well overlapping a
+  pressure record, which doesn't exist yet. `run_barometric_efficiency()`
+  is written to pick up such a well automatically the moment one
+  qualifies, not hardcoded to MW10/MW3.
+- **Real bugs found and fixed while building/testing this** (all on a
+  scratch copy first): `find_eligible_wells()`'s well x method_type
+  grouping could return more than one row per `well_id`, causing a
+  many-to-many join and duplicate rows in the results table -- fixed
+  with `distinct(well_id, .keep_all = TRUE)`. The overlay plot's water-
+  level series was pulled for the well's ENTIRE historical record
+  (decades, in one case back to 2003) while the pressure series only
+  covered 2025-2026 -- `facet_wrap(scales = "free_y")` silently hid the
+  mismatch rather than erroring; fixed by restricting both series to
+  the real intersecting date range before plotting.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_barometric_<timestamp>.sqlite`,
+  verified against a scratch copy first): 15,154 new hourly MSLP
+  `Weather_Observations` rows (2025-01-01 through 2026-09-24). Notebook
+  07's barometric section rewritten from stub to real result + new
+  changelog row; rendered successfully end-to-end against the real
+  operational database (`quarto render`, confirmed clean in this
+  session, not just assumed).
+- **Not done this session**: no `Facies_Clusters` persistence table or
+  GeoPackage layer built (recommended above, not requested as a build
+  yet); no fault traces digitized; this session's file changes are not
+  yet committed/pushed to git.
+
+## Session 32 (2026-09-25, continued): data-folder README sweep, real earthquake catalog, temp-pressure/precip/seismicity analysis, well-completion visualization, fault-trace ingest built
+
+Large follow-up covering a full documentation sweep plus several new
+real (not synthetic) analyses requested together: pulling the original
+Sorey & Colvard (1992) barometric hydrographs, precipitation-recharge
+and earthquake cross-checks, a well-completion/confining-layer
+visualization, and scoping PHREEQC's conceptual role -- all written up
+in `notebooks/07_historical_context_sorey1992.qmd`.
+
+- **Data-folder README sweep**: new top-level `data/README.md` (the
+  three-layer raw→ingest→database→derived pattern, reproducibility
+  rules, a full subfolder index table) plus 13 new per-folder
+  `README.md` files for previously-undocumented `data/raw/` subfolders
+  (`arcgis`, `conductivity`, `discharge`, `earthquakes`, `historical`,
+  `images`, `isotopes`, `nbmg`, `ndom`, `noaa`, `phreeqc`, `usgs`,
+  `wells`) -- `field`/`ndep`/`ndwr`/`loggers`/`lab` already had
+  adequate `README.Rmd`/`README.md` documentation from earlier
+  sessions and were left as-is rather than duplicated.
+- **Real USGS earthquake catalog ingested for the first time**: pulled
+  directly via the USGS FDSN Event Web Service (`webfetch`, not a
+  search -- a real, cited data API), 139 events, greater Reno/Washoe
+  Valley/Tahoe region, 2025-01-01 to 2026-09-25, M≥1.5. New
+  `database/schema/12_earthquake_schema.R` (`Earthquake_Events`,
+  pre-computed haversine distance to the Steamboat field center) +
+  `scripts/ingest/ingest_earthquakes.R`, wired into `run_pipeline.R` as
+  `RUN_INGEST$earthquakes`. `data/raw/earthquakes/README.md` documents
+  the exact reusable query URL. Verified idempotent on a scratch copy
+  before applying to the real database.
+- **Real cross-checks against this catalog, both honestly reported**:
+  the 3 nearest real events (M1.5-1.6, ~3-4 km, near Virginia City, May
+  2025) overlap the STMGID water-level record but show **no detectable
+  step-change** beyond the ~0.1-0.2 ft baseline daily noise at either
+  MW10 or MW3 -- a real negative result, not omitted. **No earthquake
+  in the catalog overlaps the temperature-logger deployment window at
+  all** (loggers started 2026-04-14; every event within ~15 km predates
+  that) -- stated plainly as a real data gap, not stretched into a
+  comparison against a distant (>16 km) later event.
+- **Real hourly temperature-vs-barometric-pressure test, testing the
+  boiling-point-suppression ("inverse relationship") hypothesis
+  directly**: at hourly, first-differenced resolution, well **A009**
+  (`SBW_0002`, the hottest real logger, 62.8-77.2°C) shows a real,
+  highly significant inverse coupling (r=-0.17, p<1e-10, n≈1400) --
+  small effect size but directionally consistent with the mechanism.
+  This flips sign from a naive **daily**-resolution test (r=+0.35,
+  p=0.0045) -- explained, not just noted, as daily-averaging aliasing
+  the true short-lag coupling. Fumarole **A005** (13.8-88.0°C, the
+  widest range of any logger) shows **no significant coupling** at
+  either resolution and no spike-vs-pressure-drop alignment -- a real,
+  mixed (not uniformly positive) result across the two most
+  boiling-adjacent sites.
+- **STMGID MW10 vs. MW3 barometric-efficiency correlation-quality gap,
+  explained**: per the user's own observation that MW10 "is not very
+  well correlated" -- confirmed (MW10 diff-method R²=0.25 vs. MW3's
+  R²=0.38) and traced to a real, physical, falsifiable candidate cause:
+  MW10's screened interval is 480 ft (220-700 ft) vs. MW3's 100 ft
+  (186-286 ft) -- a well open across 5x the interval length is more
+  likely averaging more than one real hydrostratigraphic zone's
+  response, adding noise to a clean single-zone barometric signal.
+  Documented as a real hypothesis consistent with the data, not proven
+  outright (no true nested piezometer pair exists yet to test it
+  directly).
+- **Real precipitation-recharge check**: the largest 2025-2026 storm
+  (2025-12-25, 46.2 mm, part of a 2025-12-21 to 12-26 >110 mm system)
+  produces a real, visible ~0.27 ft rise at MW10 (deep/long-screened)
+  peaking on the storm date, with **no comparable signal at MW3**
+  (shallow/short-screened) -- reported with the honest caveat that a
+  big storm also brings a real barometric-pressure drop, so this one
+  event alone cannot cleanly separate a recharge response from a
+  barometric one at MW10.
+- **Sorey & Colvard's original 1988 barometric hydrographs (Figures
+  39-40) rendered and embedded directly** in the notebook (via
+  `pdftools::pdf_convert()` on pages 96-97 of the real PDF, regenerated
+  on demand rather than committing a static image, consistent with
+  this project's reproducibility rule) -- read carefully alongside the
+  real 2025-2026 STMGID result: the original figures show the same
+  tension (a real but modest barometric coupling, easily dominated by
+  a slower multi-day water-level trend), not a cleaner historical
+  signal than what the current data shows.
+- **New well-completion-interval / confining-layer visualization**
+  (`scripts/analysis/well_completion_profile.R`,
+  `plot_well_completion_profile()`) -- explicitly a completion-interval
+  inventory, **not lithology**: `Well_Lithology` has only 5 rows, all
+  `well_id = NULL`, tagged `confidence = ocr_heuristic_unvalidated`
+  (unusable OCR garbage, confirmed directly rather than assumed from
+  memory). Flags wells with a real screened interval >200 ft as
+  `long_open_interval` (likely multi-zone: `21-5R`, `STMGID MW10`,
+  `Cox I-1`, `83A-6`, `PW-3`). **Honest limitation stated plainly**: no
+  two wells in this database currently sit close together with
+  different screen depths AND a current water level, so a real
+  vertical-head-difference (confining-layer) argument cannot yet be
+  made from head data alone -- checked directly (STMGID MW10/MW3 are
+  ~2.5 km apart at very different elevations, so their head difference
+  is dominated by topography, not a shared confining layer).
+- **Real, minor data-quality bug found and fixed while building the
+  completion-interval plot**: well_id 149 ("Unidentified Well (NDWR
+  Log 129060)") had `top_perforation`/`bottom_perforation` reversed
+  (84/35 instead of 35/84) -- an OCR/parsing ordering slip, fixed
+  directly in the database (a one-row, unambiguous correction, not a
+  parser rewrite).
+- **PHREEQC's role in this composite picture scoped, not built**: gas-
+  phase equilibria (`12_run_phreeqc_gas_phase.R`) is flagged as the
+  most direct conceptual link (a `GAS_PHASE` model is fundamentally a
+  pressure-equilibrium calculation, physically the same mechanism
+  tested against A009/A005 above) -- running a real gas-phase model
+  across this project's real MSLP range for a real dissolved-gas
+  sample would let PHREEQC predict the response and test it against
+  the real A009 finding directly; not attempted this session (needs a
+  real dissolved-gas-bearing sample identified first). A second
+  possibility (SI tracking through a real before/after recharge event)
+  is similarly scoped, not run -- no well currently has real chemistry
+  both before and after a real precipitation event.
+- **`ingest_fault_traces.R` built and wired into `run_pipeline.R`**
+  (`RUN_INGEST$fault_traces`, mirrors `register_facility_areas.R`'s
+  `sf::st_read()` + reproject-to-EPSG:4326 pattern, for LINESTRING
+  geometry instead of polygons) -- this is the receiving end of the
+  "ArcGIS out, ArcGIS back in" loop scoped in README's Leapfrog
+  section; currently a safe no-op (confirmed by running it against the
+  real database) since no fault shapefile has been digitized yet.
+  Ready the moment the user saves a digitized fault-trace shapefile
+  under `data/raw/arcgis/faults/` (Collar & Huntley 1990 Figure 1
+  remains the best candidate source, per Session 30/31's notes).
+- **Statistical summary table added to the notebook**, consolidating
+  every test run this session (STMGID BE x2 methods, 4 logger
+  temp-pressure correlations, 2 earthquake cross-checks, 1
+  precipitation-response comparison) with n, r/BE, and p-value for
+  each -- all reproducible directly from the notebook's own live code
+  chunks against `geochem_operational.sqlite`, none hand-transcribed.
+- **Full notebook rendered successfully end-to-end** (`quarto render`,
+  confirmed clean, all new chunks including the on-demand PDF-page
+  rendering and the completion-interval plot execute without error)
+  against the real operational database. QC re-run clean (0 PHREEQC
+  failures, 0 logger outliers, 1 logger without observations -- A011,
+  correctly "standby" status).
+- **Not done this session**: real fault traces still not digitized
+  (blocked on the user's own ArcGIS work, per their stated intent to
+  source lineaments from literature figure overlays next); no
+  `Facies_Clusters` persistence table (flagged in Session 31, still
+  not built); `data/derived/qc/` remains untracked (regenerable QC
+  output, consistent with the "derived is disposable" convention).
+  This session's file changes ARE committed and pushed to git (see
+  commit history) -- including several previously-uncommitted files
+  from Session 30/31 (`cluster_hydrochemical_facies.R`,
+  `facies_depth_map.R`, `ingest_mariner_janik_1995.R`,
+  `qc_temperature_vs_air.R`, `barometric_efficiency.R`,
+  `ingest_barometric_pressure.R`) discovered untracked while preparing
+  this commit despite earlier session notes claiming they'd been
+  pushed -- swept in now rather than left stranded again.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

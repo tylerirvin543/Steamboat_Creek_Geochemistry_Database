@@ -3,6 +3,14 @@ Steamboat Hydrothermal Data Platform
 Tyler Irvin
 
 - [Overview](#overview)
+- [Setup and Running the
+  Pipeline](#setup-and-running-the-pipeline)
+  - [Prerequisites](#prerequisites)
+  - [First-Time Setup](#first-time-setup)
+  - [Running Non-Interactively /
+    Scripted](#running-non-interactively--scripted)
+  - [Typical Workflows](#typical-workflows)
+  - [Where Outputs Land](#where-outputs-land)
 - [Scientific Context and Purpose](#scientific-context-and-purpose)
 - [System Architecture](#system-architecture)
   - [Repository Structure](#repository-structure)
@@ -80,6 +88,155 @@ The underlying goal is to transform fragmented environmental
 observations into a **coherent, queryable representation of the
 hydrothermal system**, where hydraulic state, thermal behavior, and
 chemical evolution can be analyzed together.
+
+------------------------------------------------------------------------
+
+# Setup and Running the Pipeline
+
+This section is the practical "clone it and run it" companion to the
+architecture description above.
+
+## Prerequisites
+
+- **R** 4.3 or newer (developed and verified against 4.6.1).
+- **RStudio** is assumed but not required -- everything here is plain R
+  invoked via `Rscript` or `source()`.
+- **Core R packages**: `DBI`, `RSQLite`, `dplyr`, `tidyverse`, `readxl`,
+  `rmarkdown`, `sf`, `lubridate`, `here`, `zoo`. Install with:
+
+  ``` r
+  install.packages(c("DBI", "RSQLite", "tidyverse", "readxl",
+                     "rmarkdown", "sf", "lubridate", "here", "zoo"))
+  ```
+
+- **Optional, feature-specific packages** -- only needed if you enable
+  the corresponding pipeline stage:
+  - `ranger`, `mgcv` -- Cl sampling-frequency modeling
+    (`scripts/analysis/sampling_frequency/`).
+  - `ggdist`, `ggbeeswarm`, `ggalluvial`, `ComplexHeatmap` (the last via
+    `BiocManager::install("ComplexHeatmap")`) -- website chemistry
+    visualizations.
+  - `tesseract`, `pdftools` -- well-log/NDEP-PRR PDF OCR
+    (`scripts/ingest/ingest_well_logs.R`,
+    `scripts/ingest/ingest_ndep_prr.R`). Requires
+    `Sys.setenv(R_USER_DATA_DIR = "<project>/.tesseract_cache")` to be
+    set **before** `library(tesseract)` on a locked-down machine, so the
+    package's language-data cache lands inside the project instead of a
+    user profile directory it may not be allowed to create (see
+    Troubleshooting below).
+  - `exiftool` (external binary, bundled at
+    `data/raw/images/exiftool/exiftool.exe`) -- photo/video GPS
+    extraction (`scripts/ingest/ingest_image_locations.R`).
+  - `DiagrammeR`, `DiagrammeRsvg`, `rsvg`, `qrcode`, `av` -- documentation
+    diagrams, the poster QR code, and video compression respectively;
+    none of these affect the database or GIS outputs.
+  - **PHREEQC** (external executable, not an R package) -- required only
+    for `RUN_ANALYSIS$phreeqc*` stages. Install USGS PHREEQC and confirm
+    it resolves at
+    `C:/Program Files/USGS/phreeqc/bin/Release/phreeqc.exe`, or put
+    `phreeqc` on your `PATH` -- `scripts/phreeqc/utils_phreeqc.R` checks
+    both locations automatically and errors clearly
+    (`"PHREEQC executable not found"`) if neither resolves. No PHREEQC
+    stage runs unless explicitly toggled on (see below), so its absence
+    never blocks a normal ingestion/QC/website run.
+
+## First-Time Setup
+
+1. Clone the repository and open `Steamboat_Geochemistry_Database.Rproj`
+   in RStudio (or just set it as your R working directory).
+2. Install the core packages above.
+3. Decide which database you want to work against:
+   - `database/geochem_demo.sqlite` -- safe to delete/rebuild at will;
+     use this the first time, or whenever you just want to see the
+     pipeline run end-to-end without touching real field data.
+   - `database/geochem_operational.sqlite` -- the real, persistent
+     research database. Treat it like production: **back it up to**
+     `database/archive/<name>_<timestamp>.sqlite` before any run that
+     changes schema or re-ingests a large source, even though most
+     individual ingest scripts are idempotent on their own.
+4. Source the orchestrator:
+
+   ``` r
+   source("scripts/run_pipeline.R")
+   ```
+
+   Run interactively in RStudio with nothing pre-set, it will ask three
+   questions via `utils::menu()` -- target database (DEMO/OPERATIONAL),
+   ingestion profile (all sources / core chemistry only / skip
+   ingestion), and whether to rebuild the website -- then run
+   unattended. This is the easiest way to do a first smoke test.
+
+## Running Non-Interactively / Scripted
+
+For `Rscript`, CI, or any run where you want to bypass the menu prompts,
+assign `MODE`, `RUN_INGEST`, `RUN_ANALYSIS`, and/or `BUILD_WEBSITE` as
+plain variables **before** sourcing the script -- any variable already
+set is left alone and its prompt is skipped:
+
+``` r
+MODE <- "OPERATIONAL"          # "DEMO" or "OPERATIONAL"
+
+RUN_INGEST <- list(
+  ndep = TRUE, field = TRUE, logger = TRUE, ndwr = TRUE,
+  conductivity = TRUE, well_network = TRUE, well_logs = FALSE,
+  ndom_wells = TRUE, ndwr_stream_flow = TRUE,
+  historical_sorey1992 = FALSE          # only needed once; see AGENTS.md
+)
+
+RUN_ANALYSIS <- list(
+  phreeqc = FALSE,                      # opt-in: calls an external .exe per sample
+  phreeqc_mixing = FALSE, phreeqc_inverse = FALSE, phreeqc_gas_phase = FALSE,
+  leapfrog_export = FALSE
+)
+
+BUILD_WEBSITE <- FALSE
+
+source("scripts/run_pipeline.R")
+```
+
+`run_pipeline.R` itself is the authoritative list of every `RUN_INGEST`/
+`RUN_ANALYSIS` flag and its default per profile -- treat the example
+above as illustrative, not exhaustive; the values shown are the ones
+most likely to be toggled, not every field this project has ever added.
+Non-interactive runs with nothing set at all default safely to
+`MODE = "DEMO"` with every working ingest source enabled and both
+`RUN_ANALYSIS` and `BUILD_WEBSITE` off.
+
+## Typical Workflows
+
+- **Quick smoke test** -- run interactively against DEMO, accept the
+  default menu answers. Good for verifying the environment is set up
+  correctly after a fresh clone or a dependency change.
+- **Routine field-data update (OPERATIONAL)** -- back up the database,
+  then set only the `RUN_INGEST` flags for the sources that actually
+  have new files (e.g. `field = TRUE`, everything else `FALSE`) to avoid
+  unnecessary re-processing of unchanged sources.
+- **Full OPERATIONAL rebuild** (after a schema change, or to verify
+  nothing has silently drifted) -- back up first, then run with every
+  `RUN_INGEST` flag `TRUE`. Expect the well-log OCR stage alone to take
+  several minutes if it is included.
+- **PHREEQC / Leapfrog runs** -- these are always opt-in
+  (`RUN_ANALYSIS`), never triggered by a plain ingestion run, since they
+  call an external executable or are meant to seed a separate desktop
+  tool. Enable only the specific flag you need.
+- **Website rebuild only** -- set `RUN_INGEST` to skip everything
+  (profile 3 in the interactive menu, or every flag `FALSE`) and
+  `BUILD_WEBSITE <- TRUE` to re-render `website/*.Rmd` into `docs/`
+  without touching the database at all.
+
+## Where Outputs Land
+
+- `docs/` -- the rendered documentation website (GitHub Pages source);
+  regenerated entirely by `build_website()` on every website rebuild --
+  never hand-edit files here directly.
+- `output/` -- pipeline reports, the GeoPackage export, QC figures, the
+  data-availability chart; treated as disposable/regenerable, not
+  version-controlled.
+- `data/derived/` -- analysis-stage CSV outputs (e.g. NDOM coordinate
+  discrepancies, well-log match candidates, sampling-frequency results).
+- `database/archive/` -- manual timestamped backups made before a
+  risky operation; nothing here is auto-pruned, so periodically review
+  it if disk space matters.
 
 ------------------------------------------------------------------------
 

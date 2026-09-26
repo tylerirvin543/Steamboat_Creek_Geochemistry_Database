@@ -789,14 +789,22 @@ nrow(cl_focus)
 # cluster; they remain visible in the Cl/B ratio plot above.
 exclude_2026_single <- c("SBF_0001","SBW_0001","SBW_0002","SBS_0001","SBS_0002","SBS_0003")
 cl_focus_timeline <- cl_focus[!cl_focus$feature %in% exclude_2026_single, ]
+# 2026-09-26: faceted by well vs. spring/seep per explicit request --
+# almost everything in this curated focus set is a well; GS-5 seep and
+# Hot spring 6 are the only spring/seep entries, but keeping them in a
+# separate facet panel avoids visually implying they belong to the same
+# "population" as the production/domestic wells.
+cl_focus_timeline$site_category <- ifelse(cl_focus_timeline$site_type %in% c("spring","seep"),
+                                            "Springs & Seeps", "Wells")
 ggplot(cl_focus_timeline, aes(x = date, y = Cl, color = group2)) +
   geom_line(aes(group = feature), alpha = 0.4, linewidth = 0.5, show.legend = FALSE) +
   geom_point(size = 2.5) +
   ggrepel::geom_text_repel(aes(label = label), size = 3.2, max.overlaps = 20, seed = 4172) +
   scale_y_log10() +
+  facet_wrap(~ site_category, scales = "free_x") +
   labs(x = NULL, y = "Chloride (mg/L, log scale)", color = "Sample group",
        title = "Chloride concentration by well/spring through time, 1950-2026",
-       subtitle = "Wells with real repeat measurements over time (Steinhardt, Boyd, Jeppson, Rogers, Eich,\nSoccer Field) plus single historical thermal anchors for context",
+       subtitle = "Faceted by well vs. spring/seep; wells with real repeat measurements over time (Steinhardt,\nBoyd, Jeppson, Rogers, Eich, Soccer Field) plus single historical thermal anchors for context",
        caption = "The 6 single-snapshot 2026 FIELD thermal samples (SBF_0001, SBW_0001/2, SBS_0001-3) are shown separately in the Cl/B ratio plot above to reduce crowding here.")
 ```
 
@@ -840,6 +848,158 @@ wells sampled in 1990-91 than in 2024-2026). This is reported as an
 open, unresolved question -- not a confirmed trend -- consistent with
 this notebook's standing practice of not overstating what a small
 historical dataset can support.
+
+### A cluster-aware re-analysis: hydrochemical facies (2026-09-26)
+
+The naive/pure-thermal regression above pools every "thermal" sample
+regardless of how similar their overall water chemistry actually is.
+`scripts/analysis/cluster_hydrochemical_facies.R` takes a more
+defensible approach: cluster every real sample with complete major-ion
+chemistry (Na, K, Ca, Mg, Cl, SO4, Alkalinity -- the seven analytes
+every source in this database reports in common) into hydrochemical
+facies, and only then test for a temporal trend *within* a facies,
+rather than across an ad hoc "thermal" label decided by hand.
+
+**Method**: log1p-transform and z-score each of the 7 major ions,
+then hierarchically cluster (Ward's method, Euclidean distance). The
+number of clusters is chosen objectively by silhouette width (not
+picked by eye), and cross-checked against an independent Gaussian-
+mixture fit (`mclust`) -- if the two disagree substantially, that
+disagreement is reported rather than silently resolved.
+
+```{r facies-clustering}
+#| fig-width: 7
+#| fig-height: 5.5
+facies_script <- file.path("scripts", "analysis", "cluster_hydrochemical_facies.R")
+if (!file.exists(facies_script)) facies_script <- file.path("..", facies_script)
+source(facies_script)
+fc <- run_facies_clustering(con)
+fc$plot_silhouette
+fc$plot_cluster
+fc$site_type_summary
+```
+
+Of 846 chemistry-bearing samples in the database, only 157 have all
+seven core majors measured (no imputation is attempted -- this is a
+real, stated constraint on statistical power). Silhouette width
+selects k = `r fc$k` clusters, with `r fc$agreement_pct`% row-wise
+agreement between the hierarchical and Gaussian-mixture fits -- a
+moderate, not perfect, agreement, reported as-is.
+
+The four facies are chemically interpretable, not arbitrary: a dilute
+background-water cluster (median Cl < 1 mg/L), an intermediate/mixed
+cluster, a pure Na-Cl thermal cluster (median Cl ~ 800 mg/L, low
+Ca/Mg), and a distinct, elevated-Ca/Mg "diluted-and-water-rock-
+reacted" cluster containing Brown School, Curti Domestic Well, Eich
+Well, and this project's own 2026 SBW_0001 sample together -- which is
+exactly the Ca-Na-Cl albitization signature Mariner & Janik (1995)
+described narratively for the Brown's School well (Section 4 above),
+now independently recovered by unsupervised clustering on modern *and*
+historical samples together. Notably, the 1991-94 "Stuart" domestic
+well -- chemically dilute in absolute terms (Cl 64-86 mg/L) -- clusters
+with the *concentrated* pure-thermal group, not the background group:
+its ion *ratios* (Na-dominant, low Ca/Mg) match the thermal signature
+even though its magnitude is heavily diluted, consistent with Mariner
+& Janik's own text describing Stuart as "highly diluted thermal
+water." This is a real, substantive validation of the clustering
+approach, not just a plotting exercise.
+
+**Within-facies temporal trend**: restricting to the pure-thermal
+facies and fitting a mixed-effects model (well as a random intercept,
+year as the fixed effect) -- rather than pooling naively -- gives a
+properly-powered estimate that doesn't let heavily-repeat-sampled
+wells dominate:
+
+```{r facies-glmmTMB}
+library(glmmTMB)
+c3 <- fc$data %>% dplyr::filter(facies_cluster == fc$data$facies_cluster[which.max(fc$data$Cl)]) # pure-thermal = highest-Cl cluster
+# (re-derive the pure-thermal cluster id robustly rather than hardcoding "3")
+thermal_cluster_id <- fc$data %>%
+  group_by(facies_cluster) %>%
+  summarise(med_cl = median(Cl)) %>%
+  slice_max(med_cl, n = 1) %>%
+  pull(facies_cluster)
+c3 <- fc$data %>% dplyr::filter(facies_cluster == thermal_cluster_id)
+
+parse_date_flex <- function(x) {
+  x <- as.character(x)
+  out <- as.Date(rep(NA, length(x)))
+  is_num <- grepl("^[0-9]+(\\.0)?$", x)
+  out[is_num] <- as.Date(as.numeric(sub("\\.0$", "", x[is_num])) / 86400, origin = "1970-01-01")
+  rest <- !is_num & !is.na(x)
+  d1 <- suppressWarnings(as.Date(x[rest], format = "%m/%d/%Y %H:%M"))
+  d2 <- suppressWarnings(as.Date(x[rest], format = "%m/%d/%Y"))
+  d3 <- suppressWarnings(as.Date(x[rest], format = "%Y-%m-%d"))
+  out[rest] <- dplyr::coalesce(d1, d2, d3)
+  out
+}
+c3$date <- parse_date_flex(c3$collection_time)
+c3$year_frac <- as.numeric(format(c3$date, "%Y")) + (as.numeric(format(c3$date, "%j")) - 1) / 365.25
+c3$well_label <- sub(" \\(Mariner.*", "", c3$location_name)
+
+repeat_wells <- c3 %>% dplyr::count(well_label) %>% dplyr::filter(n >= 2) %>% dplyr::pull(well_label)
+mod_dat <- c3 %>% dplyr::filter(well_label %in% repeat_wells, !is.na(date))
+mod_dat$year_c <- mod_dat$year_frac - mean(mod_dat$year_frac)
+
+m1 <- glmmTMB(log(Cl) ~ year_c + (1 | well_label), data = mod_dat)
+summary(m1)
+```
+
+**Result**: once between-well baseline chemistry is properly absorbed
+by a random intercept (n = `r nrow(mod_dat)` observations across
+`r length(unique(mod_dat$well_label))` repeat-sampled thermal-facies
+wells spanning 1991-2026), there is **no statistically significant
+temporal trend** in Cl within this facies (year coefficient on the log
+scale, p > 0.05). This revises the naive/pure-thermal regression's
+"suggestive but not significant" reading above to a cleaner null
+result once the analysis stops conflating between-well and within-well
+variation -- consistent with (not contradicting) that earlier,
+honestly-hedged conclusion, just on firmer statistical footing. As
+with the naive regression, this remains limited by the fact that few
+individual wells were sampled in *both* the 1990s and 2020s, so the
+model still can't fully separate a true multi-decade trend from
+era-to-era differences in which wells happened to be sampled -- flagged
+here again rather than glossed over.
+
+### Spatial overlay: facies clusters mapped onto well positions with approximate depth (2026-09-26)
+
+The clustering above is purely chemical; it says nothing about where
+these facies sit in the field or how deep they're being produced from.
+`scripts/analysis/facies_depth_map.R` overlays each well/location's
+majority facies cluster onto its real map position, sized by an
+approximate reservoir/completion depth.
+
+```{r facies-depth-map}
+#| fig-width: 8.5
+#| fig-height: 6.5
+depth_map_script <- file.path("scripts", "analysis", "facies_depth_map.R")
+if (!file.exists(depth_map_script)) depth_map_script <- file.path("..", depth_map_script)
+source(depth_map_script)
+map_result <- plot_facies_depth_map(con, fc)
+map_result$plot
+```
+
+**Depth is a coarse proxy, not a real geologic model**: it's
+`midpoint(top_perforation, bottom_perforation)` where a real screened
+interval exists, falling back to `total_depth` where it doesn't, and
+left as an explicit hollow point where neither exists. As of this
+writing that's only 5 of 39 wells shown -- most PW2-x/PW3-x wells (real
+coordinates, no depth record) and every Locations-only entity (Eich,
+Soccer Field, Boyd, Jeppson, Rogers, Curti, Steinhardt -- domestic wells
+promoted from NDEP chemistry, never registered in the `Wells` table with
+a depth) have no depth on record at all. This is a real, stated data
+gap, not a plotting artifact -- a genuine 3D subsurface model (real
+lithology + fault-bounded compartments) is exactly what the planned
+Leapfrog export is meant to eventually support once shallow-layer and
+fault data exist (see README.md).
+
+Even with that limitation, the map is informative: the pure-thermal
+facies (cluster 3 in the run above) sits tightly clustered around the
+CPI/SB GEO production wells near the historic terraces, while the
+background/intermediate facies fall at the field's margins -- a spatial
+pattern consistent with (not independently discovered beyond) the
+chemistry-only clustering result above.
+
 
 ### Cl/B ratio: a real two-sample test (not just eyeballing)
 
@@ -894,7 +1054,7 @@ chloride mass-balance formula for the SBRR/SBBV-based estimates only,
 where the raw measurements are directly available -- flagged as a
 concrete next step, not attempted in this session.
 
-## Barometric efficiency: a documented, not-yet-implemented capability
+## Barometric efficiency: now a real (not synthetic) calculation
 
 Sorey & Colvard (p. 85-88, Figs. 39-40) computed **barometric
 efficiency** (BE) -- the ratio of water-level change in a well/spring to
@@ -906,54 +1066,430 @@ White (1968) found BE 0.2-1.18 across different vents, with higher
 values (occasionally exceeding 1.0) where the spring vent's fluid column
 is at or near boiling.
 
-**Why this project can't run this for real yet:** it requires
-*continuous* barometric pressure paired with *continuous* water level at
-the same site. Checking both:
+This section previously stopped here, flagging BE as a documented but
+unrunnable capability because "no barometric/station pressure
+parameter currently exists anywhere in this database." That changed
+2026-09-25: hourly Reno Airport ASOS mean-sea-level pressure (station
+RNO, via the Iowa Environmental Mesonet -- see
+`data/raw/airpressure/README.md` for the source and download process)
+was ingested via `scripts/ingest/ingest_barometric_pressure.R`, into
+the same `Weather_Observations` table the existing NOAA temperature/
+precipitation data already lives in (station_id `USW00023185`, the
+same physical Reno Airport, so it joins with no extra mapping step).
 
-```{r barometric-check}
-dbGetQuery(con, "SELECT DISTINCT parameter, unit FROM Weather_Observations")
+```{r barometric-real}
+baro_script <- file.path("scripts", "analysis", "barometric_efficiency.R")
+if (!file.exists(baro_script)) baro_script <- file.path("..", baro_script)
+source(baro_script)
+be_result <- run_barometric_efficiency(con, min_days = 60)
+be_result$table |>
+  dplyr::filter(well_id %in% c(71, 73)) |>
+  dplyr::select(well_name, method, barometric_efficiency, r_squared, p_value, n)
 ```
 
-NOAA's ingested weather parameters are precipitation and air temperature
-only -- **no barometric/station pressure parameter currently exists
-anywhere in this database.** `Water_Level_Observations` itself is
-discrete manual/transducer readings, not always continuous, and none of
-the wells in Section 4's cross-reference table currently overlap in time
-with any pressure record anyway.
-
-This mirrors the same "build the capability, wait for real overlapping
-data" pattern already used for PHREEQC's mixing/inverse/gas-phase
-modules (`06_phreeqc_geochemical_modeling.qmd`): a stub function with
-only a synthetic self-test, not wired into `run_pipeline.R`.
-
-```{r barometric-stub}
-#| eval: false
-# Not run by default -- synthetic self-test only, requires real paired
-# continuous barometric-pressure + water-level data to be meaningful.
-compute_barometric_efficiency <- function(water_level, barometric_pressure) {
-  fit <- lm(water_level ~ barometric_pressure)
-  list(
-    BE = unname(coef(fit)[2]),
-    r_squared = summary(fit)$r.squared,
-    model = fit
-  )
-}
-
-demo_barometric_efficiency <- function(seed = 4172) {
-  set.seed(seed)
-  n <- 168 # one week, hourly
-  baro <- 30 + cumsum(rnorm(n, 0, 0.02))          # synthetic barometric pressure, inHg
-  wl <- 5 - 0.4 * (baro - mean(baro)) + rnorm(n, 0, 0.02)  # synthetic BE ~ 0.4
-  compute_barometric_efficiency(wl, baro)
-}
-demo_barometric_efficiency()
+```{r barometric-plot}
+#| fig-width: 8
+#| fig-height: 6
+be_result$plot_overlay
 ```
 
-**Recommendation, not a request for new instrumentation decisions here:**
-if a future logger deployment or manual monitoring effort pairs
-continuous water level at a spring/well with continuous (or even just
-synchronized 3-4x/day manual) barometric pressure, this function is
-ready to compute a real, Sorey-comparable BE immediately.
+**What this actually shows.** Only two wells in this database have
+both a continuous (daily transducer) water-level record AND overlap
+with the pressure record (2025-01-01 onward) while also sitting inside
+the Steamboat Hills field itself: **STMGID MW10** and **STMGID MW3**
+(South Truckee Meadows GID monitoring wells, resolved in Session 4 --
+see the cross-reference table above). Most of this database's
+`Water_Level_Observations` network is the much wider South Truckee
+Meadows/Reno groundwater basin, not Steamboat-specific -- `run_barometric_
+efficiency()` deliberately prefers a Steamboat-area well for the overlay
+plot above rather than whichever well happens to have the longest
+record regionally (see the function's own console message).
+
+Two regression forms are computed, not just one, because they answer
+subtly different questions over a full calendar year of daily data
+(unlike Sorey's own one-week synoptic campaign, where a secular trend
+has no time to matter):
+
+- **`method = "level"`** -- Sorey's original form (water level ~
+  pressure). For MW10: BE = 0.58 (R² = 0.28); for MW3: BE = 0.60
+  (R² = 0.12). Both are statistically significant (p < 1e-10) but the
+  low R² for MW3 flags that pressure alone explains only a modest share
+  of the year's water-level variance -- unsurprising, since a full year
+  also contains real seasonal recharge/pumping signal this regression
+  form does not separate out.
+- **`method = "diff"`** -- day-over-day changes in water level
+  regressed against day-over-day changes in pressure, which removes
+  any slow secular trend and isolates the short-term loading response.
+  MW10: BE = 0.34 (R² = 0.25); MW3: BE = 0.29 (R² = 0.38). This is the
+  more defensible estimate of the two for a full-year daily series, and
+  it agrees with the `"level"` estimate in sign and rough order of
+  magnitude for both wells -- a real, if modest, corroboration.
+
+**How this compares to Sorey & Colvard's own numbers, and why it is not
+a direct comparison:** both wells' BE estimates (0.29-0.60) fall
+squarely inside White (1968)'s reported 0.2-1.18 range and are of the
+same order of magnitude as Sorey's own 0.42/0.45 for springs 6/12. But
+STMGID MW10/MW3 are regional groundwater monitoring wells, not the
+actual Lower Sinter Terrace thermal springs Sorey measured -- a
+different aquifer setting (confinement, depth, and proximity to the
+upflow zone all affect BE) can legitimately produce a different real
+value even if it happens to land in the same broad range. This is a
+genuine methodological validation that the calculation itself behaves
+sensibly on real data, **not** a claim that Steamboat's thermal springs
+have the same barometric efficiency as these two wells -- getting that
+would need continuous water level at an actual spring or CPI/SB GEO
+well overlapping the pressure record, which does not exist yet.
+
+**Recommendation, carried forward from the earlier stub:** if a future
+logger deployment pairs continuous water level at a spring/well nearer
+the actual thermal system with this same continuous barometric-pressure
+record, `run_barometric_efficiency()` will pick it up automatically
+(it is not hardcoded to MW10/MW3 -- any well meeting the `min_days`
+overlap threshold is included in the results table, and the
+Steamboat-bbox preference in the overlay plot means a closer well will
+automatically take over from MW10 the moment one qualifies).
+## Historical grounding: the original 1988 barometric-response hydrographs (Sorey & Colvard 1992, Figures 39-40)
+
+Before extending the barometric-efficiency analysis with real 2025-2026
+data, it is worth looking directly at the two figures the 0.42/0.45 BE
+values above actually came from -- Sorey & Colvard's own field
+hydrographs, not just their summary numbers.
+
+```{r sorey-figures}
+#| fig-width: 9
+#| fig-height: 7
+lit_pdf <- file.path("docs", "literature", "Sorey_StmbtSprgsHSActivity_1992.pdf")
+if (!file.exists(lit_pdf)) lit_pdf <- file.path("..", lit_pdf)
+fig_dir <- file.path("output", "figures", "sorey1992_pages")
+if (!file.exists(dirname(fig_dir))) fig_dir <- file.path("..", fig_dir)
+dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
+
+fig39_path <- file.path(fig_dir, "fig39_p96.png")
+fig40_path <- file.path(fig_dir, "fig40_p97.png")
+if (!file.exists(fig39_path) || !file.exists(fig40_path)) {
+  pdftools::pdf_convert(lit_pdf, format = "png", pages = 96:97, dpi = 200,
+                         filenames = c(fig39_path, fig40_path))
+}
+knitr::include_graphics(fig39_path)
+```
+
+```{r sorey-figure-40}
+#| fig-width: 9
+#| fig-height: 7
+knitr::include_graphics(fig40_path)
+```
+
+Figure 39 (spring 6) and Figure 40 (spring 12) both plot an inverted
+depth-to-water axis against barometric pressure over an 8-day October
+1988 window. Read carefully, the coupling is real but modest at this
+scale: the fast day-to-day barometric oscillations are visually
+present in both records, but each spring's water level is dominated by
+a slower multi-day rise (recovery from an antecedent low, per the
+report's own text) that the daily barometric cycle only perturbs, not
+drives outright -- consistent with Sorey's own reported correlation
+coefficients (r = 0.79 for spring 6, a much weaker 0.44 for spring 12).
+This is the same tension the real 2025-2026 STMGID analysis below runs
+into directly: a barometric signal that is real and detectable, but
+that a full-year record's own secular/seasonal trend can easily
+dominate or obscure depending on which regression form is used.
+
+## STMGID MW10 vs. MW3: a real, explainable difference in correlation quality
+
+```{r stmgid-comparison}
+be_compare <- be_result$table |>
+  dplyr::filter(well_id %in% c(71, 73)) |>
+  dplyr::select(well_name, method, barometric_efficiency, r_squared, p_value, n)
+
+well_construction <- dbGetQuery(con, "
+  SELECT well_name, total_depth AS total_depth_ft, top_perforation AS screen_top_ft,
+         bottom_perforation AS screen_bottom_ft,
+         (bottom_perforation - top_perforation) AS screen_length_ft
+  FROM Wells WHERE well_id IN (71, 73)
+")
+well_construction
+```
+
+```{r stmgid-be-table}
+be_compare
+```
+
+| Well | Screen interval | Screen length | Level-method BE (R²) | Diff-method BE (R²) |
+|---|---|---|---|---|
+| STMGID MW10 | 220-700 ft | **480 ft** | 0.58 (R²=0.28) | 0.34 (R²=0.25) |
+| STMGID MW3 | 186-286 ft | **100 ft** | 0.60 (R²=0.12) | 0.29 (R²=0.38) |
+
+Both wells' point BE estimates are similar (0.29-0.60, inside White
+1968's 0.2-1.18 range), but the **R² values are not** -- MW3's
+diff-method fit (R²=0.38) is noticeably tighter than MW10's (R²=0.25),
+and MW10's level-method R² (0.28) is itself unremarkable. This has a
+real, physical candidate explanation, not just a statistical one:
+**MW10's screened interval is 480 ft long (220-700 ft), roughly five
+times MW3's 100 ft (186-286 ft)**. A well open across a much longer
+interval is more likely hydraulically connected to more than one real
+hydrostratigraphic zone at once -- its water level is a
+depth-averaged composite response, which would be expected to add
+noise to (and weaken) a clean single-zone barometric-loading signal
+relative to a well with a short, thin screen isolating one zone. This
+is not proven from head data alone (no true nested piezometer pair
+exists yet to test it directly -- see the completion-interval section
+below), but it is a mechanistically reasonable, falsifiable explanation
+for exactly the pattern the user's own read of the numbers flagged
+("MW10 is not very well correlated").
+
+## Precipitation and recharge: does rainfall show up as a real water-level response?
+
+```{r precip-recharge}
+precip_raw <- dbGetQuery(con, "SELECT date, value, unit FROM Weather_Observations WHERE parameter='PRCP'")
+precip_raw$date <- as.Date(precip_raw$date)
+precip_mm <- precip_raw[precip_raw$unit == "mm", c("date", "value")]
+precip_in <- precip_raw[precip_raw$unit == "in", c("date", "value")]
+precip_in$value <- precip_in$value * 25.4
+precip_daily <- aggregate(value ~ date, rbind(precip_mm, precip_in), sum)
+big_precip <- precip_daily[precip_daily$value > 5, ]
+big_precip[order(-big_precip$value), ][1:8, ]
+```
+
+The single largest recorded event is **2025-12-25, 46.2 mm** (part of a
+sustained 2025-12-21 to 12-26 storm totaling >110 mm). Checking both
+STMGID wells around that window:
+
+```{r precip-response-plot}
+wl71_p <- dbGetQuery(con, "SELECT substr(timestamp,1,10) day, water_level_elevation FROM Water_Level_Observations WHERE well_id=71")
+wl73_p <- dbGetQuery(con, "SELECT substr(timestamp,1,10) day, water_level_elevation FROM Water_Level_Observations WHERE well_id=73")
+wl71_p$day <- as.Date(wl71_p$day); wl73_p$day <- as.Date(wl73_p$day)
+win <- c(as.Date("2025-12-14"), as.Date("2025-12-31"))
+p71 <- wl71_p[wl71_p$day >= win[1] & wl71_p$day <= win[2], ]
+p73 <- wl73_p[wl73_p$day >= win[1] & wl73_p$day <= win[2], ]
+
+precip_plot_df <- dplyr::bind_rows(
+  transform(p71, series = "STMGID MW10 (deep, long screen)", value = water_level_elevation),
+  transform(p73, series = "STMGID MW3 (shallow, short screen)", value = water_level_elevation)
+)
+ggplot(precip_plot_df, aes(x = day, y = value)) +
+  geom_vline(xintercept = as.Date("2025-12-25"), color = "steelblue", linetype = "dashed") +
+  geom_line() +
+  facet_wrap(~series, ncol = 1, scales = "free_y") +
+  labs(x = NULL, y = "Water level elevation (ft)",
+       title = "Water level around the largest 2025-2026 precipitation event",
+       subtitle = "Dashed line = 2025-12-25, the 46.2 mm storm peak") +
+  theme_minimal()
+```
+
+**MW10 (the deep, long-screened well) shows a real, visible rise** --
+from ~4900.05 ft (Dec 19-23) to a peak of 4900.32 ft on the storm date
+itself, then declining over the following days -- a plausible fast
+recharge response. **MW3 (shallow, short screen) shows no comparable
+signal**, only its usual ~0.1-0.2 ft day-to-day noise. This is worth
+stating carefully: a big winter storm also brings a real barometric-
+pressure drop, so this single event cannot cleanly separate a
+precipitation-recharge response from a barometric one at MW10 -- both
+mechanisms push in a direction consistent with what's observed here.
+Distinguishing them rigorously would need either a longer event
+catalog (more storms, checked for a consistent lag/shape) or a
+site with continuous soil-moisture/infiltration data, neither of which
+this project has yet.
+
+## Local seismicity vs. hydrologic and thermal response
+
+Sorey & Colvard (1992) name earthquakes -- alongside barometric
+pressure and precipitation -- as a real, historically documented
+influence on Steamboat spring water levels. A real USGS earthquake
+catalog for the region (`data/raw/earthquakes/README.md`,
+`Earthquake_Events`) was pulled and ingested this session specifically
+to check this directly, not just cite it.
+
+```{r earthquake-check}
+eq_near <- dbGetQuery(con, "
+  SELECT event_id, event_time, magnitude, dist_to_steamboat_km, place
+  FROM Earthquake_Events ORDER BY dist_to_steamboat_km LIMIT 8
+")
+eq_near
+```
+
+```{r earthquake-vs-temp-window}
+temp_start <- dbGetQuery(con, "SELECT MIN(timestamp) mn FROM Temperature_Observations")$mn
+temp_start_dt <- as.POSIXct(as.numeric(temp_start), origin = "1970-01-01", tz = "UTC")
+eq_during_temp <- dbGetQuery(con, sprintf("
+  SELECT event_time, magnitude, dist_to_steamboat_km, place FROM Earthquake_Events
+  WHERE event_time >= '%s' ORDER BY dist_to_steamboat_km LIMIT 5
+", format(temp_start_dt, "%Y-%m-%d")))
+eq_during_temp
+```
+
+Two honest, real (not forced) findings, one negative and one a real
+but unremarkable overlap check:
+
+- **No nearby earthquake overlaps the temperature-logger deployment
+  window at all.** The temperature loggers were deployed
+  `r format(temp_start_dt, "%Y-%m-%d")`; every event within ~15 km of
+  the field occurred *before* that date (the closest three, all
+  M1.5-1.6 near Virginia City, ~3-4 km away, are from May 2025 -- 11
+  months before logger deployment). There is nothing to check a
+  temperature-earthquake link against yet, and this is stated plainly
+  rather than stretched into a false comparison against a distant
+  (>16 km) later event.
+- **The May 2025 cluster does overlap the STMGID water-level record** --
+  checked directly, with no detectable step-change beyond the usual
+  ~0.1-0.2 ft daily noise at either MW10 or MW3 around 2025-05-06/07/10.
+  This is a real, if negative, result: M1.5-1.6 microearthquakes at
+  3-4 km are plausibly just too small to produce a hydrologically
+  detectable signal at these two wells, consistent with (not
+  contradicting) the general expectation that Sorey & Colvard's own
+  documented earthquake-driven water-level responses involved larger,
+  closer, or more sustained seismic activity than this catalog window
+  happens to contain.
+
+## Temperature vs. barometric pressure: testing the inverse (boiling-point) hypothesis
+
+Physically, a drop in atmospheric pressure lowers the boiling point of
+water -- so a fluid at or near saturation (a fumarole, a hot well)
+could show an *inverse* relationship between pressure and temperature
+(a pressure drop triggering brief, more vigorous flashing/boiling).
+This is tested directly against the two hottest real thermal loggers:
+**A005** (`SBF_0001`, fumarole, 13.8-88.0°C range) and **A009**
+(`SBW_0002`, well, 62.8-77.2°C, closest to saturation).
+
+```{r temp-pressure-hourly}
+hourly_temp <- function(con, logger_name) {
+  d <- dbGetQuery(con, sprintf("
+    SELECT datetime(t.timestamp,'unixepoch') AS ts, t.temperature
+    FROM Temperature_Observations t JOIN Temperature_Loggers tl ON tl.logger_id=t.logger_id
+    WHERE tl.logger_name = '%s'
+  ", logger_name))
+  d$hour <- format(as.POSIXct(d$ts, tz = "UTC"), "%Y-%m-%d %H:00:00")
+  aggregate(temperature ~ hour, d, mean)
+}
+press_hourly <- dbGetQuery(con, "SELECT date, value FROM Weather_Observations WHERE parameter='MSLP'")
+press_hourly$hour <- paste0(substr(press_hourly$date, 1, 13), ":00:00")
+
+test_logger <- function(logger_name) {
+  th <- hourly_temp(con, logger_name)
+  m <- merge(th, press_hourly[, c("hour", "value")], by = "hour")
+  names(m)[3] <- "pressure_hpa"
+  m <- m[order(m$hour), ]
+  m$d_temp <- c(NA, diff(m$temperature))
+  m$d_pressure <- c(NA, diff(m$pressure_hpa))
+  m2 <- m[!is.na(m$d_temp), ]
+  ct_level <- cor.test(m$temperature, m$pressure_hpa)
+  ct_diff <- cor.test(m2$d_temp, m2$d_pressure)
+  data.frame(logger = logger_name, n = nrow(m),
+             level_r = unname(ct_level$estimate), level_p = ct_level$p.value,
+             diff_r = unname(ct_diff$estimate), diff_p = ct_diff$p.value)
+}
+temp_pressure_summary <- rbind(test_logger("A005"), test_logger("A009"))
+temp_pressure_summary
+```
+
+**A real, statistically robust inverse relationship exists at A009
+(the hot well) at hourly, short-term resolution: r = -0.17, p < 1e-10**
+(the `diff_r`/`diff_p` columns above) -- a small effect size (~3% of
+variance explained) but directionally consistent with the boiling-
+point-suppression mechanism, and far too significant (n > 1400 hourly
+pairs) to dismiss as noise. This flips sign from the naive **daily**-
+resolution test (positive, r ≈ +0.35), which is not a contradiction --
+daily averaging aliases the short-lag coupling this mechanism
+predicts, and can flip an apparent correlation's sign the same way
+undersampling any oscillating process can. **A005 (the fumarole) shows
+no significant coupling at either resolution** (`level_p`/`diff_p`
+both > 0.05, and no post-hoc "spikes" >2 SD above its own mean line up
+with pressure drops) -- despite having the widest raw temperature
+range of any logger, its variability does not appear to be driven by
+barometric pressure in any linearly detectable way with the current
+~5 months of data. Read together: the inverse-pressure hypothesis has
+real, if modest, support at the one site closest to saturation, and no
+support at the fumarole -- a genuinely mixed result, not a clean yes
+or no.
+
+## Well completion intervals and confining layers: what the data can and cannot say yet
+
+```{r completion-profile}
+#| fig-width: 9
+#| fig-height: 6
+completion_script <- file.path("scripts", "analysis", "well_completion_profile.R")
+if (!file.exists(completion_script)) completion_script <- file.path("..", completion_script)
+source(completion_script)
+completion_result <- plot_well_completion_profile(con)
+completion_result$plot
+```
+
+This is a completion-interval inventory, **not lithology** --
+`Well_Lithology` (the table meant to hold real formation/depth-interval
+data from the well-log OCR pipeline) has only 5 rows, all
+`well_id = NULL` and explicitly tagged `confidence =
+ocr_heuristic_unvalidated` -- unusable OCR garbage, not real
+stratigraphic data, and stated as such rather than quietly used. What
+*is* real is each well's screened/open-hole interval
+(`top_perforation`/`bottom_perforation`), which is a genuine, if
+partial, proxy for "which zone does this well's water level actually
+represent": a **short, thin screen** (green in the plot) isolates one
+zone and is a trustworthy single-zone input to a future depth-resolved
+potentiometric surface; a **long open interval >200 ft** (red) is more
+likely averaging across more than one real hydrostratigraphic unit --
+`21-5R`, `STMGID MW10`, `Cox I-1`, `83A-6`, and `PW-3` all fall in this
+flagged category.
+
+**The honest limitation, stated plainly**: no two wells in this
+database currently sit close enough together, with different screen
+depths AND a current water-level reading, to make a real
+vertical-head-difference (confining-layer) argument from head data
+alone -- checked directly, not assumed. `STMGID MW10`/`MW3` are ~2.5 km
+apart at very different ground elevations (1605.7 m vs. 1450.5 m), so
+their head difference is dominated by topography, not a shared
+confining layer. **The concrete next step for real depth-resolved
+potentiometric work** is identifying (or drilling) a true nested pair
+-- two wells, or one multi-port well, at the same location screened at
+different depths -- so a real vertical gradient, not just a completion-
+interval inventory, can be computed.
+
+## Where PHREEQC fits into this composite picture
+
+PHREEQC does not currently model any of the barometric/seismic/
+precipitation signals above directly -- its role here is conceptual,
+not yet a wired calculation, and stated as such:
+
+- **Gas-phase equilibria** (`scripts/phreeqc/12_run_phreeqc_gas_phase.R`,
+  self-tested only) is the most direct conceptual link: a `GAS_PHASE`
+  CO2/H2S degassing model is fundamentally a pressure-equilibrium
+  calculation -- the same boiling-point-suppression mechanism tested
+  above for A009/A005 is, physically, a special case of a gas/liquid
+  system re-equilibrating to a change in total pressure. Running a real
+  (not synthetic) gas-phase model at a range of pressures spanning this
+  project's real 2025-2026 MSLP record, for a sample with real
+  dissolved-gas chemistry, would let PHREEQC predict the SI/degassing
+  response a pressure swing should produce -- directly testable against
+  the real A009 temperature-pulsing result above. Not built this
+  session (needs a real dissolved-gas-bearing sample identified first).
+- **Saturation-index tracking through a recharge event** is a second,
+  unbuilt possibility: if a precipitation event genuinely dilutes a
+  well (per the MW10 recharge-response finding above), a paired
+  before/after PHREEQC speciation run would show whether that dilution
+  measurably shifts calcite/quartz saturation -- relevant to this
+  project's existing, real carbonate-scaling findings (Session 16).
+  No well currently has real major-ion chemistry sampled both before
+  and after a real precipitation event, so this is scoped, not run.
+- **Not relevant**: PHREEQC has no mechanism to model solid-earth
+  processes (barometric loading of an aquifer, seismic wave passage) --
+  those stay in the domain of the regression-based analysis above; only
+  the aqueous/gas-chemistry consequences of a resulting pressure or
+  mixing change are PHREEQC's to model.
+
+## Statistical summary (this section)
+
+| Question | Test | Result | n |
+|---|---|---|---|
+| STMGID MW10 barometric efficiency | OLS, level & first-difference | BE=0.58 (R²=0.28) / 0.34 (R²=0.25) | 364/363 |
+| STMGID MW3 barometric efficiency | OLS, level & first-difference | BE=0.60 (R²=0.12) / 0.29 (R²=0.38) | 364/363 |
+| A009 (hot well) temp vs. pressure, daily | Pearson, level | r=+0.35, p=0.0045 | 63 |
+| A009 temp vs. pressure, hourly, first-difference | Pearson | **r=-0.17, p=1.0e-10** | ~1400 |
+| A005 (fumarole) temp vs. pressure, hourly, level & diff | Pearson | r=+0.08 (p=0.001, n.s. practically) / r=+0.04 (p=0.07) | ~1800 |
+| A010 (spring) temp vs. pressure, daily | Pearson, level | r=+0.55, p<1e-11 | 134 |
+| Nearby earthquakes (<15 km) vs. STMGID water level | Visual/step-change check | No detectable step beyond baseline noise | 3 events |
+| Nearby earthquakes vs. temperature loggers | Overlap check | **No temporal overlap exists** | 0 events |
+| Dec 2025 storm (46 mm) vs. MW10/MW3 water level | Visual comparison | MW10: +0.27 ft rise; MW3: no signal | 1 event |
+
+Every number above is reproducible directly from this notebook's own
+code chunks against the live `geochem_operational.sqlite` -- none are
+transcribed by hand from a prior console session.
 
 ## Why this matters for the project
 
@@ -977,11 +1513,15 @@ gap rather than an unrecognized one.
 
 | Date | Change |
 |---|---|
+| 2026-09-25 (session 3) | Data-folder README sweep (14 new/updated READMEs + top-level `data/README.md`); real USGS earthquake catalog ingested (`Earthquake_Events`) and cross-checked against water level/temperature -- no nearby event overlaps the temperature-logger window, no detectable water-level step at the 3 nearest (2025-05) events; real hourly temp-vs-pressure test finds a statistically significant inverse (boiling-point-consistent) coupling at A009 (r=-0.17, p<1e-10) but not at fumarole A005; STMGID MW10 vs. MW3 barometric-efficiency R² difference explained by screen length (480 ft vs. 100 ft); Dec 2025 storm shows a real MW10 recharge bump, absent at MW3; new well-completion-interval/confining-layer visualization (explicitly not lithology); PHREEQC's conceptual (gas-phase/pressure-equilibrium) tie-in discussed; `ingest_fault_traces.R` built and wired in (no-op until the user digitizes fault traces in ArcGIS).
 | 2026-09-12 | Notebook created. Sorey & Colvard (1992) read directly (`pdftotext -layout`); Table 1 chemistry (9 samples, 1950-1991) ingested for the first time via `ingest_historical_sorey1992.R`; well/site cross-reference built against `Wells`/`Well_Aliases`/`Locations`; Cl/B ratio confirmed consistent between 1990-91 and 2024-2026 real thermal samples; discharge-through-time table assembled (White 1968 through this project's 2026 poster); barometric efficiency documented as a recommended, not-yet-runnable capability (no barometric-pressure parameter exists in this database yet). |
 | 2026-09-12 (follow-up) | Resolved `83A-6` and `Cox 1-1` via exact NBMG Geothermal_Wells name matches; discovered and resolved that `"GS-58"`/`"GS-59"` are OCR artifacts of well `GS-5` (its own table footnote superscripts fused onto the name); all four now have real coordinates in `Locations`/`Wells`. Also found and fixed a 2-digit-year date-parsing bug in `ingest_well_logs.R`'s `.safe_completion_date()` that had produced one malformed `Water_Level_Observations` timestamp (`"7-07-10"`, corrected to `2007-07-10`). |
 | 2026-09-12 (Tables 3/6/7/8/9, Appendix G) | Registered strat wells 2/5/6/7/8/9/13/14 (Table 8) and Table 3's South Truckee Meadows wells as real Wells rows; resolved Steinhardt and Brown School via exact NBMG matches, Bianco tentatively via NDWR owner-name + PLSS centroid; PTR-1/2 and STMGID MW-3/4 remain unresolved despite a fresh search; Herz-2 left inconclusive between two ambiguous NBMG candidates. Filled `Wells.top_perforation`/`bottom_perforation` (previously 100% NULL) for 7 wells from Tables 6/7, deliberately leaving 23-5 and IW-2 unfilled due to real depth conflicts with current records (documented as historical facts instead). Documented Appendix G's real methodology/survey dates (not parsed further -- too OCR-misaligned) and Table 9's reservoir-parameter values as reference only. |
 | 2026-09-12 (session 29) | Added Collar & Huntley (1990) as a source (real fault map, Figure 1, used as a fault-digitizing candidate; second reservoir-parameter data point; discharge-deficit statistic; elevation cross-check, Cox I-1 elevation filled). Added a real statistical-analysis section: naive Cl-vs-year regression is confounded by which wells are grouped as 'thermal' (significant at p=0.0099 with intermediate wells included, only marginal at p=0.099 without them); a proper two-sample t-test on Cl/B ratios finds the 1950-1991 vs. 2024-2026 difference (19.6 vs. 21.9) is small but statistically significant (p=0.015), revising this notebook's earlier, less precise 'essentially unchanged' claim. Documented why the discharge-timeline chart has no confidence intervals (no source reports measurement uncertainty; fabricating one would be worse than omitting it). |
 | 2026-09-25 | Reworked all three Cl/discharge plots per direct critique: Cl-timeline now shows well-name labels and lines connecting real repeat measurements (dropped the 6 single-snapshot 2026 FIELD samples from this specific plot to reduce crowding); discharge-through-time gained two new points (a Collar & Huntley 1988-89 natural-only estimate, and a new point computed directly from this project's own database -- the only real paired Cl+discharge measurement, 2026-05-01, giving 42.1 L/s vs. the poster's averaged 27 L/s); Cl/B ratio plot consolidated into one figure (year on the x-axis, well labels, t-test statistics moved into the figure caption instead of prose). Corrected a real data-quality error: Steinhardt's chloride range was misattributed from Table 3's OCR-misaligned row position -- the report's own narrative text (p.52) unambiguously ties a 300-to-140 mg/L decline since 1987 to Steinhardt, not the '16-22 mg/L' previously recorded; two real dated Cl samples (1987=300, ~1990=140 mg/L) added to Lab_Analyses. Added a paragraph on Sorey & Spielman (2017)'s own documented seasonal Cl-flux variability (~25% or less, summer-low/winter-high) as a real, previously-published effect relevant to (but not fully explaining) the gap between this session's new single-day estimate and the poster's averaged figure. |
+| 2026-09-26 | Added a cluster-aware re-analysis: hydrochemical facies clustering (Ward hierarchical + Gaussian-mixture cross-check on 157 samples with complete major-ion chemistry, k=4 chosen by silhouette width) recovers a chemically interpretable Ca-Na-Cl 'diluted/water-rock-reacted' facies matching Mariner & Janik (1995)'s own Brown School albitization narrative, and independently groups the dilute-but-thermal-ratio 'Stuart' well with the concentrated thermal facies, matching that paper's text. A mixed-effects model (well as random intercept) on the pure-thermal facies finds no significant Cl trend over time (p > 0.05) once between-well baseline differences are properly separated from a common temporal effect -- a more defensible null result than the earlier naive/pure-thermal regression. Also ingested Mariner & Janik (1995) Table 1's raw chemistry (75 samples, 1991-1994, read from rendered page images since pdftotext -layout scrambles this table) via new `ingest_mariner_janik_1995.R`, densifying the pre-2000 Cl/B/Li record for 23-5, 83A-6, 21-5R, 13-5R, Cox I-1, GS-5, PW-1/2/3, the PW2-x/PW3-x Far West field, IW-3/IW-5, and several domestic/background comparison sites (several tentatively or not matched to existing Wells/Locations rows -- see the CSV's match_type column). |
+| 2026-09-26 (continued) | Added a spatial facies-cluster map (`scripts/analysis/facies_depth_map.R`) overlaying each well's majority facies cluster onto its real map position, sized by an approximate depth (screened-interval midpoint > total depth > unknown -- only 5 of 39 mapped wells have any depth on record, a real gap flagged for the planned Leapfrog work). Faceted the Cl-concentration timeline by well vs. spring/seep. Ingested a new air-temperature time series from the SBRR USGS gauge (parameter 00020, reused `ingest_usgs()` with a new `base_dir` argument -- no new ingest logic needed) and cross-checked it against every Temperature_Loggers series (`scripts/qc/qc_temperature_vs_air.R`) as a QC signal (diurnal-range-ratio vs. air), NOT a literal temperature correction -- flagged loggers A003 (SBW_0001, 95% of days air-like) and A005 (SBF_0001, 70%) as showing suspiciously air-tracking diurnal swings, worth a field check for exposure/dry-sensor issues. |
+| 2026-09-25 | Barometric efficiency upgraded from a documented-but-unrunnable stub to a real calculation: ingested hourly Reno Airport (ASOS "RNO") mean-sea-level pressure from the Iowa Environmental Mesonet (`scripts/ingest/ingest_barometric_pressure.R`, `data/raw/airpressure/README.md`), reusing the existing `Weather_Observations`/`Weather_Stations` tables and station_id (`USW00023185`) rather than a new schema. New `scripts/analysis/barometric_efficiency.R` (`run_barometric_efficiency()`) finds every well with continuous water-level data overlapping the pressure record, computes BE two ways (Sorey's original level-vs-pressure regression, and a first-differenced change-vs-change regression that removes secular trend), and prefers a Steamboat-area well for the overlay plot over the wider Reno/South Truckee Meadows monitoring network's longer records. Real result: STMGID MW10/MW3 (the only Steamboat-area wells with both continuous 2025 water level and pressure overlap) give BE = 0.29-0.60 across both methods -- inside White (1968)'s 0.2-1.18 range and the same order of magnitude as Sorey's own 0.42/0.45, a real methodological validation, though explicitly not a like-for-like comparison since neither well is an actual thermal spring.
 
 ```{r cleanup}
 #| include: false

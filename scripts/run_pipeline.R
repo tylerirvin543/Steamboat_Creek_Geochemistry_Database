@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -217,6 +217,7 @@ source("database/schema/08_phreeqc_schema.R")
 source("database/schema/09_ndom_wells_schema.R")
 source("database/schema/10_ndwr_stream_flow_schema.R")
 source("database/schema/11_fault_traces_schema.R")
+source("database/schema/12_earthquake_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -297,6 +298,7 @@ source("database/schema/08_phreeqc_schema.R")
 source("database/schema/09_ndom_wells_schema.R")
 source("database/schema/10_ndwr_stream_flow_schema.R")
 source("database/schema/11_fault_traces_schema.R")
+source("database/schema/12_earthquake_schema.R")
 }
 
 # ============================================================
@@ -421,6 +423,16 @@ run_step(RUN_INGEST$flux, "FLUX", {
 run_step(RUN_INGEST$usgs, "USGS", {
   source("scripts/ingest/ingest_usgs.R")
   ingest_usgs(con)
+  # 2026-09-26: air-temperature time series from the same SBRR gauge
+  # (USGS-10349300), parameter code 00020, downloaded into a separate
+  # data/raw/usgs/air_temperature_data/ folder rather than
+  # data/raw/usgs/input/ -- reuses ingest_usgs()'s existing generic
+  # per-folder/per-parameter-code handling (same pattern already used
+  # for discharge vs. historic specific-conductance) via its new
+  # base_dir argument, no new ingest logic needed. Stored in the same
+  # USGS_Timeseries table, so joinable to discharge/SC on
+  # (station_id, datetime) with no schema change.
+  ingest_usgs(con, base_dir = "data/raw/usgs/air_temperature_data")
 })
 
 run_step(RUN_INGEST$usgs_historic_chem, "USGS HISTORIC CHEMISTRY", {
@@ -431,6 +443,22 @@ run_step(RUN_INGEST$usgs_historic_chem, "USGS HISTORIC CHEMISTRY", {
 run_step(RUN_INGEST$noaa_weather, "NOAA WEATHER", {
   source("scripts/ingest/ingest_noaa_weather.R")
   ingest_noaa_weather(con)
+})
+
+run_step(RUN_INGEST$barometric_pressure, "BAROMETRIC PRESSURE (RENO AIRPORT, IEM ASOS)", {
+  # Real (non-synthetic) barometric-pressure source, unblocking the
+  # barometric-efficiency stub in notebooks/07_historical_context_sorey1992.qmd.
+  # See data/raw/airpressure/README.md for the source/download process.
+  source("scripts/ingest/ingest_barometric_pressure.R")
+  ingest_barometric_pressure(con)
+})
+
+run_step(RUN_INGEST$earthquakes, "EARTHQUAKE CATALOG (USGS)", {
+  # Real local seismicity catalog -- checks whether nearby events
+  # coincide with detectable anomalies in water level/temperature/
+  # barometric response. See data/raw/earthquakes/README.md.
+  source("scripts/ingest/ingest_earthquakes.R")
+  ingest_earthquakes(con)
 })
 
 run_step(RUN_INGEST$image_locations, "IMAGE LOCATIONS (EXIF GPS)", {
@@ -492,6 +520,14 @@ run_step(RUN_INGEST$well_network, "DHAKAL WELL/PORT FLOW NETWORK", {
   register_well_coordinates(con, coords_csv = "data/raw/wells/dhakal_wells_arcgis.csv")
   source("scripts/ingest/register_facility_areas.R")
   register_facility_areas(con)
+})
+
+run_step(RUN_INGEST$fault_traces, "FAULT TRACES (USER-DIGITIZED, ARCGIS)", {
+  # No-op until real digitized fault/lineament shapefiles exist under
+  # data/raw/arcgis/faults/ -- see scripts/ingest/ingest_fault_traces.R's
+  # header for the full 'ArcGIS out, ArcGIS back in' workflow.
+  source("scripts/ingest/ingest_fault_traces.R")
+  ingest_fault_traces(con)
 })
 # 2026-09-06 bug fix: this run_step() call was previously left nested
 # *inside* the "DHAKAL WELL/PORT FLOW NETWORK" run_step() block above
@@ -568,6 +604,22 @@ run_step(RUN_INGEST$historical_sorey1992, "SOREY & COLVARD 1992 HISTORICAL CHEMI
   register_sorey1992_resolved_wells(con)
   register_sorey1992_perforation_data(con)
   ingest_historical_sorey1992(con)
+})
+
+run_step(RUN_INGEST$mariner_janik_1995, "MARINER & JANIK 1995 HISTORICAL CHEMISTRY", {
+  # Ingests the raw (non-reconstituted) 1991-1994 chemistry analyses
+  # from Table 1 of Mariner & Janik (1995), GRC Transactions v.19 --
+  # read directly from the rendered page images (pdftotext -layout
+  # badly scrambles this table). Densifies the pre-2000 Cl/B/Li record
+  # for wells 23-5, 83A-6, 21-5R, 13-5R, Cox I-1, GS-5, PW-1/2/3, the
+  # PW2-x/PW3-x Far West field, IW-3, IW-5 (=46-28), plus several
+  # domestic/background comparison wells and creeks (some tentatively
+  # matched, several genuinely unresolved -- see the CSV's own
+  # match_type column). See
+  # scripts/ingest/ingest_mariner_janik_1995.R and
+  # notebooks/07_historical_context_sorey1992.qmd.
+  source("scripts/ingest/ingest_mariner_janik_1995.R")
+  ingest_mariner_janik_1995(con)
 })
 
 # ============================================================
