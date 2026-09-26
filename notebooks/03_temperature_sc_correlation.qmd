@@ -43,13 +43,15 @@ detrending below, so a strong correlation at short lags should be
 interpreted with that in mind.
 :::
 
-```{r setup}
+```{r setup-03}
 #| message: false
 library(knitr)
-opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+if (basename(getwd()) == "notebooks") {
+  opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+}
 ```
 
-```{r connect}
+```{r connect-03}
 #| message: false
 library(DBI)
 library(RSQLite)
@@ -64,7 +66,7 @@ con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
 
 ## Load daily-mean series
 
-```{r load}
+```{r load-03}
 temp_daily <- dbGetQuery(con, "
   SELECT
     l.external_station_code AS site,

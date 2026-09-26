@@ -124,7 +124,7 @@ The `Conductivity_Loggers` table (below) is the single source of truth for
 this mapping; everything else in this document resolves location and role
 through it rather than hard-coding a serial number or coordinate.
 
-```{r setup}
+```{r setup-01}
 #| message: false
 library(DBI)
 library(RSQLite)
@@ -139,7 +139,9 @@ library(lubridate)
 # scripts using paths written relative to the project root -- the same
 # assumption run_pipeline.R makes -- so pinning root.dir here keeps every
 # path below identical to how these scripts are invoked from the pipeline.
-knitr::opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+if (basename(getwd()) == "notebooks") {
+  knitr::opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+}
 ```
 
 ```{r connect-db}

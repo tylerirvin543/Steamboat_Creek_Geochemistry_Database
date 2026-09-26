@@ -37,13 +37,15 @@ precipitation comparison here as regional context, not a local
 water-balance input, until an on-site rain gauge exists.
 :::
 
-```{r setup}
+```{r setup-02}
 #| message: false
 library(knitr)
-opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+if (basename(getwd()) == "notebooks") {
+  opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+}
 ```
 
-```{r connect}
+```{r connect-02}
 #| message: false
 library(DBI)
 library(RSQLite)
@@ -58,7 +60,7 @@ con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
 
 ## Load the three sources
 
-```{r load}
+```{r load-02}
 sc_daily <- dbGetQuery(con, "SELECT * FROM vw_sc_discharge_daily") |>
   mutate(date = as.Date(date))
 

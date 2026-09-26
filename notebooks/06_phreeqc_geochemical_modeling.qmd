@@ -130,7 +130,7 @@ sample individually — a single problem sample never silently drops every
 other sample in its batch. Convergence failures that persist across every
 database tried are logged to `PHREEQC_Run_Failures`, not silently dropped.
 
-```{r setup}
+```{r setup-06}
 #| message: false
 library(DBI)
 library(RSQLite)
@@ -657,7 +657,7 @@ that hasn't been seen yet.
 | 2026-09-06 | `SBW_0002` PHREEQC convergence failure diagnosed (boron/alkalinity interaction at pH 9) and the boron-exclusion guard replaced with a physically-grounded, pH-aware check. `PHREEQC_Run_Failures` empty database-wide. |
 | 2026-09-06 | Gas geothermometry (D'Amore-Panichi 1980, validated against real Mariner & Janik 1995 numbers) and forward/inverse gas mixing added (`13_gas_geothermometry.R`, `14_gas_mixing.R`) -- standalone, no schema/pipeline wiring, ahead of the planned UCSB (Fischer) gas-sampling campaign. Also fixed a latent PHREEQC SO4/sulfide element-name ambiguity (bare `S` -> explicit `S(6)`) and made the PHREEQC pipeline stage auto-detect new/changed chemistry and expose mixing/inverse/gas-phase runs via toggleable config CSVs. |
 
-```{r cleanup}
+```{r cleanup-06}
 #| include: false
 dbDisconnect(con)
 ```

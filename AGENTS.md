@@ -3904,6 +3904,224 @@ potentiometric-surface write-ups -- all landing in
   next-steps table). This session's file changes are committed and
   pushed to git (see commit history).
 
+## Session 34 (2026-09-25, continued): well-log 23-5 promotion, statistical
+synthesis notebook, documentation/console-UX polish, notebooks consolidated
+into one PDF
+
+Large multi-part follow-up covering a real database promotion, a new
+cross-cutting statistics notebook, a documentation sweep across
+previously-undocumented script folders, console UX (a printed flag
+reference table + a README console-command cheat sheet), and stitching
+all 8 living-reference notebooks + the annotated bibliography into one
+combined PDF -- the last of which surfaced and fixed several real,
+previously-latent structural bugs.
+
+- **Well-log 61248 promoted to well 23-5**, per explicit user
+  instruction (the circumstantial-evidence match flagged for review
+  since Session 33: coordinate ~160 m match, exact 3001 ft
+  total-depth match, owner 'Phillips Petroleum Co.' -- a documented
+  historic pre-Ormat operator). Added to
+  `data/raw/ndwr/well_log_document_map.csv`, ran
+  `promote_well_log_documents(con)` (fills `Wells` fields only when
+  currently `NULL`), then manually set the 3 `Well_Lithology` rows
+  sourced from this document to `well_id=96`. **Real merge bug found
+  and fixed while doing this**: `promote_well_log_documents()` only
+  fills `Well_Log_Documents.well_id` when it is currently `NULL` --
+  but this document already had a NON-NULL `well_id` (182, a
+  provisional 'Unidentified Well (NDWR Log 61248)' row created by an
+  earlier session's `register_provisional_well_logs()`), so the
+  promotion silently kept pointing at the wrong (provisional) well
+  instead of the newly-confirmed 23-5. Fixed by directly merging the
+  now-redundant provisional well_id 182 into canonical well_id 96
+  (repointed its one `Well_Work_Events` row, updated
+  `Well_Log_Documents.well_id`/`match_method`, deleted the empty
+  provisional `Wells` row) -- verified clean on a scratch copy first,
+  then applied identically to the real, backed-up
+  `geochem_operational.sqlite` (backup:
+  `geochem_operational_pre_23-5_promotion_<timestamp>.sqlite`). QC
+  re-ran clean afterward. This is a real, generalizable gap worth
+  remembering: any future well-log promotion needs to check for and
+  merge a pre-existing provisional well_id, not assume `well_id` is
+  `NULL` just because a document was never manually promoted before.
+- **New action-items document**: `docs/action_items_for_user.md` --
+  NDEP data requests (what/why/blocking-what), the fault-digitization
+  reminder (Collar & Huntley 1990 Figure 1, save target
+  `data/raw/arcgis/faults/`), unresolved well-identity confirmations
+  pending user judgment, the water-level-data gap stated plainly, and
+  confirmation that git status was clean and `docs/literature/` stays
+  permanently gitignored per this session's explicit instruction (not
+  just 'still open' as several earlier session notes had implied).
+- **New notebook**: `notebooks/08_statistical_synthesis.qmd` --
+  equations paired with the exact production code that implements
+  each (charge balance, SI, mixing fraction, Cl mass-balance
+  discharge, Na/K geothermometers, D'Amore-Panichi gas
+  geothermometer, barometric efficiency, the boron-exclusion guard);
+  real PHREEQC SI/charge-balance-error distribution analysis (sentinel
+  `-999.999`/`+/-100` values identified and excluded, Shapiro-Wilk
+  testing, `fitdistrplus` AIC model comparison against logistic/
+  Cauchy alternatives, bootstrap 95% CIs on the small n=7-8 real
+  thermal-sample means); new cross-cutting methods not used elsewhere
+  in the project -- Kruskal-Wallis + pairwise Wilcoxon on Cl by site
+  type, a significance-tested Pearson correlation matrix
+  (`Hmisc::rcorr`) on major ions, a PCA biplot colored by the
+  persisted facies clusters, a population-level (not
+  facies-restricted) `lme4::lmer` mixed-effects Cl-vs-year trend
+  across all 157 clustered samples (complementing, not replacing,
+  `07`'s facies-restricted `glmmTMB` model), and an exploratory
+  `gstat` semivariogram on all real geolocated Cl samples (explicitly
+  caveated as all-time-pooled, not synoptic, so not yet a kriging-
+  ready result). New packages installed: `fitdistrplus`, `Hmisc`,
+  `gstat` (`boot`, `lme4`, `corrplot` were already present). Rendered
+  successfully end-to-end against the real operational database.
+- **Documentation sweep**: new `scripts/README.md` (top-level folder
+  index) plus new per-folder READMEs for every previously-
+  undocumented `scripts/` subfolder (`analysis/`, `phreeqc/`,
+  `documentation/`, `templates/`, `leapfrog/`) and a new
+  `database/schema/README.md` (one row per numbered schema file,
+  01-15, plus the two `*_map.R` files). **Found and fixed real
+  documentation staleness**: `scripts/ingest/README.Rmd`/`.md` and
+  `scripts/qc/README.md` still only documented 3-4 scripts each from
+  an early project phase, missing essentially all ~24 sources/checks
+  added across Sessions 3-33 -- both substantially rewritten with a
+  full per-script table (reads/writes/notes), re-knit via
+  `rmarkdown::render(..., output_format='github_document')` for the
+  `.Rmd`-backed one.
+- **Console UX**: `run_pipeline.R` gained `print_pipeline_help()`,
+  called automatically right after `RUN_INGEST`/`RUN_ANALYSIS` are
+  finalized -- prints every flag's name, current value, and a
+  one-line description, so a user can `source('scripts/run_pipeline.R')`
+  and immediately see what a run will/won't do without opening the
+  script. Verified the existing PIPELINE SUMMARY table already covers
+  every newer stage (facies clusters, aquifer classification,
+  earthquakes, fault traces, Leapfrog export) since they all go
+  through the shared `run_step()`/`.log_stage()` wrapper -- no gap
+  found there. README.md gained a new 'Quick Console Commands for
+  Common Tasks' section with copy-pasteable snippets for every
+  routine workflow (full/chemistry-only/skip-ingestion profiles,
+  PHREEQC-only, real mixing/inverse/gas-phase config runs, GeoPackage-
+  only export, Leapfrog-only export, single/all-notebook rendering,
+  website-only rebuild, QC-only).
+- **Notebooks consolidated into one PDF**: new
+  `notebooks/00_full_report.qmd`, transcluding `01`-`08` plus the
+  annotated bibliography via `{{< include >}}`, front matter linking
+  the GitHub repo and live website, and a Key Figures appendix.
+  Renders to a real 225-page, ~13 MB PDF
+  (`output/reports/notebooks/00_full_report.pdf`) via TinyTeX/
+  LuaLaTeX (confirmed already installed in this environment). Getting
+  there required real debugging, not just assembly, and surfaced
+  several genuine, previously-latent bugs in the individual notebooks
+  themselves (all fixed at the source, and re-verified standalone
+  after fixing):
+  1. **Duplicate knitr chunk labels across files** (`setup`/`cleanup`/
+     `load`/`connect`, each independently reused by 2-7 of the 8
+     notebooks) -- knitr requires document-wide-unique labels once
+     `{{< include >}}` flattens everything into one document; fixed
+     by renaming the ~11 colliding labels to be file-suffixed
+     (`setup-01`, `connect-02`, etc.) directly in
+     `01`/`02`/`03`/`05`/`06`/`07`/`08`. `options(knitr.duplicate.label
+     = 'allow')` does NOT help here (that only applies to
+     `knit_child()`-based inclusion, not raw-text `{{< include >}}`,
+     which knitr sees as genuinely one file at parse time, before any
+     chunk executes).
+  2. **Root-directory pinning compounds across chapters.**
+     `01`/`02`/`03` each unconditionally computed
+     `root.dir = normalizePath(file.path(getwd(), '..'))` in their own
+     setup chunk -- correct in isolation (cwd starts at `notebooks/`),
+     but since `opts_knit\$set(root.dir=...)` persists globally across
+     ALL subsequent chunks in a merged document, chapter 2's setup ran
+     with cwd already pinned to the project root by chapter 1, so its
+     own `'..'` climbed one level too far (landing one directory
+     above the real project root) -- broke every relative `db_path` in
+     chapters 2 onward. Fixed by wrapping all three in
+     `if (basename(getwd()) == 'notebooks') { ... }`, mirroring the
+     guard `06` already had (Session 18). `04`'s two hardcoded
+     `'..'`-prefixed paths (for `source()` and `db_path`) had the
+     same underlying problem and were rewritten to the
+     file.exists()-based fallback pattern `05`/`07` already used.
+  3. **`knitr::include_graphics()` mishandles a path when `root.dir`
+     is pinned**, even an absolute one -- it recomputes the path
+     relative to the ORIGINAL document directory (`notebooks/`) for
+     the rendered output, and that recomputation is what actually
+     failed ('Cannot find the file(s): ../output/figures/...'), not
+     the caller's own `file.exists()` check (which had already passed
+     on the correct absolute path). This broke the 4 on-demand
+     literature-figure embeds in `07` (Sorey Figs. 39-40, Klein
+     2007 Fig. 1, White 1968 Plate 1) only in the combined-document
+     context -- each rendered fine standalone, where `root.dir` is
+     never pinned to begin with. Fixed by bypassing
+     `include_graphics()` entirely for these 4 chunks: emit a raw
+     markdown image tag directly via
+     `knitr::asis_output(sprintf('![...](%s)', path))` (with
+     `#| results: asis` on each chunk) using a path built fresh from
+     `normalizePath(getwd())` at execution time -- immune to knitr's
+     internal path-rewriting since it never touches
+     `include_graphics()`'s special-cased logic.
+  4. **Stale `_freeze/` caches masked source fixes** mid-debugging --
+     `_freeze/07_historical_context_sorey1992` (dated Sep 12, i.e.
+     from that notebook's last STANDALONE render) was silently reused
+     for the SAME chunks when transcluded into the new combined
+     document, even after editing the source and even after deleting
+     `_freeze/00_full_report` specifically -- quarto's freeze cache is
+     keyed by the underlying source file's own identity, not just the
+     outer including document. Had to `rm -rf _freeze` (all of it, not
+     just the master document's own slot) before a source edit would
+     actually take effect in a combined-doc render. Worth remembering
+     for ANY future edit-then-re-render cycle on a document that
+     transcludes other, independently-frozen `.qmd` files.
+  5. **Pandoc/quarto metadata merging across transcluded files is
+     last-wins**, which silently overwrote this document's own
+     `title`/`subtitle`/`author` YAML with whichever chapter's own
+     front matter was processed last (first the bibliography's, then
+     -- after that file was excluded from the merge, see below --
+     notebook `08`'s). `title-block-style: none` did NOT suppress the
+     resulting stray auto-title page; a `pandoc-args`/`-M` metadata
+     override was ALSO tried and did not take effect (order of
+     precedence between YAML-block metadata and `-M` flags did not
+     work the way expected). **Two real fixes landed, one workaround
+     accepted**: (a) the annotated-bibliography chapter -- the file
+     most directly under this project's own control -- is no longer
+     transcluded via `{{< include >}}` at all; a chunk now reads it
+     with `readLines()`, strips everything up to and including its
+     second `---` line (its YAML block), and emits the rest via
+     `knitr::asis_output()`, so it can never contribute frontmatter to
+     the merge; (b) an explicit, correct title block was added directly
+     in this document's own body (a LaTeX `titlepage` environment for
+     PDF + a plain `# ...` heading for HTML/other formats) so the
+     INTENDED title always appears correctly on what is now page 2;
+     (c) the underlying stray page 1 (now carrying notebook `08`'s
+     title, since the bibliography no longer contributes) was NOT
+     further chased -- a full fix would need the same YAML-stripping
+     treatment applied to all 8 transcluded notebooks, which was
+     judged not worth the additional multi-file edit risk for a purely
+     cosmetic, one-extra-page issue. Documented in
+     `00_full_report.qmd`'s own body as a known limitation for future
+     editors, including an explicit warning about the next bullet.
+  6. **`pdftools::pdf_subset()` corrupted the rendered PDF** when
+     tried as a quick way to drop the stray page 1 -- silently reduced
+     it from a real 13 MB, 225-page file to a broken 190 KB one full of
+     'Unknown compression method in flate stream' errors (a real
+     poppler/pdftools incompatibility with this specific lualatex
+     output, not a usage mistake). Caught immediately by re-checking
+     file size/page text after the 'fix,' reverted by re-rendering from
+     source rather than attempting to repair the corrupted file. **Do
+     not use `pdf_subset()` on this project's rendered PDF output
+     without first confirming it round-trips cleanly on a throwaway
+     copy.**
+- Standalone rendering of every edited notebook (`01`, `04`, `07`
+  spot-checked directly; `02`/`03`/`05`/`06`/`08` share the same fix
+  patterns) was re-verified working correctly after all of the above
+  -- none of the combined-document fixes broke independent use.
+- Cleaned up incidental artifacts from this session's many render
+  attempts (`phreeqc.log` at the repo root, an accidental
+  `scripts/ingest/README.html` from re-knitting the `.Rmd`) before
+  committing.
+- **Not done this session**: the DEMO database was not rebuilt with
+  the well-log-23-5 promotion; the stray PDF title-page cosmetic issue
+  (above) remains unresolved by design (documented, not silently
+  worked around further); `data/derived/qc/` remains untracked
+  (disposable/regenerable QC output, consistent with existing
+  convention).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

@@ -1,0 +1,485 @@
+---
+title: "Statistical Synthesis: Distributions, Equations, and Cross-Cutting Tests"
+subtitle: "A living reference for the project's statistical methods, run against the real operational database"
+date: today
+format:
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+execute:
+  warning: true
+  message: true
+---
+
+## Purpose and scope
+
+This notebook is a companion to `01` (Cl-sampling-frequency time series
+methods), `06` (PHREEQC), and `07` (historical Cl/B trend, mixed-effects
+facies model). Rather than repeating what those already do well, this
+notebook:
+
+1. Puts the project's key computed quantities on record as **explicit
+   equations paired with the exact R code that implements them** in
+   production (`scripts/phreeqc/utils_phreeqc.R`,
+   `scripts/analysis/barometric_efficiency.R`, etc.) -- a single
+   math-to-code reference.
+2. Treats PHREEQC's saturation-index and charge-balance output as real
+   **statistical distributions**, not just point summaries: normality
+   testing, distribution fitting with model comparison, and bootstrap
+   confidence intervals sized appropriately for this project's small
+   real-thermal-sample counts (n = 7-8).
+3. Runs a set of statistical methods not otherwise used elsewhere in this
+   project's notebooks -- Kruskal-Wallis/pairwise Wilcoxon, a
+   significance-tested correlation matrix, PCA, a population-level (not
+   facies-restricted) mixed-effects model, and an exploratory variogram
+   -- chosen because each is a reasonable fit to a specific real question
+   this dataset can actually answer, not chosen for their own sake.
+4. Closes with a single synthesis section stating, in one place, what
+   this project's statistics currently support, what's merely
+   suggestive, and what's still blocked on more data.
+
+```{r setup-08}
+#| message: false
+library(DBI)
+library(RSQLite)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(fitdistrplus)
+library(boot)
+library(Hmisc)
+library(lme4)
+library(gstat)
+library(sf)
+
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
+con <- dbConnect(SQLite(), db_path)
+```
+
+## 1. Equations and the code that implements them
+
+Every quantity below is computed by production code elsewhere in this
+project (cited under each equation) -- this section is a reference, not
+a re-implementation.
+
+### 1.1 Charge-balance error
+
+Every PHREEQC solution's analytical quality is screened with the
+standard charge-balance-error statistic:
+
+$$
+\text{CBE\%} = \frac{\sum z_i m_i^{cation} - \sum |z_i| m_i^{anion}}
+{\sum z_i m_i^{cation} + \sum |z_i| m_i^{anion}} \times 100
+$$
+
+where $z_i$ is ionic charge and $m_i$ is molar concentration. Computed
+in `build_phreeqc_solutions()` (`scripts/phreeqc/08_build_phreeqc_tables.R`)
+using `lab_analyte_map.R`'s `charge`/`molar_mass` columns, and stored as
+`PHREEQC_Solutions.charge_balance`.
+
+### 1.2 Mineral saturation index
+
+$$
+SI = \log_{10}\left(\frac{IAP}{K_{sp}}\right)
+$$
+
+where $IAP$ is the ion activity product and $K_{sp}$ the mineral's
+solubility product at the sample's temperature -- PHREEQC computes this
+directly from the `SOLUTION` block; `PHREEQC_Results.parameter` stores
+one row per `SI_<mineral>`. $SI = 0$ is equilibrium, $SI > 0$
+supersaturated, $SI < 0$ undersaturated.
+
+### 1.3 Two-end-member conservative mixing fraction (chloride)
+
+$$
+f_{thermal} = \frac{C_{obs} - C_{meteoric}}{C_{thermal} - C_{meteoric}}
+$$
+
+Implemented in `scripts/phreeqc/10_run_phreeqc_mixing.R`'s pure-R
+conservative-mixing calculation (`compute_mixing_fraction()`), the same
+functional form as Sorey & Colvard's (1992) own thermal-water discharge
+method, 35 years earlier.
+
+### 1.4 Chloride mass-balance thermal-water discharge
+
+$$
+Q_{TW} = Q_{stream} \times \frac{C_{stream} - C_{meteoric}}{C_{thermal} - C_{meteoric}}
+$$
+
+The formula behind both this project's poster finding (~27 L/s,
+averaged) and the single-date 42.1 L/s point computed directly from this
+database in `07` -- see `notebooks/07_historical_context_sorey1992.qmd`
+Section 6 for the real numbers.
+
+### 1.5 Activity-based Na-K geothermometers
+
+Giggenbach (1988):
+$$
+T_{Gigg}(^\circ C) = \frac{1390}{1.75 + \log_{10}(a_{Na}/a_K)} - 273.15
+$$
+Fournier (1979):
+$$
+T_{Four}(^\circ C) = \frac{1217}{1.483 + \log_{10}(a_{Na}/a_K)} - 273.15
+$$
+Both implemented in `scripts/phreeqc/09_run_phreeqc.R`'s activity-based
+geothermometer functions, using PHREEQC's own computed ion activities
+(not raw concentrations) as $a_{Na}$, $a_K$.
+
+### 1.6 D'Amore-Panichi (1980) multicomponent gas geothermometer
+
+$$
+t(^\circ C) = \frac{a + b\,\log_{10}(CO_2) + c\,\log_{10}(H_2/CH_4) + d\,\log_{10}(H_2S/H_2) + 273.15\left(\cdots\right)}{\cdots} - 273.15
+$$
+(the full multi-term form, with coefficient set validated against real
+Mariner & Janik 1995 Table 2 values for well 23-5) is in
+`scripts/phreeqc/13_gas_geothermometry.R` -- see that file's header
+comment for the exact coefficients, including the corrected H2
+coefficient (6, per Powell 2000) flagged in Session 19.
+
+### 1.7 Barometric efficiency
+
+Sorey's original level-vs-pressure regression:
+$$
+\Delta h_{water} = BE \times \Delta P_{atm} + \varepsilon
+$$
+and this project's own first-differenced form (removes a secular trend):
+$$
+\Delta(\Delta h_{water}) = BE_{diff} \times \Delta(\Delta P_{atm}) + \varepsilon
+$$
+Both fit in `scripts/analysis/barometric_efficiency.R`'s
+`run_barometric_efficiency()` -- see Section 3 of `07` for the real
+STMGID MW3/MW10 result (BE = 0.58-0.60 / 0.29-0.34).
+
+### 1.8 Borate-alkalinity screening (boron exclusion guard)
+
+Henderson-Hasselbalch, used as a 25°C screening approximation (PHREEQC
+itself computes the real speciation at each sample's true T/µ):
+$$
+\frac{[\text{B(OH)}_4^-]}{[\text{B(OH)}_3]} = 10^{\,pH - pK_a}, \quad pK_a \approx 9.24
+$$
+Implemented in `format_solution_block()`
+(`scripts/phreeqc/utils_phreeqc.R`) to decide when a sample's boron
+would materially inflate PHREEQC's internal alkalinity balance --
+diagnosed and fixed for sample 815 (SBW_0002) in Session 17.
+
+## 2. PHREEQC saturation-index distributions: are they normal?
+
+Real `PHREEQC_Results` values include a documented sentinel,
+`-999.999`, PHREEQC's own "undefined" placeholder for a mineral it
+couldn't evaluate (e.g. no alkalinity on file). These are filtered out
+below -- they are a data-availability flag, not a real SI value.
+
+```{r phreeqc-pull}
+phr <- dbGetQuery(con, "
+  SELECT r.sample_id, r.parameter, r.value, l.site_type
+  FROM PHREEQC_Results r
+  JOIN Samples sm ON r.sample_id = sm.sample_id
+  JOIN Locations l ON sm.location_id = l.location_id
+  WHERE r.parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz')
+") |>
+  filter(value > -900) |>
+  mutate(group = ifelse(site_type == "background", "background_dilute", "thermal_or_other"))
+
+n_sentinel_dropped <- nrow(dbGetQuery(con, "
+  SELECT * FROM PHREEQC_Results WHERE parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz') AND value < -900
+"))
+cat("Sentinel (-999.999, 'undefined') rows excluded:", n_sentinel_dropped, "\n")
+```
+
+```{r phreeqc-normality}
+norm_tests <- phr |>
+  group_by(parameter, group) |>
+  summarise(
+    n = n(), mean = mean(value), sd = sd(value), median = median(value),
+    shapiro_p = if (n() >= 5 && n() <= 5000) shapiro.test(value)$p.value else NA_real_,
+    .groups = "drop"
+  )
+knitr::kable(norm_tests, digits = 3, caption = "Normality of PHREEQC SI values by mineral and sample group")
+```
+
+The Shapiro-Wilk test rejects normality (p < 0.05) for background SI
+distributions in 4 of the 6 rows above -- but with n = 225, even a mild,
+practically-unimportant departure from normality reaches statistical
+significance. Model comparison, not just a p-value, is a fairer way to
+judge whether "assume normal" is actually a bad approximation:
+
+```{r phreeqc-distfit}
+#| fig-width: 6
+#| fig-height: 4.5
+calcite_bg <- phr$value[phr$parameter == "SI_Calcite" & phr$group == "background_dilute"]
+fit_norm  <- fitdist(calcite_bg, "norm")
+fit_logis <- fitdist(calcite_bg, "logis")
+fit_cauchy <- fitdist(calcite_bg, "cauchy")
+aic_tbl <- sort(c(normal = fit_norm$aic, logistic = fit_logis$aic, cauchy = fit_cauchy$aic))
+knitr::kable(data.frame(distribution = names(aic_tbl), AIC = round(aic_tbl, 1)),
+             caption = "AIC comparison, background-well calcite SI (n=225)")
+denscomp(list(fit_norm, fit_logis, fit_cauchy), legendtext = c("normal","logistic","cauchy"))
+```
+
+**Reading**: despite the significant Shapiro-Wilk result, the normal
+distribution has the lowest AIC of the three symmetric candidates
+tried -- the real distribution has slightly heavier tails than a
+perfect normal (a few strongly under/supersaturated background wells),
+but "roughly normal with some outliers" is a fair, not misleading,
+characterization for this group. SI can be negative, so a lognormal/
+gamma fit isn't applicable without an arbitrary shift; that's why the
+comparison set here is limited to symmetric, real-line distributions.
+
+### Bootstrap confidence intervals for the small real-thermal sample set
+
+With only n = 7-8 real thermal (fumarole/seep/spring/well) samples, a
+textbook Central-Limit-Theorem confidence interval is a weak
+approximation. A nonparametric bootstrap resample of the mean is a more
+honest way to report uncertainty on such a small real sample:
+
+```{r phreeqc-bootstrap}
+set.seed(4821)
+boot_summary <- phr |>
+  filter(group == "thermal_or_other") |>
+  group_by(parameter) |>
+  summarise(
+    n = n(), mean = mean(value),
+    boot_ci = {
+      b <- boot(value, function(d, i) mean(d[i]), R = 5000)
+      ci <- boot.ci(b, type = "perc")$percent[4:5]
+      paste0("[", round(ci[1], 2), ", ", round(ci[2], 2), "]")
+    },
+    .groups = "drop"
+  )
+knitr::kable(boot_summary, caption = "Bootstrap 95% CI on the mean real thermal-sample SI (5000 resamples)")
+```
+
+### Charge-balance error, as a QC statistic
+
+`PHREEQC_Solutions.charge_balance` also carries a `±100` sentinel for
+solutions PHREEQC couldn't evaluate a real balance for (incomplete
+input chemistry) -- excluded the same way as the SI sentinel above.
+
+```{r cbe-distribution}
+#| fig-width: 6
+#| fig-height: 4
+cbe <- dbGetQuery(con, "SELECT charge_balance FROM PHREEQC_Solutions WHERE charge_balance IS NOT NULL") |>
+  filter(abs(charge_balance) < 99.99)
+cat("Real, evaluable charge-balance rows:", nrow(cbe), "of",
+    nrow(dbGetQuery(con, "SELECT charge_balance FROM PHREEQC_Solutions WHERE charge_balance IS NOT NULL")), "\n")
+cat("Median CBE%:", round(median(cbe$charge_balance), 2),
+    " | Mean CBE%:", round(mean(cbe$charge_balance), 2),
+    " | % within +/-5% QC threshold:",
+    round(100 * mean(abs(cbe$charge_balance) <= 5), 1), "\n")
+ggplot(cbe, aes(x = charge_balance)) +
+  geom_histogram(bins = 40) +
+  geom_vline(xintercept = c(-5, 5), linetype = "dashed", color = "firebrick") +
+  labs(x = "Charge-balance error (%)", y = "Count",
+       title = "Charge-balance error distribution, real evaluable PHREEQC solutions",
+       subtitle = "Dashed lines: the project's standard +/-5% QC pass/fail threshold")
+```
+
+This is a real, useful re-statement of a QC number already tracked in
+`qc_data_integrity_checks.R` -- most solutions cluster tightly around
+zero, consistent with Session 15's fix (median imbalance dropped from
+~60% to ~0.7% once alkalinity was correctly ingested), with a real right
+skew (a handful of double-digit-percent samples, mostly the more
+concentrated thermal waters where small absolute measurement error in
+any one ion has more leverage).
+
+## 3. Additional statistical methods
+
+### 3.1 Chloride by site type: Kruskal-Wallis + pairwise Wilcoxon
+
+Chloride is heavily right-skewed across site types (background creeks
+near detection limit vs. real thermal water at 600-900 mg/L) -- a
+rank-based test is the honest choice here, not a t-test/ANOVA that
+assumes normal residuals.
+
+```{r cl-kw}
+ions <- dbGetQuery(con, "SELECT sample_id, location_id, analyte, value FROM vw_major_ions")
+loc_type <- dbGetQuery(con, "SELECT location_id, site_type FROM Locations")
+cl <- ions |>
+  filter(analyte == "Cl") |>
+  left_join(loc_type, by = "location_id") |>
+  mutate(group = case_when(
+    site_type %in% c("fumarole", "seep", "spring") ~ "thermal_surface",
+    site_type == "well" ~ "well",
+    site_type == "background" ~ "background",
+    TRUE ~ NA_character_
+  )) |>
+  filter(!is.na(group))
+
+table(cl$group)
+kruskal.test(value ~ group, data = cl)
+pairwise.wilcox.test(cl$value, cl$group, p.adjust.method = "holm")
+```
+
+Chloride differs significantly between background and both other
+groups (p < 0.001 either way), but **thermal_surface and well are not
+significantly different from each other** (p ≈ 0.19) -- expected, since
+the "well" group mixes real thermal production/monitor wells together
+with dilute domestic/NDEP wells; it is not a clean thermal-vs-dilute
+split on its own.
+
+### 3.2 Correlation matrix with significance (major ions)
+
+```{r ion-corr}
+ions_wide <- ions |>
+  filter(analyte %in% c("Ca", "Mg", "Na", "K", "Cl", "SO4")) |>
+  group_by(sample_id, analyte) |>
+  summarise(value = mean(value), .groups = "drop") |>
+  pivot_wider(names_from = analyte, values_from = value) |>
+  filter(complete.cases(pick(everything())))
+
+cat("Complete-case samples (all 6 majors):", nrow(ions_wide), "\n")
+rc <- rcorr(as.matrix(ions_wide[, -1]), type = "pearson")
+knitr::kable(round(rc$r, 2), caption = "Pearson correlation, major ions (r)")
+knitr::kable(round(rc$P, 4), caption = "p-values")
+```
+
+Cl-Na-K-SO4 are all strongly, significantly positively correlated
+(r ≥ 0.89) -- the thermal-water ionic signature -- while Ca-Mg form a
+separate, strongly correlated pair (r = 0.91) that correlates
+*negatively* with the thermal-signature ions (Cl-Mg: r = -0.29,
+p < 0.001). This is the same Na-Cl-K-vs-Ca-Mg dichotomy the
+`ComplexHeatmap` clustering on the website already shows visually --
+here it's a formal, significance-tested statement of the same real
+pattern.
+
+### 3.3 PCA on major-ion chemistry, colored by the persisted facies clusters
+
+```{r ion-pca}
+#| fig-width: 7
+#| fig-height: 5.5
+fc <- dbGetQuery(con, "
+  SELECT a.sample_id, a.facies_cluster AS cluster
+  FROM Facies_Cluster_Assignments a
+  WHERE a.run_id = (SELECT MAX(run_id) FROM Facies_Cluster_Runs)
+")
+pca_data <- ions_wide |> inner_join(fc, by = "sample_id")
+pca <- prcomp(scale(pca_data[, c("Cl", "SO4", "Ca", "Mg", "Na", "K")]))
+summary(pca)
+knitr::kable(round(pca$rotation[, 1:2], 3), caption = "PC1/PC2 loadings")
+
+pca_scores <- as.data.frame(pca$x[, 1:2]) |> mutate(cluster = factor(pca_data$cluster))
+ggplot(pca_scores, aes(PC1, PC2, color = cluster)) +
+  geom_point(size = 2, alpha = 0.8) +
+  labs(title = "PCA biplot of major-ion chemistry, colored by facies cluster",
+       subtitle = paste0(nrow(pca_scores), " samples with complete Ca/Mg/Na/K/Cl/SO4"))
+```
+
+PC1+PC2 explain ~97% of variance. PC1 is driven almost entirely by
+Cl/Na/K/SO4 (loadings ≈ 0.47-0.50) -- the thermal-dilution axis -- and
+PC2 by Ca/Mg (loadings ≈ 0.65-0.72). The facies clusters (persisted in
+`Facies_Cluster_Assignments`, see `07`) separate cleanly along PC1,
+confirming the clustering is really tracking the same dominant
+chemical axis PCA finds independently, not an artifact of the
+clustering algorithm's own choices.
+
+### 3.4 Population-level mixed-effects trend (all clustered samples, not just the pure-thermal facies)
+
+`07`'s mixed-effects model restricts to the pure-thermal facies only.
+Here, the same random-intercept-per-location logic is applied to
+**every** clustered sample (n = 157, spans background through thermal)
+to ask a different, complementary question: is there a real Cl trend
+in the dataset as a whole once repeated sampling at the same location
+is accounted for?
+
+```{r mixed-effects-all}
+facies_script <- file.path("scripts", "analysis", "cluster_hydrochemical_facies.R")
+if (!file.exists(facies_script)) facies_script <- file.path("..", facies_script)
+source(facies_script)
+fc_full <- run_facies_clustering(con)
+mod_dat <- fc_full$data
+# collection_time is stored as Unix-epoch-seconds text -- NOT a plain
+# date string (a project-wide storage convention, not a bug here).
+mod_dat$year <- as.numeric(format(
+  as.POSIXct(suppressWarnings(as.numeric(mod_dat$collection_time)), origin = "1970-01-01", tz = "UTC"),
+  "%Y"
+))
+cat("Samples with a parseable year:", sum(!is.na(mod_dat$year)), "of", nrow(mod_dat), "\n")
+
+m_all <- lmer(log1p(Cl) ~ scale(year, scale = FALSE) + (1 | location_id), data = mod_dat)
+summary(m_all)
+```
+
+**Reading**: a modest positive year coefficient (Cl trending up across
+the dataset as a whole, on the log1p scale) with a t-value around 1.9 --
+borderline at the conventional 0.05 threshold (`lme4` deliberately
+doesn't report a p-value by default because the correct degrees of
+freedom for a mixed model are debated; the t-value alone is reported
+here rather than manufacturing a p-value). This reflects **which
+locations have been sampled when**, not necessarily a real temporal
+process at any individual site -- 77 of 157 samples have no parseable
+collection date and are dropped, and the modeled 80 samples are not an
+even, representative time series. Read alongside `07`'s own,
+more-careful within-facies model (which finds no significant trend once
+restricted to the pure-thermal group specifically) rather than in
+place of it.
+
+### 3.5 Exploratory spatial variogram (chloride)
+
+Not a substitute for the planned ArcGIS/EBK kriging step (see README's
+"Planned: potentiometric surfaces" and "Leapfrog" sections) -- a cheap,
+honest first look at spatial autocorrelation using every real,
+geolocated Cl sample on file.
+
+```{r cl-variogram}
+#| fig-width: 6
+#| fig-height: 4.5
+cl_pts <- dbGetQuery(con, "
+  SELECT s.sample_id, l.latitude, l.longitude, la.value AS Cl
+  FROM Lab_Analyses la
+  JOIN Samples s ON la.sample_id = s.sample_id
+  JOIN Locations l ON s.location_id = l.location_id
+  WHERE la.analyte = 'Cl' AND l.latitude IS NOT NULL AND l.longitude IS NOT NULL
+")
+cl_sf <- st_as_sf(cl_pts, coords = c("longitude", "latitude"), crs = 4326) |> st_transform(26911)
+cl_sf$log_Cl <- log1p(cl_sf$Cl)
+v <- variogram(log_Cl ~ 1, cl_sf)
+plot(v, main = paste0("Empirical semivariogram, log1p(Cl), n=", nrow(cl_sf), " real samples"))
+```
+
+**Important caveat, stated plainly**: this pools **every sample ever
+collected at a location, across up to ~75 years**, into one spatial
+point cloud -- real temporal variability at a single well (see `07`'s
+own Cl-through-time analysis) is folded into the "spatial" variance
+here, which is why the empirical variogram is non-monotonic rather than
+a clean rising curve. A defensible kriging surface needs either a
+single synoptic sampling round or an explicit space-time variogram, not
+this all-time pooled version -- this section exists only to confirm
+real, computable spatial structure exists to build on, not to hand off
+a usable surface.
+
+## 4. Synthesis: where the statistics stand today
+
+- **Real, both statistically defensible and geochemically sensible**:
+  the Cl-Na-K-SO4 vs. Ca-Mg dichotomy (correlation matrix, PCA, and the
+  existing `ComplexHeatmap`/facies-clustering all independently agree);
+  the Cl/B ratio's small-but-real 1990-91-to-2024-2026 shift (`07`,
+  t-test, p = 0.015); the near-quartz-equilibrium / mildly-supersaturated
+  carbonate signature in the 7-8 real thermal samples (bootstrap CIs
+  above, both exclude zero for calcite/dolomite SI); the STMGID
+  barometric-efficiency values landing inside the historically-expected
+  0.2-1.18 range (`07`).
+- **Suggestive, not confirmed** -- explicitly flagged rather than
+  overstated: any Cl-vs-time trend, whether pooled naively (`07`,
+  p = 0.0099, confounded), restricted to pure-thermal facies (`07`,
+  not significant), or population-level with location random effects
+  (this notebook, borderline); the exploratory variogram's spatial
+  range (real structure exists, but the pooled all-time sampling makes
+  the specific range/sill numbers unreliable to use directly).
+- **Genuinely blocked on more data, not a statistical-method gap**: any
+  real (non-representative-pair) PHREEQC mixing/inverse model; a
+  spring-specific (not STMGID-basin) barometric efficiency; a real
+  potentiometric surface (too few in-field wells with current water
+  level); fault-trace-aware spatial analysis (no digitized faults yet).
+  See `docs/action_items_for_user.md` for what would unblock each of
+  these.
+
+```{r changelog}
+#| echo: false
+#| eval: false
+# 2026-09-26: initial version, built alongside a documentation/console-
+# UX polish pass and a notebook-consolidation attempt (see AGENTS.md
+# Session 34 for the full session write-up).
+```

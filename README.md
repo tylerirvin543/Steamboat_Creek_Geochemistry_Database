@@ -224,6 +224,108 @@ Non-interactive runs with nothing set at all default safely to
   `BUILD_WEBSITE <- TRUE` to re-render `website/*.Rmd` into `docs/`
   without touching the database at all.
 
+## Quick Console Commands for Common Tasks
+
+Every command below assumes the R working directory is the project
+root (RStudio does this automatically if you open the `.Rproj`). Each
+is a self-contained snippet -- paste the whole block into the console.
+
+**Full ingest + analysis (profile 1), OPERATIONAL database:**
+``` r
+MODE <- "OPERATIONAL"
+RUN_INGEST <- list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE,
+  ndwr = TRUE, lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE,
+  usgs_historic_chem = TRUE, noaa_weather = TRUE, image_locations = TRUE,
+  ndep_prr = TRUE, monitor_well_locations = TRUE, promote_ndep_staged = TRUE,
+  well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE,
+  historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, barometric_pressure = TRUE,
+  earthquakes = TRUE, fault_traces = TRUE)
+BUILD_WEBSITE <- TRUE
+source("scripts/run_pipeline.R")
+```
+
+**Chemistry-only re-ingest (profile 2) -- when only new field/lab/NDEP data arrived:**
+``` r
+MODE <- "OPERATIONAL"
+RUN_INGEST <- list(ndep = TRUE, field = TRUE, lab = TRUE, isotope = TRUE, flux = TRUE,
+  logger = FALSE, conductivity = FALSE, ndwr = FALSE, usgs = FALSE,
+  usgs_historic_chem = FALSE, noaa_weather = FALSE, image_locations = FALSE,
+  ndep_prr = FALSE, monitor_well_locations = TRUE, promote_ndep_staged = TRUE,
+  well_network = TRUE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE,
+  historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, barometric_pressure = FALSE,
+  earthquakes = FALSE, fault_traces = FALSE)
+BUILD_WEBSITE <- FALSE
+source("scripts/run_pipeline.R")
+```
+
+**Skip ingestion entirely -- just rebuild views/QC/reports/website from what's already in the database (profile 3):**
+``` r
+MODE <- "OPERATIONAL"
+RUN_INGEST <- setNames(as.list(rep(FALSE, 24)),
+  c("ndep","field","logger","conductivity","ndwr","lab","isotope","flux","usgs",
+    "usgs_historic_chem","noaa_weather","image_locations","ndep_prr",
+    "monitor_well_locations","promote_ndep_staged","well_network","well_logs",
+    "ndom_wells","ndwr_stream_flow","historical_sorey1992","mariner_janik_1995",
+    "barometric_pressure","earthquakes","fault_traces"))
+BUILD_WEBSITE <- TRUE
+source("scripts/run_pipeline.R")
+```
+
+**Run PHREEQC speciation/saturation-index only** (auto-skips if nothing changed since the last run -- see `should_rerun_phreeqc()`):
+``` r
+RUN_ANALYSIS <- list(phreeqc = TRUE)
+MODE <- "OPERATIONAL"; RUN_INGEST <- profile_presets <- NULL  # see note below
+source("scripts/run_pipeline.R")
+```
+(If you've already sourced `run_pipeline.R` once this session and just
+want to re-run PHREEQC without a full pipeline pass, call the function
+directly instead: `con <- dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite"); source("scripts/phreeqc/09_run_phreeqc.R"); run_phreeqc_pipeline(con)`.)
+
+**Run a real PHREEQC mixing/inverse/gas-phase config row** (after filling in
+`data/raw/phreeqc/{mixing,inverse,gas_phase}_config.csv` with real sample_ids -- never guessed automatically):
+``` r
+RUN_ANALYSIS <- list(phreeqc = TRUE, phreeqc_mixing = TRUE, phreeqc_inverse = TRUE, phreeqc_gas_phase = TRUE)
+source("scripts/run_pipeline.R")
+```
+
+**Export the GeoPackage only** (no ingestion, uses whatever is already in the database):
+``` r
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")
+source("scripts/ingest/create_gis_views.R"); create_gis_views(con)
+source("scripts/ingest/export_geopackage.R"); export_geopackage(con)
+```
+
+**Export the Leapfrog well CSVs only:**
+``` r
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")
+source("scripts/leapfrog/export_leapfrog.R"); export_leapfrog(con)
+```
+
+**Render one notebook / the whole `notebooks/` project:**
+``` r
+quarto::quarto_render("notebooks/07_historical_context_sorey1992.qmd")  # one file
+quarto::quarto_render("notebooks")                                      # everything
+```
+
+**Render the website only** (never call `rmarkdown::render_site()` directly -- it deletes anything under `docs/` with no source in `website/`, including `docs/literature/`; always go through the protected wrapper):
+``` r
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")
+source("scripts/run_pipeline.R")  # define the functions, then Ctrl+C / interrupt once db connects if you only need the function defs
+export_website_data_files(con); build_website(); export_website_data_files(con)
+```
+
+**Run QC only:**
+``` r
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")
+source("scripts/qc/qc_data_integrity_checks.R"); run_qc_checks(con)
+```
+
+Sourcing `scripts/run_pipeline.R` (with no flags pre-set) also prints a
+full **flag reference table** to the console before doing anything else
+-- every `RUN_INGEST`/`RUN_ANALYSIS` name, its current value, and a
+one-line description -- so you can always check what a run will do
+without opening the script.
+
 ## Where Outputs Land
 
 - `docs/` -- the rendered documentation website (GitHub Pages source);

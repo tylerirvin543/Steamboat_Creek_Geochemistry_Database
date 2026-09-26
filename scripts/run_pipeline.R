@@ -185,6 +185,63 @@ if (is.null(RUN_ANALYSIS$leapfrog_export)) RUN_ANALYSIS$leapfrog_export <- FALSE
 if (is.null(RUN_ANALYSIS$facies_clusters)) RUN_ANALYSIS$facies_clusters <- FALSE
 if (is.null(RUN_ANALYSIS$aquifer_classification)) RUN_ANALYSIS$aquifer_classification <- FALSE
 
+#' Print a quick reference of every RUN_INGEST/RUN_ANALYSIS flag with a
+#' one-line description and its current value, so a user does not have
+#' to open this script to know what a run will/will not do. Called
+#' automatically right after the flags are finalized above.
+print_pipeline_help <- function(run_ingest, run_analysis) {
+  ingest_desc <- c(
+    ndep = "NDEP production-well chemistry (public record request)",
+    field = "Field sampling metadata + chemistry (locations/events/samples)",
+    logger = "Temperature-logger deployments + time series (Elitech)",
+    conductivity = "Stream EC/temperature loggers (HOBO/Onset)",
+    ndwr = "NDWR well-log index (owner/PLSS/coordinates)",
+    lab = "Normalized long-format lab chemistry",
+    isotope = "Delta-18O/delta-D isotope analyses",
+    flux = "Stream-discharge/transect measurements",
+    usgs = "Live USGS discharge/water-level/temperature",
+    usgs_historic_chem = "Historic USGS grab-sample specific conductance",
+    noaa_weather = "NOAA daily weather (temp/precip)",
+    image_locations = "EXIF-GPS extraction from photos/video",
+    ndep_prr = "NDEP Public Records Request PDFs (staging only)",
+    monitor_well_locations = "Klein (2007)-sourced monitor-well coordinates",
+    promote_ndep_staged = "Promotes staged NDEP PRR chemistry into core tables",
+    well_network = "Production well -> port -> injection well flow network",
+    well_logs = "NDWR driller's-report PDFs (OCR + cross-reference)",
+    ndom_wells = "NDOM official well-permit records",
+    ndwr_stream_flow = "NDWR daily manual creek discharge",
+    historical_sorey1992 = "Sorey & Colvard (1992) historical chemistry/wells",
+    mariner_janik_1995 = "Mariner & Janik (1995) gas/water chemistry",
+    barometric_pressure = "Hourly Reno Airport barometric pressure (IEM ASOS)",
+    earthquakes = "USGS regional earthquake catalog",
+    fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)"
+  )
+  analysis_desc <- c(
+    phreeqc = "PHREEQC speciation/saturation-index batch run (slow, opt-in)",
+    phreeqc_force_rerun = "Force PHREEQC to re-run even if nothing changed",
+    phreeqc_mixing = "Real PHREEQC mixing runs from data/raw/phreeqc/mixing_config.csv",
+    phreeqc_inverse = "Real PHREEQC inverse-modeling runs from .../inverse_config.csv",
+    phreeqc_gas_phase = "Real PHREEQC gas-phase runs from .../gas_phase_config.csv",
+    leapfrog_export = "Export well collar/survey/interval/lithology CSVs for Leapfrog",
+    facies_clusters = "Persist hydrochemical facies clustering to the database",
+    aquifer_classification = "Derive Wells.aquifer_type from real barometric efficiency"
+  )
+  message("\n[FLAG REFERENCE] RUN_INGEST (set before sourcing to override):")
+  for (nm in names(ingest_desc)) {
+    val <- if (!is.null(run_ingest[[nm]])) run_ingest[[nm]] else NA
+    message(sprintf("  %-26s %-6s %s", nm, as.character(val), ingest_desc[[nm]]))
+  }
+  message("\n[FLAG REFERENCE] RUN_ANALYSIS (all default FALSE unless set before sourcing):")
+  for (nm in names(analysis_desc)) {
+    val <- if (!is.null(run_analysis[[nm]])) run_analysis[[nm]] else NA
+    message(sprintf("  %-26s %-6s %s", nm, as.character(val), analysis_desc[[nm]]))
+  }
+  message("")
+}
+
+print_pipeline_help(RUN_INGEST, RUN_ANALYSIS)
+
+
 message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
 
 # ============================

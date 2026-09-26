@@ -53,7 +53,7 @@ convention established by `01`/`05`/`06`:
    yet have the paired continuous water-level/barometric-pressure data
    needed to run Sorey's own method for real.
 
-```{r setup}
+```{r setup-07}
 #| message: false
 library(DBI)
 library(RSQLite)
@@ -1156,12 +1156,16 @@ values above actually came from -- Sorey & Colvard's own field
 hydrographs, not just their summary numbers.
 
 ```{r sorey-figures}
+#| results: asis
 #| fig-width: 9
 #| fig-height: 7
-lit_pdf <- file.path("docs", "literature", "Sorey_StmbtSprgsHSActivity_1992.pdf")
-if (!file.exists(lit_pdf)) lit_pdf <- file.path("..", lit_pdf)
-fig_dir <- file.path("output", "figures", "sorey1992_pages")
-if (!file.exists(dirname(fig_dir))) fig_dir <- file.path("..", fig_dir)
+# Built from the CURRENT execution cwd (absolute), not a relative
+# guess -- robust whether this chunk runs standalone (cwd=notebooks/)
+# or transcluded into a combined document where an earlier chapter
+# has pinned cwd to the project root (see 00_full_report.qmd).
+lit_pdf <- file.path(normalizePath(getwd()), "docs", "literature", "Sorey_StmbtSprgsHSActivity_1992.pdf")
+if (!file.exists(lit_pdf)) lit_pdf <- file.path(normalizePath(file.path(getwd(), "..")), "docs", "literature", "Sorey_StmbtSprgsHSActivity_1992.pdf")
+fig_dir <- file.path(normalizePath(getwd()), "output", "figures", "sorey1992_pages")
 dir.create(fig_dir, showWarnings = FALSE, recursive = TRUE)
 
 fig39_path <- file.path(fig_dir, "fig39_p96.png")
@@ -1170,13 +1174,14 @@ if (!file.exists(fig39_path) || !file.exists(fig40_path)) {
   pdftools::pdf_convert(lit_pdf, format = "png", pages = 96:97, dpi = 200,
                          filenames = c(fig39_path, fig40_path))
 }
-knitr::include_graphics(fig39_path)
+if (file.exists(fig39_path)) knitr::asis_output(sprintf("![Sorey & Colvard (1992) Figure 39](%s)", gsub("\\\\", "/", fig39_path))) else message("[skip] fig39 image not found at render time: ", fig39_path)
 ```
 
 ```{r sorey-figure-40}
+#| results: asis
 #| fig-width: 9
 #| fig-height: 7
-knitr::include_graphics(fig40_path)
+if (file.exists(fig40_path)) knitr::asis_output(sprintf("![Sorey & Colvard (1992) Figure 40](%s)", gsub("\\\\", "/", fig40_path))) else message("[skip] fig40 image not found at render time: ", fig40_path)
 ```
 
 Figure 39 (spring 6) and Figure 40 (spring 12) both plot an inverted
@@ -1641,19 +1646,19 @@ the Sorey Figures 39-40 above) for direct visual "then vs. now"
 comparison against this project's current `Wells`/`Locations` map.
 
 ```{r klein-figure}
+#| results: asis
 #| fig-width: 9
 #| fig-height: 11
-klein_pdf <- file.path("docs", "literature", "Klein_Johnson_Spielman_2007_resourceexploitation_steamboat.pdf")
-if (!file.exists(klein_pdf)) klein_pdf <- file.path("..", klein_pdf)
-lit_fig_dir <- file.path("output", "figures", "literature_reference")
-if (!file.exists(dirname(lit_fig_dir))) lit_fig_dir <- file.path("..", lit_fig_dir)
+klein_pdf <- file.path(normalizePath(getwd()), "docs", "literature", "Klein_Johnson_Spielman_2007_resourceexploitation_steamboat.pdf")
+if (!file.exists(klein_pdf)) klein_pdf <- file.path(normalizePath(file.path(getwd(), "..")), "docs", "literature", "Klein_Johnson_Spielman_2007_resourceexploitation_steamboat.pdf")
+lit_fig_dir <- file.path(normalizePath(getwd()), "output", "figures", "literature_reference")
 dir.create(lit_fig_dir, showWarnings = FALSE, recursive = TRUE)
 
 klein_fig1 <- file.path(lit_fig_dir, "klein2007_fig1_wellmap.png")
 if (!file.exists(klein_fig1)) {
   pdftools::pdf_convert(klein_pdf, format = "png", pages = 3, dpi = 200, filenames = klein_fig1)
 }
-knitr::include_graphics(klein_fig1)
+if (file.exists(klein_fig1)) knitr::asis_output(sprintf("![Klein et al. (2007) Figure 1](%s)", gsub("\\\\", "/", klein_fig1))) else message("[skip] klein_fig1 image not found at render time: ", klein_fig1)
 ```
 
 Klein et al. (2007) Figure 1 is a real, labeled map of every
@@ -1666,15 +1671,16 @@ cluster, as used in the correction above), STMGID 3/4, Zolezzi, Peigh,
 Mackay, Stuart, Johnson/Woods, and the ST-1/2/4/5 monitor points.
 
 ```{r white-figure}
+#| results: asis
 #| fig-width: 9
 #| fig-height: 7
-white_pdf <- file.path("docs", "literature", "White papers and plates", "White (1968) plate-1.pdf")
-if (!file.exists(white_pdf)) white_pdf <- file.path("..", white_pdf)
+white_pdf <- file.path(normalizePath(getwd()), "docs", "literature", "White papers and plates", "White (1968) plate-1.pdf")
+if (!file.exists(white_pdf)) white_pdf <- file.path(normalizePath(file.path(getwd(), "..")), "docs", "literature", "White papers and plates", "White (1968) plate-1.pdf")
 white_plate1 <- file.path(lit_fig_dir, "white1968_plate1_geologicmap.png")
 if (!file.exists(white_plate1)) {
   pdftools::pdf_convert(white_pdf, format = "png", dpi = 150, filenames = white_plate1)
 }
-knitr::include_graphics(white_plate1)
+if (file.exists(white_plate1)) knitr::asis_output(sprintf("![White (1968) Plate 1](%s)", gsub("\\\\", "/", white_plate1))) else message("[skip] white_plate1 image not found at render time: ", white_plate1)
 ```
 
 White (1968)'s Plate 1 generalized geologic map -- sinter, alluvium,
@@ -1827,7 +1833,7 @@ gap rather than an unrecognized one.
 | 2026-09-26 (continued) | Added a spatial facies-cluster map (`scripts/analysis/facies_depth_map.R`) overlaying each well's majority facies cluster onto its real map position, sized by an approximate depth (screened-interval midpoint > total depth > unknown -- only 5 of 39 mapped wells have any depth on record, a real gap flagged for the planned Leapfrog work). Faceted the Cl-concentration timeline by well vs. spring/seep. Ingested a new air-temperature time series from the SBRR USGS gauge (parameter 00020, reused `ingest_usgs()` with a new `base_dir` argument -- no new ingest logic needed) and cross-checked it against every Temperature_Loggers series (`scripts/qc/qc_temperature_vs_air.R`) as a QC signal (diurnal-range-ratio vs. air), NOT a literal temperature correction -- flagged loggers A003 (SBW_0001, 95% of days air-like) and A005 (SBF_0001, 70%) as showing suspiciously air-tracking diurnal swings, worth a field check for exposure/dry-sensor issues. |
 | 2026-09-25 | Barometric efficiency upgraded from a documented-but-unrunnable stub to a real calculation: ingested hourly Reno Airport (ASOS "RNO") mean-sea-level pressure from the Iowa Environmental Mesonet (`scripts/ingest/ingest_barometric_pressure.R`, `data/raw/airpressure/README.md`), reusing the existing `Weather_Observations`/`Weather_Stations` tables and station_id (`USW00023185`) rather than a new schema. New `scripts/analysis/barometric_efficiency.R` (`run_barometric_efficiency()`) finds every well with continuous water-level data overlapping the pressure record, computes BE two ways (Sorey's original level-vs-pressure regression, and a first-differenced change-vs-change regression that removes secular trend), and prefers a Steamboat-area well for the overlay plot over the wider Reno/South Truckee Meadows monitoring network's longer records. Real result: STMGID MW10/MW3 (the only Steamboat-area wells with both continuous 2025 water level and pressure overlap) give BE = 0.29-0.60 across both methods -- inside White (1968)'s 0.2-1.18 range and the same order of magnitude as Sorey's own 0.42/0.45, a real methodological validation, though explicitly not a like-for-like comparison since neither well is an actual thermal spring.
 
-```{r cleanup}
+```{r cleanup-07}
 #| include: false
 dbDisconnect(con)
 ```

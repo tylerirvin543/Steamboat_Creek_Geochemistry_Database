@@ -111,7 +111,9 @@ join) can check it:
 # Confirms the documented default above actually matches the constant
 # used in ingest_image_locations.R, so this notebook can't silently drift
 # out of sync with the code.
-source(file.path("..", "scripts", "ingest", "ingest_image_locations.R"))
+img_ingest_path <- file.path("scripts", "ingest", "ingest_image_locations.R")
+if (!file.exists(img_ingest_path)) img_ingest_path <- file.path("..", img_ingest_path)
+source(img_ingest_path)
 cat("DEFAULT_PHOTO_GPS_UNCERTAINTY_M =", DEFAULT_PHOTO_GPS_UNCERTAINTY_M, "meters\n")
 ```
 
@@ -147,7 +149,9 @@ to go in a numeric-measurement table.
 ```{r status}
 #| message: false
 library(DBI); library(RSQLite); library(dplyr)
-db_path <- file.path("..", "database", "geochem_operational.sqlite")
+db_path <- file.path("database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
+if (!file.exists(db_path)) db_path <- file.path("database", "geochem_demo.sqlite")
 if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_demo.sqlite")
 con <- dbConnect(SQLite(), db_path, flags = SQLITE_RO)
 

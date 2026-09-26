@@ -1,0 +1,178 @@
+---
+title: "Steamboat Hills Geothermal Outflow: A Data Platform and Statistical Companion"
+subtitle: "Consolidated notebooks, methods, and annotated bibliography"
+author: "Tyler Irvin"
+date: today
+format:
+  pdf:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    fig-pos: "H"
+    keep-tex: false
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+title-block-style: none
+execute:
+  warning: true
+  message: true
+  cache: false
+---
+
+::: {.content-visible when-format="pdf"}
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\LARGE \textbf{Steamboat Hills Geothermal Outflow:}}\\[0.3cm]
+{\LARGE \textbf{A Data Platform and Statistical Companion}}\\[1cm]
+{\Large Consolidated notebooks, methods, and annotated bibliography}\\[2cm]
+{\large Tyler Irvin}\\[0.3cm]
+{\large \today}
+\end{titlepage}
+:::
+
+# Steamboat Hills Geothermal Outflow: A Data Platform and Statistical Companion {.unnumbered}
+
+**Consolidated notebooks, methods, and annotated bibliography**
+
+Tyler Irvin
+
+## About this document
+
+> **Known cosmetic limitation (PDF output only)**: page 1 of the
+> rendered PDF is a stray, auto-generated title page carrying
+> whichever transcluded chapter's own YAML title happened to win
+> pandoc's last-wins frontmatter merge (harmless, but not the
+> intended title) -- the correct title page is page 2 immediately
+> after it (an explicit title block in this file's own body,
+> `title-block-style: none` in the YAML did not suppress the stray
+> page). Tried and reverted: `pdftools::pdf_subset()` to drop page 1
+> -- it corrupted the embedded images/fonts (13 MB -> 190 KB, real
+> "Unknown compression method" errors) and is NOT safe to use on
+> this file; do not re-attempt without first confirming poppler/
+> pdftools handles this specific lualatex output correctly. A real
+> fix would need to strip YAML front matter from all 8 transcluded
+> notebooks (like the annotated-bibliography workaround just above
+> does for that one file) rather than just accepting the stray page.
+
+
+This is a single, consolidated companion document assembled from the
+project's living-reference notebooks (`notebooks/01`-`08`), each of
+which is also maintained and rendered independently. It exists so the
+full analytical narrative -- from instrumentation and data provenance
+through statistical synthesis -- can be read start to finish, cited,
+and shared as one file, alongside the project's annotated bibliography.
+
+- **Source code and database pipeline**: <https://github.com/tylerirvin543/Steamboat_Creek_Geochemistry_Database>
+- **Live documentation website**: <https://tylerirvin543.github.io/Steamboat_Creek_Geochemistry_Database/>
+- **This document's source**: `notebooks/00_full_report.qmd` (re-render
+  with `quarto::quarto_render("notebooks/00_full_report.qmd")`, or
+  `quarto render notebooks/00_full_report.qmd --to pdf` from a shell)
+
+Each chapter below is transcluded verbatim from its own standalone
+notebook file (via Quarto's `{{< include >}}`) -- editing a chapter
+here means editing the source `.qmd` in `notebooks/`, not this file.
+Because several chapters query the live operational database and one
+(PHREEQC) invokes a real external executable per sample, a full render
+of this document re-executes all of that work and can take a
+meaningful amount of time; see each chapter's own notebook for a
+faster, standalone re-render during normal iteration.
+
+```{r allow-duplicate-labels}
+#| label: allow-duplicate-labels
+#| echo: false
+# Each source notebook below is also maintained/rendered as its own
+# standalone document and so has its own "setup" (and other commonly-
+# named) chunk. knitr requires document-wide-unique chunk labels once
+# everything is merged via {{< include >}} -- this is the standard,
+# documented way to combine several independent Rmd/qmd files into one
+# without renaming every chunk in every source notebook.
+options(knitr.duplicate.label = "allow")
+```
+
+\newpage
+
+# Conductivity as a Chloride-Discharge Proxy
+
+{{< include 01_conductivity_temporal_structure.qmd >}}
+
+\newpage
+
+# Specific Conductance vs. Discharge and Weather
+
+{{< include 02_sc_discharge_weather.qmd >}}
+
+\newpage
+
+# Temperature vs. Specific Conductance Correlation
+
+{{< include 03_temperature_sc_correlation.qmd >}}
+
+\newpage
+
+# Photo-Location Workflow
+
+{{< include 04_photo_location_workflow.qmd >}}
+
+\newpage
+
+# Data Inventory and Well/Facility Flow Network
+
+{{< include 05_data_inventory_and_well_network.qmd >}}
+
+\newpage
+
+# PHREEQC Geochemical Modeling
+
+{{< include 06_phreeqc_geochemical_modeling.qmd >}}
+
+\newpage
+
+# Historical Context: Sorey & Colvard (1992)
+
+{{< include 07_historical_context_sorey1992.qmd >}}
+
+\newpage
+
+# Statistical Synthesis
+
+{{< include 08_statistical_synthesis.qmd >}}
+
+\newpage
+
+# Annotated Bibliography
+
+```{r bibliography-body}
+#| echo: false
+#| results: asis
+# Read directly and strip the YAML front matter, rather than
+# {{< include >}}, because a transcluded qmd's own YAML block
+# (title/subtitle/author) silently overwrote this document's own
+# title-page metadata via pandoc's last-wins frontmatter merge --
+# confirmed by inspecting the rendered PDF's page 1 before this fix.
+bib_path <- file.path("docs", "literature", "annotated_bibliography.qmd")
+if (!file.exists(bib_path)) bib_path <- file.path("..", "docs", "literature", "annotated_bibliography.qmd")
+bib_lines <- readLines(bib_path, warn = FALSE)
+yaml_ends <- which(bib_lines == "---")
+body_start <- if (length(yaml_ends) >= 2) yaml_ends[2] + 1 else 1
+knitr::asis_output(paste(bib_lines[body_start:length(bib_lines)], collapse = "\n"))
+```
+
+\newpage
+
+# Key Figures
+
+Regenerated on demand rather than committed as static images, per this
+project's reproducibility convention -- see each source notebook for
+the code that produces them.
+
+- `output/figures/data_availability_timeline.png` -- data availability
+  through time, by source.
+- `Figures/d18O_dD.jpeg` -- isotope mixing diagram (δ¹⁸O vs. δD).
+- `output/figures/literature_reference/` -- rendered historic-literature
+  figures (Sorey & Colvard 1992 Figs. 39-40, Klein et al. 2007 Fig. 1,
+  White 1968 Plate 1), embedded directly in Chapter "Historical Context"
+  above.
