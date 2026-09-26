@@ -728,15 +728,27 @@ closest this project currently comes to an actual Leapfrog-style 3D
 view without opening Leapfrog itself.
 
 ```{r skalbeck-3d-plot}
+#| results: asis
 grid_thin <- grid_surfaces[seq(1, nrow(grid_surfaces), by = 8), ]
-plotly::plot_ly(grid_thin, x = ~UTM_E, y = ~UTM_N, z = ~ -Depth_m, color = ~Layer,
-                 colors = c("#e6ab02", "#7570b3", "#d95f02"),
-                 type = "scatter3d", mode = "markers", marker = list(size = 2)) %>%
-  plotly::layout(scene = list(
-    xaxis = list(title = "UTM Easting (m)"),
-    yaxis = list(title = "UTM Northing (m)"),
-    zaxis = list(title = "Depth below surface (m, negative down)")
-  ))
+if (knitr::is_latex_output()) {
+  # A real interactive 3D scatter only renders in HTML output -- PDF/LaTeX
+  # gets a static 2D projection (Northing vs. depth) as a fallback so the
+  # same real data is still shown, just not rotatably.
+  print(ggplot(grid_thin, aes(x = UTM_N, y = -Depth_m, color = Layer)) +
+    geom_point(size = 0.6, alpha = 0.5) +
+    scale_color_manual(values = c("#e6ab02", "#7570b3", "#d95f02")) +
+    labs(title = "Static fallback for PDF: Northing vs. depth (interactive 3D view is in the HTML notebook)",
+         x = "UTM Northing (m)", y = "Depth below surface (m, negative down)"))
+} else {
+  plotly::plot_ly(grid_thin, x = ~UTM_E, y = ~UTM_N, z = ~ -Depth_m, color = ~Layer,
+                   colors = c("#e6ab02", "#7570b3", "#d95f02"),
+                   type = "scatter3d", mode = "markers", marker = list(size = 2)) %>%
+    plotly::layout(scene = list(
+      xaxis = list(title = "UTM Easting (m)"),
+      yaxis = list(title = "UTM Northing (m)"),
+      zaxis = list(title = "Depth below surface (m, negative down)")
+    ))
+}
 ```
 
 **On hydraulic conductivity**: no literature source currently on
@@ -773,7 +785,12 @@ calchecks <- dbGetQuery(con, "
          round(difference, 2) AS difference
   FROM Logger_Calibration_Checks ORDER BY logger_type, check_timestamp
 ")
-tbl_cc <- knitr::kable(calchecks, caption = "Real field calibration/reference checks, auto-detected from Field_Measurements")
+cc_caption <- if (knitr::is_latex_output()) {
+  "Real field calibration/reference checks, auto-detected from Field\\_Measurements"
+} else {
+  "Real field calibration/reference checks, auto-detected from Field_Measurements"
+}
+tbl_cc <- knitr::kable(calchecks, caption = cc_caption)
 if (knitr::is_latex_output()) {
   tbl_cc <- kableExtra::kable_styling(tbl_cc, latex_options = c("scale_down", "hold_position"), font_size = 8)
 }
@@ -1382,6 +1399,50 @@ individual wells were sampled in *both* the 1990s and 2020s, so the
 model still can't fully separate a true multi-decade trend from
 era-to-era differences in which wells happened to be sampled -- flagged
 here again rather than glossed over.
+
+**Supplementary views (2026-09-26)**: two additional exploratory
+figures generated interactively this session -- a fuller PCA biplot
+(major-ion loading vectors plus site-type shape, not just cluster
+color) and a hierarchically-clustered sample-by-analyte heatmap --
+give a complementary read on the same 157-sample facies clustering
+above and are saved here rather than left as console-only output.
+
+```{r facies-supplementary-figures}
+#| results: asis
+#| fig-width: 9
+#| fig-height: 7
+# Built from the CURRENT execution cwd (absolute), not a relative
+# guess -- robust whether this chunk runs standalone (cwd=notebooks/)
+# or transcluded into a combined document where an earlier chapter
+# has pinned cwd to the project root (see 00_full_report.qmd).
+supp_fig_dir <- file.path(getwd(), "output", "figures", "facies")
+if (!dir.exists(supp_fig_dir)) supp_fig_dir <- file.path(getwd(), "..", "output", "figures", "facies")
+supp_fig_dir <- normalizePath(supp_fig_dir, mustWork = FALSE)
+biplot_path <- file.path(supp_fig_dir, "facies_pca_biplot.png")
+heatmap_path <- file.path(supp_fig_dir, "facies_chem_heatmap.png")
+if (file.exists(biplot_path)) {
+  knitr::asis_output(sprintf(
+    "![PCA biplot of major-ion chemistry (Na/K/Ca/Mg/Cl/SO4/Alkalinity), colored by the persisted facies cluster and shaped by site type. PC1 (67.2%% of variance) tracks the Na/K/Cl/SO4 thermal-dilution axis; PC2 (24.5%%) tracks Ca/Mg. Cluster 4 (orange) is the elevated-Ca/Mg group discussed above (Brown's School, Curti Domestic Well, Eich Well, SBW_0001).](%s)",
+    gsub("\\\\", "/", biplot_path)
+  ))
+} else {
+  message("[skip] facies PCA biplot not found at render time: ", biplot_path)
+}
+```
+
+```{r facies-supplementary-heatmap}
+#| results: asis
+#| fig-width: 9
+#| fig-height: 7
+if (file.exists(heatmap_path)) {
+  knitr::asis_output(sprintf(
+    "![Sample x analyte heatmap (log-transformed, z-scored by analyte), hierarchically clustered on both axes, row-annotated by facies cluster and site type. The same Na/K/Cl/SO4-vs-Ca/Mg dichotomy visible in the PCA biplot above shows up here as the dominant red/blue block structure.](%s)",
+    gsub("\\\\", "/", heatmap_path)
+  ))
+} else {
+  message("[skip] facies heatmap not found at render time: ", heatmap_path)
+}
+```
 
 ### Spatial overlay: facies clusters mapped onto well positions with approximate depth (2026-09-26)
 
