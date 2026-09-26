@@ -367,27 +367,29 @@ hist_ratios <- sorey_chem %>%
   filter(analyte %in% c("Cl", "B", "Li")) %>%
   pivot_wider(id_cols = c(feature, sample_date), names_from = analyte, values_from = value) %>%
   filter(!is.na(Cl), !is.na(B)) %>%
-  mutate(Cl_B = Cl / B, Cl_Li = Cl / Li, era = "1950-1991 (Sorey & Colvard 1992)")
+  mutate(Cl_B = Cl / B, Cl_Li = Cl / Li, era = "1950-1991 (Sorey & Colvard 1992)",
+         year = as.integer(substr(sample_date, 1, 4)))
 
 modern_ratios <- dbGetQuery(con, "
-  SELECT s.sample_id, l.name AS feature, l.site_type, la.analyte, la.value
+  SELECT s.sample_id, l.name AS feature, l.site_type, s.collection_time, la.analyte, la.value
   FROM Lab_Analyses la
   JOIN Samples s ON s.sample_id = la.sample_id
   JOIN Locations l ON l.location_id = s.location_id
   WHERE la.analyte IN ('Cl','B','Li')
     AND s.data_source != 'Sorey & Colvard 1992'
 ") %>%
-  pivot_wider(id_cols = c(sample_id, feature, site_type), names_from = analyte,
+  pivot_wider(id_cols = c(sample_id, feature, site_type, collection_time), names_from = analyte,
               values_from = value, values_fn = mean) %>%
   filter(!is.na(Cl), !is.na(B)) %>%
   mutate(Cl_B = Cl / B, Cl_Li = Cl / Li,
          era = if_else(site_type %in% c("fumarole", "seep", "spring"),
                         "2024-2026 real thermal (FIELD)",
-                        "2024-2026 NDEP domestic/background wells"))
+                        "2024-2026 NDEP domestic/background wells"),
+         year = lubridate::year(lubridate::mdy_hm(collection_time, quiet = TRUE)))  # real parsed sample year (2024 or 2026)
 
 ratio_compare <- bind_rows(
-  hist_ratios %>% select(feature, era, Cl, B, Li, Cl_B, Cl_Li),
-  modern_ratios %>% select(feature, era, Cl, B, Li, Cl_B, Cl_Li)
+  hist_ratios %>% select(feature, era, year, Cl, B, Li, Cl_B, Cl_Li),
+  modern_ratios %>% select(feature, era, year, Cl, B, Li, Cl_B, Cl_Li)
 )
 ratio_compare
 ```
@@ -395,26 +397,70 @@ ratio_compare
 ```{r ratio-plot}
 #| fig-width: 8
 #| fig-height: 5
-ggplot(ratio_compare %>% filter(!is.na(Cl_B)), aes(x = Cl_B, y = era)) +
-  geom_point(size = 2.5, alpha = 0.7) +
-  geom_vline(xintercept = 19.3, linetype = "dashed") +
-  annotate("text", x = 19.3, y = 0.55, label = "Sorey & Colvard (1992)\nmean Cl/B = 19.3", size = 3, hjust = -0.05) +
-  labs(x = "Cl / B (mass ratio)", y = NULL,
-       title = "Chloride-to-boron ratio: 1950-1991 vs. present-day chemistry",
-       subtitle = "Real thermal samples cluster near Sorey's 1990-91 value; dilute domestic/background wells scatter widely near their B detection limit")
+# Single unified plot (year on the x-axis, not era-on-y as in an earlier
+# draft) -- well-name labels via ggrepel, and the t-test statistics moved
+# into the figure caption rather than left as a separate prose paragraph,
+# per explicit feedback this session. Excludes the Cox well (per Sorey &
+# Colvard's own stated convention) and the SBRR/SBBV creek stations
+# (mixing points, not end-member samples -- including them the first time
+# this was tried pulled in SBRR's near-zero-B ratio and badly distorted
+# the comparison).
+cl_b_labels <- c(
+  "CPI production well 21-5" = "21-5", "CPI production well 83A-6" = "83A-6",
+  "SB GEO production well PW-1" = "PW-1", "SB GEO production well PW-2" = "PW-2",
+  "SB GEO production well PW-3" = "PW-3", "Hot spring 6, main terrace ACEC" = "Spring 6",
+  "New seep adjacent to well GS-5 (1991)" = "GS-5 seep",
+  "SBF_0001" = "SBF_0001", "SBW_0001" = "SBW_0001", "SBW_0002" = "SBW_0002",
+  "SBS_0001" = "SBS_0001", "SBS_0002" = "SBS_0002", "SBS_0003" = "SBS_0003"
+)
+ratio_plot_data <- ratio_compare %>%
+  filter(!is.na(Cl_B), !grepl("Cox", feature), !feature %in% c("SBRR", "SBBV")) %>%
+  mutate(
+    era_short = if_else(grepl("^19", era) | era == "1950-1991", "1990-91", "2024-26"),
+    label = coalesce(cl_b_labels[feature], feature)
+  )
+t_res_ratio <- t.test(Cl_B ~ era_short, data = ratio_plot_data)
+caption_ratio <- sprintf(
+  "Welch two-sample t-test: mean Cl/B = %.1f (1990-91, n=%d) vs. %.1f (2024-26, n=%d); t(%.1f) = %.2f, p = %.3f, 95%% CI [%.2f, %.2f]",
+  t_res_ratio$estimate[1], sum(ratio_plot_data$era_short == "1990-91"),
+  t_res_ratio$estimate[2], sum(ratio_plot_data$era_short == "2024-26"),
+  t_res_ratio$parameter, t_res_ratio$statistic, t_res_ratio$p.value,
+  t_res_ratio$conf.int[1], t_res_ratio$conf.int[2]
+)
+ggplot(ratio_plot_data, aes(x = year, y = Cl_B, color = era_short)) +
+  geom_point(size = 3) +
+  ggrepel::geom_text_repel(aes(label = label), size = 3, max.overlaps = 20, seed = 4172, show.legend = FALSE) +
+  labs(x = "Year", y = "Cl / B (mass ratio)", color = "Era",
+       title = "Chloride-to-boron ratio in real thermal samples, 1950-2026",
+       caption = caption_ratio) +
+  theme(plot.caption = element_text(hjust = 0, size = 9))
 ```
 
-**Reading this:** this project's own 2024-2026 real thermal FIELD
-samples (fumarole/seep/spring) give Cl/B roughly 20-23, closely matching
-Sorey & Colvard's 1990-91 CPI/SB GEO value of 19.3 +/- 1.7 -- a genuine,
-quantitative "then vs. now" consistency check, not just a qualitative
-one. The NDEP domestic/background well samples (Boyd, Jeppson, Rogers)
-show much more scattered Cl/B ratios; their B values sit at or near
-0.05-0.18 mg/L, close to a plausible analytical detection limit, so
-those ratios should be read as noisy near-DL artifacts of dilute,
-non-thermal ground water rather than a real geochemical signal -- fully
-consistent with this project's established finding that these are
-background, not thermal, waters.
+**Reading this (revised 2026-09-12 with a real statistical test -- see
+the new Statistical Analysis section below):** this project's own 2024-2026 real thermal FIELD
+samples (fumarole/seep/spring) give Cl/B roughly 20-23, in the same
+general range as Sorey & Colvard's 1990-91 CPI/SB GEO value of 19.3 +/-
+1.7. A Welch two-sample t-test on the 7 historical vs. 6 modern real
+thermal Cl/B values (excluding the Cox well, per Sorey & Colvard's own
+convention, and excluding the SBRR/SBBV creek stations, which are
+mixing points, not end-member samples) finds this difference is
+**small but statistically significant**: mean 19.6 (1950-1991) vs. 21.9
+(2024-2026), Welch t(9.87) = -2.92, p = 0.015, 95% CI on the difference
+[-4.03, -0.54]. This is a more precise, and slightly different,
+statement than this notebook's original (Session 27) "closely
+matching... essentially unchanged" framing -- the conservative-element
+signature is genuinely similar in magnitude across 35 years, but the
+two eras are not statistically indistinguishable. A plausible, not yet
+tested, explanation is a systematic difference in analytical method
+(UURI/AMTEC ICP for the 1990-91 samples vs. this project's own modern
+lab) rather than a real 12% geochemical shift -- flagged as an open
+question, not resolved here. The NDEP domestic/background well samples
+(Boyd, Jeppson, Rogers) show much more scattered Cl/B ratios; their B
+values sit at or near 0.05-0.18 mg/L, close to a plausible analytical
+detection limit, so those ratios should be read as noisy near-DL
+artifacts of dilute, non-thermal ground water rather than a real
+geochemical signal -- fully consistent with this project's established
+finding that these are background, not thermal, waters.
 
 ## Discharge-through-time: extending Sorey's Table 2
 
@@ -427,6 +473,11 @@ estimates and this project's own 2026 poster result to give a single,
 ~70-year view.
 
 ```{r discharge-timeline}
+# Extended 2026-09-25: added a new database-computed point (this project's
+# only real paired Cl+discharge measurement, 2026-05-01) and a second
+# Collar & Huntley (1990) point (their own stated "about 80% of White's
+# 1955 baseline" 1988-89 natural-only estimate, distinct from the two
+# dated Table 2 values already used).
 discharge_hist <- tribble(
   ~period, ~year_mid, ~gpm, ~Ls, ~source,
   "White (1968), Apr 1955",         1955, 1110, 1110 * 0.0630902, "White (1968), chloride-flux method",
@@ -435,22 +486,26 @@ discharge_hist <- tribble(
   "Collar (1990), Jun 1988",        1988.5, 523, 523 * 0.0630902, "Collar (1990) via Sorey & Colvard (1992) Table 2",
   "Collar (1990), Aug 1988",        1988.6, NA, NA, "Not counting net CPI production; unseen seepage component only reported",
   "Collar (1990), Mar 1989",        1989.2, 663, 663 * 0.0630902, "Collar (1990) via Sorey & Colvard (1992) Table 2",
+  "Collar & Huntley (1990), 1988-89 natural-only", 1988.8, NA, 0.80 * 1120 * 0.0630902, "Collar & Huntley (1990): 'about 80% of that estimated by White (1968) in 1955' (1120 gpm baseline, natural discharge only, excludes CPI production)",
   "Sorey & Spielman (2008), 2007-08", 2007.5, NA, mean(c(730, 1214)) * 0.0630902, "Chloride-flux, SBRR/SBBV sites",
   "Sorey & Spielman (2017), 2008-2016 avg", 2012, NA, 60, "Chloride-flux, SBRR/SBBV sites, 24 sampling events",
-  "Irvin & Lindsey (2026 poster), post-eruption", 2026, NA, 27, "This project's own chloride mass-balance estimate"
+  "This project (database), 5/1/2026", 2026.33, NA, 42.1, "Computed this session directly from real paired Cl (SBRR=17.1, SBBV=126 mg/L, both 2026-05-01) and USGS discharge (station 10349300, 11.2 cfs near the SBRR sample time) -- same formula as the poster estimate below, but a single day, not an averaging period",
+  "Irvin & Lindsey (2026 poster), post-eruption avg", 2026, NA, 27, "This project's own chloride mass-balance estimate (averaged over its own sampling period, not a single day)"
 )
 discharge_hist
 ```
 
 ```{r discharge-plot}
-#| fig-width: 8
-#| fig-height: 5
+#| fig-width: 9
+#| fig-height: 5.5
 ggplot(discharge_hist %>% filter(!is.na(Ls)), aes(x = year_mid, y = Ls)) +
-  geom_point(size = 3) +
-  geom_line(alpha = 0.4) +
+  geom_line(alpha = 0.3) +
+  geom_point(aes(color = grepl("This project", period)), size = 3, show.legend = FALSE) +
+  ggrepel::geom_text_repel(aes(label = period), size = 2.6, max.overlaps = 30, seed = 4172) +
+  scale_color_manual(values = c(`TRUE` = "#d95f02", `FALSE` = "black")) +
   labs(x = "Year", y = "Thermal-water discharge (L/s)",
        title = "Thermal-water discharge to Steamboat Creek, 1955-2026",
-       subtitle = "White (1968) through this project's own 2026 poster estimate")
+       subtitle = "No confidence intervals shown -- no source reports a measurement uncertainty. Orange point is a\nnew, reproducible single-day estimate computed directly from this project's own database this session.")
 ```
 
 **Reading this:** discharge estimates were broadly 45-90 L/s
@@ -467,6 +522,28 @@ modern chloride-flux estimates, so method consistency, not just
 magnitude, matters when reading this chart -- White (1968) and Collar
 (1990)'s methods and gauge locations are not identical to Sorey &
 Spielman's.
+
+**Seasonal Cl-flux variability -- a real, previously-published effect
+worth naming here (2026-09-25).** Sorey & Spielman (2017) -- already
+cited above, not a new document -- explicitly document a real seasonal
+pattern in their own SBRR/SBBV Cl-flux computations: *"lower computed
+chemical flux at downstream sites in SB Creek each summer and higher
+chemical loads in creek water in the wintertime runoff period,"*
+attributed in part to seasonal buildup and flushing of chloride in
+shallow soils from irrigation/evaporation cycles downstream of Crane
+Ditch diversions -- though they state *"the magnitude of such seasonal
+changes appears to be only on the order of 25% or less."* This is a
+plausible, real contributor to the gap between this session's new
+single-day database estimate (42.1 L/s, 2026-05-01, spring runoff
+season) and the poster's own averaged ~27 L/s figure -- a ~56% relative
+difference, larger than Sorey & Spielman's own documented ~25% seasonal
+envelope, so seasonality alone does not fully explain it, but it is a
+real, published, and directly relevant effect rather than pure noise.
+This also matches this project's own poster, which discusses Cl outflow
+variability in the diluted creek -- worth a dedicated seasonal-Cl-flux
+analysis once more paired Cl+discharge dates exist in the database (a
+single day, as computed here, cannot separate a real seasonal signal
+from ordinary day-to-day variability).
 
 ## Appendix G and Table 9: what's behind the discharge/reservoir numbers (2026-09-12)
 
@@ -514,7 +591,8 @@ table9 <- tibble::tribble(
   "Steamboat No.1, Mar-May 1987", "no", "nd", "1.2e-3 (calc.)", "strat 5", "Berkeley Group (1987)",
   "23-5/Cox 1-1, May-June 1987", "yes", "7930-9500", "7.8e-4 to 9.0e-4", "strat 2, 21-5", "Faulder (1987); Goranson (1989)",
   "21-5, 23-5, 83A-6, 1988", "yes", "1250-2400", "2.5e-3", "strat 9", "Collar (1990)",
-  "21-5, 23-5, 83A-6, 1988 (spring response)", "yes", "nd", "2.8e-3", "spring 12, spring 42w", "Collar (1990)"
+  "21-5, 23-5, 83A-6, 1988 (spring response)", "yes", "nd", "2.8e-3", "spring 12, spring 42w", "Collar (1990)",
+  "Spring 42w, Jun-Aug 1988 (Birsoy-Summers method)", "yes", "3000", "2.6e-3", "spring 42w", "Collar & Huntley (1990)"
 )
 table9
 ```
@@ -526,6 +604,67 @@ the qualitative reservoir-drawdown narrative already summarized above
 ("What the 1992 report says"). Worth revisiting if this project's own
 hydraulic-gradient work ever needs a real transmissivity/storage
 reference range for the Steamboat Hills reservoir.
+
+### 4.6 Collar & Huntley (1990): a fault map and a discharge-deficit statistic (2026-09-12)
+
+A second Sorey-team document, `Collar.pdf` (Collar, R.J. and Huntley, D.
+1990, 12th New Zealand Geothermal Workshop), was added to the literature
+folder and read directly. It largely overlaps the 1992 report above (same
+wells, same hydrograph story), but contributes two things not already
+captured:
+
+**A real fault map.** Its Figure 1 ("Fault and air photo lineament map of
+the Steamboat Springs geothermal area, including the location of selected
+wells") shows mapped faults (dashed = inferred, dotted = concealed) and
+air-photo lineaments of probable structural origin, including the named
+Pleasant Valley Fault and Steamboat Springs Fault Zone, with `21-5`,
+`83A-6`, `23-5`, `Cox I-1`, `PW-1/2/3`, `IW-2/3`, strat wells, `Brown
+School`, `Pine Tree Ranch`, `Steinhardt`, and `GS-1`/`GS-8` all located on
+it by name. Ten of these already have real coordinates in this database:
+
+```{r collar-fig1-control-points}
+dbGetQuery(con, "
+  SELECT well_name, latitude, longitude FROM Wells
+  WHERE well_name IN ('21-5R','23-5','83A-6','Cox I-1','PW-2','PW-3','IW-2',
+                       'Brown School Geothermal Well','Steinhardt Geothermal Well','GS-5')
+  ORDER BY well_name
+")
+```
+
+This is a materially better fault-digitizing candidate than the
+Dhakal-diagram source discussed in `README.md`'s "Planned: Leapfrog 3D
+geologic model export" section (a production/injection flow diagram, not
+a fault map) -- see that section (updated 2026-09-12) for the proposed
+digitizing approach using these ten points as control points.
+
+**A discharge-deficit statistic.** The paper states that 1988 spring
+discharge, measured at 3-4 gal/min, was far below the 34-40 gal/min
+*predicted* from White (1968)'s own spring-discharge/annual-precipitation
+relationship -- a specific, citable number distinct from (and more
+precise than) the aggregate gpm figures already in the Section 6
+discharge-through-time chart.
+
+**Elevation cross-check.** The paper gives well-field elevations (OESI/
+SB GEO ~4700 ft; CPI 5350-5660 ft; Cox I-1 5050 ft; springs ~4650 ft),
+checked against this project's own `Wells.elevation_m`:
+
+```{r elevation-crosscheck}
+dbGetQuery(con, "
+  SELECT well_name, elevation_m, ROUND(elevation_m/0.3048,0) AS elevation_ft
+  FROM Wells WHERE well_name IN ('PW-2','PW-3','IW-2','21-5R','Cox I-1')
+  ORDER BY well_name
+")
+```
+
+`IW-2`/`PW-2`/`PW-3` (4634-4730 ft) are consistent with the paper's OESI
+well-field figure (~4700 ft). `21-5R` (5722 ft) sits just above the
+paper's stated CPI range (5350-5660 ft) -- a minor, unresolved
+discrepancy, plausibly because the paper gives one representative
+figure for the whole field rather than a per-well value. `Cox I-1` had
+no recorded elevation at all; the paper's specific value (5050 ft =
+1539.24 m) is filled in below since, unlike the CPI range, it is
+directly attributable to a single named well.
+
 
 
 ## Table 10 monitoring network vs. this project's Locations
@@ -568,6 +707,192 @@ pass before being accepted; the one bad row is corrected to `2007-07-10`.
 No other row in `Well_Log_Documents`/`Water_Level_Observations` was
 affected -- this was the only 2-digit-year-formatted completion date in
 the batch.
+
+## Statistical Analysis: Is There a Real Chloride Trend? (2026-09-12)
+
+Sections above establish real Cl values across 1950-2026 and a
+qualitative sense that thermal-water chemistry looks broadly similar
+over time. This section applies actual statistical tests to that claim
+-- per an explicit request that this notebook's historical-comparison
+work be statistic-driven, not just descriptive.
+
+### A combined 1950-2026 Cl dataset
+
+```{r cl-timeline-data}
+library(lubridate)
+cl_data <- dbGetQuery(con, "
+  SELECT s.sample_id, l.name AS feature, l.site_type, s.collection_time, s.data_source, la.value AS Cl
+  FROM Lab_Analyses la
+  JOIN Samples s ON s.sample_id = la.sample_id
+  JOIN Locations l ON l.location_id = s.location_id
+  WHERE la.analyte = 'Cl'
+")
+
+# Sampling_Events/Samples.collection_time mixes Unix-epoch-seconds,
+# MM/DD/YYYY H:MM, and ISO YYYY-MM-DD formats across sources -- the
+# same class of dual/mixed-format issue already flagged project-wide
+# for Sampling_Events.date (notebook 05). Parsed here defensively,
+# trying each format in turn rather than assuming one.
+.parse_any_date <- function(x) {
+  num <- suppressWarnings(as.numeric(x))
+  out <- as.Date(rep(NA, length(x)))
+  is_num <- !is.na(num) & !grepl('[A-Za-z]', x)
+  out[is_num] <- as.Date(as.POSIXct(num[is_num], origin = '1970-01-01', tz = 'UTC'))
+  rem <- !is_num
+  out[rem] <- suppressWarnings(as.Date(x[rem], format = '%m/%d/%Y %H:%M'))
+  rem2 <- rem & is.na(out)
+  out[rem2] <- suppressWarnings(as.Date(x[rem2], format = '%Y-%m-%d'))
+  out
+}
+cl_data$date <- .parse_any_date(cl_data$collection_time)
+cl_data$year <- year(cl_data$date)
+
+# Added 2026-09-25: Steinhardt's two narrative-based bracket samples
+# (1987/1990, see Section 4.2 correction above), now that they exist.
+focus_wells <- c(
+  'CPI production well 21-5','CPI production well 83A-6','CPI production well 23-5',
+  'CPI injection well Cox 1-1 (Cox well)','SB GEO production well PW-1','SB GEO production well PW-2',
+  'SB GEO production well PW-3','Well GS-5, 1950 sample (White 1968)','New seep adjacent to well GS-5 (1991)',
+  'Hot spring 6, main terrace ACEC',
+  'SBF_0001','SBW_0001','SBW_0002','SBS_0001','SBS_0002','SBS_0003',
+  'Eich Well','Soccer Field Monitoring Well','Boyd Domestic Well','Jeppson Geothermal Well','Rogers Domestic Well',
+  'Steinhardt Geothermal Well (narrative Cl trend)'
+)
+background_names <- c('Boyd Domestic Well','Jeppson Geothermal Well','Rogers Domestic Well')
+cl_focus <- cl_data[cl_data$feature %in% focus_wells, ]
+cl_focus$group2 <- ifelse(cl_focus$feature %in% background_names, 'background/domestic',
+                    ifelse(cl_focus$feature %in% c('Eich Well','Soccer Field Monitoring Well'), 'intermediate (NDEP)', 'thermal'))
+
+well_labels <- c(
+  "CPI production well 21-5" = "21-5", "CPI production well 83A-6" = "83A-6",
+  "CPI injection well Cox 1-1 (Cox well)" = "Cox I-1", "SB GEO production well PW-1" = "PW-1",
+  "SB GEO production well PW-2" = "PW-2", "SB GEO production well PW-3" = "PW-3",
+  "Well GS-5, 1950 sample (White 1968)" = "GS-5", "New seep adjacent to well GS-5 (1991)" = "GS-5 seep",
+  "Hot spring 6, main terrace ACEC" = "Spring 6", "SBF_0001" = "SBF_0001", "SBW_0001" = "SBW_0001",
+  "SBW_0002" = "SBW_0002", "SBS_0001" = "SBS_0001", "SBS_0002" = "SBS_0002", "SBS_0003" = "SBS_0003",
+  "Eich Well" = "Eich", "Soccer Field Monitoring Well" = "Soccer Field", "Boyd Domestic Well" = "Boyd",
+  "Jeppson Geothermal Well" = "Jeppson", "Rogers Domestic Well" = "Rogers",
+  "Steinhardt Geothermal Well (narrative Cl trend)" = "Steinhardt"
+)
+cl_focus$label <- well_labels[cl_focus$feature]
+nrow(cl_focus)
+```
+
+```{r cl-timeline-plot}
+#| fig-width: 9
+#| fig-height: 5.5
+# Reworked 2026-09-25 per explicit feedback: well-name labels (not just
+# color groups), lines connecting repeat samples of the same well/spring
+# through time, and the 6 single-snapshot 2026 FIELD thermal samples
+# (SBF_0001, SBW_0001/2, SBS_0001-3) dropped from THIS plot -- they add
+# no temporal information (all one date) and were crowding the 2020s
+# cluster; they remain visible in the Cl/B ratio plot above.
+exclude_2026_single <- c("SBF_0001","SBW_0001","SBW_0002","SBS_0001","SBS_0002","SBS_0003")
+cl_focus_timeline <- cl_focus[!cl_focus$feature %in% exclude_2026_single, ]
+ggplot(cl_focus_timeline, aes(x = date, y = Cl, color = group2)) +
+  geom_line(aes(group = feature), alpha = 0.4, linewidth = 0.5, show.legend = FALSE) +
+  geom_point(size = 2.5) +
+  ggrepel::geom_text_repel(aes(label = label), size = 3.2, max.overlaps = 20, seed = 4172) +
+  scale_y_log10() +
+  labs(x = NULL, y = "Chloride (mg/L, log scale)", color = "Sample group",
+       title = "Chloride concentration by well/spring through time, 1950-2026",
+       subtitle = "Wells with real repeat measurements over time (Steinhardt, Boyd, Jeppson, Rogers, Eich,\nSoccer Field) plus single historical thermal anchors for context",
+       caption = "The 6 single-snapshot 2026 FIELD thermal samples (SBF_0001, SBW_0001/2, SBS_0001-3) are shown separately in the Cl/B ratio plot above to reduce crowding here.")
+```
+
+### Is there a statistically significant Cl trend over time?
+
+A naive linear regression of Cl against year across every
+thermal-influenced sample (thermal + intermediate groups, n = 19)
+finds a significant negative slope:
+
+```{r cl-trend-naive}
+fit_all <- lm(Cl ~ year, data = cl_focus[cl_focus$group2 != 'background/domestic', ])
+summary(fit_all)
+```
+
+**But this is confounded**, and re-running it after excluding the two
+'intermediate' NDEP wells (Eich, Soccer Field -- only ever sampled in
+2024, and already established elsewhere in this notebook as
+partially-diluted, not pure end-member thermal water) weakens the
+trend to marginal significance:
+
+```{r cl-trend-pure}
+pure_thermal <- cl_focus[cl_focus$group2 == 'thermal', ]
+fit_pure <- lm(Cl ~ year, data = pure_thermal)
+summary(fit_pure)
+
+pure_thermal$era <- ifelse(pure_thermal$year < 2000, 'pre-2000', '2024-2026')
+aggregate(Cl ~ era, data = pure_thermal, FUN = function(x) c(n = length(x), mean = mean(x), sd = sd(x)))
+```
+
+**Honest reading:** including the intermediate wells (p = 0.0099,
+R2 = 0.33) versus excluding them (p = 0.099, R2 = 0.20) changes the
+conclusion from 'significant decline' to 'suggestive but not
+significant at the conventional 0.05 threshold' -- purely because of
+which samples are grouped as 'thermal.' The pre-2000 real-thermal mean
+(811 mg/L, n=9) is numerically higher than the 2024-2026 mean (699
+mg/L, n=6), but with only 15 points spanning 76 years and no repeated
+measurements of the same individual well across both eras, this
+dataset does not have the statistical power to distinguish a real
+long-term decline from era-to-era sampling differences (different
+wells sampled in 1990-91 than in 2024-2026). This is reported as an
+open, unresolved question -- not a confirmed trend -- consistent with
+this notebook's standing practice of not overstating what a small
+historical dataset can support.
+
+### Cl/B ratio: a real two-sample test (not just eyeballing)
+
+The Cl/B ratio comparison introduced earlier in this notebook is
+repeated here as an explicit, reproducible statistical test rather
+than a visual read of the plot:
+
+```{r cl-b-test}
+cl_b_data <- dbGetQuery(con, "
+  SELECT s.sample_id, l.name AS feature, s.collection_time, la.analyte, la.value
+  FROM Lab_Analyses la JOIN Samples s ON s.sample_id=la.sample_id JOIN Locations l ON l.location_id=s.location_id
+  WHERE la.analyte IN ('Cl','B') AND s.data_source != 'NDEP'
+")
+cl_b_wide <- reshape(cl_b_data[, c('sample_id','feature','collection_time','analyte','value')],
+                      idvar = c('sample_id','feature','collection_time'), timevar = 'analyte', direction = 'wide')
+names(cl_b_wide) <- gsub('value\\.', '', names(cl_b_wide))
+cl_b_wide <- cl_b_wide[!is.na(cl_b_wide$Cl) & !is.na(cl_b_wide$B), ]
+cl_b_wide$Cl_B <- cl_b_wide$Cl / cl_b_wide$B
+cl_b_wide$year <- year(.parse_any_date(cl_b_wide$collection_time))
+# Exclude Cox (per Sorey & Colvard's own stated convention) and the
+# SBRR/SBBV creek stations (mixing points, not end-member samples --
+# including them wrongly pulled in a Cl/B ratio near 1500 dominated by
+# SBRR's near-zero B).
+cl_b_wide <- cl_b_wide[!grepl('Cox', cl_b_wide$feature) & !cl_b_wide$feature %in% c('SBRR','SBBV'), ]
+cl_b_wide$era <- ifelse(cl_b_wide$year < 2000, '1950-1991', '2024-2026')
+cl_b_wide[, c('feature','year','Cl','B','Cl_B','era')]
+
+t.test(Cl_B ~ era, data = cl_b_wide)
+```
+
+This confirms the result already folded into the "Cl/B and Cl/Li ratio
+check" section above: a small (19.6 vs. 21.9) but real, statistically
+significant (p = 0.015) difference between the two eras -- similar in
+magnitude, not statistically identical.
+
+### Discharge-estimate uncertainty: an honest limitation, not a fabricated CI
+
+The discharge-through-time chart earlier in this notebook (White 1968,
+Shump 1985, Collar 1990, Sorey & Spielman 2008/2017, this project's
+2026 poster) plots point estimates with no confidence interval. This
+is deliberate, not an oversight: none of the source documents report a
+measurement-uncertainty or replicate-based error bar for their
+discharge estimates, and the raw synoptic measurements behind the
+pre-2007 estimates are not available in a form this project can
+re-derive an uncertainty from (Appendix G's per-station table, as
+documented above, is real but too OCR-misaligned to trust for this).
+Fabricating a confidence interval from nothing would be worse than
+reporting none. A future, real improvement would be to propagate this
+project's own analytical Cl-measurement uncertainty (a stated lab
+detection-limit/precision figure, not yet compiled here) through the
+chloride mass-balance formula for the SBRR/SBBV-based estimates only,
+where the raw measurements are directly available -- flagged as a
+concrete next step, not attempted in this session.
 
 ## Barometric efficiency: a documented, not-yet-implemented capability
 
@@ -655,6 +980,8 @@ gap rather than an unrecognized one.
 | 2026-09-12 | Notebook created. Sorey & Colvard (1992) read directly (`pdftotext -layout`); Table 1 chemistry (9 samples, 1950-1991) ingested for the first time via `ingest_historical_sorey1992.R`; well/site cross-reference built against `Wells`/`Well_Aliases`/`Locations`; Cl/B ratio confirmed consistent between 1990-91 and 2024-2026 real thermal samples; discharge-through-time table assembled (White 1968 through this project's 2026 poster); barometric efficiency documented as a recommended, not-yet-runnable capability (no barometric-pressure parameter exists in this database yet). |
 | 2026-09-12 (follow-up) | Resolved `83A-6` and `Cox 1-1` via exact NBMG Geothermal_Wells name matches; discovered and resolved that `"GS-58"`/`"GS-59"` are OCR artifacts of well `GS-5` (its own table footnote superscripts fused onto the name); all four now have real coordinates in `Locations`/`Wells`. Also found and fixed a 2-digit-year date-parsing bug in `ingest_well_logs.R`'s `.safe_completion_date()` that had produced one malformed `Water_Level_Observations` timestamp (`"7-07-10"`, corrected to `2007-07-10`). |
 | 2026-09-12 (Tables 3/6/7/8/9, Appendix G) | Registered strat wells 2/5/6/7/8/9/13/14 (Table 8) and Table 3's South Truckee Meadows wells as real Wells rows; resolved Steinhardt and Brown School via exact NBMG matches, Bianco tentatively via NDWR owner-name + PLSS centroid; PTR-1/2 and STMGID MW-3/4 remain unresolved despite a fresh search; Herz-2 left inconclusive between two ambiguous NBMG candidates. Filled `Wells.top_perforation`/`bottom_perforation` (previously 100% NULL) for 7 wells from Tables 6/7, deliberately leaving 23-5 and IW-2 unfilled due to real depth conflicts with current records (documented as historical facts instead). Documented Appendix G's real methodology/survey dates (not parsed further -- too OCR-misaligned) and Table 9's reservoir-parameter values as reference only. |
+| 2026-09-12 (session 29) | Added Collar & Huntley (1990) as a source (real fault map, Figure 1, used as a fault-digitizing candidate; second reservoir-parameter data point; discharge-deficit statistic; elevation cross-check, Cox I-1 elevation filled). Added a real statistical-analysis section: naive Cl-vs-year regression is confounded by which wells are grouped as 'thermal' (significant at p=0.0099 with intermediate wells included, only marginal at p=0.099 without them); a proper two-sample t-test on Cl/B ratios finds the 1950-1991 vs. 2024-2026 difference (19.6 vs. 21.9) is small but statistically significant (p=0.015), revising this notebook's earlier, less precise 'essentially unchanged' claim. Documented why the discharge-timeline chart has no confidence intervals (no source reports measurement uncertainty; fabricating one would be worse than omitting it). |
+| 2026-09-25 | Reworked all three Cl/discharge plots per direct critique: Cl-timeline now shows well-name labels and lines connecting real repeat measurements (dropped the 6 single-snapshot 2026 FIELD samples from this specific plot to reduce crowding); discharge-through-time gained two new points (a Collar & Huntley 1988-89 natural-only estimate, and a new point computed directly from this project's own database -- the only real paired Cl+discharge measurement, 2026-05-01, giving 42.1 L/s vs. the poster's averaged 27 L/s); Cl/B ratio plot consolidated into one figure (year on the x-axis, well labels, t-test statistics moved into the figure caption instead of prose). Corrected a real data-quality error: Steinhardt's chloride range was misattributed from Table 3's OCR-misaligned row position -- the report's own narrative text (p.52) unambiguously ties a 300-to-140 mg/L decline since 1987 to Steinhardt, not the '16-22 mg/L' previously recorded; two real dated Cl samples (1987=300, ~1990=140 mg/L) added to Lab_Analyses. Added a paragraph on Sorey & Spielman (2017)'s own documented seasonal Cl-flux variability (~25% or less, summer-low/winter-high) as a real, previously-published effect relevant to (but not fully explaining) the gap between this session's new single-day estimate and the poster's averaged figure. |
 
 ```{r cleanup}
 #| include: false

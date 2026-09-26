@@ -106,3 +106,4 @@ notebooks/*_files/
 # backup/restore guard (see scripts/run_pipeline.R) protects this folder
 # across renders regardless of whether it's tracked in git.
 docs/literature/
+.posit/assistant

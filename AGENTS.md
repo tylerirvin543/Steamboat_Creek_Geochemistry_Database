@@ -3289,6 +3289,196 @@ Truckee Meadows wells), and to scope Tables 4-7/9 -- read directly via
   project's standing convention for hand-maintained CSVs under the
   blanket-ignored `data/raw/`.
 
+## Session 29 (2026-09-12, continued): Leapfrog 3D geologic model export -- scoped as a proposed direction, not built
+
+User asked about Leapfrog-ready well-data layers, incorporating fault
+data (from the Dhakal figure or literature) and eventually lithology/
+alteration for a full 3D geologic model to inform PHREEQC end-member
+grouping and a future MODFLOW build, and whether to overlay in ArcGIS
+first. Checked feasibility directly against the database rather than
+guessing, then wrote up the full scope as a new **"Planned: Leapfrog 3D
+geologic model export"** section in `README.md` (right after the
+existing "Planned: potentiometric surfaces" section) -- **nothing was
+built this session**, this is documentation/scoping only, for a future
+session to implement.
+
+- **Well collar data: mostly ready.** 109 of 205 `Wells` rows have
+  lat/lon + `elevation_m` + `total_depth` all populated (collar-ready);
+  ~76 more have partial data. No deviation surveys exist anywhere in
+  this project, so every hole would import as a straight vertical trace
+  -- stated explicitly in the README, not silently assumed.
+- **Lithology: not ready, a real gap.** `Well_Lithology` has only 5
+  rows, all `well_id = NULL` and tagged
+  `confidence=ocr_heuristic_unvalidated` (unusable OCR garbage from the
+  well-log pipeline, see Sessions 9-11/24). 83 wells have
+  `top_perforation`/`bottom_perforation` (casing/screen interval) --
+  useful as a distinct "completion interval" layer, explicitly NOT the
+  same thing as lithology.
+- **No fault data or alteration data exists anywhere in this project.**
+  The only Dhakal-sourced spatial data on disk
+  (`data/raw/arcgis/dhakal .shp/`) is well points and power-plant
+  polygons, not fault traces -- the Dhakal Figure 1 fault map (and
+  possibly White et al. 1964, PP 458-B, Plate 1) are raster figures in
+  PDFs, not georeferenced layers, and need manual digitizing (ArcGIS,
+  using this project's own well coordinates as control points), not
+  something OCR/scripting can extract. No alteration source has been
+  identified at all yet.
+- **Proposed design** (full detail in README.md): a new, separate,
+  optional pipeline stage (`scripts/leapfrog/export_leapfrog.R`,
+  `RUN_ANALYSIS$leapfrog_export`, default `FALSE`) mirroring
+  `export_geopackage.R`'s pattern exactly -- never replaces or slows
+  down the GeoPackage export. Proposed "ArcGIS out, ArcGIS back in"
+  loop: export wells/locations to the GeoPackage (already possible
+  today) as digitizing control points -> user digitizes faults/
+  alteration in ArcGIS -> a new `ingest_fault_traces.R` (mirrors
+  `register_facility_areas.R`'s `sf::st_read()` + reproject pattern)
+  reads the shapefile back into new `Fault_Traces`/`Alteration_Zones`
+  tables -> `export_leapfrog.R` reformats those same tables into
+  Leapfrog's collar/survey/interval/polyline input format.
+- **Three open decisions explicitly deferred to the user, not guessed**:
+  (1) coordinate system for the Leapfrog export (lat/lon WGS84 vs. UTM
+  Zone 11N meters -- leaning UTM but undecided); (2) who digitizes
+  faults and how (ArcGIS-led with well-coordinate control points
+  recommended over a rough automated pixel-referenced attempt); (3)
+  alteration data source (White et al. 1964, PP 458-B is an unchecked
+  candidate; otherwise stays out of scope).
+- **Proposed 4-phase build order for the next session** (README has
+  full detail): (1) `export_leapfrog_wells(con)` alone -- collar +
+  assumed-vertical survey + completion-interval proxy, buildable today,
+  no external dependency; (2) `Fault_Traces`/`Alteration_Zones` schema
+  + ingestion, structure-only, testable against a synthetic/empty
+  shapefile (same "build the capability, wait for real data" posture
+  already used for PHREEQC mixing/inverse); (3) extend
+  `export_leapfrog.R` once real digitized fault/alteration data exists,
+  resolving the CRS decision then; (4) much later, out of scope for now
+  -- a MODFLOW grid/zone export and revisiting PHREEQC end-member
+  grouping by fault-bounded compartment.
+- **Not done this session**: no code written, no schema changes, no
+  database changes -- purely a README.md scoping section plus this
+  AGENTS.md entry. `README.md` edited via the established
+  `readLines()`/`writeLines()` round-trip (CRLF file, `edit` tool's
+  exact-string matching failed against it, same recurring caveat as
+  every other CRLF file in this project). Not yet committed/pushed to
+  git.
+
+## Session 30 (2026-09-25): Leapfrog export, real PHREEQC mixing/inverse, ArcGIS Cl points, statistics-driven Cl-timeline work, Steinhardt data-quality fix
+
+Large session executing (not just scoping) the Leapfrog/PHREEQC/ArcGIS/
+statistics plan from Session 29's scoping work, plus two new literature
+documents and a real, previously-undetected data-quality fix.
+
+- **New literature**: `Collar.pdf` (Collar, R.J. and Huntley, D. 1990,
+  12th New Zealand Geothermal Workshop) and `of00-037.pdf` (Janik et al.
+  2000, Anderson Springs/SE Geysers, explicitly flagged as a **different
+  geothermal system**, methodological analog only -- same pattern as the
+  Newman-Colorado flag). Collar & Huntley's Figure 1 is a real fault and
+  air-photo-lineament map with 10 already-coordinated wells visible on it
+  (a materially better fault-digitizing candidate than the Dhakal flow
+  diagram); gives a second reservoir-parameter point (spring 42w, T=3000
+  ft2/day, S=2.6e-3) and a discharge-deficit statistic (3-4 gpm measured
+  vs. 34-40 gpm predicted, 1988). Cited in `references.Rmd` and
+  `annotated_bibliography.qmd`; both added to `notebooks/
+  07_historical_context_sorey1992.qmd` (new Section 4.6). Cox I-1's
+  previously-NULL elevation filled (5050 ft = 1539.24 m) from this source.
+- **`scripts/leapfrog/export_leapfrog.R` built and wired in**
+  (`RUN_ANALYSIS$leapfrog_export`, default FALSE): collar/survey/
+  completion-interval CSVs in UTM Zone 11N (EPSG:26911) -- resolves the
+  CRS open decision from Session 29's scoping. 110 wells fully
+  collar-ready, 95 partial (reference-only), all vertical (no deviation
+  surveys exist), 74 with a completion-interval (explicitly NOT
+  lithology) proxy.
+- **`Fault_Traces`/`Alteration_Zones` schema built**
+  (`database/schema/11_fault_traces_schema.R`), structure-only -- no real
+  digitized fault/alteration data yet. Distinguishes mapped faults
+  (inferred/concealed) from air-photo lineaments, per Collar & Huntley's
+  own legend.
+- **First REAL (non-synthetic) PHREEQC mixing and inverse runs.**
+  Populated `data/raw/phreeqc/mixing_config.csv`/`inverse_config.csv`
+  (previously header-only templates) with real sample_ids: thermal
+  end-member = sample 816 (SBF_0001, Cl=815 mg/L), meteoric end-member =
+  sample 829 (Boyd Domestic Well, Cl=45 mg/L) -- explicitly a
+  typical/representative end-member pair, not a real-time-paired
+  validation (same posture as Sorey & Colvard's own 820/6 mg/L split).
+  Mixing run stored 1,443 real `PHREEQC_Mixing_Results` rows; found that
+  `SBW_0002` (Cl=849) is slightly MORE concentrated than the chosen
+  thermal reference itself (mixing fraction 1.044) -- a genuine, novel
+  finding, not an error. Inverse run (target=Soccer Field Monitoring
+  Well, sample 827; end-members 816+829; phases Calcite+Quartz) found 1
+  real candidate solution (unlike the synthetic self-test, which finds 0
+  due to a known C(-4) numerical quirk).
+- **New `chloride_points` GeoPackage layer** (`export_geopackage.R`) --
+  one row per real Cl sample/date/location, for ArcGIS's own
+  interpolation tools to consume directly (Empirical Bayesian Kriging/
+  IDW), distinct from the all-major-ions `major_ions` layer. 763 rows.
+- **Statistics-driven Cl-timeline analysis, added to notebook 07**: a
+  naive Cl-vs-year regression across all thermal-influenced samples is
+  significant (p=0.0099) but this is confounded by which wells count as
+  "thermal" -- excluding two 2024-only intermediate NDEP wells weakens it
+  to marginal (p=0.099); reported honestly as an open question, not a
+  confirmed trend. A proper two-sample t-test on real thermal Cl/B
+  ratios (excluding Cox and the SBRR/SBBV creek mixing points) finds the
+  1990-91 vs. 2024-2026 difference (19.6 vs. 21.9) is small but
+  **statistically significant** (p=0.015) -- revises the earlier
+  Session 27 "closely matching... essentially unchanged" claim to
+  something more precise. Documented why the discharge-timeline chart
+  has no confidence intervals (no source reports measurement
+  uncertainty -- fabricating one would be worse than omitting it).
+- **New database-computed discharge point**: this project's only real
+  paired Cl+discharge dataset (SBRR Cl=17.1, SBBV Cl=126 mg/L, both
+  2026-05-01; USGS gauge 10349300 discharge ~11.2 cfs near the SBRR
+  sample time) gives Q_TW = 42.1 L/s using the same formula as the
+  poster's own 27 L/s figure -- a real, reproducible, distinctly-dated
+  point, not a re-quote of the poster. The ~56% gap versus the poster's
+  averaged figure is larger than the ~25%-or-less seasonal Cl-flux
+  variability Sorey & Spielman (2017) themselves document (already
+  cited in this project, not a new source) -- flagged as a real,
+  partially-explanatory effect (matches the user's own recollection of
+  seasonal Cl-outflow variability from their poster), not a full
+  reconciliation.
+- **Real, previously-undetected data-quality fix: Steinhardt's chloride
+  range.** Table 3 of Sorey & Colvard (1992) had (in Session 28-continued)
+  attributed a "16-22 mg/L" chloride range to the Steinhardt well from
+  the table's own OCR'd row position. Re-reading the report's narrative
+  text (p.52) directly shows it unambiguously ties a 300-to-140 mg/L
+  chloride DECLINE since 1987 to "the mixed-water Steinhardt well"
+  specifically -- the narrative is far less prone to the already-flagged
+  OCR row-misalignment than a table cell position. Corrected
+  `Wells.notes` for both Steinhardt and Brown School (the table value
+  most likely belongs to Brown School instead, or is itself
+  unreliable -- left unconfirmed, not guessed) and added two real dated
+  Lab_Analyses rows for Steinhardt (1987=300 mg/L, ~1990=140 mg/L,
+  bracketing the described decline; a new Locations row created for it
+  since it previously had none).
+- **Plots reworked three times this session per direct, iterative
+  critique** -- worth recording the exact feedback loop since it's a
+  real example of catching a live analysis mistake: (1) well/spring
+  labels and lines added to the Cl-timeline plot, connecting real repeat
+  measurements, with the 6 single-snapshot 2026 FIELD samples dropped
+  from that specific plot (shown elsewhere) to reduce crowding; (2) the
+  discharge chart gained the two new points above with text labels; (3)
+  the Cl/B plot was consolidated from two separate, confusingly similar
+  attempts into one (date on the x-axis, not era-on-y), with t-test
+  statistics moved into the figure caption -- and a live mistake was
+  caught and fixed mid-session: an early re-run of this plot in the
+  console forgot to exclude the background/domestic and intermediate
+  wells, pulling in Boyd/Jeppson/Rogers' near-zero-boron ratios and
+  inflating the "modern" mean to 83 instead of the correct 21.9; caught
+  immediately by comparing against the already-correct notebook version
+  before it was ever written anywhere permanent.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_steinhardt_fix_<timestamp>.sqlite`):
+  Steinhardt/Brown School notes corrected, 1 new Locations row, 2 new
+  Sampling_Events/Samples/Lab_Analyses rows, Cox I-1 elevation filled.
+  QC re-run clean (0 PHREEQC failures); GeoPackage re-exported cleanly
+  (14 layers now, up from 13, `major_ions` 2824 up from 2822, `locations`
+  172 up from 171); Leapfrog export re-verified (110/95/220/74 rows,
+  unchanged in count but now includes Cox I-1's elevation).
+- **Not done this session**: Brown School's real chloride range remains
+  genuinely unconfirmed (flagged, not resolved); no attempt yet to
+  digitize real fault traces from Collar & Huntley Figure 1 (schema
+  ready, no data); this session's file changes are committed and pushed
+  to git (see commit history).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

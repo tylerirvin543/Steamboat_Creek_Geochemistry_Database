@@ -126,6 +126,17 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # until this ingest was the first to put a NULL-coordinate Locations
     # row into major-ion chemistry.
     major_ions = "SELECT * FROM vw_major_ions WHERE geom_wkt IS NOT NULL",
+
+    # 2026-09-12 (session 29): a dedicated chloride-only point layer for
+    # ArcGIS's own geostatistical interpolation tools (Empirical Bayesian
+    # Kriging / IDW) to consume directly -- distinct from major_ions above
+    # (which mixes all six major ions in long format). One row per Cl
+    # sample/date/location, ready to interpolate a Cl-plume surface in
+    # ArcGIS without this project attempting the interpolation math itself
+    # (that remains the separate, bigger "Planned: potentiometric surfaces"
+    # README item). Same NULL-geometry filter as major_ions, for the same
+    # reason (a NULL geom_wkt fails sf::st_as_sf() for the whole layer).
+    chloride_points = "SELECT * FROM vw_major_ions WHERE analyte = 'Cl' AND geom_wkt IS NOT NULL",
     isotopes = "SELECT * FROM vw_isotopes_gis",
     
     # -------------------------

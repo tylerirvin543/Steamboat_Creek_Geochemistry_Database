@@ -181,6 +181,7 @@ if (is.null(RUN_ANALYSIS$phreeqc_force_rerun)) RUN_ANALYSIS$phreeqc_force_rerun 
 if (is.null(RUN_ANALYSIS$phreeqc_mixing)) RUN_ANALYSIS$phreeqc_mixing <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_inverse)) RUN_ANALYSIS$phreeqc_inverse <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_gas_phase)) RUN_ANALYSIS$phreeqc_gas_phase <- FALSE
+if (is.null(RUN_ANALYSIS$leapfrog_export)) RUN_ANALYSIS$leapfrog_export <- FALSE
 
 message("\n[QUICK START] Mode: ", MODE, " | Website rebuild: ", BUILD_WEBSITE)
 
@@ -215,6 +216,7 @@ source("database/schema/07_well_logs_schema.R")
 source("database/schema/08_phreeqc_schema.R")
 source("database/schema/09_ndom_wells_schema.R")
 source("database/schema/10_ndwr_stream_flow_schema.R")
+source("database/schema/11_fault_traces_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -294,6 +296,7 @@ source("database/schema/07_well_logs_schema.R")
 source("database/schema/08_phreeqc_schema.R")
 source("database/schema/09_ndom_wells_schema.R")
 source("database/schema/10_ndwr_stream_flow_schema.R")
+source("database/schema/11_fault_traces_schema.R")
 }
 
 # ============================================================
@@ -931,6 +934,18 @@ create_gis_views(con)
 
 message("\n[EXPORT] Writing GeoPackage")
 export_geopackage(con, mode = MODE)
+
+run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
+  # Optional, separate export of well collar/survey/completion-interval
+  # data in Leapfrog's standard CSV format (UTM Zone 11N meters) --
+  # never replaces or slows down the GeoPackage export above. See
+  # scripts/leapfrog/export_leapfrog.R and README.md's "Planned: Leapfrog
+  # 3D geologic model export" section for the full design and open
+  # items (Fault_Traces/Alteration_Zones still structure-only, no real
+  # digitized data yet).
+  source("scripts/leapfrog/export_leapfrog.R")
+  export_leapfrog_wells(con)
+})
 
 # ============================================================
 # WEBSITE EXPORT

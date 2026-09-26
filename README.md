@@ -902,6 +902,98 @@ not pairwise lines. Planned design (not yet implemented):
 
 ------------------------------------------------------------------------
 
+## Planned: Leapfrog 3D geologic model export
+
+Raised 2026-09-12 as a proposed direction, not yet built. Motivation:
+this project's well/chemistry data currently only ever gets exported as
+2D GIS layers (the GeoPackage); a 3D geologic model (implicit modeling
+in Leapfrog, informed by well collars/lithology and, eventually, fault
+and alteration surfaces) is a plausible next step toward defining
+fault-bounded flow compartments -- useful both as more defensible
+PHREEQC mixing end-members (group wells by compartment, not just by
+name) and as the layer/zone geometry a future MODFLOW model would need.
+
+**Design: a new, separate, optional export stage, not a replacement for
+the GeoPackage.** Mirrors `export_geopackage.R`'s pattern exactly --
+its own script (`scripts/leapfrog/export_leapfrog.R`,
+`export_leapfrog(con, out_dir = "output/leapfrog")`), its own
+`RUN_ANALYSIS$leapfrog_export` flag (default `FALSE`, opt-in, same
+posture as `RUN_ANALYSIS$phreeqc`), and its own output directory --
+so it can be toggled on/off independently and never blocks or slows
+down a normal pipeline run.
+
+**Data feasibility, checked directly against the database (2026-09-12):**
+
+| Leapfrog input | Status |
+|---|---|
+| Collar table (X/Y/Z + depth) | **109 of 205 wells fully ready** (lat/lon + elevation_m + total_depth all populated); another ~76 have partial data (missing one of the three) -- exportable as a separate "incomplete" layer, not silently dropped |
+| Survey/deviation table | No deviation surveys exist anywhere in this project -- every hole would import as a straight vertical trace (Depth 0 and Depth=total_depth, azimuth 0, dip -90). A reasonable assumption for essentially all of these wells, but stated explicitly, not silently assumed |
+| Lithology/interval table | **Not ready.** `Well_Lithology` has only 5 rows, all `well_id = NULL` and tagged `confidence=ocr_heuristic_unvalidated` -- genuine OCR garbage from the well-log pipeline, not usable formation-top data. 83 wells do have `top_perforation`/`bottom_perforation` (casing/screen interval), which could go in as a distinct "completion interval" layer -- explicitly not lithology, and should not be mislabeled as such in Leapfrog |
+| Fault surfaces | **None exist in this project.** The only Dhakal-sourced spatial data on disk (`data/raw/arcgis/dhakal .shp/`) is well points and power-plant polygons, not fault traces. A candidate source (Dhakal et al. 2025 Figure 1; possibly White et al. 1964, PP 458-B, Plate 1) is a raster figure in a PDF, not a georeferenced layer -- needs manual digitizing (in ArcGIS, using this project's own well coordinates as control points), not something OCR/scripting can extract |
+| Alteration surfaces | **No source identified yet.** Nothing in this project's schema or any ingested source; White et al. (1964, PP 458-B) is an unchecked candidate |
+
+**Proposed "ArcGIS out, ArcGIS back in" workflow** (this is the "future
+ArcGIS files fed back in for reformat" loop): this project already
+exports wells/locations/facility areas to the GeoPackage today, which
+is enough to serve as control-point context for manual digitizing. The
+proposed loop is:
+
+1. Export wells/locations (already possible today via the GeoPackage)
+   for the user to load into ArcGIS as digitizing control points.
+2. Digitize faults (and, once a source exists, alteration boundaries)
+   in ArcGIS as a shapefile/GeoJSON, referenced to those same well
+   coordinates.
+3. **New ingestion step (not yet built):** a small `ingest_fault_traces.R`
+   (mirroring `register_facility_areas.R`'s `sf::st_read()` + reproject-
+   to-EPSG:4326 pattern) reads that shapefile back into a new
+   `Fault_Traces` table (fault_id, name, geom_wkt LINESTRING/MULTILINESTRING,
+   source, notes) -- and, later, an `Alteration_Zones` table (polygon)
+   the same way `Facility_Areas` already works for power-plant polygons.
+4. `export_leapfrog.R` reformats whatever is in `Fault_Traces`/
+   `Alteration_Zones` into Leapfrog's expected polyline/GM-surface input
+   alongside the well collar/lithology tables -- the same underlying
+   data, reformatted for a different consumer, not a second copy
+   maintained by hand.
+
+**Open decisions, not resolved yet (raised 2026-09-12, deferred to the
+user before building):**
+- Coordinate system for the Leapfrog export: lat/lon (WGS84, matches
+  every other export in this project) vs. a projected CRS in meters
+  (UTM Zone 11N -- Leapfrog generally prefers this for real 3D distance
+  math). Leaning UTM 11N but not decided.
+- Who digitizes the faults and how carefully (user-led in ArcGIS with
+  well-coordinate control points is the recommended path; a rough
+  automated pixel-referenced attempt from the raw figure image was
+  raised as a lower-confidence fallback, not recommended as the primary
+  approach).
+- Alteration data source: unresolved. White et al. (1964, PP 458-B) is
+  an unchecked candidate; otherwise this stays out of scope until a
+  source is identified.
+
+**Proposed phasing for whoever picks this up next:**
+
+1. Build `export_leapfrog_wells(con)` only -- collar + assumed-vertical
+   survey + the completion-interval proxy table, for the 109 (+76
+   partial) wells, clearly labeled as not-lithology. This has no
+   external dependency and can be built and tested today.
+2. Design and build the `Fault_Traces`/`Alteration_Zones` schema and
+   ingestion scripts (structure only -- these can exist and be tested
+   with a synthetic/empty shapefile before any real digitized data
+   exists, consistent with this project's "build the capability, wait
+   for real data" pattern already used for PHREEQC mixing/inverse
+   modeling).
+3. Once real digitized fault (and, if a source turns up, alteration)
+   data exists, extend `export_leapfrog.R` to reformat it alongside the
+   well tables, and resolve the CRS decision above before finalizing
+   the format.
+4. Much later, out of scope for now: a MODFLOW grid/zone export drawing
+   on the same fault-bounded compartments, and revisiting PHREEQC
+   mixing end-member grouping by compartment rather than by well name
+   alone.
+
+------------------------------------------------------------------------
+
+
 # Geochemistry System
 
 ## Status: ✅ Implemented (initial)
