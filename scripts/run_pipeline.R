@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -212,6 +212,7 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     ndwr_stream_flow = "NDWR daily manual creek discharge",
     historical_sorey1992 = "Sorey & Colvard (1992) historical chemistry/wells",
     mariner_janik_1995 = "Mariner & Janik (1995) gas/water chemistry",
+    skalbeck2001 = "Skalbeck (2001) UNR dissertation: depth-to-bedrock points + well completions",
     barometric_pressure = "Hourly Reno Airport barometric pressure (IEM ASOS)",
     earthquakes = "USGS regional earthquake catalog",
     fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)"
@@ -280,6 +281,7 @@ source("database/schema/12_earthquake_schema.R")
 source("database/schema/13_facies_clusters_schema.R")
 source("database/schema/14_aquifer_classification_schema.R")
 source("database/schema/15_well_deviation_surveys_schema.R")
+source("database/schema/16_geophysical_depth_points_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -364,6 +366,7 @@ source("database/schema/12_earthquake_schema.R")
 source("database/schema/13_facies_clusters_schema.R")
 source("database/schema/14_aquifer_classification_schema.R")
 source("database/schema/15_well_deviation_surveys_schema.R")
+source("database/schema/16_geophysical_depth_points_schema.R")
 }
 
 # ============================================================
@@ -700,6 +703,31 @@ run_step(RUN_INGEST$mariner_janik_1995, "MARINER & JANIK 1995 HISTORICAL CHEMIST
   # notebooks/07_historical_context_sorey1992.qmd.
   source("scripts/ingest/ingest_mariner_janik_1995.R")
   ingest_mariner_janik_1995(con)
+})
+
+run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", {
+  # Ingests real data mined from Skalbeck (2001), a major UNR PhD
+  # dissertation on hydraulic conductivity/confining-layer behavior at
+  # Steamboat Hills, flagged 2026-09-26. Table A-2 (p.191-199) gives 240
+  # real model-derived alluvium/volcanics/altered-granodiorite thickness
+  # + depth-to-bedrock points along the dissertation's own 2.75-D
+  # gravity/aeromagnetic forward-model profile -- a genuinely new,
+  # directly Leapfrog-relevant point dataset (Geophysical_Depth_Model_
+  # Points, deliberately NOT Well_Lithology, since these are forward-
+  # model estimates, not real well logs). Table 1 (p.150) gives real
+  # well-completion detail for 15 named wells, several already known in
+  # this project (fills real construction data only where currently
+  # NULL) and 8 genuinely new/unmapped wells (Herz Geothermal, Flame,
+  # Peigh Pool Geothermal, SBG-PW1, SBG-TH1/2/3, TranSierra 4) registered
+  # as coordinate-less provisional Wells rows, logged to
+  # data/derived/skalbeck2001_unmapped_locations.csv for human review.
+  # See scripts/ingest/ingest_historical_skalbeck2001.R and
+  # database/schema/16_geophysical_depth_points_schema.R.
+  source("database/schema/16_geophysical_depth_points_schema.R")
+  create_geophysical_depth_points_schema(con)
+  source("scripts/ingest/ingest_historical_skalbeck2001.R")
+  ingest_skalbeck2001_depth_points(con)
+  ingest_skalbeck2001_well_completions(con)
 })
 
 # ============================================================
