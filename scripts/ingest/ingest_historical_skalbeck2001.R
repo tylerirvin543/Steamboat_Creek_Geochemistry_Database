@@ -597,20 +597,26 @@ ingest_skalbeck2001_table_b2_steinhardt <- function(
 # depth-to-bedrock estimate). Added 2026-09-26.
 #
 # Column mapping onto Skalbeck's own Table A-2 4-unit scheme
-# (Qal/Tv/AltKgdpKm/Kgd), documented explicitly since Table 3 itself
-# distinguishes Kgd (granodiorite) from pKm (metasediment/
-# metavolcanic) as two separate contacts, while Table A-2 bundles them
-# into one "AltKgdpKm" thickness:
+# (Qal/Tv/AltKgdpKm/Kgd). Revised 2026-09-26 (was previously labeled
+# "AltKgdpKm" -- corrected per direct review): Table 3's own column
+# header is literally "Depth to Kgd", i.e. the driller's log itself
+# calls this contact Kgd, not an alteration product -- Table 3 gives
+# no basis to further claim this interval is altered, so it is
+# labeled Kgd here, matching the source table's own terminology, not
+# AltKgdpKm. (This is the OPPOSITE relationship from Table A-2's own
+# model points, where AltKgdpKm genuinely IS the named altered cap
+# sitting within/above fresh Kgd -- see .skalbeck_table3_intervals()
+# below and export_leapfrog_geophysical_lithology()'s own AltKgdpKm-
+# cut-from-Kgd logic for that distinct case.)
 #   - [0, depth_to_tv_m]                -> Qal  (only if surface
 #     geology is Qal/Sr and depth_to_tv_m is known)
 #   - [start, depth_to_kgd_m]            -> Tv   (start = 0 if the
 #     well's surface geology is already Tv, else depth_to_tv_m)
 #   - [depth_to_kgd_m (or start if surface geology is pKm), total_depth_m]
-#                                        -> AltKgdpKm (everything from
-#     the granodiorite/metasediment contact down to total depth --
-#     deliberately NOT further split at depth_to_topkm_m, since Table
-#     A-2's own "AltKgdpKm" column doesn't distinguish granodiorite
-#     from metasediment either)
+#                                        -> Kgd (everything from the
+#     granodiorite contact down to total depth -- deliberately NOT
+#     further split at depth_to_topkm_m, since Table 3 doesn't give
+#     enough basis to separate fresh from altered Kgd here)
 # Intervals are only written where both bounds are real (non-NA)
 # numbers -- never fabricated to fill a gap.
 # ============================================================
@@ -637,11 +643,12 @@ ingest_skalbeck2001_table_b2_steinhardt <- function(
     out <- rbind(out, data.frame(depth_from_m = tv_start, depth_to_m = depth_to_kgd_m, formation_unit = "Tv"))
   }
 
-  # AltKgdpKm interval: from the granodiorite/metasediment contact (or
-  # from 0 if the well starts directly in pKm) down to total depth.
-  altkgd_start <- if (starts_in_pkm) 0 else depth_to_kgd_m
-  if (!is.na(altkgd_start) && !is.na(total_depth_m) && total_depth_m > altkgd_start) {
-    out <- rbind(out, data.frame(depth_from_m = altkgd_start, depth_to_m = total_depth_m, formation_unit = "AltKgdpKm"))
+  # Kgd interval: from the granodiorite contact (or from 0 if the
+  # well starts directly in pKm) down to total depth. Labeled Kgd,
+  # not AltKgdpKm, matching Table 3's own "Depth to Kgd" column name.
+  kgd_start <- if (starts_in_pkm) 0 else depth_to_kgd_m
+  if (!is.na(kgd_start) && !is.na(total_depth_m) && total_depth_m > kgd_start) {
+    out <- rbind(out, data.frame(depth_from_m = kgd_start, depth_to_m = total_depth_m, formation_unit = "Kgd"))
   }
 
   out

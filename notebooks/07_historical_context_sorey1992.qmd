@@ -615,6 +615,13 @@ minilog_a2 <- dbGetQuery(con, "
   WHERE qal_thickness_m IS NOT NULL
   ORDER BY point_id LIMIT 15
 ")
+# Kgd drawn as the full bedrock column (base of Tv -> a per-point
+# visual floor, real_bedrock_depth * 1.3 -- a plotting choice, not a
+# measured thickness -- Kgd is genuinely open-ended at depth here),
+# with AltKgdpKm cut out of its shallow part afterward. Matches
+# scripts/analysis/skalbeck_cross_sections.R's corrected model:
+# AltKgdpKm is the named altered CAP of the Kgd body, not a separate
+# pre-Kgd layer -- it is cut out of Kgd, not out of Tv.
 a2_intervals <- purrr::pmap_dfr(minilog_a2, function(point_id, qal_thickness_m, tv_thickness_m,
                                                        alt_kgd_km_thickness_m, depth_to_bedrock_m) {
   cursor <- 0
@@ -629,19 +636,15 @@ a2_intervals <- purrr::pmap_dfr(minilog_a2, function(point_id, qal_thickness_m, 
                                           To_m = cursor + tv_thickness_m, formation_unit = 'Tv')
     cursor <- cursor + tv_thickness_m
   }
-  # AltKgdpKm sits contiguously ABOVE the fresh-Kgd contact (never
-  # overlapping it) -- depth_to_bedrock_m in this source IS the
-  # bottom of AltKgdpKm / top of fresh Kgd, so a 4th, open-ended "Kgd"
-  # interval (added below, real DB export only) starts exactly where
-  # this one ends. Nothing is double-counted between the two.
-  if (!is.na(alt_kgd_km_thickness_m) && alt_kgd_km_thickness_m > 0) {
-    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = cursor,
-                                          To_m = cursor + alt_kgd_km_thickness_m, formation_unit = 'AltKgdpKm')
-    cursor <- cursor + alt_kgd_km_thickness_m
+  bedrock_top <- cursor
+  bedrock_floor <- if (!is.na(depth_to_bedrock_m)) max(depth_to_bedrock_m, bedrock_top + 1) * 1.3 else NA
+  if (!is.na(bedrock_floor)) {
+    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = bedrock_top,
+                                          To_m = bedrock_floor, formation_unit = 'Kgd')
   }
-  if (!is.na(depth_to_bedrock_m) && depth_to_bedrock_m > cursor) {
-    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = cursor,
-                                          To_m = depth_to_bedrock_m + 50, formation_unit = 'Kgd')
+  if (!is.na(alt_kgd_km_thickness_m) && alt_kgd_km_thickness_m > 0) {
+    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = bedrock_top,
+                                          To_m = bedrock_top + alt_kgd_km_thickness_m, formation_unit = 'AltKgdpKm')
   }
   dplyr::bind_rows(rows)
 })
@@ -649,7 +652,7 @@ combined_minilog <- dplyr::bind_rows(
   dplyr::mutate(minilog_wells, source = 'Table 3 well control'),
   dplyr::mutate(a2_intervals, source = 'Table A-2 grid point')
 )
-unit_colors <- c(Qal = "#e6ab02", Tv = "#7570b3", AltKgdpKm = "#1b9e77", Kgd = "#d95f02")
+unit_colors <- c(Qal = "#e6ab02", Tv = "#7570b3", AltKgdpKm = "#1b9e77", Kgd = "#f781bf")
 ggplot(combined_minilog) +
   geom_rect(aes(xmin = as.numeric(factor(HoleID)) - 0.4, xmax = as.numeric(factor(HoleID)) + 0.4,
                 ymin = From_m, ymax = To_m, fill = formation_unit)) +
@@ -657,10 +660,11 @@ ggplot(combined_minilog) +
                       labels = levels(factor(combined_minilog$HoleID))) +
   scale_y_reverse() +
   facet_grid(. ~ source, scales = "free_x", space = "free_x") +
-  scale_fill_manual(values = unit_colors, name = "Formation unit") +
+  scale_fill_manual(values = unit_colors, name = "Formation unit",
+                     breaks = c("Qal", "Tv", "AltKgdpKm", "Kgd")) +
   labs(x = NULL, y = "Depth (m)",
        title = 'Real formation-unit "mini well logs": Table 3 wells vs. Table A-2 grid points',
-       subtitle = "Same Qal/Tv/AltKgdpKm/Kgd vocabulary, two different Skalbeck (2001) source tables") +
+       subtitle = "Kgd (pink) is the full bedrock column; AltKgdpKm (green) is cut out of its shallow, altered part") +
   theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
         legend.position = "bottom")
 ```
@@ -669,21 +673,16 @@ This is a direct visual check that the shared vocabulary actually
 lines up: real well-log-derived intervals (left facet) and the
 model-grid "mini well logs" (right facet, first 15 of 241 real
 points, for readability) use the identical color scheme. **On the
-AltKgdpKm/Kgd relationship specifically**: AltKgdpKm is drawn as a
-zone sitting immediately above (never overlapping) fresh Kgd bedrock
--- `depth_to_bedrock_m` in the source IS the AltKgdpKm/Kgd contact
-depth, so the model already avoids double-counting between the two;
-the Kgd bar shown here is capped 50 m below that contact purely for
-plot readability (it is genuinely open-ended/unresolved at depth in
-the real data, not a real 50 m thickness).
-
-This is a direct visual check that the shared vocabulary actually
-lines up: real well-log-derived intervals (left facet) and the
-model-grid "mini well logs" (right facet, first 15 of 241 real
-points, for readability) use the identical three-color scheme,
-confirming `export_leapfrog_geophysical_lithology()` and the
-formation-unit-classified `Well_Lithology` rows are genuinely
-comparable outputs, not just similarly-named ones.
+AltKgdpKm/Kgd relationship, corrected 2026-09-26**: AltKgdpKm is the
+named altered CAP overlying/within the Kgd bedrock body, not a
+separate unit stacked between Tv and a disconnected deeper Kgd --
+the fix is to draw Kgd first as the full bedrock column starting at
+the base of Tv, then cut AltKgdpKm out of its shallow part, matching
+how `scripts/analysis/skalbeck_cross_sections.R`'s cross-sections now
+render the same real data. Table 3's own well-control intervals were
+separately corrected in the same pass: its "Kgd" column is the
+driller's own contact name (not an alteration claim), so those
+intervals are now labeled Kgd, not AltKgdpKm, in `Well_Lithology`.
 
 ### From scattered points to real layers: a gridded Steamboat surface for Leapfrog
 
@@ -1953,6 +1952,24 @@ lines (e.g. 20270, 20290), which a smooth raster necessarily blurs
 across neighboring, unrelated lines. These cross-sections are the
 more geologically honest view of the same underlying data.
 
+### Where these lines actually sit: a real spatial comparison
+
+```{r skalbeck-lines-map}
+#| fig-width: 9
+#| fig-height: 6
+plot_skalbeck_lines_map(con)
+```
+
+A real vector map (line segments, well points, and facility-area
+polygons, all from this project's own database) -- not an aerial-
+photo basemap -- for comparing the flight-line fan pattern directly
+against Skalbeck (2001)'s own Figure 5 (well/profile location map)
+and Klein et al. (2007) Figure 1, both already embedded earlier in
+this notebook. The fan of parallel N45W lines converging toward the
+tie line (29020, N20W) and the well cluster sitting mostly within
+the middle third of that fan are both consistent with those
+historical figures.
+
 ## The Steamboat Ditch: a real, testable losing-reach hypothesis
 
 Steamboat Ditch is a seasonal (roughly May-October) diversion
@@ -2051,11 +2068,19 @@ zero isotope samples exist for Steamboat Ditch, Whites Creek, Galena
 Creek, or any other candidate dilute end-member.** A real multi-
 end-member mixing model (even a straightforward 3-component d18O/dD +
 Cl mixing calculation per well) is therefore not something this
-notebook can honestly compute today -- it is a real, concrete,
-low-cost addition to flag for the next sampling round (a handful of
+notebook can honestly compute today.
+
+**Framed explicitly as a possible avenue to explore, not a required
+addition to an already substantial thesis scope**: a handful of
 isotope samples at the Ditch and at 2-3 Whites Creek/Galena Creek
 sites, ideally paired with the losing-reach discharge measurements
-above) rather than something to approximate with the wrong tracer.
+above, would make this real multi-end-member separation possible for
+the first time -- worth keeping in mind if time/budget allows later
+in the field season, but not something this project is committing to
+as a deliverable. `manuscript/06_calibration_sampling_proposal.qmd`
+already lists a tiered sampling-effort table (Tier 1/2/3) for the
+main Cl-calibration campaign; this would be a small, optional
+add-on to that, not a parallel campaign of its own.
 **Little Washoe Lake** was also checked directly as a candidate
 end-member -- no `Locations` row or any chemistry exists for it in
 this database at all; a real, complete gap, not yet even a
