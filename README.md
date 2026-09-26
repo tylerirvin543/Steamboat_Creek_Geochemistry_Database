@@ -409,6 +409,13 @@ order):
   1960s-era wells (GS-1 through GS-4, GS-8, Mt Rose 1, Herz 1/2,
   E Reno, W Reno, Senges, Rodeo, SB-4, No. 32, SSW) not previously
   in this database.
+- **Vaughan et al. (2005)** -- real airborne thermal-infrared
+  mineral mapping (MASTER/SEBASS) of the surface acid-sulfate
+  alteration zone (kaolinite/montmorillonite/alunite). A real,
+  qualitative cross-reference for this project's `AltKgdpKm` unit
+  (the same class of clay alteration, lower-permeability than fresh
+  rock) -- gives no numeric hydraulic-conductivity value itself, so
+  this remains qualitative, not quantitative.
 ------------------------------------------------------------------------
 
 # System Architecture

@@ -139,3 +139,46 @@ NDEP-data problem, not several.
   screen depths, both with current water level) would let a real
   confining-layer/vertical-head-difference argument be made — nothing
   in the current network qualifies.
+
+## 7. Steamboat Ditch losing-reach field measurement (real, testable, cheap)
+
+Raised 2026-09-26. Steamboat Ditch (real `Locations` row: `Steamboat
+Ditch @ Rhodes Road`, real NDEP chemistry on file, 41 samples) is a
+seasonal (~May–October) Truckee River diversion that enters Steamboat
+Creek just above the SBRR gauge — inside the primary geothermal
+discharge area. Whether that reach is *losing* water to the shallow
+subsurface (a real recharge term this project's conceptual model
+doesn't currently have) or just passing it through to SBRR is
+untested with any data on file today.
+
+**Concrete field method** (see
+`notebooks/07_historical_context_sorey1992.qmd`'s new "Steamboat
+Ditch" section for the full write-up): three flow-probe discharge
+measurements on the same day — Steamboat Creek just upstream of the
+ditch confluence, the ditch itself just before the confluence, and
+Steamboat Creek just downstream (near SBRR). $$Q_{down} < Q_{up} +
+Q_{ditch}$$ = losing reach (real recharge evidence); $$Q_{down} >
+Q_{up} + Q_{ditch}$$ = gaining reach. Repeating this 2–3 times across
+the diversion season, plus once after the ditch is shut off (a
+natural-baseflow-only control), would give a real seasonal signal,
+not just one snapshot.
+
+**A separate, real anomaly worth resolving while you're out there**:
+one Ditch sample (date field ambiguous — the known
+`Sampling_Events.date` dual-epoch issue) reads Cl=1100 mg/L, an order
+of magnitude above every other Ditch reading (0–5 mg/L). Could be a
+data error, or could be a real off-season reading if the ditch gate
+being closed lets thermally-influenced water reach that sample point
+— worth a quick look at whichever lab report/field sheet this came
+from to recover the real date.
+
+**Also flagged (not yet actionable without more data)**: separating
+Truckee-Ditch recharge from local Galena/Mt. Rose runoff chemically
+needs isotopes (Cl alone can't do it — Whites Creek is just as dilute
+as the Ditch). Zero isotope samples exist for the Ditch, Whites Creek,
+or Galena Creek today (all 8 isotope samples on file are thermal FIELD
+sites). A handful of d18O/dD samples at these dilute end-members,
+ideally paired with the discharge measurements above, would make a
+real per-well mixing calculation possible for the first time. Little
+Washoe Lake was checked directly as a candidate end-member too — no
+`Locations` row or chemistry exists for it at all.

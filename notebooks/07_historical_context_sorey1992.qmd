@@ -1901,6 +1901,166 @@ not yet a wired calculation, and stated as such:
   the aqueous/gas-chemistry consequences of a resulting pressure or
   mixing change are PHREEQC's to model.
 
+## Vaughan et al. (2005): surface mineral mapping and the AltKgdpKm alteration link
+
+Vaughan et al. (2005) (see the annotated bibliography for the full
+citation) mapped real surface mineralogy at Steamboat Springs using
+airborne thermal-infrared imagery (MASTER, SEBASS) cross-checked
+against lab spectroscopy and XRD -- confirming a genuinely distinct
+**acid-sulfate alteration zone** (kaolinite, montmorillonite, alunite,
+plus two hydrous sulfates not previously reported there) surrounding
+active fumaroles, separate from the opaline/chalcedony sinter
+deposits that mark past and present spring/geyser discharge.
+
+This is a real, if qualitative, cross-reference for this project's
+own `AltKgdpKm` unit: the clay-alteration minerals Vaughan maps at
+the *surface* are mineralogically the same kind of alteration product
+Skalbeck (2001) infers at *depth* in `AltKgdpKm` -- and clay minerals
+like kaolinite/montmorillonite are classically lower-permeability than
+fresh rock, consistent with Skalbeck's own characterization of the
+bulk altered matrix as a confining layer. **This is still not a
+numeric hydraulic-conductivity value** -- Vaughan et al. (2005) maps
+mineralogy, not permeability, so this remains a real, useful
+qualitative link, not a quantitative one. No real coordinates exist
+for Vaughan's own field/mapping sites (Figs. 3/8/9 are qualitative
+maps), so they are not registered as `Locations` here.
+
+## Real geologic cross-sections: "hard lines" instead of smoothed IDW
+
+The IDW-interpolated grid surfaces above smooth depth continuously
+between Table A-2 points -- but those points were never collected on
+a continuous surface; they sit on 10 discrete, real 2.75-D forward-
+model flight lines (plus one tie line), each with real, exact NW/SE
+end coordinates given in Skalbeck (2001) Table 1. Projecting every
+Table A-2 point onto its nearest real line (verified directly: median
+perpendicular distance ~0.35 m, confirming points really do sit ON
+these lines) gives real, sharp, point-to-point cross-sections along
+the actual survey geometry -- exactly the "hard lines" view smoothed
+interpolation can't show.
+
+```{r skalbeck-xsections}
+#| fig-width: 9
+#| fig-height: 10
+xsect_script <- file.path("scripts", "analysis", "skalbeck_cross_sections.R")
+if (!file.exists(xsect_script)) xsect_script <- file.path("..", "scripts", "analysis", "skalbeck_cross_sections.R")
+source(xsect_script)
+plot_skalbeck_cross_section(con)
+```
+
+Note the real striping artifact this explains in the earlier IDW
+raster: Tv thickens and thins sharply *within* several individual
+lines (e.g. 20270, 20290), which a smooth raster necessarily blurs
+across neighboring, unrelated lines. These cross-sections are the
+more geologically honest view of the same underlying data.
+
+## The Steamboat Ditch: a real, testable losing-reach hypothesis
+
+Steamboat Ditch is a seasonal (roughly May-October) diversion
+carrying Truckee River water across Steamboat Hills, entering
+Steamboat Creek just above the SBRR conductivity/USGS-gauge site --
+squarely within the primary geothermal discharge area. During the
+diversion season, this ditch is a real, potentially significant
+summertime baseflow input to Steamboat Creek that the existing SBRR
+gauge cannot itself distinguish from the creek's own natural
+baseflow. Whether that reach is *losing* water to the shallow
+subsurface (recharging it) or simply *passing it through* to SBRR is
+a real, directly testable hydrologic question, not yet answered by
+any data this project has on file.
+
+**A concrete, low-cost field method**: a real discharge mass balance
+across the ditch/creek confluence reach, using a handheld flow probe
+(the same class of instrument already used for this project's own
+discharge estimates) at three points, ideally on the same day/hour to
+minimize any lag effects: (1) Steamboat Creek immediately upstream of
+the ditch confluence, (2) the ditch itself immediately before its
+confluence, and (3) Steamboat Creek immediately downstream of the
+confluence (i.e. at or near SBRR). If the reach is neither gaining
+nor losing, $$Q_{downstream} = Q_{upstream} + Q_{ditch}$$ should hold
+within measurement uncertainty. A real, measured $$Q_{downstream} <
+Q_{upstream} + Q_{ditch}$$ is direct evidence of a losing reach (water
+recharging the shallow subsurface along that stretch); $$Q_{downstream}
+> Q_{upstream} + Q_{ditch}$$ would instead suggest a gaining reach
+(shallow groundwater discharging back into the creek there). Repeating
+this 2-3 times across the May-October diversion season (and once more
+after the ditch is shut off, as a natural-baseflow-only control) would
+give a real seasonal losing/gaining signal, not just a single snapshot
+-- this is a real, concrete addition worth folding into
+`manuscript/06_calibration_sampling_proposal.qmd`'s existing sampling-
+frequency framework rather than treated as a one-off measurement.
+
+**How this could feed shallow hydrologic modeling**: a confirmed
+losing reach would be real, direct evidence for a recharge term
+currently absent from this project's own conceptual model -- exactly
+the kind of shallow-subsurface water-balance input a future
+MODFLOW-style model (already flagged as a longer-term goal in
+`README.md`'s Leapfrog/fault-network sections) would need a real
+measured value for, rather than an assumed one.
+
+## Can Truckee-Ditch water be chemically separated from local runoff?
+
+```{r ditch-endmember-check}
+endmember_summary <- dbGetQuery(con, "
+  SELECT l.name,
+         ROUND(AVG(CASE WHEN la.analyte='Cl' THEN la.value END),2) AS mean_Cl_mgL,
+         ROUND(MIN(CASE WHEN la.analyte='Cl' THEN la.value END),2) AS min_Cl,
+         ROUND(MAX(CASE WHEN la.analyte='Cl' THEN la.value END),2) AS max_Cl,
+         COUNT(DISTINCT la.sample_id) AS n_samples
+  FROM Lab_Analyses la
+  JOIN Samples s ON la.sample_id = s.sample_id
+  JOIN Locations l ON s.location_id = l.location_id
+  WHERE l.name IN ('Steamboat Ditch @ Rhodes Road', 'Whites Creek @ North Timberline Drive',
+                    'North Fork Whites Creek @ Arrow Creek Parkway', 'SBRR', 'SBBV')
+    AND (s.event_id NOT IN (SELECT event_id FROM Sampling_Events WHERE date = '1497.0'))
+  GROUP BY l.name
+")
+tbl_em <- knitr::kable(endmember_summary, caption = "Real Cl chemistry, candidate end-members (one known outlier excluded, see text)")
+if (knitr::is_latex_output()) tbl_em <- kableExtra::kable_styling(tbl_em, latex_options = c("hold_position"))
+tbl_em
+```
+
+Checked directly rather than assumed: Steamboat Ditch has real,
+extensive NDEP chemistry (41 real dated samples) -- consistently
+dilute (Cl 0-5 mg/L, mean ~2.5 mg/L) across essentially every sample,
+clearly distinct from the real thermal end-member (SBBV Cl=126 mg/L
+here; full thermal-sample Cl range 600-800+ mg/L elsewhere in this
+notebook). **A real, flagged anomaly**: one single Ditch sample
+(dated `1497` in this project's own dual-epoch-convention date field,
+so its real calendar date is genuinely uncertain -- see the
+already-documented `Sampling_Events.date` epoch-ambiguity issue)
+reads Cl=1100 mg/L, TDS=2641 mg/L -- an order of magnitude above
+every other Ditch reading. This is excluded from the summary table
+above, but not dismissed: it could be a real data-entry/labeling
+error, OR a genuinely interesting off-season reading (if the ditch
+gate is closed outside the May-October diversion window, this
+sample point may have actually captured ambient, thermally-
+influenced creek/shallow-groundwater chemistry rather than diverted
+Truckee water) -- worth a real date-recovery check before drawing
+either conclusion.
+
+**On separating Truckee-Ditch recharge from local Galena/Mt. Rose
+runoff chemically, and computing per-well mixing proportions**: Cl
+alone cannot do this -- Whites Creek (a real local-runoff proxy) is
+just as dilute (Cl 1-4 mg/L) as the Ditch, so the two dilute end-
+members are indistinguishable by chloride. The obvious real
+discriminating tracer would be stable isotopes (d18O/dD): Truckee
+River water (Lake Tahoe/Sierra-crest sourced) and local Galena/Mt.
+Rose Sierra-front runoff plausibly differ in elevation-of-recharge
+signature. **Checked directly: this project has only 8 real isotope
+samples on file, all thermal FIELD sites (SBBV/SBF/SBRR/SBS/SBW) --
+zero isotope samples exist for Steamboat Ditch, Whites Creek, Galena
+Creek, or any other candidate dilute end-member.** A real multi-
+end-member mixing model (even a straightforward 3-component d18O/dD +
+Cl mixing calculation per well) is therefore not something this
+notebook can honestly compute today -- it is a real, concrete,
+low-cost addition to flag for the next sampling round (a handful of
+isotope samples at the Ditch and at 2-3 Whites Creek/Galena Creek
+sites, ideally paired with the losing-reach discharge measurements
+above) rather than something to approximate with the wrong tracer.
+**Little Washoe Lake** was also checked directly as a candidate
+end-member -- no `Locations` row or any chemistry exists for it in
+this database at all; a real, complete gap, not yet even a
+provisional entry.
+
 ## Statistical summary (this section)
 
 | Question | Test | Result | n |
