@@ -300,6 +300,7 @@ structure and its "above"/"below" companion points) -- registration is
 keyed on `external_station_code`, not `coord_key`, for exactly this
 reason.
 
+:::: {.content-hidden when-meta="in_full_report"}
 ## Changelog
 
 | Date | Change |
@@ -308,6 +309,7 @@ reason.
 | 2026-09-12 | Added NDOM well-permit cross-validation section (49 wells, 6 coordinate discrepancies flagged, elevation_m feet-vs-meters bug found and fixed project-wide) and NDWR spring/stream flow section (4 Whites Creek sites, daily discharge back to 2017). |
 | 2026-09-12 (session 24-25) | Session 24: 64 new NDWR log numbers (112 files) ingested -- PLSS lat/lon fallback, work-type/proposed-use/diameter extraction, primary/alt-scan merge-by-confidence, `Well_Work_Events` (well status history), `Well_Lithology` populated for the first time, repeatable match-candidates report with recommendations. Session 25: `146403`'s OCR longitude digit error corrected; derived `display_status` (adds Plugged & Abandoned) added to `vw_wells_gis`/website maps; `ndom_coordinate_discrepancies.csv` now includes the existing coordinate's source. |
 
+::::
 ```{r cleanup-05}
 #| include: false
 dbDisconnect(con)

@@ -548,3 +548,240 @@ ingest_skalbeck2001_table_b2_pinetreeranch1 <- function(
     well_name_for_depth = "Pine Tree Ranch-1"
   )
 }
+
+#' Ingest the real Flame and Steinhardt monthly Cl/B/temperature(/depth)
+#' series, transcribed 2026-09-26 directly from a clean user-supplied
+#' image of Table B-2 (not OCR text -- the OCR-based attempt in the
+#' prior session could not confidently resolve these two wells; this
+#' clean source resolves that gap). **Important caveat, stated plainly
+#' rather than hidden**: the source excerpt did not show explicit date
+#' labels for these rows. Dates are POSITIONAL ESTIMATES:
+#' - Flame: assumed a strict monthly sequence starting Jan-1985 with no
+#'   gaps (matching every other well in this table's own real start
+#'   date, and no visible blank-row gaps in the excerpt).
+#' - Steinhardt: anchored by value, not guessed blindly -- its LAST
+#'   listed reading (Cl=173, Temp=34) closely matches this project's
+#'   own already-ingested real 1991-11-08 sample (Cl=171, Temp=34,
+#'   from Mariner & Janik 1995) -- assigned to 1991-11-01, then stepped
+#'   backward monthly for the other 16 rows (1990-07 through 1991-10).
+#' Both are flagged with method_type/notes text saying so, so a future
+#' session (or you, checking the original scanned page) can correct
+#' the exact calendar dates without having to re-derive the values.
+ingest_skalbeck2001_table_b2_flame <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_flame.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Flame monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Flame",
+    "Skalbeck (2001) Table B-2 (Flame)",
+    "Transcribed 2026-09-26 from a clean user-supplied table image (not OCR). DATES ARE POSITIONAL ESTIMATES (assumed monthly, starting Jan-1985, no gaps) -- not read from explicit date labels in the source excerpt. Verify against the original scanned page if exact dates matter."
+  )
+}
+
+ingest_skalbeck2001_table_b2_steinhardt <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_steinhardt.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Steinhardt monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Steinhardt Geothermal Well (narrative Cl trend)",
+    "Skalbeck (2001) Table B-2 (Steinhardt)",
+    "Transcribed 2026-09-26 from a clean user-supplied table image (not OCR). DATES ARE POSITIONAL ESTIMATES anchored by value match: the last row (Cl=173, Temp=34) closely matches this project's own real 1991-11-08 sample (Cl=171, Temp=34) and was assigned 1991-11-01, with the other 16 rows stepped back monthly. Verify against the original scanned page if exact dates matter.",
+    well_name_for_depth = "Steinhardt Geothermal Well (narrative Cl trend)"
+  )
+}
+
+# ============================================================
+# Table 3 (p.74-75): "Well data used in 2.75-D forward models and 3-D
+# model depth to bedrock" -- 41 named wells with real depth-to-
+# formation-contact data (a genuine, well-by-well "mini well log" of
+# depth to Tv / depth to Kgd (granodiorite) / depth to top pKm
+# (metasediment) / total depth / the 3-D model's own independent
+# depth-to-bedrock estimate). Added 2026-09-26.
+#
+# Column mapping onto Skalbeck's own Table A-2 4-unit scheme
+# (Qal/Tv/AltKgdpKm/Kgd), documented explicitly since Table 3 itself
+# distinguishes Kgd (granodiorite) from pKm (metasediment/
+# metavolcanic) as two separate contacts, while Table A-2 bundles them
+# into one "AltKgdpKm" thickness:
+#   - [0, depth_to_tv_m]                -> Qal  (only if surface
+#     geology is Qal/Sr and depth_to_tv_m is known)
+#   - [start, depth_to_kgd_m]            -> Tv   (start = 0 if the
+#     well's surface geology is already Tv, else depth_to_tv_m)
+#   - [depth_to_kgd_m (or start if surface geology is pKm), total_depth_m]
+#                                        -> AltKgdpKm (everything from
+#     the granodiorite/metasediment contact down to total depth --
+#     deliberately NOT further split at depth_to_topkm_m, since Table
+#     A-2's own "AltKgdpKm" column doesn't distinguish granodiorite
+#     from metasediment either)
+# Intervals are only written where both bounds are real (non-NA)
+# numbers -- never fabricated to fill a gap.
+# ============================================================
+
+#' Build Skalbeck-scheme formation intervals for one Table 3 well row.
+#' Returns a data.frame with columns depth_from_m, depth_to_m,
+#' formation_unit -- zero rows if nothing can be safely bounded.
+.skalbeck_table3_intervals <- function(surface_geology, depth_to_tv_m, depth_to_kgd_m,
+                                        total_depth_m) {
+  out <- data.frame(depth_from_m = numeric(0), depth_to_m = numeric(0),
+                     formation_unit = character(0))
+  starts_in_tv <- grepl("^Tv$", surface_geology)
+  starts_in_pkm <- grepl("^pKm$", surface_geology)
+  starts_in_qal_or_sr <- grepl("Qal|Sr", surface_geology)
+
+  # Qal interval
+  if (starts_in_qal_or_sr && !is.na(depth_to_tv_m)) {
+    out <- rbind(out, data.frame(depth_from_m = 0, depth_to_m = depth_to_tv_m, formation_unit = "Qal"))
+  }
+
+  # Tv interval
+  tv_start <- if (starts_in_tv) 0 else depth_to_tv_m
+  if (!starts_in_pkm && !is.na(tv_start) && !is.na(depth_to_kgd_m) && depth_to_kgd_m > tv_start) {
+    out <- rbind(out, data.frame(depth_from_m = tv_start, depth_to_m = depth_to_kgd_m, formation_unit = "Tv"))
+  }
+
+  # AltKgdpKm interval: from the granodiorite/metasediment contact (or
+  # from 0 if the well starts directly in pKm) down to total depth.
+  altkgd_start <- if (starts_in_pkm) 0 else depth_to_kgd_m
+  if (!is.na(altkgd_start) && !is.na(total_depth_m) && total_depth_m > altkgd_start) {
+    out <- rbind(out, data.frame(depth_from_m = altkgd_start, depth_to_m = total_depth_m, formation_unit = "AltKgdpKm"))
+  }
+
+  out
+}
+
+#' Ingest Table 3's 41 real well-control points.
+ingest_skalbeck2001_table3_well_control <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table3_well_control.csv") {
+
+  message("---- Ingesting Skalbeck (2001) Table 3 well-control depths ----")
+  if (!fs::file_exists(csv_path)) {
+    message("  (no file at ", csv_path, ")")
+    return(invisible(list(inserted = 0L)))
+  }
+  rows <- readr::read_csv(csv_path, show_col_types = FALSE)
+
+  doc_id <- dbGetQuery(con, "SELECT source_id FROM Data_Sources WHERE name = 'Skalbeck (2001) Table 3'")
+  if (nrow(doc_id) == 0) {
+    dbExecute(con, "INSERT INTO Data_Sources (name, notes) VALUES ('Skalbeck (2001) Table 3',
+      'Well data used in 2.75-D forward models and 3-D model depth to bedrock, p.74-75.')")
+  }
+
+  n_new_wells <- 0L; n_matched <- 0L; n_lithology <- 0L
+  for (i in seq_len(nrow(rows))) {
+    r <- rows[i, ]
+    well_id <- NA_integer_
+    if (!is.na(r$matched_well_name[1])) {
+      well_id <- .skalbeck_resolve_well(con, r$matched_well_name[1])
+      if (!is.na(well_id)) n_matched <- n_matched + 1L
+    }
+    if (is.na(well_id)) {
+      existing <- dbGetQuery(con, "SELECT well_id FROM Wells WHERE well_name = ?", params = list(r$well_name_raw[1]))
+      if (nrow(existing) > 0) {
+        well_id <- existing$well_id[1]
+      } else {
+        dbExecute(con, "
+          INSERT INTO Wells (well_name, well_role, notes)
+          VALUES (?, 'unknown', ?)
+        ", params = list(
+          r$well_name_raw[1],
+          paste0("Provisional well, no coordinate -- Skalbeck (2001) Table 3 gives depth-to-formation data only, ",
+                 "not a coordinate (only the raster Figure 5 map shows its location). Profile: ", r$profile[1], ". ",
+                 r$notes[1])
+        ))
+        well_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+        n_new_wells <- n_new_wells + 1L
+      }
+    }
+
+    # Fill Wells.elevation_m/total_depth only if currently NULL -- never overwrite.
+    dbExecute(con, "UPDATE Wells SET elevation_m = ? WHERE well_id = ? AND elevation_m IS NULL",
+              params = list(r$elevation_m[1], well_id))
+    dbExecute(con, "UPDATE Wells SET total_depth = ? WHERE well_id = ? AND total_depth IS NULL",
+              params = list(r$total_depth_m[1] * 3.28084, well_id))  # Wells.total_depth is stored in feet elsewhere in this project
+
+    intervals <- .skalbeck_table3_intervals(r$surface_geology[1], r$depth_to_tv_m[1], r$depth_to_kgd_m[1], r$total_depth_m[1])
+    for (j in seq_len(nrow(intervals))) {
+      iv <- intervals[j, ]
+      already <- dbGetQuery(con, "
+        SELECT lithology_id FROM Well_Lithology
+        WHERE well_id = ? AND depth_from_ft = ? AND depth_to_ft = ? AND formation_unit = ?
+      ", params = list(well_id, iv$depth_from_m, iv$depth_to_m, iv$formation_unit))
+      if (nrow(already) > 0) next
+      dbExecute(con, "
+        INSERT INTO Well_Lithology
+          (well_id, depth_from_ft, depth_to_ft, description, units, formation_unit, formation_unit_basis, notes)
+        VALUES (?, ?, ?, ?, 'm', ?, 'source_table_column', ?)
+      ", params = list(
+        well_id, iv$depth_from_m, iv$depth_to_m,
+        paste0(iv$formation_unit, " (Skalbeck 2001 Table 3, well control point, real depth-log interval)"),
+        iv$formation_unit,
+        paste0("Real interval derived from Skalbeck (2001) Table 3's own well-log depths (surface geology='",
+               r$surface_geology[1], "'). Depths stored in meters (units='m'), not feet, unlike most other ",
+               "Well_Lithology rows in this project -- check the units column before comparing depths directly.")
+      ))
+      n_lithology <- n_lithology + 1L
+    }
+  }
+  message("  -> ", n_new_wells, " new provisional well(s), ", n_matched, " matched to existing wells, ",
+          n_lithology, " real formation-unit interval(s) written.")
+  invisible(list(new_wells = n_new_wells, matched = n_matched, intervals = n_lithology))
+}
+
+# ============================================================
+# Table B-2, TH-1/TH-2/TH-3 wells (p.210-213): real monthly water-depth
+# (m) readings, Jan-1985 through 1998 -- SBG-TH1/SBG-TH2/SBG-TH3 (see
+# Table 1's own 1991-completion entries for these same wells, already
+# Wells.well_id 216/217/218, both provisional/coordinate-less). No
+# chemistry in this specific table section -- water depth only, so
+# this writes Water_Level_Observations, not Lab_Analyses. Added
+# 2026-09-26.
+#
+# Real, unresolved discrepancy flagged rather than silently patched:
+# this table's own real data shows TH-2/TH-3 readings as early as
+# 1989 -- two years BEFORE Table 1's own stated 1991 completion date
+# for SBG-TH1/2/3. Column-position parsing was independently verified
+# self-consistent (a smooth, continuous, physically plausible 1989-98
+# series with no discontinuity at the 1991 "completion" date), so the
+# values themselves are trusted; the completion-date-vs-first-reading
+# conflict itself is NOT resolved here.
+# ============================================================
+
+ingest_skalbeck2001_table_b2_th_wells <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_th_wells.csv") {
+
+  message("---- Ingesting Skalbeck (2001) Table B-2, TH-1/TH-2/TH-3 water-depth series ----")
+  if (!fs::file_exists(csv_path)) {
+    message("  (no file at ", csv_path, ")")
+    return(invisible(list(inserted = 0L)))
+  }
+  rows <- readr::read_csv(csv_path, show_col_types = FALSE, col_types = readr::cols(date = readr::col_character()))
+
+  well_map <- c("TH-1" = "SBG-TH1", "TH-2" = "SBG-TH2", "TH-3" = "SBG-TH3")
+  source_name <- "Skalbeck (2001) Table B-2 (TH-1/TH-2/TH-3)"
+  dbExecute(con, "INSERT OR IGNORE INTO Data_Sources (name, notes) VALUES (?, ?)",
+            params = list(source_name,
+              "Real monthly water-depth (m) readings for SBG-TH1/2/3, p.210-213. No chemistry in this table section -- water depth only. A real, unresolved discrepancy exists between this table's own earliest readings (1989) and Table 1's stated 1991 completion date for these wells -- flagged, not resolved."))
+
+  n_inserted <- 0L; n_skipped <- 0L; n_unmatched <- 0L
+  for (i in seq_len(nrow(rows))) {
+    r <- rows[i, ]
+    well_name <- well_map[[r$well_name[1]]]
+    well_id <- .skalbeck_resolve_well(con, well_name)
+    if (is.na(well_id)) {
+      n_unmatched <- n_unmatched + 1L
+      next
+    }
+    already <- dbGetQuery(con, "
+      SELECT observation_id FROM Water_Level_Observations
+      WHERE well_id = ? AND method = ? AND timestamp = ?
+    ", params = list(well_id, source_name, r$date[1]))
+    if (nrow(already) > 0) { n_skipped <- n_skipped + 1L; next }
+    dbExecute(con, "
+      INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes)
+      VALUES (?, ?, ?, ?, 'historical', ?)
+    ", params = list(well_id, r$date[1], r$water_depth_m[1], source_name,
+                       "Real depth-to-water reading (meters), Skalbeck (2001) Table B-2."))
+    n_inserted <- n_inserted + 1L
+  }
+  message("  -> Inserted ", n_inserted, " real water-depth reading(s) (", n_skipped, " already present, ",
+          n_unmatched, " unmatched well name(s)).")
+  invisible(list(inserted = n_inserted, skipped = n_skipped, unmatched = n_unmatched))
+}

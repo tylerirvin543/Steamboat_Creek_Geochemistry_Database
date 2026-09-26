@@ -96,8 +96,17 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # -------------------------
     # HYDROLOGIC ANALYSIS
     # -------------------------
-    hydraulic_head = "SELECT * FROM vw_hydraulic_head_clean",
-    water_level_latest = "SELECT * FROM vw_water_level_latest",
+    # 2026-09-26 fix: WHERE geom_wkt IS NOT NULL added -- the same NULL-
+    # geometry-breaks-the-whole-layer bug already fixed for
+    # temperature_timeseries/major_ions/vw_wells_gis (Sessions 7/26/27)
+    # was latent here too: a well can have a real elevation_m (so
+    # hydraulic_head computes to a real number) while still lacking
+    # a coordinate (geom_wkt NULL) -- newly hit once Skalbeck (2001)
+    # Table B-2 water-level readings were added for provisional,
+    # coordinate-less wells (Herz Geothermal, Steinhardt, etc.) that
+    # do have a real Table-1-sourced elevation.
+    hydraulic_head = "SELECT * FROM vw_hydraulic_head_clean WHERE geom_wkt IS NOT NULL",
+    water_level_latest = "SELECT * FROM vw_water_level_latest WHERE geom_wkt IS NOT NULL",
     
     # -------------------------
     # THERMAL SYSTEM

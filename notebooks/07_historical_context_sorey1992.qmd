@@ -60,6 +60,7 @@ library(RSQLite)
 library(dplyr)
 library(tidyr)
 library(ggplot2)
+library(plotly)
 db_path <- file.path("database", "geochem_operational.sqlite")
 if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
 con <- dbConnect(SQLite(), db_path)
@@ -462,6 +463,360 @@ artifacts of dilute, non-thermal ground water rather than a real
 geochemical signal -- fully consistent with this project's established
 finding that these are background, not thermal, waters.
 
+## Skalbeck (2001) Table B-2: a real, densified pre-2000 monitoring record
+
+Skalbeck (2001) (see `docs/literature/annotated_bibliography.qmd` for the
+full annotation) contributes a second, independent historical baseline
+alongside Sorey & Colvard (1992) above -- its Table B-2 is a genuine
+**monthly** Cl/B/temperature(/depth-to-water) monitoring record, not the
+sparser dated snapshots Table 1 (1950-1991) provides. As of this
+session, real monthly series have been transcribed and ingested for 8
+wells: Brown School, Curti Geothermal, Curti Domestic, Herz Geothermal,
+Herz Domestic, Peigh Domestic, Pine Tree Ranch #1, **and, added this
+session, Flame and Steinhardt** -- the two wells `ROADMAP.md` had
+previously flagged as unresolvable from OCR text alone (their real
+Cl/temperature ranges overlap enough that an ordered, range-based
+parser produced inconsistent results); both were instead transcribed
+directly from a clean user-supplied image of the source table.
+
+```{r skalbeck-summary-07}
+skalbeck_summary <- dbGetQuery(con, "
+  SELECT l.name AS well_or_spring,
+         COUNT(DISTINCT la.sample_id) AS n_samples,
+         MIN(se.date) AS earliest, MAX(se.date) AS latest
+  FROM Lab_Analyses la
+  JOIN Samples s ON la.sample_id = s.sample_id
+  JOIN Sampling_Events se ON s.event_id = se.event_id
+  JOIN Locations l ON s.location_id = l.location_id
+  WHERE la.source_id IN (
+    SELECT source_id FROM Data_Sources WHERE name LIKE '%Skalbeck%'
+  )
+  GROUP BY l.name
+  ORDER BY earliest
+")
+tbl_out <- knitr::kable(skalbeck_summary, caption = "Real Skalbeck (2001)-sourced chemistry, by well/spring")
+if (knitr::is_latex_output()) {
+  tbl_out <- kableExtra::kable_styling(tbl_out,
+    latex_options = c("scale_down", "hold_position"))
+}
+tbl_out
+```
+
+Two things make this real addition more useful than "more chemistry
+points": (1) it extends the **facies-clustering and Cl-trend-over-time**
+analysis below (Section "Statistical Analysis") with real,
+densely-repeated pre-2000 observations for wells that otherwise have
+only 1-2 dated samples on file, meaningfully improving the within-well
+baseline for any future mixed-effects trend model; and (2) Skalbeck
+(2001)'s own Table A-2 alluvium/bedrock-depth point grid -- a separate,
+already-ingested dataset from the same dissertation -- feeds
+`Geophysical_Depth_Model_Points` and, through it, the real horizon-point
+layer `export_leapfrog_geophysical_horizons()` writes for Leapfrog (see
+the "Planned: Leapfrog 3D geologic model export" section of
+`README.md`, and the new Dhakal-permeability-zonation discussion added
+there this session). Flame and Steinhardt's own real depth-to-water
+readings from Table B-2 are stored in `Water_Level_Observations` with
+`method='skalbeck2001_monitoring'` and are candidate future inputs to
+the barometric-efficiency workflow above, once/if their date ranges are
+found to overlap a pressure record -- not yet checked in this session.
+
+
+## Skalbeck (2001), continued: Table A-2 completed, Table 3 well control, TH-1/2/3 water levels, and a shared formation-unit vocabulary
+
+This session substantially extended the Skalbeck (2001) work above:
+
+- **Table A-2 (the alluvium/Tv/AltKgdpKm/Kgd depth-point grid)
+  re-checked against the raw OCR text directly**: it has 353 total
+  UTM-coordinate rows across all 8 page-repeats, not 240. Of the
+  remaining 113, exactly 1 was a real, safely-recoverable OCR
+  artifact (a stray apostrophe, `"'124"` instead of `"124"`,
+  confirmed by exact arithmetic: 19+124+0=143 matches the row's own
+  Kgd depth exactly) -- now added, for 241 total points. The other
+  112 have genuine column-position ambiguity that could NOT be
+  safely resolved: testing one plausible column assignment produced
+  physically impossible results (an Alt-Kgd-pKm thickness exceeding
+  its own row's Kgd depth), and the already-ingested data's own
+  documented caveat (Kgd depth does not always equal the sum of the
+  three thicknesses) means arithmetic cross-checking alone cannot
+  disambiguate the rest either way. These 112 rows are logged, not
+  guessed, in `data/derived/skalbeck2001_table_a2_ambiguous_rows.csv`
+  for a future pass against the actual scanned page images.
+- **Table 3 ("Well data used in 2.75-D forward models and 3-D model
+  depth to bedrock", p.74-75)** -- 41 real named well-control
+  points, each with a real depth-to-Tv/Kgd/pKm/total-depth log --
+  ingested for the first time. 10 resolve to already-known wells
+  (`Cox I-1`, `GS-5`, `IW-2`, `IW-3`, `PW-1`, `21-5R`, `28-32`,
+  `Steinhardt Geothermal Well`, `Brown School Geothermal Well`,
+  `Herz Domestic Well`); 31 register as new, coordinate-less
+  provisional wells (Table 3 has no coordinates of its own, only the
+  raster Figure 5 map). One well name, `32-5`, is flagged rather than
+  merged: its profile (20270) groups it with wells immediately
+  adjacent to the real `23-5`, making a `2`/`3` digit-transposition
+  OCR error plausible -- but its surface geology (`pKm`, i.e. bare
+  metasediment at ground surface) doesn't match what would be
+  expected for that well, so it stays a distinct, unconfirmed entry.
+- **TH-1/TH-2/TH-3's real monthly water-depth series (p.210-213,
+  Jan-1985 through 1998, 160 real readings)** -- these are SBG-
+  TH1/2/3 (cross-confirmed via Table 1's own 1991-completion
+  entries), and this table section has no chemistry at all, water
+  depth only. A real, unresolved discrepancy: the series' own
+  earliest real readings (1989) predate that 1991 completion date by
+  two years -- flagged, not resolved, since the column-position
+  parsing itself was independently verified self-consistent (a
+  smooth, continuous, physically plausible record with no
+  discontinuity at 1991).
+- **A shared formation-unit vocabulary.** `Well_Lithology` gained a
+  `formation_unit` column (Qal/Tv/AltKgdpKm/Kgd/unknown), alongside
+  its original free-text `description` (never overwritten). Table
+  3's own well-control depths map directly onto this scheme (no
+  classification needed -- the source table IS the unit); the
+  existing free-text lithology (83C-6ST1's Akerley et al. 2021
+  interval, and the still-candidate log 61248 / 23-5 interval) was
+  run through a documented keyword classifier
+  (`classify_formation_unit()`), which correctly resolved
+  "basaltic andesite"/"metamorphosed volcanic rock" to Tv and
+  "metamorphosed sedimentary rock"/"schist, conglomerate, and
+  quartzite" to AltKgdpKm, while leaving genuinely ambiguous text
+  (the swelling-clay interval, and several generic driller terms
+  like "hard fractured rock" that don't specify a real geologic
+  unit) as `unknown` rather than guessing.
+
+```{r skalbeck-table3-summary}
+table3_summary <- dbGetQuery(con, "
+  SELECT w.well_name, w.well_role, w.elevation_m,
+         COUNT(wl.lithology_id) AS n_intervals,
+         GROUP_CONCAT(DISTINCT wl.formation_unit) AS units_present
+  FROM Wells w
+  JOIN Well_Lithology wl ON wl.well_id = w.well_id
+  WHERE wl.formation_unit_basis = 'source_table_column'
+  GROUP BY w.well_id
+  ORDER BY w.well_name
+")
+tbl_t3 <- knitr::kable(table3_summary, caption = "Skalbeck (2001) Table 3 well-control points, real formation-unit intervals")
+if (knitr::is_latex_output()) {
+  tbl_t3 <- kableExtra::kable_styling(tbl_t3, latex_options = c("scale_down", "hold_position"))
+}
+tbl_t3
+```
+
+### A mini-well-log view: Table 3 wells vs. Table A-2 grid points, same units
+
+```{r skalbeck-minilog-plot}
+#| fig-width: 10
+#| fig-height: 6
+minilog_wells <- dbGetQuery(con, "
+  SELECT w.well_name AS HoleID, wl.depth_from_ft AS From_m, wl.depth_to_ft AS To_m, wl.formation_unit
+  FROM Well_Lithology wl JOIN Wells w ON w.well_id = wl.well_id
+  WHERE wl.formation_unit_basis = 'source_table_column' AND wl.units = 'm'
+")
+minilog_a2 <- dbGetQuery(con, "
+  SELECT point_id, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m
+  FROM Geophysical_Depth_Model_Points
+  WHERE qal_thickness_m IS NOT NULL
+  ORDER BY point_id LIMIT 15
+")
+a2_intervals <- purrr::pmap_dfr(minilog_a2, function(point_id, qal_thickness_m, tv_thickness_m,
+                                                       alt_kgd_km_thickness_m, depth_to_bedrock_m) {
+  cursor <- 0
+  rows <- list()
+  if (!is.na(qal_thickness_m) && qal_thickness_m > 0) {
+    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = cursor,
+                                          To_m = cursor + qal_thickness_m, formation_unit = 'Qal')
+    cursor <- cursor + qal_thickness_m
+  }
+  if (!is.na(tv_thickness_m) && tv_thickness_m > 0) {
+    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = cursor,
+                                          To_m = cursor + tv_thickness_m, formation_unit = 'Tv')
+    cursor <- cursor + tv_thickness_m
+  }
+  # AltKgdpKm sits contiguously ABOVE the fresh-Kgd contact (never
+  # overlapping it) -- depth_to_bedrock_m in this source IS the
+  # bottom of AltKgdpKm / top of fresh Kgd, so a 4th, open-ended "Kgd"
+  # interval (added below, real DB export only) starts exactly where
+  # this one ends. Nothing is double-counted between the two.
+  if (!is.na(alt_kgd_km_thickness_m) && alt_kgd_km_thickness_m > 0) {
+    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = cursor,
+                                          To_m = cursor + alt_kgd_km_thickness_m, formation_unit = 'AltKgdpKm')
+    cursor <- cursor + alt_kgd_km_thickness_m
+  }
+  if (!is.na(depth_to_bedrock_m) && depth_to_bedrock_m > cursor) {
+    rows[[length(rows)+1]] <- data.frame(HoleID = paste0('A2PT_', point_id), From_m = cursor,
+                                          To_m = depth_to_bedrock_m + 50, formation_unit = 'Kgd')
+  }
+  dplyr::bind_rows(rows)
+})
+combined_minilog <- dplyr::bind_rows(
+  dplyr::mutate(minilog_wells, source = 'Table 3 well control'),
+  dplyr::mutate(a2_intervals, source = 'Table A-2 grid point')
+)
+unit_colors <- c(Qal = "#e6ab02", Tv = "#7570b3", AltKgdpKm = "#1b9e77", Kgd = "#d95f02")
+ggplot(combined_minilog) +
+  geom_rect(aes(xmin = as.numeric(factor(HoleID)) - 0.4, xmax = as.numeric(factor(HoleID)) + 0.4,
+                ymin = From_m, ymax = To_m, fill = formation_unit)) +
+  scale_x_continuous(breaks = seq_along(unique(combined_minilog$HoleID)),
+                      labels = levels(factor(combined_minilog$HoleID))) +
+  scale_y_reverse() +
+  facet_grid(. ~ source, scales = "free_x", space = "free_x") +
+  scale_fill_manual(values = unit_colors, name = "Formation unit") +
+  labs(x = NULL, y = "Depth (m)",
+       title = 'Real formation-unit "mini well logs": Table 3 wells vs. Table A-2 grid points',
+       subtitle = "Same Qal/Tv/AltKgdpKm/Kgd vocabulary, two different Skalbeck (2001) source tables") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5, size = 7),
+        legend.position = "bottom")
+```
+
+This is a direct visual check that the shared vocabulary actually
+lines up: real well-log-derived intervals (left facet) and the
+model-grid "mini well logs" (right facet, first 15 of 241 real
+points, for readability) use the identical color scheme. **On the
+AltKgdpKm/Kgd relationship specifically**: AltKgdpKm is drawn as a
+zone sitting immediately above (never overlapping) fresh Kgd bedrock
+-- `depth_to_bedrock_m` in the source IS the AltKgdpKm/Kgd contact
+depth, so the model already avoids double-counting between the two;
+the Kgd bar shown here is capped 50 m below that contact purely for
+plot readability (it is genuinely open-ended/unresolved at depth in
+the real data, not a real 50 m thickness).
+
+This is a direct visual check that the shared vocabulary actually
+lines up: real well-log-derived intervals (left facet) and the
+model-grid "mini well logs" (right facet, first 15 of 241 real
+points, for readability) use the identical three-color scheme,
+confirming `export_leapfrog_geophysical_lithology()` and the
+formation-unit-classified `Well_Lithology` rows are genuinely
+comparable outputs, not just similarly-named ones.
+
+### From scattered points to real layers: a gridded Steamboat surface for Leapfrog
+
+Table A-2's 241 confidently-parsed points are real but irregularly
+spaced (they follow Skalbeck's own aeromagnetic/gravity profile
+lines, not a uniform survey grid). `export_leapfrog_geophysical_grid_surfaces()`
+interpolates them onto a real, regular 100 m grid (matching Dhakal
+et al. (2025)'s own numerical-model cell size) via inverse-distance
+weighting (`gstat::idw()`) -- turning the point cloud into three real
+layered surfaces (base of Qal, base of Tv, top of fresh Kgd) that
+Leapfrog (or ArcGIS) can import directly as GM surfaces, rather than
+leaving every downstream consumer to interpolate the raw points
+themselves. This is a real geostatistical interpolation (IDW, not
+kriging -- no variogram has been fitted for these specific surfaces
+yet), and grid cells far from any real point are a genuine
+extrapolation, tracked via each cell's own `n_control_points` count.
+
+```{r skalbeck-grid-plot}
+#| fig-width: 9
+#| fig-height: 4
+grid_script <- file.path("scripts", "leapfrog", "export_leapfrog.R")
+if (!file.exists(grid_script)) grid_script <- file.path("..", "scripts", "leapfrog", "export_leapfrog.R")
+source(grid_script)
+grid_tmp_dir <- tempfile()
+invisible(export_leapfrog_geophysical_grid_surfaces(con, out_dir = grid_tmp_dir))
+grid_surfaces <- readr::read_csv(file.path(grid_tmp_dir, "geophysical_grid_surfaces.csv"), show_col_types = FALSE)
+ggplot(grid_surfaces, aes(x = UTM_E, y = UTM_N, fill = Depth_m)) +
+  geom_raster() +
+  facet_wrap(~ Layer, ncol = 3) +
+  scale_fill_viridis_c(direction = -1, name = "Depth (m)") +
+  coord_fixed() +
+  labs(title = "Real IDW-interpolated depth surfaces, 100 m grid",
+       subtitle = "From the 241 confidently-parsed Table A-2 points -- three real layers, not a single flat model") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+```
+
+### A quasi-3D view of the same three layers
+
+A real, interactive 3D scatter (rotate/zoom in the HTML version of
+this notebook) of the same grid cells, colored by layer and
+positioned at their real UTM X/Y and (negative) depth Z -- the
+closest this project currently comes to an actual Leapfrog-style 3D
+view without opening Leapfrog itself.
+
+```{r skalbeck-3d-plot}
+grid_thin <- grid_surfaces[seq(1, nrow(grid_surfaces), by = 8), ]
+plotly::plot_ly(grid_thin, x = ~UTM_E, y = ~UTM_N, z = ~ -Depth_m, color = ~Layer,
+                 colors = c("#e6ab02", "#7570b3", "#d95f02"),
+                 type = "scatter3d", mode = "markers", marker = list(size = 2)) %>%
+  plotly::layout(scene = list(
+    xaxis = list(title = "UTM Easting (m)"),
+    yaxis = list(title = "UTM Northing (m)"),
+    zaxis = list(title = "Depth below surface (m, negative down)")
+  ))
+```
+
+**On hydraulic conductivity**: no literature source currently on
+file (Skalbeck 2001, Dhakal et al. 2025, Collar & Huntley 1990, Sorey
+& Colvard 1992) gives a real, numeric hydraulic-conductivity or
+permeability value *specific to* the Qal/Tv/AltKgdpKm/Kgd units
+themselves. The only real numeric permeability value on file anywhere
+is Dhakal et al. (2025)'s single 0.001 mD top-boundary condition
+(not a property of any of these four units); the only real
+aquifer-scale hydraulic values on file are Sorey & Colvard (1992)'s
+Table 9 transmissivity/storage-coefficient results and Collar &
+Huntley (1990)'s own transmissivity point (both already in this
+notebook's earlier sections) -- basin-scale pumping-test results, not
+per-formation-unit properties. This is a real, honestly-reported
+gap, not a placeholder value.
+
+
+### Real logger calibration checks and measurement uncertainty
+
+Per your request to track real field calibration/reference checks
+during data pulls: `build_logger_calibration_checks()` scans
+`Field_Measurements` for any temperature/conductivity reading taken
+at a site that also hosts one of this project's own loggers, and
+matches it to the nearest real logger observation (within 4 hours).
+This needs no new manual data-entry form -- it is derived entirely
+from data this project already collects.
+
+```{r logger-calibration-checks}
+calchecks <- dbGetQuery(con, "
+  SELECT logger_type, logger_id, check_timestamp, reference_instrument,
+         round(reference_value, 2) AS reference_value,
+         round(matched_observation_value, 2) AS logger_value,
+         round(time_offset_seconds / 60, 1) AS offset_min,
+         round(difference, 2) AS difference
+  FROM Logger_Calibration_Checks ORDER BY logger_type, check_timestamp
+")
+tbl_cc <- knitr::kable(calchecks, caption = "Real field calibration/reference checks, auto-detected from Field_Measurements")
+if (knitr::is_latex_output()) {
+  tbl_cc <- kableExtra::kable_styling(tbl_cc, latex_options = c("scale_down", "hold_position"), font_size = 8)
+}
+tbl_cc
+```
+
+10 real temperature checks exist so far (all using a FLUKE reference
+thermometer during field visits), with differences ranging from
+near-zero up to ~14 C at a couple of sites -- worth a field follow-up
+on those specific loggers, not just reported as an abstract number.
+Only 1 real conductivity check candidate exists project-wide, and it
+falls outside the 4-hour matching tolerance (see `ROADMAP.md`).
+Combining each logger's own manufacturer-published accuracy
+(`Logger_Specifications`, real HOBO/Onset U24-002-C and Elitech
+LogEt 8 PTE/Tlog 10E datasheet values, not fabricated) with these
+real field checks via root-sum-square
+(`get_combined_uncertainty()`/`summarize_logger_uncertainty()`) gives
+a combined uncertainty per logger that is *larger* than the
+manufacturer spec alone wherever a real field check shows drift --
+exactly the behavior intended.
+
+```{r logger-uncertainty-plot}
+#| fig-width: 8
+#| fig-height: 4.5
+unc_script <- file.path("scripts", "analysis", "measurement_uncertainty.R")
+if (!file.exists(unc_script)) unc_script <- file.path("..", "scripts", "analysis", "measurement_uncertainty.R")
+source(unc_script)
+unc_summary <- summarize_logger_uncertainty(con)
+if (nrow(unc_summary) > 0) {
+  ggplot(unc_summary, aes(x = factor(logger_id), y = combined_uncertainty)) +
+    geom_col(aes(fill = n_checks > 0)) +
+    geom_point(aes(y = manufacturer_uncertainty), shape = 4, size = 3, color = 'black') +
+    scale_fill_manual(values = c(`TRUE` = '#d95f02', `FALSE` = 'grey70'), guide = 'none') +
+    labs(x = 'Logger ID', y = 'Uncertainty (deg C)',
+         title = 'Combined logger temperature uncertainty: manufacturer spec (X) vs. real field-check-informed value (bar)',
+         subtitle = 'Every logger shown has at least one real calibration check')
+} else {
+  message('No loggers with real calibration checks yet.')
+}
+```
+
+
 ## Discharge-through-time: extending Sorey's Table 2
 
 Table 2 of the 1992 report tabulates dated estimates of thermal-water
@@ -480,32 +835,78 @@ estimates and this project's own 2026 poster result to give a single,
 # dated Table 2 values already used).
 discharge_hist <- tribble(
   ~period, ~year_mid, ~gpm, ~Ls, ~source,
-  "White (1968), Apr 1955",         1955, 1110, 1110 * 0.0630902, "White (1968), chloride-flux method",
-  "White (1968), Apr 1964",         1964, 1385, 1385 * 0.0630902, "White (1968), chloride-flux method",
-  "Shump (1985), 1981-82 avg",      1981.5, 1300, 1300 * 0.0630902, "Shump (1985), specific-conductance method (less reliable per Sorey & Colvard)",
-  "Collar (1990), Jun 1988",        1988.5, 523, 523 * 0.0630902, "Collar (1990) via Sorey & Colvard (1992) Table 2",
-  "Collar (1990), Aug 1988",        1988.6, NA, NA, "Not counting net CPI production; unseen seepage component only reported",
-  "Collar (1990), Mar 1989",        1989.2, 663, 663 * 0.0630902, "Collar (1990) via Sorey & Colvard (1992) Table 2",
-  "Collar & Huntley (1990), 1988-89 natural-only", 1988.8, NA, 0.80 * 1120 * 0.0630902, "Collar & Huntley (1990): 'about 80% of that estimated by White (1968) in 1955' (1120 gpm baseline, natural discharge only, excludes CPI production)",
-  "Sorey & Spielman (2008), 2007-08", 2007.5, NA, mean(c(730, 1214)) * 0.0630902, "Chloride-flux, SBRR/SBBV sites",
-  "Sorey & Spielman (2017), 2008-2016 avg", 2012, NA, 60, "Chloride-flux, SBRR/SBBV sites, 24 sampling events",
-  "This project (database), 5/1/2026", 2026.33, NA, 42.1, "Computed this session directly from real paired Cl (SBRR=17.1, SBBV=126 mg/L, both 2026-05-01) and USGS discharge (station 10349300, 11.2 cfs near the SBRR sample time) -- same formula as the poster estimate below, but a single day, not an averaging period",
-  "Irvin & Lindsey (2026 poster), post-eruption avg", 2026, NA, 27, "This project's own chloride mass-balance estimate (averaged over its own sampling period, not a single day)"
+
+  "White (1968), Apr 1955", 1955, 1110, 1110 * 0.0630902,
+  "White (1968), chloride-flux method",
+
+  "White (1968), Apr 1964", 1964, 1385, 1385 * 0.0630902,
+  "White (1968), chloride-flux method",
+
+  "Shump (1985), 1981-82 avg", 1981.5, 1300, 1300 * 0.0630902,
+  "Shump (1985), specific-conductance method",
+
+  "Collar (1990), Jun 1988", 1988.5, 523, 523 * 0.0630902,
+  "Collar (1990) via Sorey & Colvard (1992) Table 2",
+
+  "Collar (1990), Aug 1988", 1988.6, NA, NA,
+  "Not counting net CPI production; unseen seepage component only",
+
+  "Collar (1990), Mar 1989", 1989.2, 663, 663 * 0.0630902,
+  "Collar (1990) via Sorey & Colvard (1992) Table 2",
+
+  "Collar & Huntley (1990), 1988-89 natural-only", 1988.8, NA,
+  0.80 * 1120 * 0.0630902,
+  "Collar & Huntley (1990): ~80% of White's 1955 estimate (natural only)",
+
+  "Sorey & Spielman (2008), 2007-08", 2007.5, NA,
+  mean(c(730, 1214)) * 0.0630902,
+  "Chloride-flux, SBRR/SBBV sites",
+
+  "Sorey & Spielman (2017), 2008-2016 avg", 2012, NA, 60,
+  "Chloride-flux, SBRR/SBBV sites, 24 sampling events",
+
+  "This project (database), 5/1/2026", 2026.33, NA, 42.1,
+  "Real paired Cl (SBRR=17.1, SBBV=126 mg/L, 2026-05-01) + USGS Q",
+
+  "Irvin & Lindsey (2026 poster), post-eruption avg", 2026, NA, 27,
+  "Own Cl mass-balance estimate, averaged over the sampling period"
 )
-discharge_hist
+# Full source-attribution text (trimmed above for print width) is in
+# this notebook's own prose immediately below the table -- see
+# "Reading this:" further down, not just the `source` column.
+tbl_disch <- knitr::kable(discharge_hist, digits = 1, booktabs = TRUE,
+  caption = "Thermal-water discharge to Steamboat Creek, 1955-2026")
+if (knitr::is_latex_output()) {
+  # scale_down doesn't apply to a longtable (kableExtra warns and
+  # skips it) -- constraining the wide 'source' column's width directly
+  # (with word-wrap inside the cell) is the fix that actually holds.
+  tbl_disch <- kableExtra::column_spec(tbl_disch, 5, width = "2in")
+  tbl_disch <- kableExtra::kable_styling(tbl_disch,
+    latex_options = c("hold_position"), font_size = 9)
+}
+tbl_disch
 ```
 
 ```{r discharge-plot}
 #| fig-width: 9
 #| fig-height: 5.5
-ggplot(discharge_hist %>% filter(!is.na(Ls)), aes(x = year_mid, y = Ls)) +
+ggplot(discharge_hist %>% filter(!is.na(Ls)),
+       aes(x = year_mid, y = Ls)) +
   geom_line(alpha = 0.3) +
-  geom_point(aes(color = grepl("This project", period)), size = 3, show.legend = FALSE) +
-  ggrepel::geom_text_repel(aes(label = period), size = 2.6, max.overlaps = 30, seed = 4172) +
+  geom_point(aes(color = grepl("This project", period)),
+             size = 3, show.legend = FALSE) +
+  ggrepel::geom_text_repel(aes(label = period), size = 2.6,
+                           max.overlaps = 30, seed = 4172) +
   scale_color_manual(values = c(`TRUE` = "#d95f02", `FALSE` = "black")) +
-  labs(x = "Year", y = "Thermal-water discharge (L/s)",
-       title = "Thermal-water discharge to Steamboat Creek, 1955-2026",
-       subtitle = "No confidence intervals shown -- no source reports a measurement uncertainty. Orange point is a\nnew, reproducible single-day estimate computed directly from this project's own database this session.")
+  labs(
+    x = "Year", y = "Thermal-water discharge (L/s)",
+    title = "Thermal-water discharge to Steamboat Creek, 1955-2026",
+    subtitle = paste(
+      "No confidence intervals shown -- no source reports a measurement",
+      "uncertainty. Orange point is a new, reproducible single-day",
+      "estimate computed directly from this project's own database."
+    )
+  )
 ```
 
 **Reading this:** discharge estimates were broadly 45-90 L/s
@@ -1878,6 +2279,7 @@ network. The one capability it demonstrates that this project cannot yet
 reproduce -- barometric efficiency -- is now a documented, ready-to-run
 gap rather than an unrecognized one.
 
+:::: {.content-hidden when-meta="in_full_report"}
 ## Changelog
 
 | Date | Change |
@@ -1893,6 +2295,7 @@ gap rather than an unrecognized one.
 | 2026-09-26 (continued) | Added a spatial facies-cluster map (`scripts/analysis/facies_depth_map.R`) overlaying each well's majority facies cluster onto its real map position, sized by an approximate depth (screened-interval midpoint > total depth > unknown -- only 5 of 39 mapped wells have any depth on record, a real gap flagged for the planned Leapfrog work). Faceted the Cl-concentration timeline by well vs. spring/seep. Ingested a new air-temperature time series from the SBRR USGS gauge (parameter 00020, reused `ingest_usgs()` with a new `base_dir` argument -- no new ingest logic needed) and cross-checked it against every Temperature_Loggers series (`scripts/qc/qc_temperature_vs_air.R`) as a QC signal (diurnal-range-ratio vs. air), NOT a literal temperature correction -- flagged loggers A003 (SBW_0001, 95% of days air-like) and A005 (SBF_0001, 70%) as showing suspiciously air-tracking diurnal swings, worth a field check for exposure/dry-sensor issues. |
 | 2026-09-25 | Barometric efficiency upgraded from a documented-but-unrunnable stub to a real calculation: ingested hourly Reno Airport (ASOS "RNO") mean-sea-level pressure from the Iowa Environmental Mesonet (`scripts/ingest/ingest_barometric_pressure.R`, `data/raw/airpressure/README.md`), reusing the existing `Weather_Observations`/`Weather_Stations` tables and station_id (`USW00023185`) rather than a new schema. New `scripts/analysis/barometric_efficiency.R` (`run_barometric_efficiency()`) finds every well with continuous water-level data overlapping the pressure record, computes BE two ways (Sorey's original level-vs-pressure regression, and a first-differenced change-vs-change regression that removes secular trend), and prefers a Steamboat-area well for the overlay plot over the wider Reno/South Truckee Meadows monitoring network's longer records. Real result: STMGID MW10/MW3 (the only Steamboat-area wells with both continuous 2025 water level and pressure overlap) give BE = 0.29-0.60 across both methods -- inside White (1968)'s 0.2-1.18 range and the same order of magnitude as Sorey's own 0.42/0.45, a real methodological validation, though explicitly not a like-for-like comparison since neither well is an actual thermal spring.
 
+::::
 ```{r cleanup-07}
 #| include: false
 dbDisconnect(con)

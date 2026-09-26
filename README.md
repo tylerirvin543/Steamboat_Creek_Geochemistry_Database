@@ -361,6 +361,54 @@ fluid mixing, recharge sources, and hydrothermal upflow zones. The
 platform is not just a database, but an **analytical framework for
 geothermal system characterization**.
 
+
+## Key Literature Sources
+
+Several published sources are treated as load-bearing references
+throughout this project (cited fully in
+`docs/literature/annotated_bibliography.qmd`, in chronological
+order):
+
+- **Sorey, M.L. and Colvard, E.M. (1992)** and Sorey's related
+  1979/2000/2008/2017 chloride-discharge papers -- the classic USGS
+  study of thermal-water discharge to Steamboat Creek, and this
+  project's own ~70-year discharge-through-time baseline.
+- **Dhakal et al. (2025)** -- the current Ormat/CPI numerical model
+  of the reservoir (Volsung), whose production well -> port ->
+  injection well flow diagram this project's `Production_Port_Links`/
+  `Port_Injection_Links` tables directly transcribe, and whose grid
+  domain/permeability-anisotropy values inform the Leapfrog zonation
+  discussion below.
+- **Klein, Johnson & Spielman (2007)** -- the single most useful map
+  of the historical groundwater monitor-well network at Steamboat.
+- **Skalbeck, J.D. (2001)** -- a UNR PhD dissertation combining
+  2.75-D gravity/aeromagnetic forward modeling with Cl/B mixing
+  analysis, and this project's single richest hydraulic-
+  conductivity/confining-layer reference. Three real datasets from
+  it are ingested directly: (1) Table A-2's 241-point Qal/Tv/
+  AltKgdpKm/Kgd depth-to-bedrock grid (`Geophysical_Depth_Model_
+  Points`), exported as both real Leapfrog horizon points and, as of
+  2026-09-26, per-point "mini well log" formation intervals
+  (`geophysical_lithology_intervals.csv` -- see "Planned: Leapfrog
+  3D geologic model export" below); (2) Table 3's 41 named well-
+  control points, each with its own real depth-to-Tv/Kgd/pKm/total-
+  depth log, feeding the SAME formation-unit-constrained
+  `Well_Lithology` vocabulary as real well logs; (3) real dated Cl/B
+  chemistry (Tables 1/2/B-1/B-2) and, for SBG-TH1/2/3, a genuine
+  1985-1998 monthly water-depth series -- one of very few pre-2000
+  continuous water-level records in this entire project. See
+  `scripts/ingest/ingest_historical_skalbeck2001.R` and
+  `notebooks/07_historical_context_sorey1992.qmd`'s Skalbeck section
+  for the full detail, including the real Table A-2/B-2 OCR-
+  parsing caveats documented there.
+
+- **Nehring, N.L. (1979, 1980)** -- early USGS geochemical studies;
+  the 1980 report's Table 7 (real well data reproduced from White
+  1968a: depth, temperature, enthalpy, Cl) is now ingested
+  (`ingest_historical_nehring1980.R`), adding 15 new provisional
+  1960s-era wells (GS-1 through GS-4, GS-8, Mt Rose 1, Herz 1/2,
+  E Reno, W Reno, Senges, Rodeo, SB-4, No. 32, SSW) not previously
+  in this database.
 ------------------------------------------------------------------------
 
 # System Architecture
@@ -1174,9 +1222,11 @@ not pairwise lines. Planned design (not yet implemented):
 
 ------------------------------------------------------------------------
 
-## Planned: Leapfrog 3D geologic model export
+## Leapfrog 3D geologic model export
 
-Raised 2026-09-12 as a proposed direction, not yet built. Motivation:
+Raised 2026-09-12 as a proposed direction; **built and actively
+used as of 2026-09-26** (this section previously said "not yet
+built" -- refreshed to match the real, current state). Motivation:
 this project's well/chemistry data currently only ever gets exported as
 2D GIS layers (the GeoPackage); a 3D geologic model (implicit modeling
 in Leapfrog, informed by well collars/lithology and, eventually, fault
@@ -1187,22 +1237,26 @@ name) and as the layer/zone geometry a future MODFLOW model would need.
 
 **Design: a new, separate, optional export stage, not a replacement for
 the GeoPackage.** Mirrors `export_geopackage.R`'s pattern exactly --
-its own script (`scripts/leapfrog/export_leapfrog.R`,
-`export_leapfrog(con, out_dir = "output/leapfrog")`), its own
-`RUN_ANALYSIS$leapfrog_export` flag (default `FALSE`, opt-in, same
-posture as `RUN_ANALYSIS$phreeqc`), and its own output directory --
-so it can be toggled on/off independently and never blocks or slows
-down a normal pipeline run.
+its own script (`scripts/leapfrog/export_leapfrog.R`, with
+`export_leapfrog_wells()`, `export_leapfrog_geophysical_horizons()`,
+and, added 2026-09-26, `export_leapfrog_geophysical_lithology()`),
+its own `RUN_ANALYSIS$leapfrog_export` flag (default `FALSE`, opt-in,
+same posture as `RUN_ANALYSIS$phreeqc`), and its own output directory
+(`output/leapfrog/`) -- so it can be toggled on/off independently and
+never blocks or slows down a normal pipeline run.
 
-**Data feasibility, checked directly against the database (2026-09-12):**
+**Data feasibility, checked directly against the database (updated
+2026-09-26):**
 
 | Leapfrog input | Status |
 |---|---|
-| Collar table (X/Y/Z + depth) | **109 of 205 wells fully ready** (lat/lon + elevation_m + total_depth all populated); another ~76 have partial data (missing one of the three) -- exportable as a separate "incomplete" layer, not silently dropped |
-| Survey/deviation table | No deviation surveys exist anywhere in this project -- every hole would import as a straight vertical trace (Depth 0 and Depth=total_depth, azimuth 0, dip -90). A reasonable assumption for essentially all of these wells, but stated explicitly, not silently assumed |
-| Lithology/interval table | **Not ready.** `Well_Lithology` has only 5 rows, all `well_id = NULL` and tagged `confidence=ocr_heuristic_unvalidated` -- genuine OCR garbage from the well-log pipeline, not usable formation-top data. 83 wells do have `top_perforation`/`bottom_perforation` (casing/screen interval), which could go in as a distinct "completion interval" layer -- explicitly not lithology, and should not be mislabeled as such in Leapfrog |
-| Fault surfaces | **None exist in this project.** The only Dhakal-sourced spatial data on disk (`data/raw/arcgis/dhakal .shp/`) is well points and power-plant polygons, not fault traces. A candidate source (Dhakal et al. 2025 Figure 1; possibly White et al. 1964, PP 458-B, Plate 1) is a raster figure in a PDF, not a georeferenced layer -- needs manual digitizing (in ArcGIS, using this project's own well coordinates as control points), not something OCR/scripting can extract |
+| Collar table (X/Y/Z + depth) | **113 of ~250 wells fully ready** (lat/lon + elevation_m + total_depth all populated); another ~136 have partial data -- exportable as a separate "incomplete" layer, not silently dropped |
+| Survey/deviation table | One well (`83C-6ST1`) has a real, literature-sourced deviation survey (Akerley et al. 2021); every other hole is exported as a straight vertical trace (no real deviation data exists for it), stated explicitly, not silently assumed |
+| Lithology/interval table | **Substantially improved 2026-09-26.** `Well_Lithology` now carries a `formation_unit` column (controlled Qal/Tv/AltKgdpKm/Kgd vocabulary, matching Skalbeck 2001's own model units) alongside the original free-text `description` -- real intervals now exist for 83C-6ST1 (literature), the candidate 23-5 log, and 10 wells resolved from Skalbeck (2001) Table 3's own real per-well depth-to-formation data (58 real intervals). A NEW, separate `geophysical_lithology_intervals.csv` treats each of Skalbeck (2001) Table A-2's 241 real grid points as its own "mini well log" (689 real intervals across all 241 points) -- see "Key Literature Sources" above and `notebooks/07_historical_context_sorey1992.qmd`'s Skalbeck section for the full detail. 83 wells also have `top_perforation`/`bottom_perforation` (casing/screen interval), exported separately as `completion_interval.csv` -- explicitly not lithology |
+| Fault surfaces | **Still none exist in this project.** The only Dhakal-sourced spatial data on disk (`data/raw/arcgis/dhakal .shp/`) is well points and power-plant polygons, not fault traces. Candidate sources (Dhakal et al. 2025 Figure 1, Collar & Huntley 1990 Figure 1, possibly White et al. 1964 PP 458-B Plate 1) are raster figures in PDFs, not georeferenced layers -- needs manual digitizing (in ArcGIS, using this project's own well coordinates as control points). `ingest_fault_traces.R` and the `Fault_Traces`/`Alteration_Zones` schema already exist and are wired into `run_pipeline.R` (currently a safe no-op with zero real rows) -- ready the moment a digitized shapefile is dropped in |
 | Alteration surfaces | **No source identified yet.** Nothing in this project's schema or any ingested source; White et al. (1964, PP 458-B) is an unchecked candidate |
+| Horizon points (formation-top elevations) | **Real, 4 of 4 formation contacts** (top of Qal is implicit at ground surface; base-of-Qal/base-of-Tv/top-of-AltKgdpKm/depth-to-bedrock-Kgd are all exported, the 4th -- top-of-AltKgdpKm -- added 2026-09-26, closing a real gap where only 3 of the 4 real Skalbeck (2001) Table A-2 contacts were being exported) -- `geophysical_horizons.csv`, 964 rows, all 241 points with a real USGS-3DEP surface elevation so true Z (not just depth-below-surface) is populated throughout |
+| Gridded layer surfaces | **New 2026-09-26.** `export_leapfrog_geophysical_grid_surfaces()` interpolates the 241 real Table A-2 points onto a regular 100 m grid (matching Dhakal et al. 2025's own model cell size) via IDW (`gstat::idw()`), producing three real layered surfaces (base of Qal, base of Tv, top of fresh Kgd) -- `geophysical_grid_surfaces.csv`, 63,840 grid cells. This is a real geostatistical interpolation, not a made-up grid; no variogram has been fitted for these specific surfaces yet, so it is IDW, not kriging. See `notebooks/07_historical_context_sorey1992.qmd` for a raster-map view and a quasi-3D `plotly` scatter of the same layers |
 
 **Proposed "ArcGIS out, ArcGIS back in" workflow** (this is the "future
 ArcGIS files fed back in for reformat" loop): this project already
@@ -1262,6 +1316,55 @@ user before building):**
    on the same fault-bounded compartments, and revisiting PHREEQC
    mixing end-member grouping by compartment rather than by well name
    alone.
+
+**Using Dhakal et al. (2025)'s own numerical model to inform zonation
+(2026-09-26, scoped, not built):** Dhakal et al. (2025)'s Volsung
+reservoir model (the same source as this project's `Production_Port_
+Links`/`Port_Injection_Links` flow network, Section "Well & Facility
+Flow Network" above) is a real, quantitatively documented 3D
+permeability model, not just a flow diagram -- checked directly against
+the paper's own text (`docs/literature/Dhakal.pdf`) before writing this:
+
+- **What's quantitatively usable as-is**: the model's own grid domain
+  (15 km x 15 km, 100 m x 100 m cells, 157,388 cells total, UTM Zone
+  11N easting 254,000-269,000 m / northing 4,354,500-4,369,500 m,
+  elevation +1750 to -1000 m RSL) gives a real, citable bounding box
+  and vertical extent for any future Leapfrog/MODFLOW grid built for
+  this project -- no digitizing needed, just transcribing these
+  numbers. The paper also states two real, usable permeability
+  anisotropy ratios (kx:kz = 10:1 reservoir-wide, 15:1 specifically for
+  Lower Steamboat's faults, reflecting more horizontal-stratigraphy-
+  dominated flow there) and one real absolute value (a 0.001 mD
+  "very low permeable" layer imposed at 1400 m RSL as the model's own
+  top boundary condition, not a measured rock property).
+- **What is NOT quantitatively available**: Dhakal et al. (2025) does
+  NOT publish a per-rock-type permeability table (mD) for its Upper/
+  Middle/Lower Steamboat thermal-area zonation -- Figure 7 ("Reservoir
+  model permeability structures") is a rendered 3D-perspective figure
+  in the PDF, not a data table, the same "real information trapped in
+  a raster figure" situation already flagged for the fault-trace map
+  (Figure 1) above. Building a Leapfrog volume model directly from
+  Figure 7's zones would need the same manual digitizing/
+  georeferencing workflow, not something extractable by
+  scripting/OCR.
+- **Recommended use, once faults are digitized (Phase 2/3 above)**:
+  rather than treating permeability/thermal-area zonation as a fourth
+  parallel digitizing task, use the *fault traces themselves* (Figure
+  1, Collar & Huntley 1990's Figure 1 -- both already flagged as the
+  fault-digitizing candidates) as the compartment boundaries, and
+  assign each resulting fault-bounded compartment a qualitative
+  Upper/Middle/Lower Steamboat thermal-area label straight from
+  Dhakal et al. (2025) Table 1's own well groupings (already
+  transcribed into `data/raw/wells/dhakal_well_network.csv` -- see
+  "Well & Facility Flow Network" above). This reuses data this
+  project already has (well-to-thermal-area assignment) instead of
+  re-digitizing Figure 7 from scratch, and gives PHREEQC mixing/
+  inverse work a real, literature-grounded compartment scheme for
+  end-member grouping (the "revisit PHREEQC end-member grouping by
+  fault-bounded compartment" item in the phasing list above) --
+  qualitative zone membership now, with real mD values only if/when a
+  future request specifically needs the numerical model's underlying
+  simulation deck (not published in the GRC paper itself).
 
 ------------------------------------------------------------------------
 

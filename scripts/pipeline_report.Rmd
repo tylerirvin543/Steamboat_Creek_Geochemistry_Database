@@ -63,7 +63,11 @@ tables <- c(
   "Earthquake_Events",
   "Facies_Cluster_Runs",
   "Facies_Cluster_Assignments",
-  "Well_Deviation_Surveys"
+  "Well_Deviation_Surveys",
+  "Geophysical_Depth_Model_Points",
+  "Well_Lithology",
+  "Logger_Specifications",
+  "Logger_Calibration_Checks"
 )
 
 counts <- do.call(rbind, lapply(tables, function(t) {

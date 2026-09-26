@@ -282,6 +282,8 @@ source("database/schema/13_facies_clusters_schema.R")
 source("database/schema/14_aquifer_classification_schema.R")
 source("database/schema/15_well_deviation_surveys_schema.R")
 source("database/schema/16_geophysical_depth_points_schema.R")
+source("database/schema/17_formation_unit_schema.R")
+source("database/schema/18_logger_uncertainty_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -367,6 +369,8 @@ source("database/schema/13_facies_clusters_schema.R")
 source("database/schema/14_aquifer_classification_schema.R")
 source("database/schema/15_well_deviation_surveys_schema.R")
 source("database/schema/16_geophysical_depth_points_schema.R")
+source("database/schema/17_formation_unit_schema.R")
+source("database/schema/18_logger_uncertainty_schema.R")
 }
 
 # ============================================================
@@ -438,6 +442,9 @@ run_step(RUN_INGEST$logger, "TEMPERATURE LOGGERS", {
 run_step(RUN_INGEST$conductivity, "CONDUCTIVITY LOGGERS", {
   source("scripts/ingest/ingest_conductivity.R")
   ingest_conductivity(con)
+  source("database/schema/18_logger_uncertainty_schema.R")
+  create_logger_uncertainty_schema(con)
+  seed_logger_specifications(con)
 })
 
 # 2026-09-12: paths below point inside the WellLogQuery "_files"
@@ -736,6 +743,15 @@ run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", 
   ingest_skalbeck2001_table_b2_herzdomestic(con)
   ingest_skalbeck2001_table_b2_peighdomestic(con)
   ingest_skalbeck2001_table_b2_pinetreeranch1(con)
+  ingest_skalbeck2001_table_b2_flame(con)
+  ingest_skalbeck2001_table_b2_steinhardt(con)
+  source("database/schema/17_formation_unit_schema.R")
+  migrate_well_lithology_formation_unit(con)
+  classify_existing_well_lithology(con)
+  ingest_skalbeck2001_table3_well_control(con)
+  ingest_skalbeck2001_table_b2_th_wells(con)
+  source("scripts/ingest/ingest_historical_nehring1980.R")
+  ingest_nehring1980_table7(con)
   # Real ground-surface elevation (USGS 3DEP, via its public point-query
   # API) at each depth-model point, added 2026-09-26 so Leapfrog horizon
   # exports can report true Z instead of only depth-below-surface.
@@ -1128,6 +1144,16 @@ message("\n[EXPORT] Computing data availability across all sources")
 source("scripts/analysis/data_availability.R")
 build_data_availability_outputs(con)
 
+# Real field calibration/reference checks for the conductivity and
+# temperature loggers (e.g. a handheld thermometer or lab conductivity
+# reading taken during a data-pull field visit), auto-detected from
+# Field_Measurements -- always-on, no RUN_INGEST/RUN_ANALYSIS flag,
+# same posture as the data-availability report above (pure
+# derivation from already-ingested data, not new raw ingestion).
+# See scripts/analysis/logger_calibration_checks.R. Added 2026-09-26.
+source("scripts/analysis/logger_calibration_checks.R")
+build_logger_calibration_checks(con)
+
 message("\n[EXPORT] Creating GIS views")
 create_gis_views(con)
 
@@ -1145,6 +1171,8 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   source("scripts/leapfrog/export_leapfrog.R")
   export_leapfrog_wells(con)
   export_leapfrog_geophysical_horizons(con)
+  export_leapfrog_geophysical_lithology(con)
+  export_leapfrog_geophysical_grid_surfaces(con)
 })
 
 # ============================================================

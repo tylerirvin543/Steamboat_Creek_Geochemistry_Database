@@ -10,12 +10,41 @@ format:
     number-sections: true
     fig-pos: "H"
     keep-tex: false
+    # 2026-09-26 fix: long single-line source code (raw SQL strings,
+    # wide tribble()/dbGetQuery() calls with trailing comments) was
+    # running off the right margin, uncut, in the rendered PDF -- quarto's
+    # PDF default for code-cell source is "scroll" (fine for HTML, but a
+    # PDF page can't scroll, so the line just gets clipped). "wrap" forces
+    # long source lines to wrap with a continuation arrow instead of
+    # escaping the page. Checked directly against a rendered page (p.136,
+    # p.128): printed data.frame/kable() table output already wraps
+    # correctly at R's own print width -- this targets the actual,
+    # confirmed cause (source-code echo), not tables.
+    code-overflow: wrap
+    # 2026-09-26, continued: code-overflow: wrap alone did NOT actually
+    # prevent long single-line source code (verified directly on a
+    # rendered page -- the tribble()/ggplot() calls were still clipped
+    # at the margin, not wrapped) -- quarto's PDF code blocks go through
+    # pandoc's fancyvrb/fvextra Verbatim environment, which needs its
+    # own breaklines option set directly; code-overflow appears to be
+    # effective for HTML/reveal.js output, not consistently for PDF.
+    # This is the fix that was actually confirmed (by re-rendering and
+    # visually checking the same page) to work.
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \fvset{breaklines=true, breakanywhere=true}
   html:
     toc: true
     toc-depth: 3
     number-sections: true
     embed-resources: true
 title-block-style: none
+in_full_report: true
+# ^ read by each transcluded chapter's own
+#   `::: {.content-hidden when-meta="in_full_report"}` changelog wrapper --
+#   this document sets it true; a standalone notebook render never does,
+#   so the same wrapper shows the changelog there instead of hiding it.
 execute:
   warning: true
   message: true

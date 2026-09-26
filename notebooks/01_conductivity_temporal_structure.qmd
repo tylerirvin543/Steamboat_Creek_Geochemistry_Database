@@ -625,6 +625,7 @@ document.
 4. Agree an explicit $\tau_{RMSE}$ and/or $\tau_{flux}$ threshold with the PI
    before treating any output of §7 as an actual recommendation.
 
+:::: {.content-hidden when-meta="in_full_report"}
 **Changelog:**
 
 - 2026-09-05 — Added `scripts/analysis/sampling_frequency/run_sampling_frequency.R`
@@ -639,3 +640,4 @@ document.
   scientific motivation, explicit formulas alongside their implementing
   code, and worked (synthetic, clearly labeled) demonstrations of the
   chloride-model and Monte Carlo sections.
+::::

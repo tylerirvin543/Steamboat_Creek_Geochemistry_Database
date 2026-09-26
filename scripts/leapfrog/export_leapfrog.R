@@ -181,7 +181,7 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
   # ------------------------------------------------------------
   lithology_real <- tryCatch(
     dbGetQuery(con, "
-      SELECT w.well_name AS HoleID, wl.depth_from_ft, wl.depth_to_ft, wl.description, wl.notes
+      SELECT w.well_name AS HoleID, wl.depth_from_ft, wl.depth_to_ft, wl.units AS lith_units, wl.description, wl.formation_unit, wl.formation_unit_basis, wl.notes
       FROM Well_Lithology wl
       JOIN Wells w ON w.well_id = wl.well_id
       WHERE wl.well_id IS NOT NULL
@@ -193,9 +193,12 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
       filter(HoleID %in% collar$HoleID) %>%
       transmute(
         HoleID,
-        From = round(depth_from_ft * FT_TO_M, 2),
-        To = round(depth_to_ft * FT_TO_M, 2),
+        # units='ft' (the project default) needs FT_TO_M; units='m' (e.g. Skalbeck Table 3's own metric well-log depths) is already correct and must NOT be double-converted -- a real bug found and fixed 2026-09-26 while testing this against real data (values were silently coming out ~3.28x too small).
+        From = round(ifelse(lith_units == "m", depth_from_ft, depth_from_ft * FT_TO_M), 2),
+        To = round(ifelse(lith_units == "m", depth_to_ft, depth_to_ft * FT_TO_M), 2),
         Description = description,
+        FormationUnit = formation_unit,
+        FormationUnitBasis = formation_unit_basis,
         IntervalType = "lithology",
         Notes = notes
       )
@@ -272,6 +275,10 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
   }
   n_with_elev <- sum(!is.na(pts$surface_elevation_m))
 
+  # Cumulative depth (top of the AltKgdpKm unit = base of Tv), needed for
+  # the 4th horizon added 2026-09-26 -- previously only 3 of the 4 real
+  # formation contacts in this dataset were exported.
+  pts$top_altkgd_depth_m <- pts$qal_thickness_m + pts$tv_thickness_m
   horizons <- list()
   add_horizon <- function(name, depth_col) {
     d <- pts[!is.na(pts[[depth_col]]), ]
@@ -287,6 +294,7 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
   }
   horizons[["qal_base"]] <- add_horizon("base_of_Qal_alluvium", "qal_thickness_m")
   horizons[["tv_base"]] <- add_horizon("base_of_Tv_volcanics", "tv_thickness_m")
+  horizons[["altkgd_top"]] <- add_horizon("top_of_AltKgdpKm", "top_altkgd_depth_m")
   horizons[["depth_to_bedrock"]] <- add_horizon("depth_to_bedrock_Kgd", "depth_to_bedrock_m")
   out <- do.call(rbind, horizons[!sapply(horizons, is.null)])
 
@@ -298,4 +306,174 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
           "so Elevation_m (true Z) is now populated for those rows -- DepthBelowSurface_m/SurfaceElevation_m ",
           "are kept alongside it so the derivation stays auditable.")
   invisible(list(horizons_n = nrow(out), n_with_real_elevation = n_with_elev))
+}
+
+#' Export Skalbeck (2001) Table A-2's real depth-model points as
+#' Leapfrog-style LITHOLOGY INTERVALS -- treating each UTM point as its
+#' own tiny "mini well log": a stack of From/To/FormationUnit rows in
+#' the exact same column shape as export_leapfrog_wells()'s real
+#' lithology.csv, so a Leapfrog user (or any other consumer) sees ONE
+#' consistent interval format whether the source is a real well log or
+#' a Skalbeck geophysical model point. Added 2026-09-26, directly
+#' answering the "map cleanly as a point source ... like mini well
+#' logs" request -- deliberately NOT persisted as a new database
+#' table (Geophysical_Depth_Model_Points already fully captures this
+#' as cumulative thicknesses; a second, derived-at-export-time
+#' representation avoids a second source of truth for the same data).
+#'
+#' Each point can contribute up to 4 intervals: Qal [0, qal_thickness],
+#' Tv [qal_thickness, qal+tv], AltKgdpKm [qal+tv, depth_to_bedrock] --
+#' only where the relevant thickness is a real, non-NA, positive
+#' number. A 4th, open-ended "Kgd" interval starting at
+#' depth_to_bedrock_m (no lower bound -- fresh bedrock is not resolved
+#' any deeper by this model) is included with To = NA, flagged as
+#' open-ended in its own Notes text, never given a fabricated lower
+#' bound.
+export_leapfrog_geophysical_lithology <- function(con, out_dir = "output/leapfrog") {
+  message("---- Exporting Skalbeck (2001) depth-model points as Leapfrog mini-well-log lithology intervals ----")
+
+  pts <- dbGetQuery(con, "
+    SELECT point_id, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m
+    FROM Geophysical_Depth_Model_Points
+  ")
+  if (nrow(pts) == 0) {
+    message("  -> No Geophysical_Depth_Model_Points rows -- nothing to export.")
+    return(invisible(list(intervals_n = 0L)))
+  }
+
+  out_rows <- list()
+  for (i in seq_len(nrow(pts))) {
+    p <- pts[i, ]
+    hole_id <- paste0("A2PT_", p$point_id)
+    cursor <- 0
+    add_row <- function(depth_from, depth_to, unit, note) {
+      out_rows[[length(out_rows) + 1]] <<- data.frame(
+        HoleID = hole_id, From = depth_from, To = depth_to,
+        Description = paste0(unit, " (Skalbeck 2001 Table A-2 model point, mini well log)"),
+        FormationUnit = unit, FormationUnitBasis = "source_table_column",
+        IntervalType = "geophysical_model_lithology", Notes = note
+      )
+    }
+    if (!is.na(p$qal_thickness_m) && p$qal_thickness_m > 0) {
+      add_row(cursor, cursor + p$qal_thickness_m, "Qal", NA_character_)
+      cursor <- cursor + p$qal_thickness_m
+    }
+    if (!is.na(p$tv_thickness_m) && p$tv_thickness_m > 0) {
+      add_row(cursor, cursor + p$tv_thickness_m, "Tv", NA_character_)
+      cursor <- cursor + p$tv_thickness_m
+    }
+    if (!is.na(p$alt_kgd_km_thickness_m) && p$alt_kgd_km_thickness_m > 0) {
+      add_row(cursor, cursor + p$alt_kgd_km_thickness_m, "AltKgdpKm", NA_character_)
+      cursor <- cursor + p$alt_kgd_km_thickness_m
+    }
+    if (!is.na(p$depth_to_bedrock_m)) {
+      add_row(p$depth_to_bedrock_m, NA_real_, "Kgd",
+              "Open-ended -- fresh/final bedrock, no lower bound resolved by this model.")
+    }
+  }
+
+  if (length(out_rows) == 0) {
+    message("  -> No real formation-thickness data on any point -- nothing to export.")
+    return(invisible(list(intervals_n = 0L)))
+  }
+  out <- do.call(rbind, out_rows)
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  write_csv(out, fs::path(out_dir, "geophysical_lithology_intervals.csv"))
+  message("  -> geophysical_lithology_intervals.csv: ", nrow(out), " mini-well-log interval(s) across ",
+          length(unique(out$HoleID)), " model point(s).")
+  invisible(list(intervals_n = nrow(out), points_n = length(unique(out$HoleID))))
+}
+
+#' Interpolate Skalbeck (2001) Table A-2's real, irregularly-spaced
+#' depth-model points onto a REGULAR grid, per formation contact --
+#' turning the scattered point network into real, layered surfaces
+#' Leapfrog (or ArcGIS) can use directly, rather than leaving every
+#' consumer to interpolate the raw points themselves. Added
+#' 2026-09-26, directly answering "should [Table A-2] create a grid
+#' on Steamboat and have multiple layers at depth for leapfrog".
+#'
+#' Method: inverse-distance-weighting (`gstat::idw()`, power=2) in UTM
+#' Zone 11N meters -- a real, standard geostatistical interpolator,
+#' not a made-up smoothing. Deliberately NOT kriging: kriging needs a
+#' real fitted variogram, which the analysis-first exploratory pass
+#' in `notebooks/08_statistical_synthesis.qmd` has not yet done for
+#' these specific depth surfaces (only for the all-time-pooled
+#' chloride semivariogram) -- IDW is the honest, no-extra-assumptions
+#' choice until that exists. `cell_size_m` defaults to 100 m, matching
+#' Dhakal et al. (2025)'s own numerical-model grid resolution (see
+#' README.md's "Key Literature Sources" section) so the two grids
+#' are directly comparable if ever overlaid.
+#'
+#' Grid extent is the rectangular bounding box of the real points,
+#' buffered by one cell -- corner/edge cells far from any real point
+#' are a real IDW extrapolation, not a fabricated value, but should
+#' be treated with more caution than cells near real control points
+#' (`n_control_points` is recorded per layer for exactly this reason).
+#' Three layers are output in one long CSV
+#' (`geophysical_grid_surfaces.csv`): ground surface elevation is NOT
+#' included (no real surface DEM grid is interpolated here, only the
+#' sparse point elevations already on file) -- this file is
+#' depth-below-surface layers only, matching
+#' `geophysical_horizons.csv`'s own DepthBelowSurface_m convention.
+export_leapfrog_geophysical_grid_surfaces <- function(con, out_dir = "output/leapfrog", cell_size_m = 100) {
+  message("---- Interpolating Skalbeck (2001) Table A-2 onto a regular grid (IDW) ----")
+  if (!requireNamespace("gstat", quietly = TRUE) || !requireNamespace("sp", quietly = TRUE)) {
+    message("  -> gstat/sp not available -- skipping grid interpolation.")
+    return(invisible(list(grid_n = 0L)))
+  }
+
+  pts <- dbGetQuery(con, "
+    SELECT utm_e, utm_n, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m
+    FROM Geophysical_Depth_Model_Points
+    WHERE utm_e IS NOT NULL AND utm_n IS NOT NULL
+  ")
+  if (nrow(pts) < 4) {
+    message("  -> Fewer than 4 real points with UTM coordinates -- nothing to interpolate.")
+    return(invisible(list(grid_n = 0L)))
+  }
+  pts$top_altkgd_depth_m <- pts$qal_thickness_m + pts$tv_thickness_m
+
+  bbox <- list(xmin = min(pts$utm_e) - cell_size_m, xmax = max(pts$utm_e) + cell_size_m,
+               ymin = min(pts$utm_n) - cell_size_m, ymax = max(pts$utm_n) + cell_size_m)
+  grid_xy <- expand.grid(
+    utm_e = seq(bbox$xmin, bbox$xmax, by = cell_size_m),
+    utm_n = seq(bbox$ymin, bbox$ymax, by = cell_size_m)
+  )
+  sp::coordinates(grid_xy) <- ~utm_e + utm_n
+
+  interpolate_layer <- function(value_col, layer_name) {
+    d <- pts[!is.na(pts[[value_col]]), c("utm_e", "utm_n", value_col)]
+    if (nrow(d) < 4) return(NULL)
+    names(d)[3] <- "z"
+    sp::coordinates(d) <- ~utm_e + utm_n
+    fit <- gstat::idw(z ~ 1, locations = d, newdata = grid_xy, idp = 2, debug.level = 0)
+    out_df <- as.data.frame(sp::coordinates(fit))
+    out_df$Depth_m <- fit$var1.pred
+    out_df$Layer <- layer_name
+    out_df$n_control_points <- nrow(d)
+    out_df
+  }
+
+  layers <- list(
+    interpolate_layer("qal_thickness_m", "base_of_Qal_alluvium"),
+    interpolate_layer("top_altkgd_depth_m", "base_of_Tv_volcanics"),
+    interpolate_layer("depth_to_bedrock_m", "top_of_fresh_Kgd")
+  )
+  out <- do.call(rbind, layers[!sapply(layers, is.null)])
+  if (is.null(out) || nrow(out) == 0) {
+    message("  -> No layer had enough real control points to interpolate.")
+    return(invisible(list(grid_n = 0L)))
+  }
+  names(out)[1:2] <- c("UTM_E", "UTM_N")
+  # Real points are never wrong by construction, but IDW can produce a
+  # small negative depth right at the grid edge, just outside the real
+  # point cloud -- clipped to 0, not reported as a negative depth,
+  # since a below-ground formation can't start above ground surface.
+  out$Depth_m <- pmax(out$Depth_m, 0)
+
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  write_csv(out, fs::path(out_dir, "geophysical_grid_surfaces.csv"))
+  message("  -> geophysical_grid_surfaces.csv: ", nrow(out), " grid cells across ",
+          length(unique(out$Layer)), " interpolated layer(s), ", cell_size_m, " m cell size (IDW, power=2).")
+  invisible(list(grid_n = nrow(out), cell_size_m = cell_size_m))
 }
