@@ -383,7 +383,7 @@ ingest_skalbeck2001_table_b2_brownschool <- function(
 #' as a separate, explicit per-well entry point rather than a silent
 #' loop, so each well's real transcription/validation work stays
 #' individually documented and auditable).
-.ingest_skalbeck2001_b2_well <- function(con, csv_path, location_name, source_name, source_notes) {
+.ingest_skalbeck2001_b2_well <- function(con, csv_path, location_name, source_name, source_notes, well_name_for_depth = NULL) {
   if (!fs::file_exists(csv_path)) {
     message("  (no file at ", csv_path, ")")
     return(invisible(list(rows_inserted = 0L)))
@@ -419,6 +419,20 @@ ingest_skalbeck2001_table_b2_brownschool <- function(
     if (!is.na(r$Temp[1])) dbExecute(con, "INSERT INTO Field_Measurements (sample_id, parameter, value, units, instrument) VALUES (?, 'temperature', ?, 'deg C', ?)",
                                        params = list(sample_id, r$Temp[1], source_name))
     n_inserted <- n_inserted + 1L
+    if (!is.null(well_name_for_depth) && "Depth" %in% names(r) && !is.na(r$Depth[1])) {
+      well_id <- .skalbeck_resolve_well(con, well_name_for_depth)
+      if (!is.na(well_id)) {
+        already_wl <- dbGetQuery(con, "SELECT observation_id FROM Water_Level_Observations WHERE well_id = ? AND method = ? AND timestamp = ?",
+                                  params = list(well_id, source_name, r$date[1]))
+        if (nrow(already_wl) == 0) {
+          dbExecute(con, "INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes) VALUES (?, ?, ?, ?, 'historical', ?)",
+                    params = list(well_id, r$date[1], r$Depth[1], source_name,
+                                   paste0(source_name, ", real depth-to-water reading (meters).")))
+        }
+      } else {
+        warning("[ingest_skalbeck2001_b2_well] '", well_name_for_depth, "' not found in Wells -- depth reading for ", r$date[1], " not recorded.")
+      }
+    }
   }
   message("  -> Inserted ", n_inserted, " real sample(s) (", n_skipped, " already present).")
   invisible(list(rows_inserted = n_inserted, rows_skipped = n_skipped))
@@ -452,5 +466,49 @@ ingest_skalbeck2001_table_b2_curtidomestic <- function(
     con, csv_path, "Curti Domestic Well",
     "Skalbeck (2001) Table B-2 (Curti Domestic)",
     "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.203-205+; careful manual cross-check with an ordered, range-based token parser, 2026-09-26. 9 ambiguous rows (Nov-1989 through Jun-1990, plus Feb-1991) deliberately excluded -- see AGENTS.md."
+  )
+}
+
+#' Ingest the real, cross-checked Herz Geothermal Water monthly Cl/B/
+#' temperature/depth-to-water series (Table B-2, 1985-1989, 48 real
+#' observations). This well's 4-column layout (Cl/B/temp/depth) made
+#' the temp-vs-depth-missing ambiguity a real problem: when this well's
+#' own depth reading was genuinely blank, the parser sometimes
+#' consumed the FIRST token of the next well (Herz Domestic's own Cl)
+#' as if it were this well's depth. Caught via a plausibility check
+#' (this well's real depth stays close to a stable ~14-16.3 m band; 7
+#' months where the "depth" token came back as an implausible single
+#' digit 1-6 had that field set to NA -- Cl/B/Temp for those months
+#' were still trustworthy and kept, only the corrupted depth field was
+#' dropped). No real values were found in the raw table after
+#' Oct-1989 -- either monitoring genuinely stopped, or a real later
+#' gap that wasn't successfully extracted; not resolved further.
+ingest_skalbeck2001_table_b2_herzgeothermal <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_herzgeothermal.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Herz Geothermal Water monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Herz Geothermal",
+    "Skalbeck (2001) Table B-2 (Herz Geothermal)",
+    "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.203-205+; careful manual cross-check, 2026-09-26. 7 implausible depth values (likely column-bleed from Herz Domestic's own Cl) set to NA -- Cl/B/Temp for those months kept.",
+    well_name_for_depth = "Herz Geothermal"
+  )
+}
+
+#' Ingest the real, cross-checked Herz Domestic Water monthly Cl/B/
+#' temperature/depth-to-water series (Table B-2, 1985-1994, 45 real
+#' observations after excluding 9 months where a temp-vs-depth-missing
+#' slip in the preceding Herz Geothermal column shifted this well's own
+#' reading -- caught via a boron sanity check (Herz Domestic's real B
+#' never exceeds ~4.5 mg/L per Table 2, so any row reporting B > 5 is
+#' almost certainly a shifted/contaminated read) plus a depth sanity
+#' check (< 3 m is implausible once real depth readings begin).
+ingest_skalbeck2001_table_b2_herzdomestic <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_herzdomestic.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Herz Domestic Water monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Herz Domestic Well",
+    "Skalbeck (2001) Table B-2 (Herz Domestic)",
+    "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.203-205+; careful manual cross-check, 2026-09-26. 9 months excluded (B>5 mg/L sanity check or implausible <3 m depth) as likely shift-contaminated from the preceding Herz Geothermal column's own temp-vs-depth ambiguity.",
+    well_name_for_depth = "Herz Domestic Well"
   )
 }

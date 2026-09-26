@@ -732,6 +732,8 @@ run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", 
   ingest_skalbeck2001_table_b2_brownschool(con)
   ingest_skalbeck2001_table_b2_curtigeothermal(con)
   ingest_skalbeck2001_table_b2_curtidomestic(con)
+  ingest_skalbeck2001_table_b2_herzgeothermal(con)
+  ingest_skalbeck2001_table_b2_herzdomestic(con)
   # Real ground-surface elevation (USGS 3DEP, via its public point-query
   # API) at each depth-model point, added 2026-09-26 so Leapfrog horizon
   # exports can report true Z instead of only depth-below-surface.
