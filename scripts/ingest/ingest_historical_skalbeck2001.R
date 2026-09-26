@@ -74,6 +74,30 @@ ingest_skalbeck2001_depth_points <- function(
 #' well_map_csv is a human-confirmed log_number-equivalent mapping
 #' (well_name_raw -> canonical Wells.well_name), matching this project's
 #' standard "never auto-guess identity" convention.
+.skalbeck_resolve_well <- function(con, name_raw) {
+  w <- dbGetQuery(con, "SELECT well_id, well_name FROM Wells WHERE well_name = ?", params = list(name_raw))
+  if (nrow(w) > 0) return(w$well_id[1])
+  a <- dbGetQuery(con, "SELECT well_id FROM Well_Aliases WHERE alias = ?", params = list(name_raw))
+  if (nrow(a) > 0) return(a$well_id[1])
+  NA_integer_
+}
+
+# A name may match an existing Locations row (a sampling point) with no
+# corresponding Wells row (construction detail) yet -- mirrors the Boyd
+# Domestic Well lesson (Wells and Locations are different ID spaces).
+# When that happens, create a real Wells row and link it via
+# location_id rather than leaving an orphaned duplicate.
+.skalbeck_resolve_or_create_via_location <- function(con, name_raw) {
+  loc <- dbGetQuery(con, "SELECT location_id FROM Locations WHERE name = ?", params = list(name_raw))
+  if (nrow(loc) == 0) return(NA_integer_)
+  location_id <- loc$location_id[1]
+  already <- dbGetQuery(con, "SELECT well_id FROM Wells WHERE location_id = ?", params = list(location_id))
+  if (nrow(already) > 0) return(already$well_id[1])
+  dbExecute(con, "INSERT INTO Wells (well_name, location_id, well_role, notes) VALUES (?, ?, 'unknown', 'Linked to existing Locations row via Skalbeck (2001) ingestion.')",
+            params = list(name_raw, location_id))
+  dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+}
+
 ingest_skalbeck2001_well_completions <- function(
     con,
     completions_csv = "data/raw/historical/skalbeck2001_well_completions.csv",
@@ -86,38 +110,13 @@ ingest_skalbeck2001_well_completions <- function(
   n_chem_rows <- 0L
   unmapped <- character(0)
 
-  resolve_well <- function(name_raw) {
-    # 1. exact well_name match
-    w <- dbGetQuery(con, "SELECT well_id, well_name FROM Wells WHERE well_name = ?", params = list(name_raw))
-    if (nrow(w) > 0) return(w$well_id[1])
-    # 2. alias match
-    a <- dbGetQuery(con, "SELECT well_id FROM Well_Aliases WHERE alias = ?", params = list(name_raw))
-    if (nrow(a) > 0) return(a$well_id[1])
-    NA_integer_
-  }
-
-  # A name may match an existing Locations row (a sampling point) with
-  # no corresponding Wells row (construction detail) yet -- mirrors the
-  # Boyd Domestic Well lesson (Wells and Locations are different ID
-  # spaces). When that happens, create a real Wells row and link it via
-  # location_id rather than leaving an orphaned duplicate.
-  resolve_or_create_via_location <- function(name_raw) {
-    loc <- dbGetQuery(con, "SELECT location_id FROM Locations WHERE name = ?", params = list(name_raw))
-    if (nrow(loc) == 0) return(NA_integer_)
-    location_id <- loc$location_id[1]
-    already <- dbGetQuery(con, "SELECT well_id FROM Wells WHERE location_id = ?", params = list(location_id))
-    if (nrow(already) > 0) return(already$well_id[1])
-    dbExecute(con, "INSERT INTO Wells (well_name, location_id, well_role, notes) VALUES (?, ?, 'unknown', 'Linked to existing Locations row via Skalbeck (2001) Table 1 ingestion.')",
-              params = list(name_raw, location_id))
-    dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
-  }
 
   if (fs::file_exists(completions_csv)) {
     comp <- readr::read_csv(completions_csv, show_col_types = FALSE)
     for (i in seq_len(nrow(comp))) {
       row <- comp[i, ]
-      well_id <- resolve_well(row$well_name[1])
-      if (is.na(well_id)) well_id <- resolve_or_create_via_location(row$well_name[1])
+      well_id <- .skalbeck_resolve_well(con, row$well_name[1])
+      if (is.na(well_id)) well_id <- .skalbeck_resolve_or_create_via_location(con, row$well_name[1])
       if (is.na(well_id)) {
         # No confirmed match -- register a provisional Wells row so real
         # construction data isn't stranded, coordinate-less until a
@@ -164,4 +163,105 @@ ingest_skalbeck2001_well_completions <- function(
   }
 
   invisible(list(wells_created = n_wells_created, fields_filled = n_fields_filled, unmapped = unmapped))
+}
+
+#' Resolve a raw well/site name to a real Locations row for chemistry
+#' attachment (Samples.location_id is NOT NULL). Tries, in order: (1)
+#' exact Locations.name match, (2) the "<name> (Mariner & Janik 1995; =
+#' Wells '...')" naming convention already used for the same wells by
+#' ingest_mariner_janik_1995.R, (3) a couple of documented spelling
+#' variants for wells this project already knows under a different
+#' label. Creates a new, coordinate-less provisional Locations row only
+#' as a last resort, logged for human review -- never guesses a
+#' coordinate.
+.skalbeck_resolve_location <- function(con, name_raw, well_id = NA_integer_) {
+  loc <- dbGetQuery(con, "SELECT location_id FROM Locations WHERE name = ?", params = list(name_raw))
+  if (nrow(loc) > 0) return(loc$location_id[1])
+
+  loc <- dbGetQuery(con, "SELECT location_id FROM Locations WHERE name LIKE ?",
+                     params = list(paste0(name_raw, " (Mariner%")))
+  if (nrow(loc) > 0) return(loc$location_id[1])
+
+  # STMGID#4 -> "Stmgid 4"; PW 2-1 -> "PW2-1 (Mariner..." (no space)
+  alt_name <- gsub("PW ", "PW", name_raw, fixed = TRUE)
+  alt_name <- gsub("STMGID MW-4|STMGID#4", "Stmgid 4", alt_name)
+  if (alt_name != name_raw) {
+    loc <- dbGetQuery(con, "SELECT location_id FROM Locations WHERE name = ? OR name LIKE ?",
+                       params = list(alt_name, paste0(alt_name, " (Mariner%")))
+    if (nrow(loc) > 0) return(loc$location_id[1])
+  }
+
+  # Last resort: a new, coordinate-less provisional Locations row.
+  coords <- if (!is.na(well_id)) {
+    dbGetQuery(con, "SELECT latitude, longitude FROM Wells WHERE well_id = ?", params = list(well_id))
+  } else data.frame(latitude = NA_real_, longitude = NA_real_)
+  lat <- if (nrow(coords) > 0) coords$latitude[1] else NA_real_
+  lon <- if (nrow(coords) > 0) coords$longitude[1] else NA_real_
+  site_type_guess <- if (grepl('Spring|Creek', name_raw, ignore.case = TRUE)) 'spring' else 'well'
+  dbExecute(con, "
+    INSERT INTO Locations (name, latitude, longitude, site_type, crs, notes)
+    VALUES (?, ?, ?, ?, 'EPSG:4326', ?)
+  ", params = list(name_raw, lat, lon, site_type_guess,
+                    paste0("Provisional, created from Skalbeck (2001) Table B-1/B-2 chemistry ingestion -- ",
+                           if (is.na(lat)) "no coordinate available yet." else "coordinate copied from the linked Wells row.")))
+  dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+}
+
+#' Ingest Table B-1's real dated Cl/B analyses (cold background + thermal
+#' SB GEO/CPI wells, 1977-1994).
+ingest_skalbeck2001_table_b1 <- function(
+    con,
+    csv_path = "data/raw/historical/skalbeck2001_table_b1_clb.csv") {
+
+  message("---- Ingesting Skalbeck (2001) Table B-1 dated Cl/B analyses ----")
+  if (!fs::file_exists(csv_path)) {
+    message("  (no file at ", csv_path, ")")
+    return(invisible(list(rows_inserted = 0L)))
+  }
+
+  dbExecute(con, "
+    INSERT OR IGNORE INTO Data_Sources (name, notes)
+    VALUES ('Skalbeck (2001) Table B-1', 'docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.200-202; hand-corrected OCR, 2026-09-26.')
+  ")
+  source_id <- dbGetQuery(con, "SELECT source_id FROM Data_Sources WHERE name = 'Skalbeck (2001) Table B-1'")$source_id[1]
+
+  rows <- readr::read_csv(csv_path, show_col_types = FALSE,
+                           col_types = readr::cols(date = readr::col_character()))
+
+  n_inserted <- 0L
+  n_skipped <- 0L
+
+  for (i in seq_len(nrow(rows))) {
+    r <- rows[i, ]
+    well_id <- .skalbeck_resolve_well(con, r$well_name[1])
+    location_id <- .skalbeck_resolve_location(con, r$well_name[1], well_id)
+
+    ext_id <- paste0("SKALBECK2001_B1_", gsub("[^A-Za-z0-9]", "", r$well_name[1]), "_", r$date[1])
+
+    existing_sample <- dbGetQuery(con, "SELECT sample_id FROM Samples WHERE external_sample_id = ?", params = list(ext_id))
+    if (nrow(existing_sample) > 0) { n_skipped <- n_skipped + 1L; next }
+
+    dbExecute(con, "INSERT INTO Sampling_Events (external_event_id, date, purpose, notes) VALUES (?, ?, 'historical', ?)",
+              params = list(ext_id, r$date[1], paste0("Skalbeck (2001) Table B-1. Reference: ", r$reference[1])))
+    event_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+
+    dbExecute(con, "
+      INSERT INTO Samples (location_id, event_id, sample_type, collection_time, external_event_id, external_sample_id, data_source, notes)
+      VALUES (?, ?, 'historical', ?, ?, ?, 'Skalbeck 2001 Table B-1', ?)
+    ", params = list(location_id, event_id, r$date[1], ext_id, ext_id, r$notes[1]))
+    sample_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
+
+    if (!is.na(r$Cl[1])) {
+      dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'Cl', ?, 'mg/L', ?, ?)",
+                params = list(sample_id, r$Cl[1], r$reference[1], source_id))
+    }
+    if (!is.na(r$B[1])) {
+      dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'B', ?, 'mg/L', ?, ?)",
+                params = list(sample_id, r$B[1], r$reference[1], source_id))
+    }
+    n_inserted <- n_inserted + 1L
+  }
+
+  message("  -> Inserted ", n_inserted, " real sample(s) (", n_skipped, " already present).")
+  invisible(list(rows_inserted = n_inserted, rows_skipped = n_skipped))
 }

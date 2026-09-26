@@ -728,6 +728,7 @@ run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", 
   source("scripts/ingest/ingest_historical_skalbeck2001.R")
   ingest_skalbeck2001_depth_points(con)
   ingest_skalbeck2001_well_completions(con)
+  ingest_skalbeck2001_table_b1(con)
 })
 
 # ============================================================
@@ -1131,6 +1132,7 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   # digitized data yet).
   source("scripts/leapfrog/export_leapfrog.R")
   export_leapfrog_wells(con)
+  export_leapfrog_geophysical_horizons(con)
 })
 
 # ============================================================

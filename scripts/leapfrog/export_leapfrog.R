@@ -244,3 +244,46 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
     wells_with_real_survey = wells_with_real_survey
   ))
 }
+
+#' Export Skalbeck (2001) Table A-2's real depth-model points as Leapfrog-
+#' style horizon points -- one row per real UTM point per formation
+#' contact (top of Qal / top of Tv / top of Alt-Kgd-Km / bedrock),
+#' expressed as depth-below-ground-surface (m), NOT true elevation --
+#' this project has no DEM at these points, so a real elevation value is
+#' not fabricated. If/when a DEM becomes available, subtracting these
+#' depths from it would give real Z values for Leapfrog import.
+export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog") {
+  message("---- Exporting Skalbeck (2001) depth-model points as Leapfrog horizon points ----")
+
+  pts <- dbGetQuery(con, "
+    SELECT point_id, utm_e, utm_n, latitude, longitude,
+           qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m
+    FROM Geophysical_Depth_Model_Points
+  ")
+  if (nrow(pts) == 0) {
+    message("  -> No Geophysical_Depth_Model_Points rows -- nothing to export.")
+    return(invisible(list(horizons_n = 0L)))
+  }
+
+  horizons <- list()
+  add_horizon <- function(name, depth_col) {
+    d <- pts[!is.na(pts[[depth_col]]), ]
+    if (nrow(d) == 0) return(NULL)
+    data.frame(
+      PointID = d$point_id, UTM_E = d$utm_e, UTM_N = d$utm_n,
+      Latitude = d$latitude, Longitude = d$longitude,
+      Horizon = name, DepthBelowSurface_m = d[[depth_col]]
+    )
+  }
+  horizons[["qal_base"]] <- add_horizon("base_of_Qal_alluvium", "qal_thickness_m")
+  horizons[["tv_base"]] <- add_horizon("base_of_Tv_volcanics", "tv_thickness_m")
+  horizons[["depth_to_bedrock"]] <- add_horizon("depth_to_bedrock_Kgd", "depth_to_bedrock_m")
+  out <- do.call(rbind, horizons[!sapply(horizons, is.null)])
+
+  dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
+  write_csv(out, fs::path(out_dir, "geophysical_horizons.csv"))
+  message("  -> geophysical_horizons.csv: ", nrow(out), " horizon points across ",
+          length(unique(out$Horizon)), " formation contact(s). ",
+          "NOTE: DepthBelowSurface_m, not true elevation -- no DEM available at these points yet.")
+  invisible(list(horizons_n = nrow(out)))
+}

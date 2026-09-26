@@ -159,7 +159,14 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # Persisted hydrochemical facies-cluster assignments (added 2026-09-25,
     # session 33) -- latest run only (see vw_facies_clusters_gis), for
     # overlay against digitized fault traces once those exist.
-    facies_clusters = "SELECT * FROM vw_facies_clusters_gis WHERE geom_wkt IS NOT NULL"
+    facies_clusters = "SELECT * FROM vw_facies_clusters_gis WHERE geom_wkt IS NOT NULL",
+
+    # Real model-derived alluvium/volcanics/altered-granodiorite
+    # thickness + depth-to-bedrock points from Skalbeck (2001) Table
+    # A-2 (added 2026-09-26) -- directly usable in ArcGIS/Leapfrog as
+    # collar/interval-style point data without any georeferencing step,
+    # since the source table is already UTM-coordinate-tagged.
+    geophysical_depth_points = "SELECT point_id, utm_e, utm_n, latitude, longitude, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m, source_document, coordinate_uncertainty_m, notes FROM Geophysical_Depth_Model_Points WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
   )
   
   # ============================================================
@@ -167,7 +174,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # ============================================================
   
   requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow",
-                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments")
+                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points")
 
   for (layer_name in names(layers)) {
     
