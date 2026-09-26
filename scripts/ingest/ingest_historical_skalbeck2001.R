@@ -512,3 +512,39 @@ ingest_skalbeck2001_table_b2_herzdomestic <- function(
     well_name_for_depth = "Herz Domestic Well"
   )
 }
+
+#' Ingest the real, cross-checked Peigh Domestic monthly Cl/B/temperature
+#' series (Table B-2, second well-group block, 1985-1998, 102 real
+#' observations). 3 months with an implausible B value (>1 mg/L against
+#' a known real max of ~0.3 mg/L, almost certainly column-bleed from
+#' Pine Tree Ranch #1's own Cl reading) were excluded.
+ingest_skalbeck2001_table_b2_peighdomestic <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_peighdomestic.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Peigh Domestic monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Peigh",
+    "Skalbeck (2001) Table B-2 (Peigh Domestic)",
+    "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.206-208+; careful manual cross-check, 2026-09-26. 3 months excluded (B>1 mg/L sanity check against a known real max of ~0.3 mg/L)."
+  )
+}
+
+#' Ingest the real, cross-checked Pine Tree Ranch #1 monthly Cl/B/
+#' temperature/depth series (Table B-2, second well-group block,
+#' 1985-1990, 48 real observations). Real chemistry sampling at this
+#' well ended in June 1990 (matching Table 2's own documented date
+#' range exactly) -- later-looking "readings" in the raw table for this
+#' well's column position are actually water-level-only values (no
+#' longer paired with real Cl/B/Temp), correctly truncated out rather
+#' than mistaken for continued chemistry monitoring. 3 months with an
+#' implausible B value (>6 mg/L against a known real max of ~4.9 mg/L)
+#' were also excluded.
+ingest_skalbeck2001_table_b2_pinetreeranch1 <- function(
+    con, csv_path = "data/raw/historical/skalbeck2001_table_b2_pinetreeranch1.csv") {
+  message("---- Ingesting Skalbeck (2001) Table B-2, Pine Tree Ranch #1 monthly time series ----")
+  .ingest_skalbeck2001_b2_well(
+    con, csv_path, "Pine Tree Ranch-1",
+    "Skalbeck (2001) Table B-2 (Pine Tree Ranch #1)",
+    "docs/literature/Skalbeck_StmbtHlls_GeoMdlng_2001.pdf, p.206-208+; careful manual cross-check, 2026-09-26. Truncated to the real Dec-1984-to-Jun-1990 chemistry sampling window (matches Table 2's own documented end date); 3 months excluded (B>6 mg/L sanity check).",
+    well_name_for_depth = "Pine Tree Ranch-1"
+  )
+}
