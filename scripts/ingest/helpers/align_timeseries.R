@@ -56,19 +56,35 @@ align_timeseries <- function(
     setorderv(left_dt,  c(group_col, "left_time"))
     setorderv(right_dt, c(group_col, "right_time"))
     
-    # ✅ preserve left_time explicitly BEFORE join
-    # preserve left time BEFORE join
-    left_dt[, join_time := left_time]
+    # 2026-09-27: this branch only ever preserved left_time (via
+    # join_time) before the join. Confirmed with a minimal repex that
+    # data.tables rolling-join convention OVERWRITES the "on" column
+    # named on the x-side (here, right_dts "right_time") with the
+    # i-sides matched value (left_dts "left_time") in the OUTPUT --
+    # right_dts real matched timestamp is not retained anywhere else
+    # in the result, so "right_time" in the output was silently always
+    # just a copy of left_time. That made time_diff_min always exactly
+    # 0 and max_diff_minutes a complete no-op: real 1987 chemistry
+    # samples were matching a 2025 USGS discharge reading with an
+    # apparent 0-minute gap and passing every downstream filter. Fixed
+    # by mirroring the (already-correct) ungrouped branch below --
+    # preserve BOTH sides real timestamps in side-channel columns
+    # immune to the joins own column-aliasing, then restore both
+    # afterward. This also fixes build_temp_flow() (Temperature <->
+    # USGS), which uses this same grouped branch and shows the
+    # identical symptom (filtering never removes any row).
+    left_dt[, join_left_time := left_time]
+    right_dt[, join_right_time := right_time]
     
     result <- right_dt[
       left_dt,
-      on = .(right_time = left_time),
+      on = c(group_col, right_time = "left_time"),
       roll = "nearest"
     ]
     
-    # restore AFTER join
-    result[, left_time := join_time]
-    result[, join_time := NULL]
+    result[, left_time  := join_left_time]
+    result[, right_time := join_right_time]
+    result[, c("join_left_time", "join_right_time") := NULL]
   } else {
     
     setorderv(left_dt,  "left_time")

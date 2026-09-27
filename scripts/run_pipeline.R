@@ -1581,8 +1581,42 @@ build_website <- function() {
     file.copy(lit_dir, lit_backup_parent, recursive = TRUE)
     lit_backup <- file.path(lit_backup_parent, "literature")
   }
+
+  # 2026-09-27: docs/literature/ was the only render_site()-cleanup
+  # casualty this project protected against with a full backup/restore
+  # -- but a real incident this session (a bare rmarkdown::render_site()
+  # call, made while testing outside this wrapper) deleted 47 OTHER
+  # tracked docs/ files render_site() has no counterpart for in
+  # website's own input tree: docs/site_libs/ (leaflet/plotly/
+  # crosstalk JS bundles rmarkdown normally re-bundles itself, but did
+  # not that time), several docs/figures/*.png (reference figures
+  # embedded by notebooks, not the website pages themselves),
+  # docs/outreach/, docs/action_items_for_user.md, and the knitr
+  # *_files/figure-html/ folders. All 47 were tracked in git and
+  # recoverable via `git checkout --`; an UNtracked file (like
+  # docs/literature/ itself) would have been lost for good. Rather
+  # than keep enumerating individually-protected subpaths one at a
+  # time as each new gap gets discovered, this backs up everything
+  # under docs/ EXCEPT docs/literature/ (already handled above, and
+  # excluded here purely to avoid a second ~500MB copy every call) and
+  # restores any file render_site() removed but did not itself
+  # regenerate. This is a "fill the gaps" restore only -- anything
+  # render_site() DOES correctly rebuild (the page .html files,
+  # styles.css, the site_libs/ bundles it re-copies fresh every
+  # render) is left as the newly-rendered version, never overwritten
+  # by the stale backup.
+  docs_rest_backup <- NULL
+  if (dir.exists("docs")) {
+    docs_rest_backup_parent <- file.path(tempdir(), paste0("docs_rest_backup_", format(Sys.time(), "%Y%m%d%H%M%S")))
+    docs_rest_backup <- file.path(docs_rest_backup_parent, "docs_rest")
+    dir.create(docs_rest_backup, recursive = TRUE, showWarnings = FALSE)
+    docs_rest_entries <- setdiff(list.files("docs", full.names = FALSE), "literature")
+    for (docs_rest_entry in docs_rest_entries) {
+      file.copy(file.path("docs", docs_rest_entry), docs_rest_backup, recursive = TRUE)
+    }
+  }
   
-  message("[WEBSITE] Rendering site from 'website/' → 'docs/'")
+  message("[WEBSITE] Rendering site from 'website/' -> 'docs/'")
   
   start_time <- Sys.time()
   
@@ -1592,7 +1626,7 @@ build_website <- function() {
     
     elapsed <- round(difftime(Sys.time(), start_time, units = "secs"), 1)
     
-    message("✅ Website built successfully (", elapsed, " sec)")
+    message("Website built successfully (", elapsed, " sec)")
     
   }, error = function(e) {
     warning("[WEBSITE] Build failed: ", e$message)
@@ -1603,6 +1637,25 @@ build_website <- function() {
   if (!is.null(lit_backup)) {
     dir.create(lit_dir, recursive = TRUE, showWarnings = FALSE)
     file.copy(list.files(lit_backup, full.names = TRUE), lit_dir, recursive = TRUE, overwrite = TRUE)
+  }
+
+  # Fill any docs/ gap render_site() left behind (see backup comment
+  # above) -- only restores a file if it is currently MISSING, never
+  # overwrites something render_site() successfully rebuilt fresh.
+  if (!is.null(docs_rest_backup)) {
+    docs_rest_backup_files <- list.files(docs_rest_backup, recursive = TRUE, full.names = FALSE)
+    n_docs_restored <- 0L
+    for (docs_rel in docs_rest_backup_files) {
+      docs_dest <- file.path("docs", docs_rel)
+      if (!file.exists(docs_dest)) {
+        dir.create(dirname(docs_dest), recursive = TRUE, showWarnings = FALSE)
+        file.copy(file.path(docs_rest_backup, docs_rel), docs_dest, overwrite = FALSE)
+        n_docs_restored <- n_docs_restored + 1L
+      }
+    }
+    if (n_docs_restored > 0) {
+      message("[WEBSITE] Restored ", n_docs_restored, " file(s) under docs/ that render_site() removed but did not regenerate.")
+    }
   }
 
   # 2026-09-27: website/project.Rmd, references.Rmd, and results.Rmd all

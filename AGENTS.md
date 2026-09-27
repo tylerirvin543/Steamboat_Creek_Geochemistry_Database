@@ -4258,6 +4258,251 @@ elevating Sorey (2000) to a critical reference.
   changes; `manuscript/01`/`04`/`05` remain stubs/partial drafts as
   explicitly scoped in Session 34.
 
+## Session 36 (2026-09-27): DEMO database finally rebuilt end-to-end; five real pipeline-crashing bugs found and fixed; k-means facies cross-check; website notebooks/qc_summary fixes; proximity audit
+
+Closed out the "DEMO database has never actually been rebuilt" gap
+flagged across dozens of prior sessions, plus four other independent
+follow-ups from the same request. Full plan at
+`.posit/assistant/plans/2026-09-27-2040-plan.md`.
+
+- **DEMO database (`geochem_demo.sqlite`) rebuilt completely for the
+  first time**, exercising every schema addition (well-network,
+  PHREEQC, facies-clustering, NDOM/Skalbeck, earthquakes, fault
+  traces, aquifer classification, Leapfrog export) via profile-1
+  `RUN_INGEST` + `RUN_ANALYSIS` flags. **Five real, previously-latent
+  bugs were found and fixed** -- this is almost certainly why the
+  DEMO rebuild had silently never completed before, not just time
+  pressure:
+  1. `database/schema/15_well_deviation_surveys_schema.R`'s hardcoded
+     `well_id=98` seed INSERT crashed outright (`FOREIGN KEY
+     constraint failed`) the moment `Wells` is genuinely empty (a
+     freshly-reset/never-built DEMO database) -- fixed to check
+     well-existence first and skip gracefully with a message.
+  2. `scripts/ingest/helpers/align_timeseries.R`'s rolling join
+     crashed (`stopifnot(inherits(..., "POSIXct"))`) on a zero-row
+     result (e.g. a station with no overlapping USGS coverage --
+     common on DEMO's smaller real dataset) -- fixed to return a
+     well-typed empty result instead.
+  3. `scripts/analysis/calc_gradients.R`'s `st_as_sf()` crashed
+     ("missing values in coordinates not allowed") the moment any
+     `vw_hydraulic_head_clean` row lacks a coordinate (a provisional
+     Wells row from the well-log/NDOM paths) -- fixed to drop those
+     rows first, with a message.
+  4. Three bare dplyr generics (`lag()` in `qc_conductivity_checks.R`,
+     `first()` x2 in `extract_ndep_samples.R`, `count()` in
+     `ingest_field.R`) broke under a `conflicted`-package session
+     (loaded transitively by `tidymodels`, which this project's own
+     sampling-frequency workstream uses) -- fixed by qualifying all
+     four `dplyr::`. Worth remembering: this class of bug is
+     session-dependent (only bites when `conflicted` happens to be
+     loaded), so it can look intermittent.
+  5. `run_pipeline.R`'s `.interp_zero_crossing()` helper (geothermometer
+     website export) crashed (`seq_len(-1)`) on a single-row
+     `PHREEQC_Temp_Sweep` group -- fixed with a `length(temps) < 2`
+     guard.
+  A sixth failure (`SKALBECK (2001) HYDROGEOLOGIC DISSERTATION:
+  cannot open the connection`, and the resulting `LEAPFROG WELL
+  EXPORT: no such column: surface_elevation_m` knock-on) turned out
+  to be a **transient** issue (network/file-lock blip during a
+  heavy-ingestion moment) -- confirmed by manually re-running
+  `fetch_skalbeck2001_point_elevations(con)` and the Leapfrog export
+  functions directly against the live DEMO connection, both succeeded
+  immediately on retry with no code change needed.
+  Final verified counts (DEMO): 264 Wells, 64 Well_Log_Documents, 911
+  PHREEQC_Solutions/8289 PHREEQC_Results, 157 Facies_Cluster_Assignments
+  (k=4, kmeans-vs-hc agreement 98.1%), 49 NDOM_Well_Records, 241
+  Geophysical_Depth_Model_Points (all with real USGS-3DEP elevation),
+  17-layer GeoPackage export clean, full Leapfrog CSV set. Total
+  runtime ~19 min (dominated by ~14 min of well-log OCR, matching the
+  historical estimate). Not committed (gitignored `.sqlite`).
+- **k-means added as a third, independent facies-clustering
+  cross-check**, alongside the existing hierarchical (Ward)/mclust
+  pair -- `scripts/analysis/cluster_hydrochemical_facies.R` (same
+  scaled/log-transformed matrix, same silhouette-selected k, `nstart
+  = 25`), `register_facies_clusters.R` and
+  `database/schema/13_facies_clusters_schema.R` (additive migration:
+  `Facies_Cluster_Runs.kmeans_agreement_pct_hc`/
+  `_mclust`, `Facies_Cluster_Assignments.facies_cluster_kmeans`),
+  `build_facies_diagnostic_plots.R`'s `plot_facies_agreement_heatmap()`
+  (now a faceted 3-way pairwise comparison when k-means data is
+  present, falls back to the original 2-way plot otherwise). Real
+  result against the operational database: hierarchical-vs-mclust
+  70.1%, hierarchical-vs-kmeans 98.1%, mclust-vs-kmeans 77.7% (k=4,
+  n=157) -- k-means and Ward hierarchical agree closely, both diverge
+  from mclust's Gaussian-mixture assumption similarly. Registered as
+  a new real run (`run_id=33` on the operational DB) with notes.
+- **`docs/notebooks/*.html` broken-link gap fixed**: website pages
+  (`project.Rmd`, `references.Rmd`, `results.Rmd`) have linked to
+  `notebooks/<name>.html` since they were added, but nothing ever
+  copied the real rendered notebook HTML
+  (`output/reports/notebooks/`, gitignored) into `docs/notebooks/` --
+  confirmed via a real, protected `build_website()` run that these
+  links were 404ing. New `copy_notebook_html_to_docs()` in
+  `run_pipeline.R`, called from inside `build_website()` right after
+  the existing `docs/literature/` restore, every time (not just once)
+  -- same root cause class (`render_site()` deletes anything under
+  `docs/` with no counterpart in `website/`'s own input tree).
+  `docs/notebooks/` committed to git for the first time (11 HTML + 2
+  PDF files).
+- **`docs/data/qc_summary.csv`'s render_site()-survival gap fixed**
+  (flagged since Session 12, never closed): `qc_data_integrity_checks.R`
+  now writes to a stable `data/derived/qc/qc_summary.csv` instead of
+  directly into `docs/data/`; `export_website_data_files()` copies it
+  into `docs/data/qc_summary.csv` on both of its existing before/after
+  `build_website()` call sites, exactly matching every other website
+  CSV's protection.
+- **New systematic coordinate-proximity audit**:
+  `scripts/qc/qc_location_proximity.R` /
+  `qc_location_proximity(con, threshold_m = 200)` -- generalizes the
+  one-off SBRR/SB5/SB6/STBT02Steamboat-2a discovery (which produced
+  the `Location_Aliases` table) into a standing report. Scans
+  `Locations` pairwise (covers every Conductivity_Loggers/
+  Temperature_Loggers point too, since neither table has its own
+  coordinate -- both resolve only via `location_id`) plus a separate
+  `Wells`-vs-`Locations` pass (`Wells` has its own independent
+  coordinate). Excludes pairs already resolved in `Location_Aliases`.
+  Wired into `run_pipeline.R` unconditionally, right after
+  `register_location_aliases(con)`. Writes
+  `data/derived/location_proximity_candidates.csv`, never
+  auto-matches. **Real result this session (against the operational
+  database, 200 m threshold)**: 892 candidate pairs, but essentially
+  all of them trace to three already-understood, deliberate,
+  non-confusion patterns, not new SBRR-style duplicates: (1) ~41
+  exact-0m pairs are historical-chemistry-ingestion `Locations` rows
+  (`SOREY1992_*`/`MJ1995_*`/`KLEIN_*`/Skalbeck-sourced, no
+  `external_station_code`) deliberately coordinate-copied from an
+  existing `Wells` row to attach old chemistry to a location record
+  -- by design, documented in each row's own `notes`; (2) real,
+  intentionally-paired NDWR shallow/deep monitoring wells 1-3 m apart
+  (e.g. "4th Street Deep MW"/"4th Street Shallow MW") -- a real
+  hydrogeological pattern, not a data error; (3) closely-spaced
+  `SBO_000xx` field-observation/photo points (sub-meter to a few
+  meters apart) -- legitimately dense, not duplicates. **No new
+  alias rows were added** -- nothing found rose to the SBRR level of
+  "two independently-sourced records for the literal same real-world
+  monitoring point," so nothing was proposed to the user for
+  confirmation this round. Re-runnable any time real new data sources
+  are added.
+- **Real, unrelated data-loss incident caused and fully recovered
+  this session**: while testing the notebook/qc_summary fixes, a
+  bare `rmarkdown::render_site("website")` call (made before the
+  `build_website()` wrapper's protections were re-verified in this
+  session) deleted **47 tracked `docs/` files** it has no protection
+  for (`docs/site_libs/` -- leaflet/plotly/crosstalk JS bundles,
+  several `docs/figures/*.png`, `docs/outreach/*.pdf/.qmd`,
+  `docs/action_items_for_user.md`, several `*_files/figure-html/*.png`)
+  -- the same root-cause class as the Session 13 literature incident,
+  just hitting files that were never given the same backup/restore
+  treatment (only `docs/literature/`, and now `docs/data/`/
+  `docs/notebooks/`/`docs/figures/data_availability_timeline.png`,
+  are protected). **Fully recovered via `git checkout --` against
+  each file's last-committed version** (all were tracked, unlike the
+  gitignored `docs/literature/` in the 2013 incident) -- confirmed
+  zero content loss. **Standing lesson reinforced**: never call
+  `rmarkdown::render_site()` directly on this project outside the
+  `build_website()` wrapper, even for quick testing -- it has no
+  protection of its own, and more of `docs/` is vulnerable than just
+  literature/data/notebooks/figures.
+- Not done this session: `docs/site_libs/`, `docs/figures/*.png`
+  (beyond `data_availability_timeline.png`), `docs/outreach/`, and
+  `docs/action_items_for_user.md` remain **unprotected** against a
+  future bare `render_site()` call -- worth generalizing
+  `build_website()`'s backup/restore pattern to the whole `docs/`
+  tree (backup everything under `docs/` before `render_site()`,
+  restore anything render_site() didn't itself regenerate) rather
+  than enumerating protected subpaths one at a time, next time this
+  bites someone. Committed and pushed to `origin/main` (commit
+  `f86bb1e`).
+
+## Session 36 continued (2026-09-27): generalized docs/ backup/restore; real sample_flow/temp_flow join-correctness bug found and fixed
+
+Direct follow-up to the two items flagged at the end of the previous
+turn (generalize `build_website()`'s protection to all of `docs/`;
+investigate the still-0-row `sample_flow`/`sample_flux` joins). Both
+turned into real, substantive fixes, not just investigation.
+
+- **`build_website()`'s docs/ protection generalized.** Previously
+  only `docs/literature/` had a dedicated backup/restore around
+  `rmarkdown::render_site()`'s cleanup. Added a second, generic
+  backup covering everything under `docs/` EXCEPT `docs/literature/`
+  (excluded only to avoid a redundant ~500 MB copy every call, since
+  literature already has its own protection) -- backs up before
+  `render_site()`, then after, restores any file that is missing but
+  does NOT overwrite anything `render_site()` correctly regenerated
+  fresh (a "fill the gaps" merge, not a rollback). **Verified with a
+  real, live `render_site()` call** (not a synthetic test): confirmed
+  it reproduced the exact same deletion pattern as the earlier
+  incident (`docs/site_libs/`, several `docs/figures/*.png`,
+  `docs/outreach/`, `docs/action_items_for_user.md`, several
+  `*_files/figure-html/*.png`), and this time the new restore step
+  caught it automatically -- `"[WEBSITE] Restored 45 file(s) under
+  docs/ that render_site() removed but did not regenerate"` -- with
+  zero manual `git checkout` intervention needed. Before/after file
+  listing diff confirmed 0 missing files (273 before, 273 after).
+- **Real, previously-undetected join-correctness bug found and fixed
+  in `scripts/ingest/helpers/align_timeseries.R`'s grouped branch**
+  (used by both `build_temp_flow()` and `build_sample_flow()`).
+  Confirmed via a minimal reproducible example that data.table's
+  rolling-join convention overwrites the "on" column named on the
+  x-side (here, `right_dt`'s `right_time`) with the i-side's matched
+  KEY VALUE (`left_dt`'s `left_time`) in the join output --
+  `right_dt`'s real matched timestamp is not retained anywhere else
+  in the result. The grouped branch only ever preserved `left_time`
+  (via a `join_time` side-channel) before this fix, so `right_time` in
+  every aligned row was silently just a copy of `left_time`, making
+  `time_diff_min` always exactly 0 and the `max_diff_minutes` filter a
+  complete no-op -- confirmed this let real 1974-2024 chemistry
+  samples "match" a 2025-2026 USGS discharge reading with an apparent
+  0-minute gap, and (for `temp_flow`) meant EVERY temperature-logger
+  reading ever matched a USGS discharge point regardless of true time
+  distance (0% of rows were ever filtered out, in every prior pipeline
+  run, going back to whenever this table was first built). Also traced
+  why `sample_flow` looked like a "coverage gap" rather than a bug:
+  spatial/station mapping was never the problem (matches ~1200 of
+  1515-1517 samples to a real nearest USGS station); the real,
+  separate limitation is that USGS live discharge data only covers
+  2025-01-01 through 2026-06-06 while most chemistry samples are much
+  older (Sorey 1992/Mariner & Janik 1995/Skalbeck 2001/NDEP going back
+  to 1974) -- only 73 samples fall inside the gauge's real coverage
+  window at all, and 73 is exactly the correct post-fix row count.
+  **Fix**: mirrored the already-correct ungrouped branch's pattern --
+  preserve BOTH sides' real timestamps in side-channel columns
+  (`join_left_time`/`join_right_time`) immune to the join's own
+  column-aliasing, then restore both afterward; join `on=` now also
+  includes `group_col` itself (previously the "grouped" branch never
+  actually joined by group at all, only sorted by it, so a sample
+  could silently match a reading from the WRONG station when two
+  stations' timestamps happened to tie -- confirmed this duplicate-
+  station-tie pattern directly before the fix, e.g. sample 826
+  matching both `USGS-10349300` and `USGS-10349849` at an identical
+  timestamp).
+- **Applied and verified against both databases**: DEMO
+  (`geochem_demo.sqlite`) -- `temp_flow` 193656 -> 103693 rows (real
+  time filtering now removes ~46%, not 0%), `sample_flow` 826 -> 73
+  rows, `sample_flux` 0 -> 54 rows. Operational
+  (`geochem_operational.sqlite`, backed up first to
+  `database/archive/geochem_operational_pre_align_timeseries_fix_<timestamp>.sqlite`)
+  -- same corrected counts (73 `sample_flow` / 54 `sample_flux` /
+  103693 `temp_flow`). GeoPackage re-exported cleanly for both (16
+  layers each, `sample_flow`/`temp_flow` layers now reflect the real,
+  time-correct join). QC re-run clean on the operational database
+  afterward.
+- **Not done this session**: `build_temp_gradient_links.R` already
+  explicitly passes `group_col = NULL` (the correct, ungrouped branch)
+  and was unaffected -- not re-verified beyond a code-read confirming
+  this, since its own filtering behavior (204622 -> 2160 rows,
+  observed in the DEMO rebuild) was already consistent with real
+  filtering happening correctly. The DEMO database's `temp_flow`
+  GeoPackage layer was not separately re-exported after this fix
+  (the DEMO GeoPackage was already re-exported once earlier this
+  session for the Skalbeck/Leapfrog fix, before this join fix existed)
+  -- worth doing on the next full DEMO rebuild. This session's file
+  changes (`scripts/run_pipeline.R`,
+  `scripts/ingest/helpers/align_timeseries.R`, `AGENTS.md`, plus the
+  regenerated `docs/*.html`/`docs/site_libs/*`/`docs/data/qc_summary.csv`/
+  `data/derived/qc/qc_summary.csv` from the live build_website() test)
+  are not yet committed/pushed to git.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
