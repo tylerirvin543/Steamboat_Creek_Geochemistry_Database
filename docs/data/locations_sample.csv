@@ -1,20 +1,20 @@
 "location_id","name","external_station_code","site_type","latitude","longitude"
 1,"Steamboat Creek — downstream conductivity logger (SBGG)","SBGG","creek",39.40584,-119.74213
-2,"Thomas Creek @ North Timberline Drive &[STBT03Thomas-3]","SB10","background",39.391781,-119.838097
-3,"North Fork Whites Creek @ West Zolezzi Lane","SB20","background",39.41869,-119.765999
-4,"Steamboat Creek @ Pleasant Valley &[STBT02Stbt-2]","SB3","background",39.345661,-119.778
-5,"Middle Fork Whites Creek @ Sage Hill Road","SB33","background",39.41864,-119.741501
-6,"Steamboat Creek @ Old Post Office &[STBT02Stbt-3]","SB40","background",39.387421,-119.739304
-7,"North Fork Whites Creek @ Arrow Creek Parkway","SB42","background",39.404171,-119.780403
-8,"South Fork Whites Creek @ Old Virginia Road","SB44","background",39.408371,-119.7482
-9,"Steamboat Creek @ So. Meadows Pkwy","SB46","background",39.450427,-119.723421
-10,"Steamboat Creek @ Rhodes Road","SB5","background",39.377171,-119.743797
-11,"Steamboat Ditch @ Rhodes Road","SB6","background",39.377468,-119.743797
-12,"Steamboat Creek @ Geiger Grade","SB7","background",39.402222,-119.743599
-13,"Whites Creek @ North Timberline Drive","SB8","background",39.384689,-119.837799
-14,"Steamboat Creek north of the USGS gage off of Rhodes Road","STBT02Steamboat-2a","background",39.37817,-119.7431
-15,"Thomas Creek above Arrowhead Parkway &[TC111]","STBT03Thomas-4","background",39.405998,-119.804001
-16,"Whites Creek above Thomas Creek Road &[WC-11]","STBT03Whites-2","background",39.39434,-119.792396
+2,"Thomas Creek @ North Timberline Drive &[STBT03Thomas-3]","SB10","creek",39.391781,-119.838097
+3,"North Fork Whites Creek @ West Zolezzi Lane","SB20","creek",39.41869,-119.765999
+4,"Steamboat Creek @ Pleasant Valley &[STBT02Stbt-2]","SB3","creek",39.345661,-119.778
+5,"Middle Fork Whites Creek @ Sage Hill Road","SB33","creek",39.41864,-119.741501
+6,"Steamboat Creek @ Old Post Office &[STBT02Stbt-3]","SB40","creek",39.387421,-119.739304
+7,"North Fork Whites Creek @ Arrow Creek Parkway","SB42","creek",39.404171,-119.780403
+8,"South Fork Whites Creek @ Old Virginia Road","SB44","creek",39.408371,-119.7482
+9,"Steamboat Creek @ So. Meadows Pkwy","SB46","creek",39.450427,-119.723421
+10,"Steamboat Creek @ Rhodes Road","SB5","creek",39.377171,-119.743797
+11,"Steamboat Ditch @ Rhodes Road","SB6","creek",39.377468,-119.743797
+12,"Steamboat Creek @ Geiger Grade","SB7","creek",39.402222,-119.743599
+13,"Whites Creek @ North Timberline Drive","SB8","creek",39.384689,-119.837799
+14,"Steamboat Creek north of the USGS gage off of Rhodes Road","STBT02Steamboat-2a","creek",39.37817,-119.7431
+15,"Thomas Creek above Arrowhead Parkway &[TC111]","STBT03Thomas-4","creek",39.405998,-119.804001
+16,"Whites Creek above Thomas Creek Road &[WC-11]","STBT03Whites-2","creek",39.39434,-119.792396
 17,"SBO_00001","SBO_00001","seep",39.380078,-119.739875
 18,"SBO_00002","SBO_00002","spring",39.380192,-119.739914
 19,"SBO_00003","SBO_00003","seep",39.380108,-119.739656
@@ -164,5 +164,29 @@
 163,"Whites Creek Above MRWTP","NDWR_SF_087N18E1935ABAC3","creek",39.38837,-119.81474
 164,"Whites Creek at I580","NDWR_SF_087N18E2017DAAC1","creek",39.42423,-119.7547
 165,"CPI production well 21-5","SOREY1992_21-5","well",39.3742081728802,-119.768561526409
+166,"CPI production well 83A-6","SOREY1992_83A-6","well",39.3713187,-119.7726024
+167,"CPI injection well Cox 1-1 (Cox well)","SOREY1992_Cox1-1","well",39.3819067,-119.7649188
 169,"SB GEO production well PW-2","SOREY1992_PW-2","well",39.3936912205606,-119.754644809819
 170,"SB GEO production well PW-3","SOREY1992_PW-3","well",39.3937386861778,-119.753021215072
+172,"Well GS-5, 1950 sample (White 1968)","SOREY1992_GS-58","well",39.3892621,-119.7434411
+173,"New seep adjacent to well GS-5 (1991)","SOREY1992_GS-59","seep",39.3892621,-119.7434411
+174,"Steinhardt Geothermal Well (narrative Cl trend)","SOREY1992_Steinhardt","well",39.39547,-119.7342
+175,"23-5 (Mariner & Janik 1995; = Wells '23-5')","MJ1995_23_5","well",39.3700873,-119.7668318
+176,"83A-6 (Mariner & Janik 1995; = Wells '83A-6')","MJ1995_83A_6","well",39.3713187,-119.7726024
+177,"21-5 (Mariner & Janik 1995; = Wells '21-5R')","MJ1995_21_5","well",39.3742081728802,-119.768561526409
+178,"13-5 (Mariner & Janik 1995; = Wells '13-5R')","MJ1995_13_5","well",39.3708963475173,-119.770310905677
+179,"Cox I-1 (Mariner & Janik 1995; = Wells 'Cox I-1')","MJ1995_Cox_I_1","well",39.3819067,-119.7649188
+180,"GS-5 (Mariner & Janik 1995; = Wells 'GS-5')","MJ1995_GS_5","well",39.3892621,-119.7434411
+182,"PW-2 (Mariner & Janik 1995; = Wells 'PW-2')","MJ1995_PW_2","well",39.3936912205606,-119.754644809819
+183,"PW-3 (Mariner & Janik 1995; = Wells 'PW-3')","MJ1995_PW_3","well",39.3937386861778,-119.753021215072
+184,"PW2-1 (Mariner & Janik 1995; = Wells 'PW 2-1')","MJ1995_PW2_1","well",39.39392,-119.7507
+186,"PW2-3 (Mariner & Janik 1995; = Wells 'PW 2-3')","MJ1995_PW2_3","well",39.39506,-119.7494
+188,"PW2-5 (Mariner & Janik 1995; = Wells 'PW 2-5')","MJ1995_PW2_5","well",39.39595,-119.7484
+189,"PW3-1 (Mariner & Janik 1995; = Wells 'PW 3-1')","MJ1995_PW3_1","well",39.39081,-119.7473
+190,"PW3-2 (Mariner & Janik 1995; = Wells 'PW 3-2')","MJ1995_PW3_2","well",39.39181,-119.7469
+191,"PW3-3 (Mariner & Janik 1995; = Wells 'PW 3-3')","MJ1995_PW3_3","well",39.39103,-119.7458
+192,"PW3-4 (Mariner & Janik 1995; = Wells 'PW 3-4')","MJ1995_PW3_4","well",39.39255,-119.7462
+194,"IW-5 (Mariner & Janik 1995; = Wells '46-28')","MJ1995_IW_5","well",39.39482,-119.7454
+196,"Brown's School (Mariner & Janik 1995; = Wells 'Brown School Geothermal Well')","MJ1995_Brown_s_School","well",39.40842,-119.74852
+218,"21-5R",NA,"well",39.3742081728802,-119.768561526409
+219,"13-5R",NA,"well",39.3708963475173,-119.770310905677

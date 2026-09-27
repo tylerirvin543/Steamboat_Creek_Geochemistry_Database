@@ -238,7 +238,7 @@ RUN_INGEST <- list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE
   usgs_historic_chem = TRUE, noaa_weather = TRUE, image_locations = TRUE,
   ndep_prr = TRUE, monitor_well_locations = TRUE, promote_ndep_staged = TRUE,
   well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE,
-  historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, barometric_pressure = TRUE,
+  historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE,
   earthquakes = TRUE, fault_traces = TRUE)
 BUILD_WEBSITE <- TRUE
 source("scripts/run_pipeline.R")
@@ -252,7 +252,7 @@ RUN_INGEST <- list(ndep = TRUE, field = TRUE, lab = TRUE, isotope = TRUE, flux =
   usgs_historic_chem = FALSE, noaa_weather = FALSE, image_locations = FALSE,
   ndep_prr = FALSE, monitor_well_locations = TRUE, promote_ndep_staged = TRUE,
   well_network = TRUE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE,
-  historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, barometric_pressure = FALSE,
+  historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE,
   earthquakes = FALSE, fault_traces = FALSE)
 BUILD_WEBSITE <- FALSE
 source("scripts/run_pipeline.R")
@@ -265,7 +265,7 @@ RUN_INGEST <- setNames(as.list(rep(FALSE, 24)),
   c("ndep","field","logger","conductivity","ndwr","lab","isotope","flux","usgs",
     "usgs_historic_chem","noaa_weather","image_locations","ndep_prr",
     "monitor_well_locations","promote_ndep_staged","well_network","well_logs",
-    "ndom_wells","ndwr_stream_flow","historical_sorey1992","mariner_janik_1995",
+    "ndom_wells","ndwr_stream_flow","historical_sorey1992","mariner_janik_1995","skalbeck2001",
     "barometric_pressure","earthquakes","fault_traces"))
 BUILD_WEBSITE <- TRUE
 source("scripts/run_pipeline.R")
@@ -336,7 +336,7 @@ RUN_INGEST <- setNames(as.list(rep(FALSE, 24)),
   c("ndep","field","logger","conductivity","ndwr","lab","isotope","flux","usgs",
     "usgs_historic_chem","noaa_weather","image_locations","ndep_prr",
     "monitor_well_locations","promote_ndep_staged","well_network","well_logs",
-    "ndom_wells","ndwr_stream_flow","historical_sorey1992","mariner_janik_1995",
+    "ndom_wells","ndwr_stream_flow","historical_sorey1992","mariner_janik_1995","skalbeck2001",
     "barometric_pressure","earthquakes","fault_traces"))
 BUILD_WEBSITE <- FALSE
 source("scripts/run_pipeline.R")

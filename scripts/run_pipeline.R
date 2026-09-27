@@ -125,6 +125,26 @@ if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
   }
 }
 
+# 2026-09-26: a caller-supplied RUN_INGEST list (e.g. README's own
+# documented "skip ingestion" snippet) can omit a flag added after that
+# snippet was written -- confirmed this actually happened for
+# `skalbeck2001` (present in every profile_presets entry above, but
+# missing from README's manually-typed 24-name list, which predates
+# this source). Previously this crashed deep inside the ingest stage
+# with an opaque "argument is of length zero" once the missing flag's
+# NULL reached a run_step() condition, rather than failing clearly (or
+# not failing at all). Backfilling any missing flag from profile 3
+# (skip-everything, the safest possible default) makes a partial,
+# hand-written RUN_INGEST list behave the same as an intentional
+# "skip this stage" -- never crash, never silently ingest something
+# the caller didn't ask for.
+.missing_ingest_flags <- setdiff(names(profile_presets[["3"]]), names(RUN_INGEST))
+if (length(.missing_ingest_flags) > 0) {
+  message("[QUICK START] RUN_INGEST is missing flag(s), defaulting to FALSE (skip): ",
+          paste(.missing_ingest_flags, collapse = ", "))
+  RUN_INGEST <- modifyList(profile_presets[["3"]][.missing_ingest_flags], RUN_INGEST)
+}
+
 # RUN_ANALYSIS is a small, separate flag list (not folded into RUN_INGEST)
 # for derived-modeling stages that are not data ingestion. PHREEQC calls an
 # external executable per sample and can be slow, so it defaults to FALSE

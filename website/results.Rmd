@@ -173,7 +173,7 @@ if (file.exists(p2p_path) && file.exists(p2i_path)) {
   p2i <- read_csv(p2i_path, show_col_types = FALSE)
   combo <- p2p |> select(production_well_name, port_name) |>
     inner_join(p2i |> select(port_name, injection_well_name), by = "port_name", relationship = "many-to-many") |>
-    count(production_well_name, port_name, injection_well_name, name = "n_links")
+    dplyr::count(production_well_name, port_name, injection_well_name, name = "n_links")
 
   ggplot(combo, aes(axis1 = production_well_name, axis2 = port_name, axis3 = injection_well_name, y = n_links)) +
     geom_alluvium(aes(fill = port_name), width = 1/8) +
@@ -205,8 +205,8 @@ if (file.exists(chem_path)) {
     site_types <- chem_wide$site_type
     mat_num <- as.matrix(chem_wide[, !(names(chem_wide) %in% c("sample_id", "location_name", "site_type"))])
     mat_scaled <- scale(log1p(mat_num))
-    mat_scaled[is.nan(mat_scaled)] <- 0
-    site_colors <- c(well = "#7570b3", spring = "#1b9e77", seep = "#d95f02", fumarole = "#e7298a", transect = "#66a61e")
+    mat_scaled[is.na(mat_scaled)] <- 0  # 2026-09-26: was is.nan() only, which does not catch a plain NA (e.g. a real missing chemistry value) -- widened to is.na() after this started crashing ComplexHeatmap ("NA/NaN/Inf in foreign function call") on newly-added Skalbeck rows with real NA analyte values.
+    site_colors <- c(well = "#7570b3", spring = "#1b9e77", seep = "#d95f02", fumarole = "#e7298a", transect = "#66a61e", creek = "#a6761d")  # 2026-09-26: "creek" added -- real NDEP creek/ditch samples now flow through here for the first time since the site_type="background" mislabeling fix (they were always this-chunk-eligible in principle, just previously hidden under the old "background" label the chunk-level filter below happened to catch).
     row_anno <- ComplexHeatmap::rowAnnotation(`Site type` = site_types, col = list(`Site type` = site_colors))
     ComplexHeatmap::draw(ComplexHeatmap::Heatmap(mat_scaled, name = "z-score\n(log conc.)",
       right_annotation = row_anno,
