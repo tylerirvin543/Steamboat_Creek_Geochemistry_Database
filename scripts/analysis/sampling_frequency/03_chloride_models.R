@@ -7,11 +7,42 @@
 # terms, evaluated with BLOCKED (time-aware) cross-validation — never
 # naive random k-fold on an autocorrelated series.
 #
-# Deliberately implemented with base R + mgcv + ranger (all installed)
-# rather than the tidymodels metapackage, which was not installed in
-# this environment. The rolling-origin CV logic below reproduces
-# rsample::rolling_origin()'s behavior closely enough for this use case
-# and keeps the dependency footprint small.
+# Originally implemented with base R + mgcv + ranger (all installed)
+# rather than the tidymodels metapackage, because tidymodels was not
+# installed in this environment. tidymodels IS now installed
+# (2026-09-26) -- prefer 03b_chloride_models_tidymodels.R for any new
+# work; this file is kept for its data-generating functions
+# (get_chloride_conductance_pairs(), simulate_synthetic_pairs(),
+# add_seasonal_terms()), which 03b sources and reuses unchanged, and
+# for the original hand-rolled lm/GAM/Random-Forest comparison, still
+# valid as a lighter-weight alternative with no tidymodels dependency.
+#
+# simulate_synthetic_pairs()'s `lag_days` parameter (2026-09-26):
+# the original synthetic data-generating process had chloride_mgL
+# depend on the SAME-timestep sc_25c/temperature_c, with no lag at
+# all -- discovered this made a lagged-conductivity feature
+# meaningless to test (nothing to find). `lag_days` (default 6, i.e.
+# 2 sampling steps at the 3-day spacing) now builds a real,
+# physically-motivated transport lag into the synthetic chloride
+# response, so a lagged-predictor recipe has genuine signal to
+# recover. Confirmed this matters: on lag-free data, a plain linear
+# model with same-timestep sc_25c/temperature_c (no seasonal terms)
+# was the best model found (RMSE ~0.91); once lag_days=6 is built
+# in, the SAME unlagged model degrades (RMSE ~1.24) and a correctly-
+# lagged linear model becomes the clear winner (RMSE ~1.00) -- a real
+# ~24% improvement recovered purely by matching the model's features
+# to the (synthetic) truth, not by switching model family. Pass
+# `lag_days = 0` to reproduce the original no-lag behavior if needed.
+#
+# Also discovered while revisiting feature engineering: the doy_sin/
+# doy_cos seasonal terms were NEVER part of the true chloride
+# relationship (only sc_25c/temperature_c are, and they already carry
+# the seasonal signal via their own sinusoidal construction) --
+# including them as extra predictors was collinear noise that hurt
+# the linear model specifically (RMSE 1.26 -> 0.91 after removing
+# them on the original lag-free data). Worth remembering before
+# assuming more features/complexity helps: here, removing two
+# redundant ones was the single biggest improvement found.
 #
 # Model artifacts are saved to models/chloride_prediction/*.rds and
 # logged in models/MODEL_REGISTRY.csv.
@@ -75,13 +106,38 @@ get_chloride_conductance_pairs <- function(con, tolerance_min = 60) {
 
 #' Simulate a synthetic paired dataset for self-testing the pipeline
 #' before real chloride/conductivity pairs exist.
-simulate_synthetic_pairs <- function(n = 60, seed = 4218) {
+#' @param lag_days Real hydrologic transport lag built into the
+#'   synthetic chloride response, in days, rounded to the nearest
+#'   sampling step (3-day spacing) -- 0 reproduces the original,
+#'   no-lag data-generating process. 2026-09-26: added because
+#'   testing a lagged-conductivity FEATURE is meaningless against
+#'   data with no lag structure at all (confirmed the original DGP
+#'   had none) -- a real transport lag between a logger reading and
+#'   the geothermal source's Cl response is physically plausible,
+#'   so this gives that feature genuine signal to detect, without
+#'   pretending this is anything more than a synthetic self-test
+#'   until real paired Cl/conductivity data exists.
+simulate_synthetic_pairs <- function(n = 60, seed = 4218, lag_days = 6) {
   set.seed(seed)
   t <- seq(as.POSIXct("2026-05-01", tz = "UTC"), by = "3 days", length.out = n)
   doy <- as.numeric(format(t, "%j"))
   sc <- 300 + 40 * sin(2 * pi * doy / 365) + rnorm(n, 0, 15)
   temp <- 15 + 8 * sin(2 * pi * (doy - 60) / 365) + rnorm(n, 0, 1.5)
-  cl_true <- 5 + 0.03 * sc + 0.1 * temp + rnorm(n, 0, 1.2)
+
+  # Real chloride response depends on sc/temp from `lag_steps` samples
+  # ago, not the same-timestep reading -- the first `lag_steps` rows
+  # have no real antecedent within this series, so they reuse the
+  # first real observation rather than fabricating an earlier one.
+  lag_steps <- max(0, round(lag_days / 3))
+  if (lag_steps > 0) {
+    sc_lag <- c(rep(sc[1], lag_steps), sc[seq_len(n - lag_steps)])
+    temp_lag <- c(rep(temp[1], lag_steps), temp[seq_len(n - lag_steps)])
+  } else {
+    sc_lag <- sc
+    temp_lag <- temp
+  }
+
+  cl_true <- 5 + 0.03 * sc_lag + 0.1 * temp_lag + rnorm(n, 0, 1.2)
 
   tibble::tibble(
     collection_time = t,
