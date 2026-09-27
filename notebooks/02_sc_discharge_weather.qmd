@@ -1,4 +1,4 @@
-and interpratibility? ---
+---
 title: "Specific Conductance vs. Discharge and Weather"
 subtitle: "A growing, re-runnable comparison of Steamboat Creek SC against USGS discharge and regional precipitation"
 date: today

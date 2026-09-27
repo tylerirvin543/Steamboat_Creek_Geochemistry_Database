@@ -1647,14 +1647,14 @@ than a visual read of the plot:
 cl_b_data <- dbGetQuery(con, "
   SELECT s.sample_id, l.name AS feature, s.collection_time, la.analyte, la.value
   FROM Lab_Analyses la JOIN Samples s ON s.sample_id=la.sample_id JOIN Locations l ON l.location_id=s.location_id
-  WHERE la.analyte IN ('Cl','B') AND s.data_source != 'NDEP'
+  WHERE la.analyte IN ('Cl','B') AND s.data_source IN ('Sorey & Colvard 1992', 'FIELD')
 ")
 cl_b_wide <- reshape(cl_b_data[, c('sample_id','feature','collection_time','analyte','value')],
                       idvar = c('sample_id','feature','collection_time'), timevar = 'analyte', direction = 'wide')
 names(cl_b_wide) <- gsub('value\\.', '', names(cl_b_wide))
 cl_b_wide <- cl_b_wide[!is.na(cl_b_wide$Cl) & !is.na(cl_b_wide$B), ]
 cl_b_wide$Cl_B <- cl_b_wide$Cl / cl_b_wide$B
-cl_b_wide$year <- year(.parse_any_date(cl_b_wide$collection_time))
+cl_b_wide$year <- lubridate::year(.parse_any_date(cl_b_wide$collection_time))
 # Exclude Cox (per Sorey & Colvard's own stated convention) and the
 # SBRR/SBBV creek stations (mixing points, not end-member samples --
 # including them wrongly pulled in a Cl/B ratio near 1500 dominated by
@@ -1671,35 +1671,41 @@ check" section above: a small (19.6 vs. 21.9) but real, statistically
 significant (p = 0.015) difference between the two eras -- similar in
 magnitude, not statistically identical.
 
-**A real, more serious regression found while building the figure
-below (2026-09-26), flagged rather than silently fixed:** re-running
-the `t.test()` above today (not just reading its old, cached result)
-returns `t = NaN`, `df = NaN`, `p = NA`, mean(1950-1991) = `Inf` --
-not the `p = 0.015` result the surrounding prose reports. Root cause,
-confirmed directly: `cl_b_wide`'s query (`data_source != 'NDEP'`) was
-written when the only non-NDEP Cl+B sources were the small, curated
-Sorey & Colvard (1992) end-member set and this project's own 6 FIELD
-samples (n=7 vs n=6, matching the prose). Since then, this notebook's
-own Skalbeck (2001) Table B-2 addition (below) added 8 wells' worth of
-**monthly** monitoring data under 8 distinct `Skalbeck...` source
-labels, all of which also pass `!= 'NDEP'` and are silently swept
-into the same `era`-grouped comparison -- growing "1950-1991" from 7
-to 604 real rows, several with a real detection-limit `B = 0` (Inf
-ratio). **This is not fixed here**: whether Skalbeck's domestic-well
-monthly series should even belong in a "real thermal end-member"
-Cl/B comparison is a real scope question for a human to decide (some
-Skalbeck-labeled wells, like the two "Geothermal" ones, arguably
-belong; the "Domestic"-labeled ones arguably do not) -- not something
-to silently guess at while adding an unrelated new figure. The figure
-immediately below works around this narrowly (filters to finite
-Cl/B values only) so it renders correctly either way, but the
-`cl-b-test` chunk's own query and this "19.6 vs 21.9, p=0.015"
-headline number both need a real revisit.
+**Fixed 2026-09-27 (previously flagged here as a live regression, not
+silently patched):** this chunk's query used to read `data_source !=
+'NDEP'`, correct only as long as the small, curated Sorey & Colvard
+(1992) end-member set (n=7) and this project's own 6 FIELD samples
+(n=6) were the only non-NDEP Cl+B sources on file. Once this
+notebook's own Skalbeck (2001) Table B-2 addition (below) landed 8
+wells' worth of **monthly** domestic/geothermal monitoring data under
+8 distinct `Skalbeck...` source labels, all of which also pass `!=
+'NDEP'`, the query silently swept them into the same `era`-grouped
+comparison -- growing "1950-1991" from 7 to 604 rows (several with a
+detection-limit `B = 0`, producing `Inf`/`NaN`) and breaking the
+t-test outright. The real fix scopes the query explicitly to the two
+curated end-member sources
+(`data_source IN ('Sorey & Colvard 1992', 'FIELD')`) instead of
+"everything that isn't NDEP" -- the deliberate, narrow comparison
+Sorey & Colvard's own methodology intends (a small set of CPI/SB GEO
+production wells and springs, not monthly domestic-well monitoring) --
+and it reproduces the original 19.6 vs. 21.9, p = 0.015 result
+exactly. Whether Skalbeck's monthly domestic-well series belong in
+some *other*, separate Cl/B comparison remains a real, open
+analytical question (some Skalbeck-labeled wells, like the two
+"Geothermal" ones, arguably belong in a thermal-signature comparison;
+the "Domestic"-labeled ones arguably do not) -- not attempted here,
+and not required to fix this chunk's own bug. A polished, captioned
+version of this exact figure (well-name labels, statistics in the
+caption) is saved to `output/figures/manuscript/cl_b_ratio_by_era.png`
+via `scripts/analysis/plot_theme.R`'s shared `theme_steamboat()`.
 
 ### A bootstrap-CI companion view of the same Cl/B comparison (2026-09-26)
 
-Since the real, current `cl_b_wide` population is far larger than the
-prose above assumes (see the flagged regression just above), this new
+Note: this companion figure intentionally uses a DIFFERENT, much larger
+population than the fixed cl-b-test chunk above (see that chunk's own
+note) -- it deliberately includes the Skalbeck monthly monitoring data
+rather than the curated end-member set, to show what the comparison
+looks like either way. This
 figure is built to be honest about that rather than quietly reusing
 the "small n" framing: it filters to `is.finite(Cl_B)` (removing the
 real detection-limit-zero-boron rows that make a ratio numerically

@@ -251,8 +251,6 @@ also includes `existing_coordinate_source`/`existing_coordinate_
 uncertainty_m` (all 6 current discrepancies trace back to
 `nbmg_geothermal_wells`), so a reviewer can immediately see where the
 currently-stored point came from without a separate lookup.
-ArcGIS uncertainty and are worth a manual look -- NDOM is the official
-permit-of-record coordinate.
 
 **A real, pre-existing unit bug was found via this ingestion**:
 `elevation_m` on both `Wells` and `Locations` had been storing raw feet

@@ -83,6 +83,9 @@ models/**/*.rds
 # RENDERED NOTEBOOKS
 # ==================================================
 notebooks/_freeze/
+manuscript/_freeze/
+manuscript/*.html
+manuscript/*_files/
 notebooks/*.html
 notebooks/*_cache/
 notebooks/*_files/

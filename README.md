@@ -364,6 +364,43 @@ full **flag reference table** to the console before doing anything else
 one-line description -- so you can always check what a run will do
 without opening the script.
 
+## Notebook Map and Run Order
+
+`notebooks/` holds this project's living-reference Quarto notebooks --
+each one a real (not slideware) record of a scientific question, the
+code that answers it, and its current real-vs-synthetic status. This
+table is a quick index; each notebook's own opening section states its
+question and status in more detail.
+
+| # | File | Question | Real data? | Depends on |
+|---|------|----------|------------|------------|
+| 00 | `00_full_report.qmd` | Combines 01-08 into one PDF/HTML report | -- | 01-08 |
+| 01 | `01_conductivity_temporal_structure.qmd` | Diurnal/seasonal structure in the conductivity record; minimum Cl-sampling frequency | Real (conductivity); synthetic (Cl-conductance model, self-test only) | -- |
+| 02 | `02_sc_discharge_weather.qmd` | SC vs. USGS discharge and regional precipitation | Real (SC, weather); USGS discharge not yet populated | -- |
+| 03 | `03_temperature_sc_correlation.qmd` | Lagged cross-correlation, temperature loggers vs. conductivity | Real | -- |
+| 04 | `04_photo_location_workflow.qmd` | How photo-derived GPS becomes a `Locations` row | Real (process doc) | -- |
+| 05 | `05_data_inventory_and_well_network.qmd` | Data-availability audit; well/port/injection network; well-log OCR; NDOM/NDWR cross-validation | Real | -- |
+| 06 | `06_phreeqc_geochemical_modeling.qmd` | Speciation, saturation indices, geothermometry, mixing/inverse/gas-phase modeling | Real (speciation/SI/geothermometry); representative, not time-paired, end-members for mixing/inverse | -- |
+| 07 | `07_historical_context_sorey1992.qmd` | Cross-references Sorey & Colvard (1992) against this database; carries the Skalbeck (2001) subsurface model and several hydrology side-analyses (see note below) | Real | -- |
+| 08 | `08_statistical_synthesis.qmd` | Equations + code for every statistical method used project-wide; additional cross-cutting stats (correlation matrix, PCA, mixed-effects trend, variogram) | Real | Reads the *persisted* `Facies_Cluster_Assignments`/`Facies_Cluster_Runs` tables (populated by `run_pipeline.R`'s `RUN_ANALYSIS$facies_clusters` flag or a manual `register_facies_clusters()` call) -- does not require notebook 07 to have run in the same session |
+| 09 | `09_sampling_campaign_design.qmd` | Real Monte Carlo sampling-frequency result on the actual SBRR/SBGG conductivity record; feeds the calibration-sampling recommendation | Real | Reuses `scripts/analysis/sampling_frequency/04_monte_carlo_subsampling.R`, the same framework notebook 01 demonstrates on synthetic data |
+
+**Known organizational issue, not yet fixed**: notebook 07 has grown well
+beyond its title (Sorey & Colvard 1992 historical context) to also cover
+the Skalbeck (2001) subsurface geologic model and several "homeless"
+hydrology side-analyses (Steamboat Ditch losing-reach hypothesis,
+Truckee-Ditch chemical separation, local seismicity vs. water level,
+temperature-vs-barometric-pressure). A future split (e.g. a dedicated
+`10_subsurface_geologic_model.qmd` for the Skalbeck thread) is a
+concrete, scoped next step -- not attempted yet because it needs
+dedicated time for careful line-range surgery and a full re-render
+cycle, not a partial edit.
+
+Notebooks 06/07/08 carry a `notebooks/_freeze/` cache (they hit the live
+database and, for 06, the real PHREEQC executable -- expensive to
+re-run on every render); 00-05 and 09 do not, since they re-run cheaply
+and safely on every render.
+
 ## Where Outputs Land
 
 - `docs/` -- the rendered documentation website (GitHub Pages source);

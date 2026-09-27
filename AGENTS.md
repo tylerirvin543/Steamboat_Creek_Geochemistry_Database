@@ -4544,6 +4544,295 @@ Three quick follow-ups to the align_timeseries.R join fix.
   fix -- **no other vulnerable instance of this bug exists anywhere
   else in the project.**
 
+## Session 37 (2026-09-26): Skalbeck (2001) Table B-2/A-2/Table-3 completion, Leapfrog geologic model, logger uncertainty
+
+Retroactively documenting a block of work that landed between the
+prior "Session 35" and "Session 36" entries without its own session
+note (commits `4fa34e7` through `f3b79d2`). Covers finishing the
+Skalbeck (2001) subsurface dataset and building the first real
+Leapfrog-facing geologic model artifacts.
+
+- **Skalbeck (2001) Table B-2 (monthly Cl/B/temperature/water-depth
+  monitoring, 1985-1998)** completed well-group by well-group, each a
+  careful cross-check against the scanned page images, not blind OCR
+  trust: Herz Geothermal (48 rows) + Herz Domestic (45 rows); Peigh
+  Domestic (102 rows) + Pine Tree Ranch #1 (48 rows, correctly
+  truncated to its real 1984-1990 sampling window); later, Herz
+  Domestic (+29 rows, Nov89-Dec92) and Curti Domestic (+7 rows, gap
+  1990-91) from additional user-supplied images. **Flame and
+  Steinhardt were attempted but explicitly not resolved** -- ambiguous
+  Cl/temperature range overlap broke the ordered-range parser;
+  flagged honestly as needing better scans, not force-transcribed.
+  Real bugs caught while transcribing: several Herz-Geothermal
+  "depth" values were actually column-bleed from Herz-Domestic's Cl
+  column (set to `NA`, not guessed); ~9 Herz-Domestic months excluded
+  via a B>5 mg/L sanity check.
+- **Table A-2 (241/353 spatial points) and Table 3 (41 wells: 10
+  matched to existing `Wells`, 31 registered provisional) ingested**,
+  with 112 genuinely ambiguous Table A-2 rows logged to
+  `data/derived/skalbeck2001_table_a2_ambiguous_rows.csv` for human
+  review rather than guessed. Real **TH-1/2/3 water-depth series**
+  (160 readings, 1985-1998) is a rare multi-decade pre-2000 continuous
+  water-level record. New `Well_Lithology.formation_unit` controlled
+  vocabulary (`Qal`/`Tv`/`AltKgdpKm`/`Kgd`) classifies both existing
+  and Table-3-derived lithology rows. **Real bug fixed later in this
+  same block (`cc0ab92`)**: `AltKgdpKm` is the altered *cap* of the
+  `Kgd` bedrock body (Skalbeck's own naming), not a separate layer
+  between `Tv` and a disconnected deeper `Kgd` -- 19 already-inserted
+  `Well_Lithology` rows were relabeled after cross-sections/mini-log
+  plots made the mislabeling visually obvious.
+- **New Leapfrog-facing geologic surfaces**: gridded IDW surfaces +
+  quasi-3D plotly view of the Table A-2/Table-3 point cloud; later,
+  `scripts/analysis/skalbeck_cross_sections.R` projects each real
+  point onto its nearest Table-1 flight line (median perpendicular
+  distance ~0.35 m, confirming points genuinely sit on the mapped
+  lines) and draws sharp point-to-point "hard line" cross-sections as
+  an alternative to the smoothed IDW grid, per direct user feedback
+  that IDW blurs real geologic contacts. **Real bug fixed**:
+  meter-based `Well_Lithology` intervals were silently treated as feet
+  in the Leapfrog export -- fixed. No literature source gives
+  per-formation-unit hydraulic conductivity -- documented as a real,
+  stated gap, not filled with an assumed value.
+- **New `Logger_Specifications`/`Logger_Calibration_Checks` schema**
+  (real HOBO U24-002-C / Elitech LogEt 8 accuracy specs; 10 real
+  temperature checks auto-detected from `Field_Measurements`).
+- **New schema files `16_geophysical_depth_points_schema.R`,
+  `17_formation_unit_schema.R`, `18_logger_uncertainty_schema.R`**
+  (database/schema/ now runs 01-19, see Session 38 below for `19`).
+- Vaughan et al. (2005) added to the bibliography as a qualitative
+  (no numeric K value) cross-reference for `AltKgdpKm` alteration.
+  Steamboat Ditch checked as a possible recharge end-member: dilute
+  (Cl 0-5 mg/L, one flagged Cl=1100 mg/L ambiguous-date outlier),
+  confirmed Cl alone can't separate Truckee-Ditch recharge from
+  Whites Creek runoff since zero isotope samples exist for either --
+  fed into the Steamboat Ditch losing-reach field-measurement proposal
+  in `docs/action_items_for_user.md`. Little Washoe Lake checked as an
+  end-member candidate: no `Locations` row or chemistry exists for it
+  at all.
+- **Two real PDF-render bugs fixed** while embedding new facies
+  PCA/heatmap figures into notebook 07: the 3D plotly Skalbeck view
+  broke PDF/LaTeX builds (now branches on `knitr::is_latex_output()`,
+  static 2D fallback for PDF); an unescaped underscore in a
+  kableExtra LaTeX caption ("Field_Measurements") hard-failed the PDF
+  compile (escaped for LaTeX only). `notebooks/_freeze/` cleared and
+  `00_full_report.pdf` regenerated to confirm.
+
+## Session 38 (2026-09-26, continued): NDEP site_type fix, Location_Aliases, new diagnostic figures, tidymodels Cl~conductance (synthetic)
+
+Also retroactively documented (commits `0c82e26` through `82d7543`).
+
+- **Root-cause fix**: `scripts/ingest/helpers/ndep_locations.R` had
+  hardcoded `site_type = "background"` for *every* NDEP station
+  regardless of what kind of site it actually was. Replaced with a
+  real classifier (Creek/Ditch name-pattern match on
+  `WATERBODYNAME`/`STATIONNAME`); a retroactive, idempotent backfill
+  reclassified all 15 existing `'background'` rows to `'creek'`
+  (confirmed by name: all 15 are real creek/ditch surface-water
+  stations, not wells). `'background'` remains in the schema as a
+  legitimate "genuinely unclassified" fallback, not removed.
+- **New `Location_Aliases` table** (`database/schema/
+  19_location_aliases_schema.R`) groups multiple external
+  names/codes that refer to the *same real-world monitoring point*
+  under one canonical name, without merging or re-pointing any
+  `location_id` (a deliberate, safer alternative to a merge, per
+  explicit user decision). Seeded with real, coordinate-confirmed
+  groupings: **SBRR group** (`SB5`/"Steamboat Creek @ Rhodes Road",
+  `SB6`/"Steamboat Ditch @ Rhodes Road", `STBT02Steamboat-2a`, all
+  within ~150 m of `SBRR` and the co-located USGS gauge 10349300) and
+  **SBGG group** (`SB7`/"Steamboat Creek @ Geiger Grade", confirmed by
+  Sorey & Spielman's own literature that SBGG = "Geiger Grade").
+  Explicitly checked and NOT grouped: `SB44` (a different creek,
+  despite being geographically closer to SBGG than SB7 is). New
+  `get_location_family_chemistry(con, canonical_name)` helper
+  (`scripts/analysis/location_aliases_helpers.R`) does a read-time
+  UNION across an alias group's real `Samples`/`Lab_Analyses` rows --
+  never blends or anonymizes the underlying rows.
+- **Skalbeck flag-not-exclude convention implemented**: Table B-2's
+  `.ingest_skalbeck2001_b2_well()` extended with a `flag` column
+  (blank for normal rows, e.g.
+  `possible_column_bleed_from_neighboring_well` for recovered
+  ambiguous ones); flags are written into `Lab_Analyses.qualifier`
+  (already existed, previously unused) / `Water_Level_Observations.
+  notes`, so a future analysis can include/exclude flagged rows
+  explicitly via `qualifier IS NULL` instead of them being silently
+  absent. 8 new rows (3 Herz Domestic, 5 Curti Domestic) recovered
+  from clearer images under this convention.
+- **New diagnostic figures**
+  (`scripts/analysis/build_facies_diagnostic_plots.R`,
+  `build_mixing_and_distribution_plots.R`): facies dendrogram,
+  silhouette plot, hclust-vs-mclust agreement heatmap, site-type
+  alluvial diagram, per-cluster ion raincloud plot, PHREEQC
+  mixing-fraction distribution, 3-way SI-by-group comparison. **Real
+  bug found**: `cluster_hydrochemical_facies.R`'s PHREEQC SI join
+  queried nonexistent columns (`mineral`/`saturation_index` instead of
+  the real `parameter`/`value`), silently swallowed by a `tryCatch` --
+  SI columns were never actually attached to the clustering output
+  despite code comments claiming otherwise. New
+  `scripts/analysis/facies_random_forest.R` (`ranger`): Na > Mg > Cl >
+  Ca > K > Alkalinity > SO4 importance ranking, 97.4% held-out
+  accuracy for facies-membership classification.
+- **`run_pipeline.R` crash-fix**: `RUN_INGEST$skalbeck2001` (and by
+  extension any flag) had no `is.null()` fallback default unlike every
+  other flag -- a caller supplying a partial `RUN_INGEST` list (e.g.
+  README's own documented "skip ingestion" snippet) crashed deep in
+  the ingest stage with an opaque "argument is of length zero." Fixed
+  generally: any `RUN_INGEST` list now backfills missing flags from
+  the safest preset. Also fixed: a `count()` call masked by another
+  package (qualified to `dplyr::count()`); a website heatmap chunk's
+  NaN-only cleanup missed real `NA` `Temp` values introduced by the
+  new Skalbeck rows (`is.nan` -> `is.na`); a missing `'creek'` entry in
+  `site_colors` for the newly-reclassified creek-type samples; ~16
+  tracked `docs/` files that `render_site()` had deleted mid-build,
+  restored via `git checkout`.
+- **First tidymodels Cl~conductance workflow, explicitly synthetic-
+  only**: `scripts/analysis/sampling_frequency/03_chloride_models.R`'s
+  synthetic data-generating process gained a real lag (default 6
+  days/2 steps -- it previously had none at all, making a lagged-
+  conductivity feature untestable); removing seasonal `doy_sin`/
+  `doy_cos` terms dropped the lm's RMSE 1.26 -> 0.91 on lag-free
+  synthetic data (they were actively hurting it). New
+  `03b_chloride_models_tidymodels.R`: full recipe/workflow/
+  workflow_set with `rsample::rolling_origin()` CV and `tune_grid()`
+  for `mtry`/`min_n` (an apparent `min_n=15` boundary effect resolved
+  into a genuine interior optimum ~20-25 once the grid was extended to
+  30). Winning model
+  (`models/chloride_prediction/tidymodels_lagged_lm_20260926_200611.rds`,
+  lm on lagged sc_25c/temperature_c, RMSE=1.00 rolling-origin CV) saved
+  and logged to `models/MODEL_REGISTRY.csv`. **No real paired Cl/
+  conductivity field data exists yet** -- this entire workflow is a
+  synthetic self-test/methods demonstration, not a real predictive
+  model, exactly like the sampling-frequency framework it extends.
+
+## Session 39 (2026-09-27): chloride mass-balance formula corrected (two-station flux, not single-station ratio)
+
+- **Real formula error found and fixed.** A live notebook-07 chunk
+  (commit `7fa5041`) had replaced an earlier hardcoded, non-reproducible
+  "42.1 L/s" thermal-discharge figure with a live-computed value using
+  a *single-station* concentration-ratio formula -- but re-reading the
+  GRC 2026 poster PDF directly (`pdftotext`, not memory) found the
+  poster's real formula is a **two-station chloride-flux difference**
+  (Q_TW = (flux at SBBV minus flux at SBRR) / 820 mg/L, the thermal
+  end-member concentration per Sorey & Colvard's own convention). New
+  `scripts/analysis/chloride_mass_balance.R` implements the correct
+  formula once, as the single source of truth; wired into
+  `run_pipeline.R` as an always-on reporting step, writing
+  `data/derived/chloride_mass_balance/chloride_mass_balance.csv`
+  (copied into `docs/data/` for the website). Notebook 07's chunk and
+  every downstream reference (a hardcoded tribble value, inline prose
+  in `website/results.Rmd`) were rewritten to call this one script
+  rather than re-deriving the formula inline.
+- **Real result for the only paired SBRR/SBBV date on file
+  (2026-05-01): 58.7 L/s** -- differs from the poster's own averaged
+  ~27 L/s (a multi-date average, not yet reproducible with only one
+  date on file) and from the two earlier, now-superseded 42.1/62.6 L/s
+  figures from this same correction sequence -- presented transparently
+  as a single real, dated data point, not silently reconciled with the
+  poster's own multi-date average.
+- `website/results.Rmd`'s "A First Answer" section: fixed the LaTeX
+  formula display, added a live chunk, removed a stale "not yet
+  reproducible" caveat. Rebuilt via the protected `build_website()`
+  wrapper, confirmed 0 missing `docs/` files afterward.
+
+## Session 40 (2026-09-27, continued): documentation catch-up, tidiness fixes, Cl/B t-test regression fixed, curated publication figures
+
+Direct response to a request to refocus/tidy the project, catch
+`AGENTS.md` up on undocumented work (Sessions 37-39 above), and curate
+a small set of publication-quality figures tied to clearly stated
+questions.
+
+- **Two real, isolated bugs fixed**: `notebooks/02_sc_discharge_
+  weather.qmd` had a stray leftover edit-artifact fragment
+  ("`and interpratibility? ---`") sitting before its own YAML `---`
+  delimiter (harmless to rendering, since pandoc happened to tolerate
+  it, but a real tidiness defect); `notebooks/05_data_inventory_and_
+  well_network.qmd` had an accidentally duplicated sentence about NDOM
+  coordinate discrepancies (two adjacent, identical "ArcGIS uncertainty
+  and are worth a manual look..." sentences). Both fixed; both
+  notebooks re-rendered standalone to confirm no breakage. A project-
+  wide grep for the same leftover-edit pattern found no other
+  instances.
+- **Real, previously self-flagged Cl/B t-test regression fixed** in
+  `notebooks/07`'s `cl-b-test` chunk (see that notebook's own
+  "Fixed 2026-09-27" note, added in this session, replacing a
+  "this is not fixed here" flag from 2026-09-26): the chunk's query
+  (`data_source != 'NDEP'`) was correct only while the curated Sorey &
+  Colvard (1992) end-member set (n=7) and this project's own FIELD
+  samples (n=6) were the only non-NDEP Cl+B sources on file. Once
+  Skalbeck (2001) Table B-2's monthly domestic-well data (8 distinct
+  `Skalbeck...` source labels, also `!= 'NDEP'`) landed, the query
+  silently grew "1950-1991" from 7 to 604 rows (several with
+  detection-limit `B=0`, producing `Inf`/`NaN`), breaking the `t.test()`
+  outright (`p = NA`). **Fix**: scope the query explicitly to
+  `data_source IN ('Sorey & Colvard 1992', 'FIELD')` -- the deliberate,
+  narrow comparison Sorey & Colvard's own methodology intends -- which
+  reproduces the original 19.6 vs. 21.9, p = 0.015 result exactly.
+  Verified via a live re-render of notebook 07 (rendered HTML confirmed
+  `p-value = 0.01538`). The separate "bootstrap-CI companion" figure
+  (which deliberately uses the larger, Skalbeck-inclusive population as
+  an alternate view) is unaffected and was left as-is, with its own
+  cross-reference note updated to point at the now-fixed chunk instead
+  of an open regression.
+- **New shared plotting theme**: `scripts/analysis/plot_theme.R`
+  (`theme_steamboat()`, a colorblind-safe `palette_steamboat` keyed to
+  this project's recurring site_type/era/facies vocabulary). Does not
+  retroactively touch already-generated PNGs -- applies the next time a
+  figure's generating code is edited or re-run.
+- **Five curated, captioned, publication-quality figures** saved to
+  `output/figures/manuscript/` (regenerated on demand, not committed
+  static images, consistent with this project's existing convention):
+  `cl_b_ratio_by_era.png` (the corrected Cl/B comparison, well-name
+  labels, t-test in caption), `geothermometer_comparison.png` (Na/K vs.
+  quartz divergence, now aggregated to per-well means across all 67
+  real geothermometer rows -- including Mariner & Janik 1995's wells,
+  not just the original 8-sample set -- rather than the earlier
+  cluttered all-rows plot), `sampling_frequency_error_curve.png`
+  (notebook 09's real EC-based Monte Carlo reconstruction-error curve,
+  with a 5%-reference line added). The other two curated figures
+  (`facies_pca_biplot.png`, `facies_rf_importance.png`) already existed
+  from Session 38's diagnostic-figures work and were reused as-is.
+- **`manuscript/04_results.qmd` rewritten** from a bullet-point findings
+  checklist into an illustrated results section: each of the five
+  figures above is embedded with a question-first framing paragraph
+  (what question it answers, why it matters, the real statistic behind
+  it) plus an explicit "What these results do not yet show" closing
+  section (the still-ambiguous Cl-vs-time trend, PHREEQC mixing on
+  representative-not-paired end-members) so the chapter doesn't
+  overstate what's actually been shown. Verified by a direct
+  `quarto render 04_results.qmd --to html` (renders cleanly).
+- **Notebook-07 restructuring was scoped but deliberately NOT executed
+  this session**: direct investigation confirmed notebook 07
+  (`07_historical_context_sorey1992.qmd`, 2,782 lines / 62 chunks) has
+  become a grab-bag covering far more than its "Historical Context:
+  Sorey & Colvard (1992)" title promises -- it now also carries the
+  entire Skalbeck (2001) subsurface-model thread, most of the project's
+  cross-cutting statistics (duplicating/coupling with notebook 08), and
+  several "homeless" hydrology side-analyses (Steamboat Ditch,
+  Truckee-Ditch separation, local seismicity, temperature-vs-pressure).
+  A physical split (e.g. a new `notebooks/10_subsurface_geologic_
+  model.qmd` for the Skalbeck thread) was judged too high-risk to do
+  safely without dedicated time for careful line-range surgery plus a
+  full standalone + combined-report re-render cycle (per the Session 34
+  lesson about `{{< include >}}`/duplicate-chunk-label/stale-freeze
+  pitfalls) -- deferred as a concrete, scoped next step rather than
+  attempted partially. One genuine finding from the investigation,
+  worth recording: notebook 08's facies-cluster PCA section does
+  **not** actually require notebook 07 to have executed first in the
+  same session, as earlier framing suggested -- it queries the
+  *persisted* `Facies_Cluster_Assignments`/`Facies_Cluster_Runs` tables
+  directly (populated via `run_pipeline.R`'s
+  `RUN_ANALYSIS$facies_clusters` flag or a manual
+  `register_facies_clusters()` call), so the real dependency is "has
+  anyone ever persisted a facies-clustering run," not "did notebook 07
+  run in this session" -- a smaller, easier-to-document reproducibility
+  note than a structural coupling.
+- **Not done this session**: the Skalbeck Steinhardt/Flame Table B-2
+  transcription gaps remain open (flagged, not blocking); no new
+  statistical-modeling directions were opened (the one clear candidate,
+  real Cl~conductivity prediction, is correctly blocked on real paired
+  field data, per Session 38 -- no action needed there beyond what's
+  built); this session's file changes are not yet committed/pushed to
+  git as of this note.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
