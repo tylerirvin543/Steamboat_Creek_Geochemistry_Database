@@ -30,12 +30,18 @@ library(dplyr)
 register_facies_clusters <- function(con, facies_result, notes = NA_character_) {
   d <- facies_result$data
 
+  # kmeans_agreement_pct_hc/_mclust are new (2026-09-27, the k-means
+  # third cross-check) -- NA_real_ if facies_result predates that
+  # addition (an older in-memory result without those list elements),
+  # so this stays backward-compatible rather than erroring.
   run_row <- data.frame(
     run_date = as.character(Sys.time()),
     method = "ward_hierarchical",
     k = facies_result$k,
     silhouette_selected = 1L,
     mclust_agreement_pct = facies_result$agreement_pct,
+    kmeans_agreement_pct_hc = if (!is.null(facies_result$agreement_pct_kmeans_hc)) facies_result$agreement_pct_kmeans_hc else NA_real_,
+    kmeans_agreement_pct_mclust = if (!is.null(facies_result$agreement_pct_kmeans_mclust)) facies_result$agreement_pct_kmeans_mclust else NA_real_,
     n_samples_clustered = nrow(d),
     core_analytes = "Na,K,Ca,Mg,Cl,SO4,Alkalinity",
     notes = notes
@@ -53,7 +59,13 @@ register_facies_clusters <- function(con, facies_result, notes = NA_character_) 
         as.integer(as.character(facies_cluster_mclust))
       } else {
         NA_integer_
+      },
+      facies_cluster_kmeans = if ("facies_cluster_kmeans" %in% names(d)) {
+        as.integer(as.character(facies_cluster_kmeans))
+      } else {
+        NA_integer_
       }
+
     ) |>
     dplyr::distinct(sample_id, .keep_all = TRUE)
 

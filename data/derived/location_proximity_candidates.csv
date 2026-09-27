@@ -1,0 +1,4 @@
+"pair_type","id_1","name_1","external_station_code_1","site_type_1","id_2","name_2","external_station_code_2","site_type_2","distance_m","recommendation"
+"location_vs_location",10,"Steamboat Creek @ Rhodes Road","SB5","creek",11,"Steamboat Ditch @ Rhodes Road","SB6","creek",33,"review: within 100m, consider a Location_Aliases row"
+"location_vs_location",11,"Steamboat Ditch @ Rhodes Road","SB6","creek",14,"Steamboat Creek north of the USGS gage off of Rhodes Road","STBT02Steamboat-2a","creek",98.4,"review: within 100m, consider a Location_Aliases row"
+"location_vs_location",10,"Steamboat Creek @ Rhodes Road","SB5","creek",14,"Steamboat Creek north of the USGS gage off of Rhodes Road","STBT02Steamboat-2a","creek",126.2,"review: within threshold but not tight -- likely a genuinely separate nearby point"

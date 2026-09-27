@@ -16,7 +16,29 @@ parse_datetime_safe <- function(x) {
   parsed[is_epoch] <- as.POSIXct(as.numeric(x[is_epoch]), origin = "1970-01-01", tz = "UTC")
 
   if (any(!is_epoch)) {
-    parsed[!is_epoch] <- suppressWarnings(as.POSIXct(x[!is_epoch], tz = "UTC"))
+    # 2026-09-26: real FIELD collection_time strings like
+    # "03/22/2024 9:12" (US format, no leading zero on the hour) are
+    # not a "standard unambiguous format" for base R's as.POSIXct(),
+    # which hard-ERRORS (not just NA-with-warning) the moment even one
+    # element in the vector is ambiguous -- confirmed this was
+    # silently blocking every real Cl/conductivity pairing attempt.
+    # as.POSIXct() validates the WHOLE vector at once, so a single bad
+    # element poisons every other (otherwise-valid, e.g. real ISO)
+    # element in the same call too -- parse element-by-element instead,
+    # trying ISO first then an explicit %m/%d/%Y %H:%M fallback
+    # (mirrors the same fallback already used in notebook 07's own
+    # .parse_any_date()) before giving up and leaving that one NA.
+    rest <- x[!is_epoch]
+    parsed_rest <- vapply(rest, function(v) {
+      if (is.na(v) || !nzchar(v)) return(NA_real_)
+      p <- tryCatch(as.numeric(as.POSIXct(v, tz = "UTC")), error = function(e) NA_real_)
+      if (is.na(p)) {
+        p <- tryCatch(as.numeric(as.POSIXct(v, format = "%m/%d/%Y %H:%M", tz = "UTC")),
+                      error = function(e) NA_real_)
+      }
+      p
+    }, numeric(1))
+    parsed[!is_epoch] <- as.POSIXct(parsed_rest, origin = "1970-01-01", tz = "UTC")
   }
 
   return(parsed)

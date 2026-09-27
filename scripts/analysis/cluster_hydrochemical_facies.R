@@ -113,11 +113,35 @@ run_facies_clustering <- function(con, k_range = 2:8) {
     round(100 * max_overlap / length(hc_clusters), 1)
   } else NA_real_
 
+  # ---- Cross-check: k-means, a third, distance-based-but-non-
+  # hierarchical method (added 2026-09-27, deferred until the
+  # site_type='background'->'creek' relabeling was verified -- that's
+  # now done, see AGENTS.md session notes, so this was safe to add).
+  # Same scaled/log-transformed matrix and the same silhouette-selected
+  # k as hierarchical/mclust, for direct three-way comparability.
+  # nstart=25 (not the default 1) since a single random k-means start
+  # can land in a poor local optimum.
+  set.seed(4821)
+  km <- kmeans(mat_scaled, centers = best_k, nstart = 25)
+  km_clusters <- km$cluster
+
+  .agreement_pct <- function(a, b) {
+    tab <- table(a, b)
+    round(100 * sum(apply(tab, 1, max)) / length(a), 1)
+  }
+  agreement_pct_kmeans_hc <- .agreement_pct(hc_clusters, km_clusters)
+  agreement_pct_kmeans_mclust <- .agreement_pct(mc_clusters, km_clusters)
+
   message("[facies] Hierarchical (Ward) vs. Gaussian-mixture (mclust) cluster agreement (best row-wise match): ",
           agreement, "%")
+  message("[facies] Hierarchical (Ward) vs. k-means cluster agreement (best row-wise match): ",
+          agreement_pct_kmeans_hc, "%")
+  message("[facies] Gaussian-mixture (mclust) vs. k-means cluster agreement (best row-wise match): ",
+          agreement_pct_kmeans_mclust, "%")
 
   complete$facies_cluster <- factor(hc_clusters)
   complete$facies_cluster_mclust <- factor(mc_clusters)
+  complete$facies_cluster_kmeans <- factor(km_clusters)
 
   cluster_plot <- fviz_cluster(list(data = mat_scaled, cluster = hc_clusters),
                                 geom = "point", ellipse.type = "convex",
@@ -156,6 +180,9 @@ run_facies_clustering <- function(con, k_range = 2:8) {
     data = complete,
     k = best_k,
     agreement_pct = agreement,
+    kmeans_obj = km,
+    agreement_pct_kmeans_hc = agreement_pct_kmeans_hc,
+    agreement_pct_kmeans_mclust = agreement_pct_kmeans_mclust,
     plot_silhouette = sil_plot,
     plot_cluster = cluster_plot,
     site_type_summary = summary_tbl,

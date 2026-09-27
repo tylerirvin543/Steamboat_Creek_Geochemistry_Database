@@ -108,7 +108,7 @@ run_conductivity_qc_checks <- function(con,
     arrange(logger_id, timestamp) |>
     group_by(logger_id) |>
     mutate(
-      prev_time = lag(timestamp),
+      prev_time = dplyr::lag(timestamp),
       gap_min = as.numeric(difftime(timestamp, prev_time, units = "mins"))
     ) |>
     filter(!is.na(gap_min)) |>

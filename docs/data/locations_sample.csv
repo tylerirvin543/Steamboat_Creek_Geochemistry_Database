@@ -149,20 +149,20 @@
 148,"STMGID MW10","NDWR_087N18E1925DBBD1","well",39.395714,-119.796467
 149,"STMGID 11 MWA","NDWR_087N18E2019BABA1","well",39.418533,-119.783454
 150,"STMGID MW3","NDWR_087N18E2019DDAA1","well",39.407588,-119.771611
-151,"Boyd Domestic Well","NDEP_Boyd_Dom","well",39.38325,-119.73992
-152,"Jeppson Geothermal Well","NDEP_Jeppson_Dom","well",39.35931,-119.7685
-153,"Rogers Domestic Well","NDEP_Rogers_Well","well",39.36248,-119.7646
-154,"Soccer Field Monitoring Well","NDEP_Soccer_Field","well",39.40187,-119.7594
-155,"Eich Well","NDEP_Eich_Well","well",39.409083,-119.744088
-156,"Herz Domestic Well","KLEIN_Herz_Dom","well",39.405472,-119.753255
-157,"DiMonte Well","KLEIN_DeMonte","well",39.412694,-119.744366
-158,"Zolezzi Well (near Zolezzi Spr)","KLEIN_Zolezzi_Well","well",39.416306,-119.762423
-159,"Curti Domestic Well","KLEIN_Curti_Dom","well",39.394361,-119.7396
-160,"Curti Barn Well (geothermal)","KLEIN_Curti_Barn","well",39.394361,-119.7396
-161,"Whites Creek Diversion to Mt. Rose WTP (MRWTP)","NDWR_SF_087N18E1935ABAC1","creek",39.38837,-119.81474
-162,"Whites Creek Below Mt. Rose WTP","NDWR_SF_087N18E1935ABAC2","creek",39.38846,-119.81467
-163,"Whites Creek Above MRWTP","NDWR_SF_087N18E1935ABAC3","creek",39.38837,-119.81474
-164,"Whites Creek at I580","NDWR_SF_087N18E2017DAAC1","creek",39.42423,-119.7547
+151,"Whites Creek Diversion to Mt. Rose WTP (MRWTP)","NDWR_SF_087N18E1935ABAC1","creek",39.38837,-119.81474
+152,"Whites Creek Below Mt. Rose WTP","NDWR_SF_087N18E1935ABAC2","creek",39.38846,-119.81467
+153,"Whites Creek Above MRWTP","NDWR_SF_087N18E1935ABAC3","creek",39.38837,-119.81474
+154,"Whites Creek at I580","NDWR_SF_087N18E2017DAAC1","creek",39.42423,-119.7547
+155,"Boyd Domestic Well","NDEP_Boyd_Dom","well",39.37371,-119.7453
+156,"Jeppson Geothermal Well","NDEP_Jeppson_Dom","well",39.35931,-119.7685
+157,"Rogers Domestic Well","NDEP_Rogers_Well","well",39.36248,-119.7646
+158,"Soccer Field Monitoring Well","NDEP_Soccer_Field","well",39.40187,-119.7594
+159,"Eich Well","NDEP_Eich_Well","well",39.409083,-119.744088
+160,"Herz Domestic Well","KLEIN_Herz_Dom","well",39.405472,-119.753255
+161,"DiMonte Well","KLEIN_DeMonte","well",39.412694,-119.744366
+162,"Zolezzi Well (near Zolezzi Spr)","KLEIN_Zolezzi_Well","well",39.416306,-119.762423
+163,"Curti Domestic Well","KLEIN_Curti_Dom","well",39.394361,-119.7396
+164,"Curti Barn Well (geothermal)","KLEIN_Curti_Barn","well",39.394361,-119.7396
 165,"CPI production well 21-5","SOREY1992_21-5","well",39.3742081728802,-119.768561526409
 166,"CPI production well 83A-6","SOREY1992_83A-6","well",39.3713187,-119.7726024
 167,"CPI injection well Cox 1-1 (Cox well)","SOREY1992_Cox1-1","well",39.3819067,-119.7649188
@@ -170,23 +170,20 @@
 170,"SB GEO production well PW-3","SOREY1992_PW-3","well",39.3937386861778,-119.753021215072
 172,"Well GS-5, 1950 sample (White 1968)","SOREY1992_GS-58","well",39.3892621,-119.7434411
 173,"New seep adjacent to well GS-5 (1991)","SOREY1992_GS-59","seep",39.3892621,-119.7434411
-174,"Steinhardt Geothermal Well (narrative Cl trend)","SOREY1992_Steinhardt","well",39.39547,-119.7342
-175,"23-5 (Mariner & Janik 1995; = Wells '23-5')","MJ1995_23_5","well",39.3700873,-119.7668318
-176,"83A-6 (Mariner & Janik 1995; = Wells '83A-6')","MJ1995_83A_6","well",39.3713187,-119.7726024
-177,"21-5 (Mariner & Janik 1995; = Wells '21-5R')","MJ1995_21_5","well",39.3742081728802,-119.768561526409
-178,"13-5 (Mariner & Janik 1995; = Wells '13-5R')","MJ1995_13_5","well",39.3708963475173,-119.770310905677
-179,"Cox I-1 (Mariner & Janik 1995; = Wells 'Cox I-1')","MJ1995_Cox_I_1","well",39.3819067,-119.7649188
-180,"GS-5 (Mariner & Janik 1995; = Wells 'GS-5')","MJ1995_GS_5","well",39.3892621,-119.7434411
-182,"PW-2 (Mariner & Janik 1995; = Wells 'PW-2')","MJ1995_PW_2","well",39.3936912205606,-119.754644809819
-183,"PW-3 (Mariner & Janik 1995; = Wells 'PW-3')","MJ1995_PW_3","well",39.3937386861778,-119.753021215072
-184,"PW2-1 (Mariner & Janik 1995; = Wells 'PW 2-1')","MJ1995_PW2_1","well",39.39392,-119.7507
-186,"PW2-3 (Mariner & Janik 1995; = Wells 'PW 2-3')","MJ1995_PW2_3","well",39.39506,-119.7494
-188,"PW2-5 (Mariner & Janik 1995; = Wells 'PW 2-5')","MJ1995_PW2_5","well",39.39595,-119.7484
-189,"PW3-1 (Mariner & Janik 1995; = Wells 'PW 3-1')","MJ1995_PW3_1","well",39.39081,-119.7473
-190,"PW3-2 (Mariner & Janik 1995; = Wells 'PW 3-2')","MJ1995_PW3_2","well",39.39181,-119.7469
-191,"PW3-3 (Mariner & Janik 1995; = Wells 'PW 3-3')","MJ1995_PW3_3","well",39.39103,-119.7458
-192,"PW3-4 (Mariner & Janik 1995; = Wells 'PW 3-4')","MJ1995_PW3_4","well",39.39255,-119.7462
-194,"IW-5 (Mariner & Janik 1995; = Wells '46-28')","MJ1995_IW_5","well",39.39482,-119.7454
-196,"Brown's School (Mariner & Janik 1995; = Wells 'Brown School Geothermal Well')","MJ1995_Brown_s_School","well",39.40842,-119.74852
-218,"21-5R",NA,"well",39.3742081728802,-119.768561526409
-219,"13-5R",NA,"well",39.3708963475173,-119.770310905677
+174,"23-5 (Mariner & Janik 1995; = Wells '23-5')","MJ1995_23_5","well",39.3700873,-119.7668318
+175,"83A-6 (Mariner & Janik 1995; = Wells '83A-6')","MJ1995_83A_6","well",39.3713187,-119.7726024
+176,"21-5 (Mariner & Janik 1995; = Wells '21-5R')","MJ1995_21_5","well",39.3742081728802,-119.768561526409
+177,"13-5 (Mariner & Janik 1995; = Wells '13-5R')","MJ1995_13_5","well",39.3708963475173,-119.770310905677
+178,"Cox I-1 (Mariner & Janik 1995; = Wells 'Cox I-1')","MJ1995_Cox_I_1","well",39.3819067,-119.7649188
+179,"GS-5 (Mariner & Janik 1995; = Wells 'GS-5')","MJ1995_GS_5","well",39.3892621,-119.7434411
+181,"PW-2 (Mariner & Janik 1995; = Wells 'PW-2')","MJ1995_PW_2","well",39.3936912205606,-119.754644809819
+182,"PW-3 (Mariner & Janik 1995; = Wells 'PW-3')","MJ1995_PW_3","well",39.3937386861778,-119.753021215072
+183,"PW2-1 (Mariner & Janik 1995; = Wells 'PW 2-1')","MJ1995_PW2_1","well",39.39392,-119.7507
+185,"PW2-3 (Mariner & Janik 1995; = Wells 'PW 2-3')","MJ1995_PW2_3","well",39.39506,-119.7494
+187,"PW2-5 (Mariner & Janik 1995; = Wells 'PW 2-5')","MJ1995_PW2_5","well",39.39595,-119.7484
+188,"PW3-1 (Mariner & Janik 1995; = Wells 'PW 3-1')","MJ1995_PW3_1","well",39.39081,-119.7473
+189,"PW3-2 (Mariner & Janik 1995; = Wells 'PW 3-2')","MJ1995_PW3_2","well",39.39181,-119.7469
+190,"PW3-3 (Mariner & Janik 1995; = Wells 'PW 3-3')","MJ1995_PW3_3","well",39.39103,-119.7458
+191,"PW3-4 (Mariner & Janik 1995; = Wells 'PW 3-4')","MJ1995_PW3_4","well",39.39255,-119.7462
+193,"IW-5 (Mariner & Janik 1995; = Wells '46-28')","MJ1995_IW_5","well",39.39482,-119.7454
+195,"Brown's School (Mariner & Janik 1995; = Wells 'Brown School Geothermal Well')","MJ1995_Brown_s_School","well",39.40842,-119.74852

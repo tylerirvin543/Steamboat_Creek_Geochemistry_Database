@@ -57,4 +57,29 @@ dbExecute(con, "
 CREATE INDEX IF NOT EXISTS idx_facies_assignments_run ON Facies_Cluster_Assignments(run_id);
 ")
 
+# ------------------------------------------------------------
+# MIGRATION (2026-09-27): k-means added as a third cross-check
+# alongside hierarchical (Ward)/mclust -- see
+# scripts/analysis/cluster_hydrochemical_facies.R. Additive
+# ALTER TABLE ADD COLUMN, same idempotent dbListFields()-check
+# pattern used elsewhere in this project; never a destructive
+# CREATE TABLE rewrite. Old runs simply have NULL in these new
+# columns (correct -- they predate this method).
+# ------------------------------------------------------------
+run_cols <- dbListFields(con, "Facies_Cluster_Runs")
+if (!"kmeans_agreement_pct_hc" %in% run_cols) {
+  message("[MIGRATION] Facies_Cluster_Runs missing kmeans_agreement_pct_hc -- adding.")
+  dbExecute(con, "ALTER TABLE Facies_Cluster_Runs ADD COLUMN kmeans_agreement_pct_hc REAL")
+}
+if (!"kmeans_agreement_pct_mclust" %in% run_cols) {
+  message("[MIGRATION] Facies_Cluster_Runs missing kmeans_agreement_pct_mclust -- adding.")
+  dbExecute(con, "ALTER TABLE Facies_Cluster_Runs ADD COLUMN kmeans_agreement_pct_mclust REAL")
+}
+
+assignment_cols <- dbListFields(con, "Facies_Cluster_Assignments")
+if (!"facies_cluster_kmeans" %in% assignment_cols) {
+  message("[MIGRATION] Facies_Cluster_Assignments missing facies_cluster_kmeans -- adding.")
+  dbExecute(con, "ALTER TABLE Facies_Cluster_Assignments ADD COLUMN facies_cluster_kmeans INTEGER")
+}
+
 message("[SCHEMA] Facies_Cluster_Runs / Facies_Cluster_Assignments ready.")

@@ -84,22 +84,43 @@ plot_facies_silhouette_diagnostic <- function(fc, out_path = "output/figures/fac
 #' bare "X% agreement" number already reported in prose into a picture
 #' of exactly which cluster pairs the two methods disagree on.
 plot_facies_agreement_heatmap <- function(fc, out_path = "output/figures/facies/facies_agreement_heatmap.png") {
-  tab <- as.data.frame(table(
-    hierarchical = fc$data$facies_cluster,
-    mclust = fc$data$facies_cluster_mclust
-  ))
-  p <- ggplot(tab, aes(x = mclust, y = hierarchical, fill = Freq)) +
+  .pair_tab <- function(a, b, a_name, b_name, agree_pct) {
+    t <- as.data.frame(table(row_lab = a, col_lab = b))
+    t$comparison <- paste0(a_name, " vs. ", b_name, " (", agree_pct, "% agreement)")
+    t
+  }
+
+  has_kmeans <- "facies_cluster_kmeans" %in% names(fc$data) && !is.null(fc$agreement_pct_kmeans_hc)
+
+  tab_list <- list(
+    .pair_tab(fc$data$facies_cluster, fc$data$facies_cluster_mclust,
+              "Hierarchical (Ward)", "mclust", fc$agreement_pct)
+  )
+  if (has_kmeans) {
+    tab_list[[2]] <- .pair_tab(fc$data$facies_cluster, fc$data$facies_cluster_kmeans,
+                                "Hierarchical (Ward)", "k-means", fc$agreement_pct_kmeans_hc)
+    tab_list[[3]] <- .pair_tab(fc$data$facies_cluster_mclust, fc$data$facies_cluster_kmeans,
+                                "mclust", "k-means", fc$agreement_pct_kmeans_mclust)
+  }
+  tab <- dplyr::bind_rows(tab_list)
+
+  p <- ggplot(tab, aes(x = col_lab, y = row_lab, fill = Freq)) +
     geom_tile(color = "white") +
     geom_text(aes(label = Freq), color = "black", size = 4) +
     scale_fill_viridis_c(option = "rocket", direction = -1, name = "n samples") +
+    facet_wrap(~comparison, scales = "free") +
     labs(
-      title = "Hierarchical (Ward) vs. Gaussian-mixture (mclust) cluster labels",
-      subtitle = paste0(fc$agreement_pct, "% overall row-wise agreement -- off-diagonal cells show exactly where the two methods disagree"),
-      x = "mclust cluster", y = "Hierarchical (Ward) cluster"
+      title = if (has_kmeans) {
+        "Pairwise cluster-label agreement: hierarchical (Ward) vs. mclust vs. k-means"
+      } else {
+        "Hierarchical (Ward) vs. Gaussian-mixture (mclust) cluster labels"
+      },
+      subtitle = "Off-diagonal cells show exactly where each pair of independent methods disagree",
+      x = "cluster label (2nd method)", y = "cluster label (1st method)"
     ) +
     theme_minimal(base_size = 12) +
-    coord_fixed()
-  .save_if_requested(p, out_path, width = 6, height = 5.5)
+    theme(aspect.ratio = 1)
+  .save_if_requested(p, out_path, width = if (has_kmeans) 13 else 6, height = if (has_kmeans) 5 else 5.5)
 }
 
 #' Alluvial (flow) diagram: site_type -> facies_cluster. Turns the

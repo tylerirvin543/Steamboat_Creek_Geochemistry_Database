@@ -492,7 +492,7 @@ ingest_field <- function(con) {
   #     • constraint violations during insert
 # --------------------------------------------------
   dup_check <- samples_db |>
-    count(location_id, collection_time, sample_type) |>
+    dplyr::count(location_id, collection_time, sample_type) |>
     filter(n > 1)
   
   if (nrow(dup_check) > 0) {

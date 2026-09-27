@@ -467,6 +467,20 @@ run_step(RUN_INGEST$ndep, "LOCATION ALIASES (SBRR/SB5/SB6/STBT02Steamboat-2a)", 
   register_location_aliases(con)
 })
 
+run_step(TRUE, "LOCATION/WELL COORDINATE-PROXIMITY AUDIT", {
+  # Systematic, regenerable coordinate-proximity scan across every
+  # coordinate-having Locations row (which covers Conductivity_Loggers/
+  # Temperature_Loggers too, since neither carries its own lat/lon --
+  # both resolve to a point only via location_id) plus a Wells-vs-
+  # Locations pass (Wells has its own independent coordinate). Added
+  # 2026-09-27 to generalize the one-off SBRR/SB5/SB6/
+  # STBT02Steamboat-2a discovery into a standing report -- excludes
+  # pairs already resolved via Location_Aliases, never auto-matches
+  # anything. Always run (cheap, read-only besides the CSV).
+  source("scripts/qc/qc_location_proximity.R")
+  qc_location_proximity(con)
+})
+
 run_step(RUN_INGEST$field, "FIELD", {
   source("scripts/ingest/ingest_field.R")
   ingest_field(con)
@@ -1347,6 +1361,13 @@ export_website_data_files <- function(con) {
 
       sweep <- dbGetQuery(con, "SELECT sample_id, temperature_C, parameter, value FROM PHREEQC_Temp_Sweep WHERE parameter IN ('SI_Quartz','SI_Chalcedony')")
       .interp_zero_crossing <- function(temps, sis) {
+        # 2026-09-27: guard against length(temps) < 2 -- seq_len(length(temps)-1)
+        # is seq_len(-1) for a single-row/empty group (e.g. a sample with
+        # only one PHREEQC_Temp_Sweep step recorded), which errors outright
+        # ("argument must be coercible to non-negative integer") instead of
+        # just reporting no zero-crossing found. Confirmed this happens on
+        # a freshly-rebuilt DEMO database's smaller sample set.
+        if (length(temps) < 2) return(NA_real_)
         ord <- order(temps); temps <- temps[ord]; sis <- sis[ord]
         for (i in seq_len(length(temps) - 1)) {
           if (!is.na(sis[i]) && !is.na(sis[i + 1]) && sign(sis[i]) != sign(sis[i + 1])) {
@@ -1505,6 +1526,23 @@ export_website_data_files <- function(con) {
     "output/qc/qc_issues_full.csv",
     row.names = FALSE
   )
+
+  # 2026-09-27: qc_summary.csv used to be written directly into
+  # docs/data/ by scripts/qc/qc_data_integrity_checks.R, one-shot,
+  # during the earlier QC stage -- so it never got the same
+  # before-AND-after-build_website() protection every other file in
+  # this function has, and render_site()'s cleanup deleted it with
+  # nothing to rewrite it afterward (flagged since Session 12,
+  # confirmed still true as of Session 35). qc_data_integrity_checks.R
+  # now writes it to a stable canonical location instead
+  # (data/derived/qc/qc_summary.csv); this just copies it into
+  # docs/data/ on both of this function's own call sites, same as
+  # everything else here.
+  if (file.exists("data/derived/qc/qc_summary.csv")) {
+    file.copy("data/derived/qc/qc_summary.csv", "docs/data/qc_summary.csv", overwrite = TRUE)
+  } else {
+    message("[EXPORT] data/derived/qc/qc_summary.csv not found yet -- skipping qc_summary.csv (run the QC stage first).")
+  }
 }
 
 export_website_data_files(con)
@@ -1566,6 +1604,43 @@ build_website <- function() {
     dir.create(lit_dir, recursive = TRUE, showWarnings = FALSE)
     file.copy(list.files(lit_backup, full.names = TRUE), lit_dir, recursive = TRUE, overwrite = TRUE)
   }
+
+  # 2026-09-27: website/project.Rmd, references.Rmd, and results.Rmd all
+  # link to notebooks/<name>.html (e.g. notebooks/06_phreeqc_
+  # geochemical_modeling.html, notebooks/07_historical_context_
+  # sorey1992.html), but nothing has ever copied the real rendered
+  # notebook HTML (output/reports/notebooks/, gitignored) into
+  # docs/notebooks/ -- those links have very likely been 404ing on the
+  # live GitHub Pages site since they were first added. Same root cause
+  # as the docs/literature/ and docs/data/ cleanup bugs above (render_
+  # site() deletes anything under docs/ with no counterpart in
+  # website/'s own input tree), so this has to run every time, after
+  # render_site(), not just once.
+  copy_notebook_html_to_docs()
+}
+
+#' Copy every rendered notebook HTML (and its PDF sibling, if any) from
+#' output/reports/notebooks/ into docs/notebooks/, so website pages that
+#' link to notebooks/<name>.html actually resolve on the published
+#' GitHub Pages site. Skips gracefully (with a message) if no notebooks
+#' have been rendered yet -- never errors the whole website build over
+#' this.
+copy_notebook_html_to_docs <- function() {
+  src_dir <- "output/reports/notebooks"
+  dest_dir <- "docs/notebooks"
+  if (!dir.exists(src_dir)) {
+    message("[WEBSITE] ", src_dir, " does not exist yet -- skipping notebooks/ copy (render a notebook first).")
+    return(invisible(NULL))
+  }
+  files <- list.files(src_dir, pattern = "\\.(html|pdf)$", full.names = TRUE)
+  if (length(files) == 0) {
+    message("[WEBSITE] No rendered .html/.pdf files found in ", src_dir, " -- skipping notebooks/ copy.")
+    return(invisible(NULL))
+  }
+  dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  file.copy(files, dest_dir, overwrite = TRUE)
+  message("[WEBSITE] Copied ", length(files), " notebook file(s) into ", dest_dir, ".")
+  invisible(NULL)
 }
 
 if (BUILD_WEBSITE) {

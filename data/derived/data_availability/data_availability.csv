@@ -1,6 +1,6 @@
 "source","category","start_date","end_date","n_records"
-"Chemistry Sampling Events","Discrete / Event",1950-01-01,2026-05-01,1440
-"Water Level Observations","Discrete / Event",1952-06-25,2026-01-01,153736
+"Chemistry Sampling Events","Discrete / Event",1950-01-01,2026-05-01,843
+"Water Level Observations","Discrete / Event",1952-06-25,2026-01-01,153442
 "USGS Historic Specific Conductance (grab samples)","Discrete / Event",1971-07-28,2001-02-07,73
 "NOAA Weather Observations","External Time Series",2001-08-08,2026-09-24,43197
 "USGS Discharge (live, param 60)","Continuous Logger",2025-01-01,2026-06-06,272039

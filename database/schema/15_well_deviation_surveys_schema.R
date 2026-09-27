@@ -58,7 +58,25 @@ dbExecute(con, "CREATE INDEX IF NOT EXISTS idx_deviation_well ON Well_Deviation_
 # ------------------------------------------------------------
 existing_83c6 <- dbGetQuery(con, "SELECT COUNT(*) n FROM Well_Deviation_Surveys WHERE well_id = 98")$n
 
-if (existing_83c6 == 0) {
+# 2026-09-27: this schema file is sourced twice, both before any
+# ingestion runs (initial connect + DEMO reset in run_pipeline.R) --
+# fine for the real operational database, where Wells already has
+# well_id=98 ('83C-6ST1') from a prior run, but a freshly-reset (or
+# never-before-built) DEMO database has an EMPTY Wells table at this
+# point, so the hardcoded well_id=98 FOREIGN KEY insert below used to
+# crash the entire pipeline outright ("FOREIGN KEY constraint
+# failed") instead of just skipping -- confirmed this is exactly what
+# silently blocked every previous "rebuild the DEMO database" attempt
+# from completing. Guard by well-existence, not just row-count, and
+# skip gracefully (re-run register_well_network()/ingest_ndwr() etc.
+# first, then re-source this file, to seed it on a DEMO build).
+well_98_exists <- dbGetQuery(con, "SELECT COUNT(*) n FROM Wells WHERE well_id = 98")$n > 0
+
+if (existing_83c6 == 0 && !well_98_exists) {
+  message("[SCHEMA] Wells.well_id=98 ('83C-6ST1') does not exist yet -- skipping Well_Deviation_Surveys seed (will apply once that well is ingested and this file is re-sourced).")
+}
+
+if (existing_83c6 == 0 && well_98_exists) {
   akerley_citation <- "Akerley, J., Eilan, B., Selwood, R., Darf, N., Canning, B. (2021). Drilling Challenge and Pumping Innovations for the Steamboat Hills Enhancement. GRC Transactions, Vol. 45."
 
   dbExecute(con, "

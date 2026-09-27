@@ -107,6 +107,26 @@ align_timeseries <- function(
   
   message("  → Rows after removing unmatched: ", nrow(result))
   
+  # 2026-09-27: a rolling join (roll = "nearest") against a
+  # zero-row/no-overlap right_dt (e.g. a station with no real USGS
+  # timeseries coverage -- confirmed this is exactly what happens on a
+  # freshly-rebuilt DEMO database, where far fewer stations have
+  # matching USGS data than in the real operational database) can
+  # return left_time/right_time as a zero-length logical/integer
+  # column instead of a zero-length POSIXct one, which made the
+  # stopifnot(inherits(..., "POSIXct")) checks below crash the entire
+  # pipeline outright on an empty-but-valid "nothing to align" result,
+  # instead of just returning it. Return early with a well-typed empty
+  # result -- there is nothing to align, and that's a real, reportable
+  # outcome, not an error.
+  if (nrow(result) == 0) {
+    message("  -> No overlapping rows to align -- returning empty result.")
+    result[, left_time := as.POSIXct(character(0), tz = "UTC")]
+    result[, right_time := as.POSIXct(character(0), tz = "UTC")]
+    result[, time_diff_min := numeric(0)]
+    return(result)
+  }
+
   bad_left  <- result[is.na(left_time)]
   bad_right <- result[is.na(right_time)]
   

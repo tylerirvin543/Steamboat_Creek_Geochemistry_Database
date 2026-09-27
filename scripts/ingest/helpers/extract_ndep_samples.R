@@ -22,9 +22,9 @@ extract_ndep_events <- function(norm_df) {
     ) |>
     group_by(external_event_id) |>
     reframe(
-      external_event_id = first(external_event_id),
+      external_event_id = dplyr::first(external_event_id),
       date = as.Date(min(SAMPLEDATETIME, na.rm = TRUE)),
-      observer = first(ORGANIZATION[!is.na(ORGANIZATION)]),
+      observer = dplyr::first(ORGANIZATION[!is.na(ORGANIZATION)]),
       purpose = "historical",
       weather_conditions = NA_character_,
       notes = "NDEP sampling event"

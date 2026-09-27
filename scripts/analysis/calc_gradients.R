@@ -28,6 +28,24 @@ calc_gradients <- function(con, max_distance = 2000) {
   if (nrow(df) == 0) {
     stop("No hydraulic head data available.")
   }
+
+  # 2026-09-27: vw_hydraulic_head_clean can still include rows with a
+  # NULL latitude/longitude (e.g. a provisional Wells row -- created by
+  # the well-log/NDOM ingest paths -- that has a real hydraulic_head
+  # reading but no coordinate yet). st_as_sf() errors outright
+  # ("missing values in coordinates not allowed") the moment even one
+  # row lacks a coordinate, which crashed the entire pipeline on a
+  # freshly-rebuilt DEMO database instead of just excluding those rows
+  # from the (inherently coordinate-dependent) gradient calculation.
+  n_before <- nrow(df)
+  df <- df[!is.na(df$latitude) & !is.na(df$longitude), ]
+  if (nrow(df) < n_before) {
+    message("  -> Dropped ", n_before - nrow(df), " hydraulic-head row(s) with no coordinate (cannot compute a gradient without one).")
+  }
+  if (nrow(df) == 0) {
+    warning("No coordinate-having hydraulic head data available.")
+    return(data.frame())
+  }
   
   # ==================================================
   # 2. PROJECT TO METERS

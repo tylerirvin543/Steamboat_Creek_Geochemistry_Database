@@ -406,7 +406,18 @@ FROM QC_Issues
 GROUP BY issue_type, severity
 ")
   
-  write.csv(qc_summary, "docs/data/qc_summary.csv", row.names = FALSE)
+  # 2026-09-27: previously wrote directly to docs/data/qc_summary.csv,
+  # a single write with no protection against render_site()'s cleanup
+  # of anything under docs/ with no counterpart in website/'s own input
+  # tree (the same bug class already fixed for docs/data/*.csv and
+  # docs/literature/ -- flagged here specifically since Session 12,
+  # never fixed). Now writes to a stable canonical location instead;
+  # export_website_data_files() (scripts/run_pipeline.R) copies it into
+  # docs/data/qc_summary.csv on both of its own call sites (before AND
+  # after build_website()), same protection every other website CSV
+  # already has.
+  dir.create("data/derived/qc", recursive = TRUE, showWarnings = FALSE)
+  write.csv(qc_summary, "data/derived/qc/qc_summary.csv", row.names = FALSE)
   
   # ==================================================
   # SUMMARY
