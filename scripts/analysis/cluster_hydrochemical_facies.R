@@ -124,18 +124,25 @@ run_facies_clustering <- function(con, k_range = 2:8) {
                                 main = paste0("Hydrochemical facies clusters (k=", best_k, ", Ward/Euclidean)"),
                                 subtitle = paste0("PCA plane; site_type shown via point shape below"))
 
-  # Attach PHREEQC saturation indices where available (interpretation only)
+  # Attach PHREEQC saturation indices where available (interpretation only).
+  # 2026-09-26 bug fix: PHREEQC_Results stores parameter/value (e.g.
+  # parameter = "SI_Calcite"), not mineral/saturation_index -- the
+  # original query here referenced nonexistent columns and was
+  # silently swallowed by tryCatch every time, so no SI_* column was
+  # EVER actually joined despite the design comment above claiming it
+  # was. Confirmed by inspecting fc_full$data's real column names.
   phreeqc_si <- tryCatch(
     dbGetQuery(con, "
-      SELECT sample_id, mineral, saturation_index
+      SELECT sample_id, parameter, value
       FROM PHREEQC_Results
-      WHERE mineral IN ('Calcite','Dolomite','Quartz','Chalcedony')
+      WHERE parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz','SI_Chalcedony')
+        AND value > -900
     "),
     error = function(e) NULL
   )
   if (!is.null(phreeqc_si) && nrow(phreeqc_si) > 0) {
     si_wide <- phreeqc_si %>%
-      pivot_wider(names_from = mineral, values_from = saturation_index, names_prefix = "SI_")
+      pivot_wider(names_from = parameter, values_from = value)
     complete <- complete %>% left_join(si_wide, by = "sample_id")
   }
 
@@ -152,6 +159,12 @@ run_facies_clustering <- function(con, k_range = 2:8) {
     plot_silhouette = sil_plot,
     plot_cluster = cluster_plot,
     site_type_summary = summary_tbl,
-    hclust_obj = hc
+    hclust_obj = hc,
+    # Added 2026-09-26 so downstream diagnostic plots (dendrogram,
+    # per-sample silhouette, agreement heatmap) can reuse the exact
+    # same distance/scaled-matrix objects the clustering itself used,
+    # instead of recomputing them (and risking a subtle mismatch).
+    dist_obj = dist(mat_scaled),
+    mat_scaled = mat_scaled
   )
 }

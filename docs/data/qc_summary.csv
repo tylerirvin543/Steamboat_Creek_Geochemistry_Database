@@ -1,11 +1,11 @@
 "issue_type","severity","n"
 "extreme_gradient","WARN",10
 "invalid_detection_limit","ERROR",838
-"invalid_solution","WARN",1201
+"invalid_solution","WARN",1225
 "missing_coordinates","ERROR",47
-"missing_field_parameters","WARN",1465
-"missing_major_ions","WARN",1151
+"missing_field_parameters","WARN",1473
+"missing_major_ions","WARN",1159
 "negative_value","ERROR",162
-"no_active_logger","WARN",1472
+"no_active_logger","WARN",1480
 "no_observations","WARN",1
 "phreeqc_convergence_failure","WARN",2

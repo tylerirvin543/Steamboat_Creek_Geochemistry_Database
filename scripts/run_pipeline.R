@@ -184,6 +184,8 @@ if (is.null(RUN_ANALYSIS$phreeqc_gas_phase)) RUN_ANALYSIS$phreeqc_gas_phase <- F
 if (is.null(RUN_ANALYSIS$leapfrog_export)) RUN_ANALYSIS$leapfrog_export <- FALSE
 if (is.null(RUN_ANALYSIS$facies_clusters)) RUN_ANALYSIS$facies_clusters <- FALSE
 if (is.null(RUN_ANALYSIS$aquifer_classification)) RUN_ANALYSIS$aquifer_classification <- FALSE
+if (is.null(RUN_ANALYSIS$diagnostic_figures)) RUN_ANALYSIS$diagnostic_figures <- FALSE
+if (is.null(RUN_ANALYSIS$facies_rf_importance)) RUN_ANALYSIS$facies_rf_importance <- FALSE
 
 #' Print a quick reference of every RUN_INGEST/RUN_ANALYSIS flag with a
 #' one-line description and its current value, so a user does not have
@@ -225,7 +227,9 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     phreeqc_gas_phase = "Real PHREEQC gas-phase runs from .../gas_phase_config.csv",
     leapfrog_export = "Export well collar/survey/interval/lithology CSVs for Leapfrog",
     facies_clusters = "Persist hydrochemical facies clustering to the database",
-    aquifer_classification = "Derive Wells.aquifer_type from real barometric efficiency"
+    aquifer_classification = "Derive Wells.aquifer_type from real barometric efficiency",
+    diagnostic_figures = "Re-save facies/mixing/SI diagnostic PNGs from current data",
+    facies_rf_importance = "Random-forest variable importance for facies membership"
   )
   message("\n[FLAG REFERENCE] RUN_INGEST (set before sourcing to override):")
   for (nm in names(ingest_desc)) {
@@ -284,6 +288,7 @@ source("database/schema/15_well_deviation_surveys_schema.R")
 source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
+source("database/schema/19_location_aliases_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -371,6 +376,7 @@ source("database/schema/15_well_deviation_surveys_schema.R")
 source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
+source("database/schema/19_location_aliases_schema.R")
 }
 
 # ============================================================
@@ -429,6 +435,18 @@ run_step(RUN_INGEST$ndep, "NDEP", {
   source("scripts/ingest/ingest_ndep.R")
 })
 
+run_step(RUN_INGEST$ndep, "LOCATION ALIASES (SBRR/SB5/SB6/STBT02Steamboat-2a)", {
+  # Registers real Location_Aliases rows grouping NDEP creek stations
+  # confirmed to be the same real-world point as this project's own
+  # SBRR conductivity-logger location (~12-133 m apart) -- per
+  # explicit user decision, keeps both Locations rows separate rather
+  # than merging; this only adds the grouping metadata. Idempotent.
+  # See database/schema/19_location_aliases_schema.R and
+  # data/raw/locations/location_aliases.csv.
+  source("scripts/ingest/register_location_aliases.R")
+  register_location_aliases(con)
+})
+
 run_step(RUN_INGEST$field, "FIELD", {
   source("scripts/ingest/ingest_field.R")
   ingest_field(con)
@@ -443,6 +461,7 @@ run_step(RUN_INGEST$conductivity, "CONDUCTIVITY LOGGERS", {
   source("scripts/ingest/ingest_conductivity.R")
   ingest_conductivity(con)
   source("database/schema/18_logger_uncertainty_schema.R")
+  source("database/schema/19_location_aliases_schema.R")
   create_logger_uncertainty_schema(con)
   seed_logger_specifications(con)
 })
@@ -868,6 +887,39 @@ run_step(RUN_ANALYSIS$aquifer_classification, "AQUIFER TYPE CLASSIFICATION (BARO
   source("scripts/analysis/barometric_efficiency.R")
   .be <- run_barometric_efficiency(con, min_days = 60)
   classify_aquifer_type(con, .be)
+})
+
+run_step(RUN_ANALYSIS$diagnostic_figures, "STATISTICAL DIAGNOSTIC FIGURES (FACIES/MIXING/SI, RE-SAVED FROM CURRENT DATA)", {
+  # Regenerates every figure built in the facies-diagnostics and
+  # mixing/SI-distribution workstreams directly from whatever the
+  # database currently contains -- no manual console steps required.
+  # Each PNG is overwritten in place under output/figures/{facies,
+  # phreeqc,statistics}/. Opt-in (not run by default) since these are
+  # exploratory/poster figures, not a required pipeline product.
+  source("scripts/analysis/cluster_hydrochemical_facies.R")
+  source("scripts/analysis/build_facies_diagnostic_plots.R")
+  .fc_diag <- run_facies_clustering(con)
+  plot_facies_dendrogram(.fc_diag)
+  plot_facies_silhouette_diagnostic(.fc_diag)
+  plot_facies_agreement_heatmap(.fc_diag)
+  plot_facies_alluvial(.fc_diag)
+  plot_facies_ion_raincloud(.fc_diag)
+
+  source("scripts/analysis/build_mixing_and_distribution_plots.R")
+  plot_mixing_fraction_distribution(con)
+  plot_si_distribution_by_group(con)
+})
+
+run_step(RUN_ANALYSIS$facies_rf_importance, "RANDOM-FOREST FACIES VARIABLE IMPORTANCE", {
+  # Which of the 7 core major ions (Na/K/Ca/Mg/Cl/SO4/Alkalinity) most
+  # separates the already-persisted facies clusters -- an independent,
+  # non-distance-based cross-check on the PCA-loading-based reading
+  # already given in prose. Uses `ranger` (already installed/used
+  # elsewhere in this project's sampling-frequency workstream).
+  source("scripts/analysis/cluster_hydrochemical_facies.R")
+  source("scripts/analysis/facies_random_forest.R")
+  .fc_rf <- run_facies_clustering(con)
+  run_facies_random_forest(.fc_rf)
 })
 
 

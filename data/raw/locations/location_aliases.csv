@@ -1,0 +1,4 @@
+canonical_name,alias,alias_type,source,notes
+SBRR,SB5,ndep_station_code,NDEP StationData.csv,"Steamboat Creek @ Rhodes Road; ~12 m from SBRR's own coordinate. Confirmed same real point by user, 2026-09-26."
+SBRR,SB6,ndep_station_code,NDEP StationData.csv,"Steamboat Ditch @ Rhodes Road; ~39 m from SBRR's own coordinate. Same real Rhodes Road cluster, per user confirmation."
+SBRR,STBT02Steamboat-2a,ndep_station_code,NDEP StationData.csv,"Steamboat Creek north of the USGS gage off of Rhodes Road; ~133 m from SBRR's own coordinate, co-located with USGS gauge 10349300."

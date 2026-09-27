@@ -412,10 +412,17 @@ ingest_skalbeck2001_table_b2_brownschool <- function(
     ", params = list(location_id, event_id, r$date[1], ext_id, ext_id, source_name))
     sample_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
 
-    if (!is.na(r$Cl[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'Cl', ?, 'mg/L', ?, ?)",
-                                     params = list(sample_id, r$Cl[1], source_name, source_id))
-    if (!is.na(r$B[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id) VALUES (?, 'B', ?, 'mg/L', ?, ?)",
-                                    params = list(sample_id, r$B[1], source_name, source_id))
+    # 2026-09-26: an optional 'flag' column (present once a well's CSV
+    # has had ambiguous/re-transcribed rows added back in, per user
+    # instruction to flag-but-still-use rather than silently exclude)
+    # is written straight into Lab_Analyses.qualifier (already exists,
+    # otherwise unused) -- NULL/blank for every normal row, so this is
+    # a pure addition, no behavior change for wells with no flag column.
+    row_flag <- if ("flag" %in% names(r) && !is.na(r$flag[1]) && nzchar(r$flag[1])) r$flag[1] else NA_character_
+    if (!is.na(r$Cl[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id, qualifier) VALUES (?, 'Cl', ?, 'mg/L', ?, ?, ?)",
+                                     params = list(sample_id, r$Cl[1], source_name, source_id, row_flag))
+    if (!is.na(r$B[1])) dbExecute(con, "INSERT INTO Lab_Analyses (sample_id, analyte, value, units, method, source_id, qualifier) VALUES (?, 'B', ?, 'mg/L', ?, ?, ?)",
+                                    params = list(sample_id, r$B[1], source_name, source_id, row_flag))
     if (!is.na(r$Temp[1])) dbExecute(con, "INSERT INTO Field_Measurements (sample_id, parameter, value, units, instrument) VALUES (?, 'temperature', ?, 'deg C', ?)",
                                        params = list(sample_id, r$Temp[1], source_name))
     n_inserted <- n_inserted + 1L
@@ -425,9 +432,10 @@ ingest_skalbeck2001_table_b2_brownschool <- function(
         already_wl <- dbGetQuery(con, "SELECT observation_id FROM Water_Level_Observations WHERE well_id = ? AND method = ? AND timestamp = ?",
                                   params = list(well_id, source_name, r$date[1]))
         if (nrow(already_wl) == 0) {
+          wl_note <- paste0(source_name, ", real depth-to-water reading (meters).",
+                             if (!is.na(row_flag)) paste0(" [FLAG: ", row_flag, "]") else "")
           dbExecute(con, "INSERT INTO Water_Level_Observations (well_id, timestamp, depth_to_water, method, method_type, notes) VALUES (?, ?, ?, ?, 'historical', ?)",
-                    params = list(well_id, r$date[1], r$Depth[1], source_name,
-                                   paste0(source_name, ", real depth-to-water reading (meters).")))
+                    params = list(well_id, r$date[1], r$Depth[1], source_name, wl_note))
         }
       } else {
         warning("[ingest_skalbeck2001_b2_well] '", well_name_for_depth, "' not found in Wells -- depth reading for ", r$date[1], " not recorded.")

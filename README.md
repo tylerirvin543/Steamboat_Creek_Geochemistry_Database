@@ -314,6 +314,44 @@ source("scripts/run_pipeline.R")  # define the functions, then Ctrl+C / interrup
 export_website_data_files(con); build_website(); export_website_data_files(con)
 ```
 
+**Regenerate the facies/mixing/SI diagnostic figures only** (re-reads
+whatever the database currently contains -- every function below
+always re-queries fresh, there is no caching/staleness risk):
+``` r
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")
+source("scripts/analysis/cluster_hydrochemical_facies.R")
+source("scripts/analysis/build_facies_diagnostic_plots.R")
+fc <- run_facies_clustering(con)
+plot_facies_dendrogram(fc); plot_facies_silhouette_diagnostic(fc)
+plot_facies_agreement_heatmap(fc); plot_facies_alluvial(fc); plot_facies_ion_raincloud(fc)
+source("scripts/analysis/build_mixing_and_distribution_plots.R")
+plot_mixing_fraction_distribution(con); plot_si_distribution_by_group(con)
+```
+Or regenerate all of them (plus the random-forest importance figure)
+in one pipeline pass, without touching ingestion:
+``` r
+RUN_ANALYSIS <- list(diagnostic_figures = TRUE, facies_rf_importance = TRUE)
+MODE <- "OPERATIONAL"
+RUN_INGEST <- setNames(as.list(rep(FALSE, 24)),
+  c("ndep","field","logger","conductivity","ndwr","lab","isotope","flux","usgs",
+    "usgs_historic_chem","noaa_weather","image_locations","ndep_prr",
+    "monitor_well_locations","promote_ndep_staged","well_network","well_logs",
+    "ndom_wells","ndwr_stream_flow","historical_sorey1992","mariner_janik_1995",
+    "barometric_pressure","earthquakes","fault_traces"))
+BUILD_WEBSITE <- FALSE
+source("scripts/run_pipeline.R")
+```
+
+**Run the random-forest facies-importance check on its own:**
+``` r
+con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")
+source("scripts/analysis/cluster_hydrochemical_facies.R")
+source("scripts/analysis/facies_random_forest.R")
+fc <- run_facies_clustering(con)
+rf <- run_facies_random_forest(fc)
+rf$plot_importance  # OOB error / held-out test accuracy printed to console too
+```
+
 **Run QC only:**
 ``` r
 con <- DBI::dbConnect(RSQLite::SQLite(), "database/geochem_operational.sqlite")

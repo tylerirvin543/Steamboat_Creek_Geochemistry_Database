@@ -577,6 +577,42 @@ section header PHREEQC actually uses there -- flagged in `ROADMAP.md` as a
 concrete near-term item, not attempted as a quick fix here (a wrong chart
 built from a mis-parsed table would be worse than no chart).
 
+### The mixing fraction itself: a univariate distribution (2026-09-26)
+
+The relationship plot above shows how PHREEQC-predicted saturation
+indices vary ACROSS the real mixing-fraction gradient. It does not,
+by itself, show WHERE real samples actually fall along that gradient
+-- that is a different, complementary question, answered here with a
+new figure using `ggdist`/`ggbeeswarm` (already used elsewhere on the
+live website, applied here for the first time to this real result).
+
+```{r mixing-fraction-distribution}
+#| fig-width: 9
+#| fig-height: 6
+mix_dist_script <- file.path("scripts", "analysis", "build_mixing_and_distribution_plots.R")
+if (!file.exists(mix_dist_script)) mix_dist_script <- file.path("..", mix_dist_script)
+source(mix_dist_script)
+plot_mixing_fraction_distribution(con)
+```
+
+**Reading**: background creek samples pile up tightly near f=0 (as
+expected -- dilute meteoric water should look like the meteoric
+end-member), while the thermal/other group spans nearly the entire
+0-1 range with real intermediate samples at every level, not just a
+bimodal split at the two ends -- consistent with a real continuum of
+thermal-meteoric mixing rather than a small number of discrete water
+types. The labeled point is `SBW_0002` (f = 1.044): note this real
+outlier only shows up in the underlying `PHREEQC_Mixing_Fractions`
+table (the pure-Cl linear calc, run against every real sample with a
+Cl value) -- it is **not** among the 111 samples in
+`PHREEQC_Mixing_Results` (the fuller MIX-block run above), because
+that sample never converged there. Restricting this figure to the
+111-sample set was tried first and silently dropped this exact
+finding -- flagged here as a reminder that "real data exists in two
+related tables with different real coverage" is worth checking
+explicitly, not assumed to be the same population.
+
+
 ### Gas-phase equilibria (`12_run_phreeqc_gas_phase.R`)
 
 Models CO2/H2S degassing along the ascent-to-discharge path via PHREEQC's

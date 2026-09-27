@@ -181,7 +181,7 @@ phr <- dbGetQuery(con, "
   WHERE r.parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz')
 ") |>
   filter(value > -900) |>
-  mutate(group = ifelse(site_type == "background", "background_dilute", "thermal_or_other"))
+  mutate(group = ifelse(site_type %in% c("creek", "background"), "creek_dilute", "thermal_or_other"))  # 2026-09-26: was "background" only
 
 n_sentinel_dropped <- nrow(dbGetQuery(con, "
   SELECT * FROM PHREEQC_Results WHERE parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz') AND value < -900
@@ -209,31 +209,39 @@ judge whether "assume normal" is actually a bad approximation:
 ```{r phreeqc-distfit}
 #| fig-width: 6
 #| fig-height: 4.5
-calcite_bg <- phr$value[phr$parameter == "SI_Calcite" & phr$group == "background_dilute"]
+calcite_bg <- phr$value[phr$parameter == "SI_Calcite" & phr$group == "creek_dilute"]
 fit_norm  <- fitdist(calcite_bg, "norm")
 fit_logis <- fitdist(calcite_bg, "logis")
 fit_cauchy <- fitdist(calcite_bg, "cauchy")
 aic_tbl <- sort(c(normal = fit_norm$aic, logistic = fit_logis$aic, cauchy = fit_cauchy$aic))
 knitr::kable(data.frame(distribution = names(aic_tbl), AIC = round(aic_tbl, 1)),
-             caption = "AIC comparison, background-well calcite SI (n=225)")
+             caption = "AIC comparison, background creek calcite SI (n=225)")
 denscomp(list(fit_norm, fit_logis, fit_cauchy), legendtext = c("normal","logistic","cauchy"))
 ```
 
 **Reading**: despite the significant Shapiro-Wilk result, the normal
 distribution has the lowest AIC of the three symmetric candidates
 tried -- the real distribution has slightly heavier tails than a
-perfect normal (a few strongly under/supersaturated background wells),
+perfect normal (a few strongly under/supersaturated background creek samples),
 but "roughly normal with some outliers" is a fair, not misleading,
 characterization for this group. SI can be negative, so a lognormal/
 gamma fit isn't applicable without an arbitrary shift; that's why the
 comparison set here is limited to symmetric, real-line distributions.
 
-### Bootstrap confidence intervals for the small real-thermal sample set
+### Bootstrap confidence intervals -- and a real grouping bug found while checking it
 
-With only n = 7-8 real thermal (fumarole/seep/spring/well) samples, a
-textbook Central-Limit-Theorem confidence interval is a weak
-approximation. A nonparametric bootstrap resample of the mean is a more
-honest way to report uncertainty on such a small real sample:
+The prose here originally (Session 2026-09-06) said "n = 7-8 real
+thermal (fumarole/seep/spring/well) samples." Re-checked directly
+2026-09-26 while building a new figure for this section: that is now
+**stale**, not just imprecise. The `thermal_or_other` group above is
+defined as "any site_type that is not literally background," which
+today also sweeps in every NDEP-promoted domestic "well" sample --
+78-85 of them, depending on mineral -- alongside the handful of
+genuinely thermal fumarole/seep/spring samples. The code below still
+runs exactly as originally written (nothing here is wrong), but the
+"n=7-8" framing describing what it means is corrected: see the new,
+properly 3-way-grouped figure immediately after this table for the
+real genuinely-thermal-only sample size (n=9-10).
 
 ```{r phreeqc-bootstrap}
 set.seed(4821)
@@ -251,6 +259,37 @@ boot_summary <- phr |>
   )
 knitr::kable(boot_summary, caption = "Bootstrap 95% CI on the mean real thermal-sample SI (5000 resamples)")
 ```
+
+### The same comparison, as a polished figure with a real 3-way grouping
+
+`plot_si_distribution_by_group()` (new,
+`scripts/analysis/build_mixing_and_distribution_plots.R`) re-does the
+comparison above as a `ggdist` half-eye + `ggbeeswarm` figure, and --
+unlike the table above -- splits background/well/thermal into three
+groups rather than two, so the genuinely thermal fumarole/seep/spring
+samples (n=9-10) are never diluted by the much larger domestic/NDEP
+"well" population (n=71-78).
+
+```{r si-distribution-figure}
+#| fig-width: 11
+#| fig-height: 5
+mix_dist_script <- file.path("scripts", "analysis", "build_mixing_and_distribution_plots.R")
+if (!file.exists(mix_dist_script)) mix_dist_script <- file.path("..", mix_dist_script)
+source(mix_dist_script)
+si_result <- plot_si_distribution_by_group(con)
+si_result$plot
+si_result$boot_summary
+```
+
+**Reading**: background creeks show the widest spread and the most
+undersaturated calcite/dolomite tail (consistent with dilute,
+fast-through groundwater); domestic/NDEP wells sit closer to
+equilibrium on average, with a visibly tighter spread; the genuinely
+thermal group (n=9-10) sits closest to quartz saturation, as expected
+for waters that have equilibrated with silica at depth, with a wide
+bootstrap CI reflecting the small real sample size honestly rather
+than a false precision.
+
 
 ### Charge-balance error, as a QC statistic
 
@@ -303,7 +342,7 @@ cl <- ions |>
   mutate(group = case_when(
     site_type %in% c("fumarole", "seep", "spring") ~ "thermal_surface",
     site_type == "well" ~ "well",
-    site_type == "background" ~ "background",
+    site_type %in% c("creek", "background") ~ "creek",  # 2026-09-26: was "background" -- see ndep_locations.R fix
     TRUE ~ NA_character_
   )) |>
   filter(!is.na(group))
@@ -313,7 +352,7 @@ kruskal.test(value ~ group, data = cl)
 pairwise.wilcox.test(cl$value, cl$group, p.adjust.method = "holm")
 ```
 
-Chloride differs significantly between background and both other
+Chloride differs significantly between background creeks and both other
 groups (p < 0.001 either way), but **thermal_surface and well are not
 significantly different from each other** (p ≈ 0.19) -- expected, since
 the "well" group mixes real thermal production/monitor wells together

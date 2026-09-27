@@ -131,6 +131,12 @@ ndep_locations <- parse_ndep_locations(station_file)
 validate_locations(ndep_locations)
 insert_ndep_locations(con, ndep_locations)
 
+# 2026-09-26: fixes site_type for any NDEP creek/ditch stations
+# ingested before parse_ndep_locations()'s classifier existed --
+# idempotent, only ever changes rows still 'background' that now
+# match the same real creek/ditch name pattern.
+backfill_ndep_site_types(con)
+
 station_lookup <- build_station_location_lookup(con)
 
 # --------------------------------------------------

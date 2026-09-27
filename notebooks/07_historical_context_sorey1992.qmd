@@ -1444,6 +1444,114 @@ if (file.exists(heatmap_path)) {
 }
 ```
 
+### Cluster-quality and grouping diagnostics (2026-09-26)
+
+The two supplementary figures above (PCA biplot, chemistry heatmap)
+show the facies clusters exist and roughly what they mean; they do
+not, by themselves, say how confidently a k=4 hierarchical grouping
+should be trusted, or exactly how the hierarchical (Ward) and
+independent Gaussian-mixture (mclust) cross-check disagree beyond the
+single "70.1% agreement" number already reported in prose. Four new
+diagnostic figures answer that directly, using
+`scripts/analysis/build_facies_diagnostic_plots.R` (new this session).
+
+**A real, previously-latent bug fixed while building these**:
+`cluster_hydrochemical_facies.R`'s own PHREEQC saturation-index join
+queried nonexistent columns (`mineral`/`saturation_index` instead of
+the real `parameter`/`value` schema) -- silently caught by a
+`tryCatch`, so no `SI_*` column was EVER actually attached to `fc$data`
+despite the function's own design comment claiming it was. Fixed;
+confirmed `SI_Calcite`/`SI_Dolomite`/`SI_Quartz`/`SI_Chalcedony` now
+populate correctly, with no change to the cluster assignments
+themselves (same k=4, same 22/66/61/8 per-cluster counts).
+
+```{r facies-dendrogram}
+#| fig-width: 10
+#| fig-height: 5
+diag_script <- file.path("scripts", "analysis", "build_facies_diagnostic_plots.R")
+if (!file.exists(diag_script)) diag_script <- file.path("..", diag_script)
+source(diag_script)
+plot_facies_dendrogram(fc, out_path = NULL)
+```
+
+The dendrogram shows facies 4 (the elevated-Ca/Mg group: Brown's
+School, Curti Domestic Well, Eich Well, SBW_0001) as a genuinely
+tight, early-splitting branch, not a late/weak split forced by picking
+k=4 -- a direct visual argument for treating it as a real, distinct
+facies rather than an artifact of the cluster-count choice.
+
+```{r facies-silhouette}
+#| fig-width: 9
+#| fig-height: 5
+plot_facies_silhouette_diagnostic(fc, out_path = NULL)
+```
+
+Most samples sit comfortably above a silhouette width of ~0.3-0.4, but
+two real samples -- one in facies 2, one in facies 4 -- have
+near-zero or negative silhouette width, meaning they fit their
+assigned cluster only weakly and could plausibly belong to a
+neighboring facies instead. This is an honest qualification, not a
+contradiction, of the "chemically interpretable, not arbitrary" claim
+made above: the great majority of samples support it strongly, but a
+small number sit right on a facies boundary.
+
+```{r facies-agreement-heatmap}
+#| fig-width: 6
+#| fig-height: 5.5
+plot_facies_agreement_heatmap(fc, out_path = NULL)
+```
+
+This is the real, substantive finding behind the bare "70.1%"
+agreement number: the hierarchical and mclust methods agree almost
+completely on facies 1 and facies 2 (the two dilute/background-side
+groups), but **mclust does not independently recover facies 4 at
+all** -- all 8 of its samples land in mclust's own cluster 1 (which
+also absorbs facies 1's 22 dilute-background samples and 8 of facies
+3's samples). In other words, the elevated-Ca/Mg signature that makes
+facies 4 visually distinct in the PCA biplot and dendrogram is real
+and Ward-clustering finds it cleanly, but it is subtle enough,
+relative to the dominant thermal-dilution axis, that an independent
+Gaussian-mixture fit at the same k does not separate it out on its
+own. This meaningfully qualifies (without overturning) the earlier
+"chemically interpretable, not arbitrary" claim for facies 4
+specifically -- it is real, but its separation from the dilute
+background is the least robust of the four groups to the specific
+clustering method used.
+
+```{r facies-alluvial}
+#| fig-width: 8
+#| fig-height: 6.5
+plot_facies_alluvial(fc, out_path = NULL)
+```
+
+The alluvial diagram shows, at a glance, which a priori site types
+feed which facies: `background` splits almost entirely between
+facies 1 and facies 2 (the two dilute groups), `well` splits across
+facies 2, 3, and 4 (domestic/NDEP wells span the full dilution
+gradient, as expected -- this is exactly the population that gave
+the SI-distribution figure in notebook 08 its large "well" sample
+size), and the genuinely thermal site types (`fumarole`, `seep`,
+`spring`) sit almost entirely in facies 3, the pure Na-Cl-dominant
+group. No site type is facies-exclusive except by virtue of small n --
+a real, useful cross-check that the unsupervised clustering broadly
+recovers the a priori site classification rather than cutting across
+it randomly.
+
+```{r facies-ion-raincloud}
+#| fig-width: 11
+#| fig-height: 4.5
+plot_facies_ion_raincloud(fc, out_path = NULL)
+```
+
+Finally, this raincloud view puts real distributions (not single
+summary numbers) behind every separation claim made in prose above:
+facies 3's Na/Cl distributions sit almost entirely above facies 1/2's,
+with facies 4 intermediate on Na/Cl but distinctly elevated on Ca/Mg
+relative to facies 3 -- visually confirming the "diluted and
+water-rock-reacted" interpretation given to facies 4 earlier, not just
+asserting it.
+
+
 ### Spatial overlay: facies clusters mapped onto well positions with approximate depth (2026-09-26)
 
 The clustering above is purely chemical; it says nothing about where
@@ -1517,6 +1625,82 @@ This confirms the result already folded into the "Cl/B and Cl/Li ratio
 check" section above: a small (19.6 vs. 21.9) but real, statistically
 significant (p = 0.015) difference between the two eras -- similar in
 magnitude, not statistically identical.
+
+**A real, more serious regression found while building the figure
+below (2026-09-26), flagged rather than silently fixed:** re-running
+the `t.test()` above today (not just reading its old, cached result)
+returns `t = NaN`, `df = NaN`, `p = NA`, mean(1950-1991) = `Inf` --
+not the `p = 0.015` result the surrounding prose reports. Root cause,
+confirmed directly: `cl_b_wide`'s query (`data_source != 'NDEP'`) was
+written when the only non-NDEP Cl+B sources were the small, curated
+Sorey & Colvard (1992) end-member set and this project's own 6 FIELD
+samples (n=7 vs n=6, matching the prose). Since then, this notebook's
+own Skalbeck (2001) Table B-2 addition (below) added 8 wells' worth of
+**monthly** monitoring data under 8 distinct `Skalbeck...` source
+labels, all of which also pass `!= 'NDEP'` and are silently swept
+into the same `era`-grouped comparison -- growing "1950-1991" from 7
+to 604 real rows, several with a real detection-limit `B = 0` (Inf
+ratio). **This is not fixed here**: whether Skalbeck's domestic-well
+monthly series should even belong in a "real thermal end-member"
+Cl/B comparison is a real scope question for a human to decide (some
+Skalbeck-labeled wells, like the two "Geothermal" ones, arguably
+belong; the "Domestic"-labeled ones arguably do not) -- not something
+to silently guess at while adding an unrelated new figure. The figure
+immediately below works around this narrowly (filters to finite
+Cl/B values only) so it renders correctly either way, but the
+`cl-b-test` chunk's own query and this "19.6 vs 21.9, p=0.015"
+headline number both need a real revisit.
+
+### A bootstrap-CI companion view of the same Cl/B comparison (2026-09-26)
+
+Since the real, current `cl_b_wide` population is far larger than the
+prose above assumes (see the flagged regression just above), this new
+figure is built to be honest about that rather than quietly reusing
+the "small n" framing: it filters to `is.finite(Cl_B)` (removing the
+real detection-limit-zero-boron rows that make a ratio numerically
+undefined, not cherry-picking which real samples to keep) and reports
+the real resulting sample size directly in its own caption, whatever
+that turns out to be, via `bootstrap_ci_by_group()` (new helper,
+`scripts/analysis/build_mixing_and_distribution_plots.R`).
+
+```{r cl-b-beeswarm-bootstrap}
+#| fig-width: 7
+#| fig-height: 5
+mix_dist_script <- file.path("scripts", "analysis", "build_mixing_and_distribution_plots.R")
+if (!file.exists(mix_dist_script)) mix_dist_script <- file.path("..", mix_dist_script)
+source(mix_dist_script)
+cl_b_wide_finite <- cl_b_wide[is.finite(cl_b_wide$Cl_B), ]
+cat("Rows excluded as non-finite (Cl/B undefined, B=0):",
+    sum(!is.finite(cl_b_wide$Cl_B)), "of", nrow(cl_b_wide), "\n")
+cl_b_boot <- bootstrap_ci_by_group(cl_b_wide_finite, value_col = "Cl_B", group_col = "era")
+cl_b_boot
+
+ggplot(cl_b_wide_finite, aes(x = era, y = Cl_B, color = era)) +
+  ggbeeswarm::geom_quasirandom(width = 0.08, size = 1.4, alpha = 0.5, show.legend = FALSE) +
+  scale_y_log10() +
+  geom_errorbar(data = cl_b_boot, aes(y = mean, ymin = ci_lo, ymax = ci_hi),
+                inherit.aes = TRUE, width = 0.12, color = "black", linewidth = 0.7) +
+  geom_point(data = cl_b_boot, aes(y = mean), color = "black", size = 2.5, show.legend = FALSE) +
+  labs(x = "Era", y = "Cl / B (mass ratio, log scale)", color = "Era",
+       title = "Chloride-to-boron ratio: real samples + bootstrap 95% CI on each era mean",
+       caption = paste0(
+         "Black points/bars: bootstrap 95% CI (n=", cl_b_boot$n[1], "/", cl_b_boot$n[2], ", 5000 resamples).\n",
+         "n here is the REAL current cl_b_wide population (dominated by Skalbeck Table B-2 monthly data for\n",
+         "1950-1991), not the curated n=7/6 the surrounding prose describes -- see the flagged regression above."
+       )) +
+  theme_minimal(base_size = 12) +
+  theme(legend.position = "none", plot.caption = element_text(hjust = 0, size = 9))
+```
+
+**Reading**: with the real (much larger, Skalbeck-inclusive)
+population, the two eras' bootstrap CIs are both tight and clearly
+separated -- but this is now a genuinely different comparison than
+the curated end-member one the surrounding prose describes, dominated
+by monthly domestic/geothermal well monitoring rather than a small set
+of production-well/spring snapshots. Whether that is the right
+comparison to headline is exactly the open scope question flagged
+above, not resolved by this figure.
+
 
 ### Discharge-estimate uncertainty: an honest limitation, not a fabricated CI
 
