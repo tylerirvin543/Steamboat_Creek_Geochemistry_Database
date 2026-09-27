@@ -4503,6 +4503,47 @@ turned into real, substantive fixes, not just investigation.
   `data/derived/qc/qc_summary.csv` from the live build_website() test)
   are not yet committed/pushed to git.
 
+## Session 36 continued (2026-09-27, part 3): DEMO GeoPackage re-export, spot-check, and other-vulnerable-joins audit
+
+Three quick follow-ups to the align_timeseries.R join fix.
+
+- **DEMO GeoPackage re-exported** after re-running `build_temp_flow()`/
+  `build_sample_flow()`/`build_sample_flux()` against
+  `geochem_demo.sqlite` with the fixed join -- confirmed identical
+  corrected counts to the operational database (`temp_flow` 103693,
+  `sample_flow` 54, `sample_flux` matching). 16-layer GeoPackage export
+  clean.
+- **Spot-checked the 73 real `sample_flow` matches against known
+  field-visit dates** -- all `time_diff_min` values now fall in a
+  sensible 0-2.5 minute range (matches the USGS 15-minute reporting
+  cadence), and the 73 rows cluster into exactly 7 real, independently
+  documented field-visit days: 2025-04-17/2025-08-27 (NDEP grab
+  samples), 2026-04-04/04-11 (the dense `SBO_000xx` steaming-ground
+  survey walk), 2026-04-14 (temperature-logger deployment day), and
+  2026-04-29/05-01 (the FIELD sampling campaign). **Precise
+  cross-check**: the `SBRR` row (sample 819, 2026-05-01 12:37) gives a
+  matched USGS discharge of 0.317 m3/s = exactly 11.2 cfs -- the same
+  figure already independently documented in Session 30's real Cl+
+  discharge Q_TW=42.1 L/s calculation. This is strong, independent
+  confirmation the fix produces trustworthy, physically sensible
+  matches, not just a plausible row count.
+- **Audited the rest of the codebase for the same data.table
+  on-column-aliasing quirk** -- grepped for every `roll =`/`on = .(...)`
+  /`on = c(...)` rolling-join pattern project-wide. Only 5 files use
+  `data.table` at all (`align_timeseries.R`, `nearest_station.R`,
+  `sample_flow.R`, `sample_flux.R`, `temp_flow.R`), and only
+  `align_timeseries.R` itself contains a rename-style `on=` join (two
+  call sites -- the now-fixed grouped branch and the already-correct
+  ungrouped branch). `nearest_station.R` uses a cross-join +
+  `which.min()` (no rolling join, not vulnerable). `sample_flux.R`
+  uses a plain `merge(by = "sample_id")` equi-join (no column
+  renaming, not vulnerable -- it inherits correctness from
+  `sample_flow` being fixed upstream). All three real call sites of
+  `align_timeseries()` (`build_temp_flow`, `build_sample_flow`,
+  `build_temp_gradient_links`) are covered by the one shared-helper
+  fix -- **no other vulnerable instance of this bug exists anywhere
+  else in the project.**
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
