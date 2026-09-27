@@ -250,13 +250,26 @@ Discharge estimates sat mostly in the 40-90 L/s range from 1955 through the 2008
 
 ## A First Answer: Reactivation, Not a New Source
 
-A poster presented at the 2026 Geothermal Rising Conference (Irvin and Lindsey, 2026, listed in full on the [References](references.html) page) used this database directly to ask the question the eruption raised in the first place: is the 2025 Lower Sinter Terrace event a chemically distinct new geothermal source, or a reactivation and redistribution of flow within the hydrothermal system that was already there? A chloride mass balance across the USGS Rhodes Road (SBRR) and Bella Vista (SBBV) stations on Steamboat Creek,
+A poster presented at the 2026 Geothermal Rising Conference (Irvin and Lindsey, 2026, listed in full on the [References](references.html) page) used this database directly to ask the question the eruption raised in the first place: is the 2025 Lower Sinter Terrace event a chemically distinct new geothermal source, or a reactivation and redistribution of flow within the hydrothermal system that was already there? The poster's own chloride mass balance across the USGS Rhodes Road (SBRR) and Bella Vista (SBBV) stations on Steamboat Creek is a two-station **flux** difference, not a simple concentration difference,
 
-$$Q_{TW} = \frac{C_{Cl,SBBV} - C_{Cl,SBRR}}{820\ \text{mg/L}}$$
+$$Q_{TW} = \frac{Q_{SBBV}\,C_{Cl,SBBV} - Q_{SBRR}\,C_{Cl,SBRR}}{820\ \text{mg/L}}$$
 
-(where 820 mg/L is the typical Steamboat brine chloride concentration used as the deep end-member), puts current thermal water inflow to the creek at roughly **27 L/s**. That is well below the 60 L/s average (45-90 L/s range) Sorey and Spielman (2017) reported for 2008-2016, suggesting overall discharge has declined even as flow paths reorganize at the surface. Stream-water stable isotopes shift toward thermal-water compositions moving downstream between SBRR and SBBV, and paired temperature loggers show a moderate inverse relationship (r = -0.68) consistent with discharge redistributing within a connected shallow, fracture-controlled flow system rather than a separate source turning on. Together, these point toward conduit reactivation and flow-path reorganization as the more likely explanation.
+(where 820 mg/L is the typical Steamboat brine chloride concentration used as the deep end-member), and puts current thermal water inflow to the creek at roughly **27 L/s**, averaged over the poster's own full sampling period.
 
-This is a poster-stage finding, not yet a fully documented analysis in this codebase: the chloride mass-balance calculation above has not yet been re-run as a reproducible script against the live database the way the rest of this site's figures are, so treat the specific numbers as a snapshot from that presentation rather than a live, auto-updating result. Folding that calculation into the pipeline itself, so it updates the same way every other number on this page does, is a natural near-term follow-up.
+```{r qtw-live, echo=FALSE, warning=FALSE, message=FALSE}
+qtw_path <- "../docs/data/chloride_mass_balance.csv"
+qtw_df <- tryCatch(read_csv(qtw_path, show_col_types = FALSE), error = function(e) NULL)
+if (!is.null(qtw_df) && nrow(qtw_df) > 0) {
+  knitr::kable(qtw_df, digits = 1,
+    caption = "Live recomputation of the poster's own formula, from the real, corrected sample_flow join (one row per real date both SBRR and SBBV have a matched Cl + discharge measurement)")
+} else {
+  cat("_Chloride mass-balance data will appear here after the pipeline's EXPORT stage runs._")
+}
+```
+
+**This calculation is no longer just a poster-stage snapshot.** `scripts/analysis/chloride_mass_balance.R` implements the poster's own formula exactly (confirmed by reading `docs/literature/GRC_2026_Steamboat.pdf` directly) and runs automatically every pipeline run, the same way every other number on this page does. It found a real bug along the way: the `sample_flow` table it depends on had returned 0 usable rows for most of this project's history because of a join-correctness bug (fixed 2026-09-27 in `scripts/ingest/helpers/align_timeseries.R`), and an earlier attempt at this same live recomputation used the wrong (single-station) formula before being corrected against the poster PDF -- see the [Historical Context notebook](notebooks/07_historical_context_sorey1992.html) for that full trail. The table above currently has only one real paired date (2026-05-01), so it cannot yet reproduce the poster's own multi-date average -- it will grow, and the mean will become directly comparable, as more real SBRR/SBBV sampling dates land in the database.
+
+Stream-water stable isotopes shift toward thermal-water compositions moving downstream between SBRR and SBBV, and paired temperature loggers show a moderate inverse relationship (r = -0.68) consistent with discharge redistributing within a connected shallow, fracture-controlled flow system rather than a separate source turning on. Together with the mass-balance result above, these point toward conduit reactivation and flow-path reorganization as the more likely explanation, though the poster's own averaged 27 L/s remains the better-supported headline figure until more paired dates accumulate.
 
 
 ## What Comes Next

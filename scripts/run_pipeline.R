@@ -1230,6 +1230,17 @@ message("\n[EXPORT] Computing data availability across all sources")
 source("scripts/analysis/data_availability.R")
 build_data_availability_outputs(con)
 
+# 2026-09-27: folds the GRC 2026 poster's own chloride mass-balance
+# calculation (Q_TW = (Cl-flux_SBBV - Cl-flux_SBRR) / 820 mg/L) into a
+# real, reproducible pipeline step, per website/results.Rmd's own
+# explicit note that this had never been re-run as a script against
+# the live database. Read-only reporting (like data_availability
+# above) -- always runs, not gated by RUN_INGEST/RUN_ANALYSIS, since
+# it just reflects whatever real paired sample_flow+Lab_Analyses rows
+# currently exist. See scripts/analysis/chloride_mass_balance.R.
+source("scripts/analysis/chloride_mass_balance.R")
+build_chloride_mass_balance_report(con)
+
 # Real field calibration/reference checks for the conductivity and
 # temperature loggers (e.g. a handheld thermometer or lab conductivity
 # reading taken during a data-pull field visit), auto-detected from
@@ -1542,6 +1553,17 @@ export_website_data_files <- function(con) {
     file.copy("data/derived/qc/qc_summary.csv", "docs/data/qc_summary.csv", overwrite = TRUE)
   } else {
     message("[EXPORT] data/derived/qc/qc_summary.csv not found yet -- skipping qc_summary.csv (run the QC stage first).")
+  }
+
+  # 2026-09-27: same before/after protection for the new chloride
+  # mass-balance report (scripts/analysis/chloride_mass_balance.R) --
+  # website/results.Rmd reads this to report the poster's own
+  # calculation live instead of a hardcoded snapshot.
+  if (file.exists("data/derived/chloride_mass_balance/chloride_mass_balance.csv")) {
+    file.copy("data/derived/chloride_mass_balance/chloride_mass_balance.csv",
+              "docs/data/chloride_mass_balance.csv", overwrite = TRUE)
+  } else {
+    message("[EXPORT] chloride_mass_balance.csv not found yet -- skipping (run the EXPORT stage first).")
   }
 }
 

@@ -107,3 +107,6 @@ notebooks/*_files/
 # across renders regardless of whether it's tracked in git.
 docs/literature/
 .posit/assistant
+
+/.quarto/
+**/*.quarto_ipynb

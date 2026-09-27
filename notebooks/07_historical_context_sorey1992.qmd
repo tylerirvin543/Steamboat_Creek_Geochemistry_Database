@@ -844,53 +844,46 @@ estimates and this project's own 2026 poster result to give a single,
 ~70-year view.
 
 
-**Update (2026-09-27): this figure is now computed live, not transcribed.**
-A real join-correctness bug in `scripts/ingest/helpers/align_timeseries.R`
-(the shared helper behind `sample_flow`/`temp_flow`) made `sample_flow`
-return 0 usable rows for most of this project's history -- the `42.1 L/s`
-figure previously hardcoded below was computed manually, outside this
-notebook, working around that bug, and its exact method (which station's
-discharge, which end-member convention) was never preserved/reproducible.
-With the join fixed, `sample_flow` now has 73 real rows and the same
-calculation can be done live, directly from the database, every time this
-notebook renders.
+**Update (2026-09-27): this figure is now computed live, not transcribed --
+and using the poster's own actual formula.** A real join-correctness bug
+in `scripts/ingest/helpers/align_timeseries.R` (the shared helper behind
+`sample_flow`/`temp_flow`) made `sample_flow` return 0 usable rows for
+most of this project's history -- the `42.1 L/s` figure previously
+hardcoded below was computed manually, outside this notebook, working
+around that bug, using a single-station formula that (checked directly
+against `docs/literature/GRC_2026_Steamboat.pdf` via `pdftotext`) turns
+out not to be the poster's own method at all. The poster states its
+formula explicitly: *"Chloride mass balance: Q_TW = (Cl-flux at SBBV -
+Cl-flux at SBRR) / 820 mg/L Cl"* -- a two-station FLUX difference (each
+station's discharge times its own Cl concentration), not a single-
+station concentration ratio. That exact formula is now implemented in
+`scripts/analysis/chloride_mass_balance.R` and wired into
+`run_pipeline.R` as a real, reproducible, always-on reporting step
+(read-only, like the data-availability report), reading directly from
+the corrected `sample_flow` join.
 
 ```{r live-qtw-chunk}
-# Live single-station chloride mass-balance (same formula as notebook 08
-# Section 1.4, and the same 820/6 mg/L thermal/meteoric convention already
-# used for the Appendix G comparison above), applied to the real,
-# corrected sample_flow join for the only two stream samples with both a
-# real Cl measurement and a real matched USGS discharge: SBRR (upstream)
-# and SBBV (downstream, thermally enriched).
-qtw_pair <- dbGetQuery(con, "
-  SELECT sf.sample_id, l.name AS site, sf.discharge_m3_s, sf.time_diff_min,
-         la.value AS cl_mgL
-  FROM sample_flow sf
-  JOIN Locations l ON l.location_id = sf.location_id
-  JOIN Lab_Analyses la ON la.sample_id = sf.sample_id AND la.analyte = 'Cl'
-  WHERE l.name IN ('SBRR', 'SBBV')
-")
-C_meteoric <- 6; C_thermal <- 820
-qtw_pair$Q_TW_Ls <- qtw_pair$discharge_m3_s * (qtw_pair$cl_mgL - C_meteoric) / (C_thermal - C_meteoric) * 1000
-qtw_pair$Q_cfs <- round(qtw_pair$discharge_m3_s / 0.0283168, 1)
-knitr::kable(qtw_pair[, c("site", "Q_cfs", "cl_mgL", "time_diff_min", "Q_TW_Ls")],
-  digits = 1, col.names = c("Site", "Discharge (cfs)", "Cl (mg/L)", "Match gap (min)", "Q_TW (L/s)"),
-  caption = "Live single-station Cl mass-balance, 2026-05-01, using the corrected sample_flow join")
-qtw_sbbv_live <- qtw_pair$Q_TW_Ls[qtw_pair$site == "SBBV"]
-qtw_sbrr_live <- qtw_pair$Q_TW_Ls[qtw_pair$site == "SBRR"]
+source("../scripts/analysis/chloride_mass_balance.R")
+qtw_result <- compute_chloride_mass_balance(con)
+knitr::kable(qtw_result$by_date, digits = 1,
+  caption = "Poster's own chloride mass-balance formula (Q_TW = (Cl-flux_SBBV - Cl-flux_SBRR)/820 mg/L), applied live to every real paired date in the corrected sample_flow join")
+qtw_live <- qtw_result$mean_Q_TW_Ls
 ```
 
-The two stations give quite different single-station estimates
-(`r round(qtw_sbrr_live,1)` L/s at SBRR, upstream and less thermally
-enriched; `r round(qtw_sbbv_live,1)` L/s at SBBV, downstream) -- expected,
-since a single-station chloride mass-balance is sensitive to exactly where
-along the reach the sample is taken, and this is precisely the kind of
-method-consistency caveat already flagged earlier in this section for the
-pre-2007 estimates. The discharge-through-time table below now uses the
-downstream (SBBV) value as the headline point -- consistent with how the
-historical single-station estimates (White 1968, Collar 1990) are also
-each a single measurement, not an average -- but shows both so neither is
-hidden.
+With the join fixed, this real, live recomputation gives
+`r round(qtw_live,1)` L/s for the only real paired SBRR/SBBV date
+currently on file (2026-05-01) -- notably different from BOTH the
+poster's own reported ~27 L/s (described as averaged over their full
+sampling period, not this single date) and the earlier, non-reproducible
+42.1 L/s this notebook previously reported (which, per the correction
+above, used a different formula entirely). This is exactly the kind of
+result this project's standing practice calls for surfacing plainly
+rather than silently reconciling: same real data and now the poster's
+own actual formula, but a single day cannot reproduce a multi-date
+average, and the poster's own underlying per-date values are not
+preserved anywhere this project can re-derive them from. As more real
+SBRR/SBBV date pairs accumulate in `sample_flow`, this table and the
+mean will grow and become a genuinely comparable multi-date average.
 
 ```{r discharge-timeline}
 # Extended 2026-09-25: added a new database-computed point (this project's
@@ -930,8 +923,8 @@ discharge_hist <- tribble(
   "Sorey & Spielman (2017), 2008-2016 avg", 2012, NA, 60,
   "Chloride-flux, SBRR/SBBV sites, 24 sampling events",
 
-  "This project (database), 5/1/2026", 2026.33, NA, qtw_sbbv_live,
-  "Real paired Cl (SBRR=17.1, SBBV=126 mg/L, 2026-05-01), live-computed from the corrected sample_flow join (SBBV single-station value)",
+  "This project (database), 5/1/2026", 2026.33, NA, qtw_live,
+  "Real paired Cl (SBRR=17.1, SBBV=126 mg/L, 2026-05-01), live-computed via the poster's own flux-difference formula from the corrected sample_flow join",
 
   "Irvin & Lindsey (2026 poster), post-eruption avg", 2026, NA, 27,
   "Own Cl mass-balance estimate, averaged over the sampling period"
@@ -1000,11 +993,11 @@ shallow soils from irrigation/evaporation cycles downstream of Crane
 Ditch diversions -- though they state *"the magnitude of such seasonal
 changes appears to be only on the order of 25% or less."* This is a
 plausible, real contributor to the gap between this session's new
-single-day database estimate (`r round(qtw_sbbv_live,1)` L/s, 2026-05-01,
+single-day database estimate (`r round(qtw_live,1)` L/s, 2026-05-01,
 spring runoff season, live-computed from the corrected `sample_flow` join
 above -- superseding the earlier, non-reproducible 42.1 L/s figure this
 notebook previously reported) and the poster's own averaged ~27 L/s
-figure -- a `r round(100*(qtw_sbbv_live-27)/27)`% relative difference,
+figure -- a `r round(100*(qtw_live-27)/27)`% relative difference,
 larger than Sorey & Spielman's own documented ~25% seasonal envelope, so
 seasonality alone does not fully explain it, but it is a real,
 published, and directly relevant effect rather than pure noise.
@@ -2776,7 +2769,8 @@ gap rather than an unrecognized one.
 | 2026-09-26 | Added a cluster-aware re-analysis: hydrochemical facies clustering (Ward hierarchical + Gaussian-mixture cross-check on 157 samples with complete major-ion chemistry, k=4 chosen by silhouette width) recovers a chemically interpretable Ca-Na-Cl 'diluted/water-rock-reacted' facies matching Mariner & Janik (1995)'s own Brown School albitization narrative, and independently groups the dilute-but-thermal-ratio 'Stuart' well with the concentrated thermal facies, matching that paper's text. A mixed-effects model (well as random intercept) on the pure-thermal facies finds no significant Cl trend over time (p > 0.05) once between-well baseline differences are properly separated from a common temporal effect -- a more defensible null result than the earlier naive/pure-thermal regression. Also ingested Mariner & Janik (1995) Table 1's raw chemistry (75 samples, 1991-1994, read from rendered page images since pdftotext -layout scrambles this table) via new `ingest_mariner_janik_1995.R`, densifying the pre-2000 Cl/B/Li record for 23-5, 83A-6, 21-5R, 13-5R, Cox I-1, GS-5, PW-1/2/3, the PW2-x/PW3-x Far West field, IW-3/IW-5, and several domestic/background comparison sites (several tentatively or not matched to existing Wells/Locations rows -- see the CSV's match_type column). |
 | 2026-09-26 (continued) | Added a spatial facies-cluster map (`scripts/analysis/facies_depth_map.R`) overlaying each well's majority facies cluster onto its real map position, sized by an approximate depth (screened-interval midpoint > total depth > unknown -- only 5 of 39 mapped wells have any depth on record, a real gap flagged for the planned Leapfrog work). Faceted the Cl-concentration timeline by well vs. spring/seep. Ingested a new air-temperature time series from the SBRR USGS gauge (parameter 00020, reused `ingest_usgs()` with a new `base_dir` argument -- no new ingest logic needed) and cross-checked it against every Temperature_Loggers series (`scripts/qc/qc_temperature_vs_air.R`) as a QC signal (diurnal-range-ratio vs. air), NOT a literal temperature correction -- flagged loggers A003 (SBW_0001, 95% of days air-like) and A005 (SBF_0001, 70%) as showing suspiciously air-tracking diurnal swings, worth a field check for exposure/dry-sensor issues. |
 | 2026-09-25 | Barometric efficiency upgraded from a documented-but-unrunnable stub to a real calculation: ingested hourly Reno Airport (ASOS "RNO") mean-sea-level pressure from the Iowa Environmental Mesonet (`scripts/ingest/ingest_barometric_pressure.R`, `data/raw/airpressure/README.md`), reusing the existing `Weather_Observations`/`Weather_Stations` tables and station_id (`USW00023185`) rather than a new schema. New `scripts/analysis/barometric_efficiency.R` (`run_barometric_efficiency()`) finds every well with continuous water-level data overlapping the pressure record, computes BE two ways (Sorey's original level-vs-pressure regression, and a first-differenced change-vs-change regression that removes secular trend), and prefers a Steamboat-area well for the overlay plot over the wider Reno/South Truckee Meadows monitoring network's longer records. Real result: STMGID MW10/MW3 (the only Steamboat-area wells with both continuous 2025 water level and pressure overlap) give BE = 0.29-0.60 across both methods -- inside White (1968)'s 0.2-1.18 range and the same order of magnitude as Sorey's own 0.42/0.45, a real methodological validation, though explicitly not a like-for-like comparison since neither well is an actual thermal spring.
-| 2026-09-27 | Fixed a real join-correctness bug in `scripts/ingest/helpers/align_timeseries.R` (the shared helper behind `sample_flow`/`temp_flow`): a data.table rolling-join convention was silently overwriting the true matched USGS timestamp with the sample's own timestamp, making `time_diff_min` always exactly 0 and the time-window filter a complete no-op -- `sample_flow` had returned 0 usable rows for most of this project's history as a result. With the fix, `sample_flow` now has 73 real rows. The discharge-through-time section's "This project (database)" point is now computed live in a new chunk (`live-qtw-chunk`) from the corrected join, superseding the earlier, non-reproducible 42.1 L/s figure -- the live single-station value is 62.6 L/s at SBBV (downstream) vs. 4.3 L/s at SBRR (upstream), both shown so the method-sensitivity is visible rather than hidden behind one headline number.
+| 2026-09-27 | Fixed a real join-correctness bug in `scripts/ingest/helpers/align_timeseries.R` (the shared helper behind `sample_flow`/`temp_flow`): a data.table rolling-join convention was silently overwriting the true matched USGS timestamp with the sample's own timestamp, making `time_diff_min` always exactly 0 and the time-window filter a complete no-op -- `sample_flow` had returned 0 usable rows for most of this project's history as a result. With the fix, `sample_flow` now has 73 real rows. |
+| 2026-09-27 (continued) | Corrected the discharge-through-time section's live recomputation: the first pass used a single-station formula that turned out NOT to match the GRC 2026 poster's own stated method once checked directly against the poster PDF. The poster's real formula is a two-station Cl-FLUX difference, `Q_TW = (Cl-flux_SBBV - Cl-flux_SBRR) / 820 mg/L`, now implemented faithfully in new `scripts/analysis/chloride_mass_balance.R` (`compute_chloride_mass_balance()`), wired into `run_pipeline.R` as an always-on, read-only reporting step (like `data_availability`), and read live in this notebook's `live-qtw-chunk` and by `website/results.Rmd` (via `docs/data/chloride_mass_balance.csv`). Real result for the only real paired SBRR/SBBV date on file (2026-05-01): 58.7 L/s -- different from both the poster's own averaged ~27 L/s (a multi-date average this project cannot yet reproduce with only one paired date) and the earlier, doubly-incorrect 42.1 L/s and 62.6 L/s figures this notebook reported in the two prior passes.
 
 ::::
 ```{r cleanup-07}
