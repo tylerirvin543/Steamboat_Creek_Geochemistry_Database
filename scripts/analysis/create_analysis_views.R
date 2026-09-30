@@ -197,7 +197,7 @@ WHERE t.temperature IS NOT NULL
   CREATE VIEW vw_major_ions AS
   SELECT *
   FROM vw_sample_master
-  WHERE analyte IN ('Ca','Mg','Na','K','Cl','SO4','HCO3')
+  WHERE analyte IN ('Ca','Mg','Na','K','Cl','SO4','HCO3','Alkalinity')
   ")
   
   dbExecute(con, "

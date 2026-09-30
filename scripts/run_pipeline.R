@@ -1241,6 +1241,12 @@ build_data_availability_outputs(con)
 source("scripts/analysis/chloride_mass_balance.R")
 build_chloride_mass_balance_report(con)
 
+# 2026-09-30: real chemistry-by-sampling-port summary (Galena 1/2/3,
+# SB2/3, SBHR), same always-on read-only reporting posture as the two
+# steps above -- see scripts/analysis/port_chemistry_summary.R.
+source("scripts/analysis/port_chemistry_summary.R")
+build_port_chemistry_report(con)
+
 # Real field calibration/reference checks for the conductivity and
 # temperature loggers (e.g. a handheld thermometer or lab conductivity
 # reading taken during a data-pull field visit), auto-detected from

@@ -298,6 +298,65 @@ structure and its "above"/"below" companion points) -- registration is
 keyed on `external_station_code`, not `coord_key`, for exactly this
 reason.
 
+## 6. Chemistry by Sampling Port
+
+The six NDEP PRR "outlet" composite samples staged since Session 3-6
+(`Galena 1/2/3 Outlet`, `SB2 Outlet`, `SB3 Outlet`, `SBHR Outlet` -- see
+`docs/action_items_for_user.md`'s earlier notes) were promoted for the
+first time this session, using the `Sampling_Ports` table's own real
+coordinates (ArcGIS facility-polygon centroids from
+`register_facility_areas.R`) as the location, since no independent
+coordinate exists for the individual outlet taps themselves.
+
+```{r port-chem-summary}
+port_source_path <- file.path("scripts", "analysis", "port_chemistry_summary.R")
+if (!file.exists(port_source_path)) port_source_path <- file.path("..", port_source_path)
+source(port_source_path)
+result <- compute_port_chemistry_summary(con)
+result$by_port
+```
+
+Real, thermal-signature chemistry (Cl 740-860 mg/L, Na 640-720 mg/L)
+now backs every one of the five named ports for the first time -- but
+**n = 2 sample dates per port** (n = 4 for `SB2/3`, fed by two distinct
+outlet taps), from a single 2024 semi-annual submittal. That is too few
+to report a standard deviation or trust as a seasonal average, so the
+figure below shows every real point rather than just a mean, and the
+summary table above deliberately omits any variance statistic.
+
+```{r port-chem-fig}
+#| echo: false
+#| fig-cap: "Real chemistry at each Ormat sampling port, n=2 (n=4 for SB2/3) sample dates per port, 2024 NDEP PRR submittal."
+knitr::include_graphics(file.path("..", "output", "figures", "port_chemistry", "port_chemistry_by_port.png"))
+```
+
+**These six samples are not PHREEQC-eligible.** The 2024 semi-annual
+submittal that is their sole source never recorded field pH or
+temperature for these outlet taps, and this project's PHREEQC pipeline
+only ever pulls pH/temperature from the *same* `sample_id`'s own rows
+(no cross-location/date borrowing) -- so all 12 (2 dates x 6 stations)
+correctly show up in `get_phreeqc_eligible()`'s rejected list with the
+reason `"missing temperature; missing pH"`. A real fix for this fixed
+project-wide, incidentally, while promoting this data: `vw_major_ions`'s
+analyte filter previously listed a literal `'HCO3'` code only, never
+this project's own standard `'Alkalinity'` code (Session 15-16's
+convention) -- silently excluding 736 real Alkalinity rows from every
+prior sample, not just these six, from the major-ions view. Fixed
+additively.
+
+**Also checked, and correctly empty today:** a second, best-effort join
+through `Production_Port_Links` -> `Wells` -> chemistry, so that
+individual production/injection well chemistry would automatically roll
+up into this same port-level summary the moment it exists. As of this
+writing, zero production/injection wells have both a populated
+`Wells.location_id` and any real chemistry, so `well_level` in
+`compute_port_chemistry_summary()`'s return value is empty by design,
+not a bug.
+
+```{r port-chem-well-level}
+result$well_level
+```
+
 :::: {.content-hidden when-meta="in_full_report"}
 ## Changelog
 
@@ -306,6 +365,7 @@ reason.
 | 2026-09-05 | Notebook created. Data availability chart built for the first time (and the `Sampling_Events.date` dual-epoch bug discovered while building it). 7 Steamboat well logs cross-checked against NBMG by location *and* completion date together (previously only location had been checked); `123802` conclusively rejected as a match to `43-33`; `27731`/"Injection Well No. 3" flagged as the tightest remaining lead but judged more likely a distinct well. All 7 registered as provisional `Wells` rows. |
 | 2026-09-12 | Added NDOM well-permit cross-validation section (49 wells, 6 coordinate discrepancies flagged, elevation_m feet-vs-meters bug found and fixed project-wide) and NDWR spring/stream flow section (4 Whites Creek sites, daily discharge back to 2017). |
 | 2026-09-12 (session 24-25) | Session 24: 64 new NDWR log numbers (112 files) ingested -- PLSS lat/lon fallback, work-type/proposed-use/diameter extraction, primary/alt-scan merge-by-confidence, `Well_Work_Events` (well status history), `Well_Lithology` populated for the first time, repeatable match-candidates report with recommendations. Session 25: `146403`'s OCR longitude digit error corrected; derived `display_status` (adds Plugged & Abandoned) added to `vw_wells_gis`/website maps; `ndom_coordinate_discrepancies.csv` now includes the existing coordinate's source. |
+| 2026-09-30 | New Section 6: promoted the six staged NDEP PRR outlet-station samples (Galena 1/2/3, SB2, SB3, SBHR) using `Sampling_Ports`' own facility-centroid coordinates; built the first chemistry-by-sampling-port summary (`scripts/analysis/port_chemistry_summary.R`); fixed a project-wide `vw_major_ions` bug that had silently excluded the `Alkalinity` analyte code (736 real rows) from the major-ions view since Session 15-16. |
 
 ::::
 ```{r cleanup-05}

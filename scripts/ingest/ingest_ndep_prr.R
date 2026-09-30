@@ -35,8 +35,45 @@ library(fs)
 library(digest)
 
 source("scripts/ingest/helpers/parse_ndep_prr_pdf.R")
+source("scripts/ingest/helpers/parse_wetlab_appendix_d_pdf.R")
 
-ingest_ndep_prr <- function(con, base_dir = "data/raw/ndep/PRR") {
+# 2026-09-30: WETLAB-format documents (TFT Compliance Reports' Appendix
+# D) use a different Customer-Sample-ID-per-composite naming scheme than
+# a fixed station list -- this maps the real composite names seen so far
+# to a stable, canonical station name so repeat samples at the same
+# physical injection point (different dates, different composite
+# numbers) resolve to the SAME Location once promoted, rather than a new
+# one per date. Falls back to the raw customer_sample_id (kept distinct/
+# unresolved) for any pattern not yet seen, rather than guessing.
+.normalize_wetlab_station_name <- function(customer_sample_id) {
+  dplyr::case_when(
+    stringr::str_detect(customer_sample_id, "G1 Injection") ~ "Galena 1 Injection Composite (TFT)",
+    stringr::str_detect(customer_sample_id, "G2 Injection") ~ "Galena 2 Injection Composite (TFT)",
+    stringr::str_detect(customer_sample_id, "G3 Injection") ~ "Galena 3 Injection Composite (TFT)",
+    stringr::str_detect(customer_sample_id, "SBHR") ~ "SBHR Injection Composite (TFT)",
+    stringr::str_detect(customer_sample_id, "SB2|SB3") ~ "SB2/3 Injection Composite (TFT)",
+    TRUE ~ customer_sample_id
+  )
+}
+
+ingest_ndep_prr <- function(con, base_dir = "data/raw/ndep/PRR", force_reprocess = FALSE, force_reprocess_pattern = NULL) {
+
+  # 2026-09-30: force_reprocess = TRUE re-parses files even if their
+  # (file_name, file_hash) was already marked processed -- needed after
+  # an extraction-logic change (e.g. the new WETLAB parser), since the
+  # PDFs themselves haven't changed so their hash hasn't either. Mirrors
+  # ingest_well_logs.R's own force_reprocess convention.
+  if (isTRUE(force_reprocess) && !is.null(force_reprocess_pattern)) {
+    .fr_docs <- dbGetQuery(con, "SELECT file_name FROM Documents_Processed WHERE source_dir LIKE ?", params = list(paste0(base_dir, "%")))
+    .fr_to_clear <- .fr_docs$file_name[grepl(force_reprocess_pattern, .fr_docs$file_name)]
+    for (.fr_fn in .fr_to_clear) dbExecute(con, "DELETE FROM Documents_Processed WHERE file_name = ?", params = list(.fr_fn))
+    message("[NDEP PRR] force_reprocess = TRUE: cleared ", length(.fr_to_clear), " Documents_Processed row(s) matching '", force_reprocess_pattern, "'.")
+  } else if (isTRUE(force_reprocess)) {
+    n_deleted_docs <- dbExecute(con, "DELETE FROM Documents_Processed WHERE source_dir LIKE ?",
+                                 params = list(paste0(base_dir, "%")))
+    message("[NDEP PRR] force_reprocess = TRUE: cleared ", n_deleted_docs,
+            " Documents_Processed row(s) for this directory.")
+  }
 
   message("---- Starting NDEP PRR (pilot) ingest ----")
 
@@ -87,6 +124,8 @@ ingest_ndep_prr <- function(con, base_dir = "data/raw/ndep/PRR") {
 
     message("\n[NDEP PRR] Processing: ", basename(f))
 
+    is_wetlab <- tryCatch(is_wetlab_format(f), error = function(e) FALSE)
+
     char_count <- sum(nchar(pdftools::pdf_text(f)))
     if (char_count == 0) {
       message("  → No extractable text (scanned/image-only PDF) — OCR required, not attempted. Skipping.")
@@ -98,6 +137,37 @@ ingest_ndep_prr <- function(con, base_dir = "data/raw/ndep/PRR") {
       next
     }
 
+    if (is_wetlab) {
+      parsed <- tryCatch(
+        parse_wetlab_lab_report(f),
+        error = function(e) {
+          warning("  -> WETLAB parse failed for ", basename(f), ": ", conditionMessage(e), call. = FALSE)
+          data.frame()
+        }
+      )
+      if (nrow(parsed) == 0) {
+        message("  -> WETLAB format detected, but no Appendix D rows parsed.")
+        dbAppendTable(con, "Documents_Processed", data.frame(
+          file_name = basename(f), file_hash = file_hash, source_dir = dirname(f),
+          processed_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC"),
+          rows_staged = 0L
+        ))
+        next
+      }
+      staged <- parsed |>
+        transmute(
+          station_name = .normalize_wetlab_station_name(customer_sample_id),
+          latitude = NA_real_,
+          longitude = NA_real_,
+          sample_date = collect_datetime,
+          analyte,
+          value,
+          units,
+          method,
+          detection_limit = NA_real_,
+          raw_source_file = source_file
+        )
+    } else {
     parsed <- tryCatch(
       parse_ndep_prr_lab_report(f),
       error = function(e) {
@@ -129,6 +199,8 @@ ingest_ndep_prr <- function(con, base_dir = "data/raw/ndep/PRR") {
         detection_limit = pql,
         raw_source_file = source_file
       )
+
+    }
 
     dbAppendTable(con, "Staging_NDEP_WQ", staged)
     dbAppendTable(con, "Documents_Processed", data.frame(

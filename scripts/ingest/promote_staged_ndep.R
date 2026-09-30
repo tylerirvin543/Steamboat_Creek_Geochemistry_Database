@@ -73,12 +73,22 @@ sgs_analyte_map <- tibble::tribble(
   # truncated variant from a wrapped source line -- see parse_ndep_prr_pdf.R
   "Alkalinity, Bicarbonate (As",          "HCO3_as_CaCO3_dup",  1,
   "Alkalinity, Carbonate (As CaCO3)",     "CO3_as_CaCO3_dup",   1,
+  "Alkalinity, Hydroxide (As CaCO3)",     "Alkalinity_Hydroxide_dup", 1,
   "Total Dissolved Solids",               "TDS",                1,
   "Suspended Solids",                     "TSS",                1,
   "Antimony",                             "Sb",                 1,
   "Arsenic",                              "As",                 1,
   "Boron",                                "B",                  1,
-  "Lithium",                              "Li",                 1
+  "Lithium",                              "Li",                 1,
+  "Temperature at pH",                    "temperature",        1,
+  "pH",                                   "pH",                 1,
+  "Total Alkalinity",                     "Alkalinity",         1.2189,
+  "Bicarbonate (HCO3)",                   "HCO3_as_CaCO3_dup",  1,
+  "Carbonate (CO3)",                      "CO3_as_CaCO3_dup",   1,
+  "Total Suspended Solids (TSS)",         "TSS",                1,
+  "Total Dissolved Solids (TDS)",         "TDS",                1,
+  "Silica",                               "SiO2",               1,
+  "Nitrate Nitrogen",                     "NO3",                1
 )
 
 promote_staged_ndep <- function(con,
@@ -96,7 +106,9 @@ promote_staged_ndep <- function(con,
     # SQLite's implicit rowid works, but naming it explicitly makes
     # the idempotency logic below legible.
     dbExecute(con, "ALTER TABLE Staging_NDEP_WQ ADD COLUMN staging_id INTEGER")
-    dbExecute(con, "UPDATE Staging_NDEP_WQ SET staging_id = rowid WHERE staging_id IS NULL")
+  }
+  dbExecute(con, "UPDATE Staging_NDEP_WQ SET staging_id = rowid WHERE staging_id IS NULL")
+  if (FALSE) {
   }
 
   if (!file_exists(map_csv)) {

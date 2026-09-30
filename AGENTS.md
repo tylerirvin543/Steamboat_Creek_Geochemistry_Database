@@ -4928,6 +4928,202 @@ in the same session.
   still-deferred notebook-07 restructuring (Session 40) -- none
   addressed this session.
 
+## Session 42 (2026-09-30, continued): NDEP PRR outlet-station promotion, chemistry-by-port summary, WETLAB Appendix D parser
+
+Three related tasks executed via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-09-30-2226-plan.md`), following up on the
+prior turn's finding that most "Ormat well chemistry" in the NDEP PRR
+source was either unpromoted (the six port-outlet samples) or unparsed
+(the TFT Compliance Reports' Appendix D).
+
+- **Six staged NDEP PRR outlet samples promoted** (`Galena 1/2/3
+  Outlet`, `SB2 Outlet`, `SB3 Outlet`, `SBHR Outlet` -- 38 rows each,
+  228 total, staged since Sessions 3-6, never promoted). Filled the six
+  blank rows in `staged_ndep_location_map.csv` using the corresponding
+  `Sampling_Ports` row's own real coordinate (ArcGIS facility-polygon
+  centroid from `register_facility_areas.R`, Session 7) -- the same
+  physical pad, not an independent survey point, documented as such.
+  `SB2 Outlet`/`SB3 Outlet` both resolve to the single `SB2/3` port
+  centroid (kept as two distinct Locations, since they're two distinct
+  named taps). Filled `Sampling_Ports.location_id` (dangling NULL since
+  Session 5) for the four 1:1 ports (`Galena 1/2/3`, `SBHR`); left NULL
+  for `SB2/3` (fed by two distinct outlet locations, can't be one FK).
+  Real result: all six now show genuinely thermal chemistry (Cl 740-860
+  mg/L, Na 640-720 mg/L) in `vw_major_ions` -- but are **not**
+  PHREEQC-eligible (`get_phreeqc_eligible()` correctly rejects all 12
+  sample-rows with "missing temperature; missing pH", since this 2024
+  semi-annual source never recorded field parameters for these outlets,
+  and `build_phreeqc_solutions()` only ever pulls pH/temp from the
+  *same* `sample_id`, never a cross-location/date fallback).
+- **Real, project-wide bug found and fixed**: `vw_major_ions`'s analyte
+  filter listed a literal `'HCO3'` code only -- never this project's
+  own standard `'Alkalinity'` code (the Session 15-16 convention,
+  HCO3-mass-equivalent, unit-converted from whatever raw CaCO3/HCO3
+  basis a source used). This silently excluded 736 real Alkalinity rows
+  (NDEP main + NDEP PRR + Sorey & Colvard 1992 + Mariner & Janik 1995)
+  from the major-ions view project-wide, not just the newly-promoted
+  outlet samples. Fixed additively (`IN (...,'HCO3','Alkalinity')`);
+  `major_ions` GeoPackage layer grew from 2824 to 4355 rows as a direct
+  result. Also added a missing `sgs_analyte_map` entry for `"Alkalinity,
+  Hydroxide (As CaCO3)"` (previously fell through unmapped), following
+  the existing `_dup`/excluded-code convention.
+- **New chemistry-by-sampling-port summary**
+  (`scripts/analysis/port_chemistry_summary.R`,
+  `compute_port_chemistry_summary()`/`build_port_chemistry_report()`):
+  joins the newly-promoted outlet samples to their port via an explicit,
+  human-reviewed lookup table (needed since `SB2/3` can't be a single
+  FK), reports n/mean/min/max per port/analyte (deliberately no SD --
+  n=2 per port, n=4 for `SB2/3`), and includes a second, best-effort join
+  through `Production_Port_Links` -> `Wells` -> chemistry that
+  currently contributes nothing (confirmed: zero production/injection
+  wells have both a populated `location_id` and real chemistry) but is
+  ready for when that data exists. Writes
+  `data/derived/port_chemistry/port_chemistry_summary.csv` and
+  `output/figures/port_chemistry/port_chemistry_by_port.png` (every
+  real point plotted, not just a bar-chart mean, given n=2). Wired into
+  `run_pipeline.R` as an always-on read-only reporting step (mirrors
+  `chloride_mass_balance.R`'s pattern). New Section 6 added to
+  `notebooks/05_data_inventory_and_well_network.qmd` presenting this
+  live, with the n=2 caveat stated in prose.
+- **TFT Compliance Report Appendix D -- built, but a real scope
+  correction first.** The two TFT reports on file
+  (`data/raw/ndep/PRR/PPR_05_26_2026/`) do **not** contain chemistry
+  broken out by individual production well -- each contains exactly one
+  real WETLAB (Western Environmental Testing Laboratory) lab sample: a
+  single required UIC-permit injection composite ("G2 Injection",
+  confirmed via the accompanying U230 form: "Injection Piping downstream
+  of HX in Plant"), not chemistry for well 24-5 itself despite that
+  well's name being in one report's filename (it refers to a production-
+  well-group flow narrative elsewhere in the document). Flagged to the
+  user in the plan before building.
+- **This project's first position-aware PDF parser**:
+  `scripts/ingest/helpers/parse_wetlab_appendix_d_pdf.R`
+  (`parse_wetlab_lab_report()`, `is_wetlab_format()`), using
+  `pdftools::pdf_data()` word-level x/y coordinates instead of the
+  existing `pdftotext -layout` + regex-split approach (confirmed, by
+  direct inspection, to badly misalign this specific table -- e.g. a
+  naive line-based read attributes the wrong result to "Total
+  Alkalinity" vs "Bicarbonate"). Clusters words by exact y into rows,
+  assigns each word to the nearest header column via midpoints between
+  the real header row's own x-positions (general to any WETLAB report's
+  exact pixel layout, not hardcoded), and recovered a complete, clean,
+  self-consistent 42-analyte panel per report -- including real pH
+  (6.75, 6.56) and temperature (24C, 22C), the field parameters the six
+  outlet samples above are missing. Cross-checked several recovered
+  values against independently-known plausible ranges (Cl 794/682 mg/L,
+  Na 600/600 mg/L -- consistent with the other Galena-port outlet
+  values from the same session) as informal validation that the parser
+  is right, not just self-consistent.
+- **Wired into `ingest_ndep_prr.R`**: `is_wetlab_format()` checked
+  before the existing SGS-format attempt (which would otherwise
+  silently produce zero rows on a WETLAB PDF, as it always had for
+  these two files); a `.normalize_wetlab_station_name()` helper maps
+  known composite-sample patterns ("G1/G2/G3 Injection", "SBHR",
+  "SB2"/"SB3") to a stable canonical station name so repeat samples at
+  the same physical point (different dates) resolve to the same
+  Location, falling back to the raw `customer_sample_id` (kept
+  distinct/unresolved) for any pattern not yet seen. New
+  `force_reprocess`/`force_reprocess_pattern` parameters (mirrors
+  `ingest_well_logs.R`'s own convention) let a re-parse target only
+  specific filenames (e.g. `"TFT"`) after an extraction-logic change,
+  without needlessly re-staging and duplicating already-working sources
+  like the SGS-format Semi-Annual Digital Submittal.
+- **Real, independent bug found and fixed while testing this**:
+  `promote_staged_ndep.R`'s `staging_id` backfill
+  (`UPDATE ... SET staging_id = rowid WHERE staging_id IS NULL`) only
+  ever ran inside the one-time `ALTER TABLE ADD COLUMN` block -- any row
+  appended by a *later* `ingest_ndep_prr.R` run (exactly this session's
+  new WETLAB rows) kept a permanently NULL `staging_id`, which broke the
+  final `"WHERE staging_id IN (...)"` promotion-marking `UPDATE` with an
+  opaque `"no such column: NA"` error the moment such a row was
+  promoted. Fixed by running the backfill unconditionally (a no-op once
+  every row already has one) -- a real, previously-latent bug that
+  would have hit *any* future new NDEP PRR ingest, not just this one.
+- **Added new `sgs_analyte_map` entries** for the WETLAB-specific names
+  with no SGS equivalent: `"Temperature at pH"` -> `temperature`,
+  `"pH"` -> `pH`, `"Total Alkalinity"` -> `Alkalinity` (factor 1.2189),
+  `"Bicarbonate (HCO3)"` -> `HCO3_as_CaCO3_dup`, `"Carbonate (CO3)"` ->
+  `CO3_as_CaCO3_dup`, `"Total Suspended Solids (TSS)"` -> `TSS`,
+  `"Total Dissolved Solids (TDS)"` -> `TDS`, `"Silica"` -> `SiO2`,
+  `"Nitrate Nitrogen"` -> `NO3`. Trace metals (Aluminum, Barium,
+  Beryllium, Cadmium, Chromium, Copper, Iron, Manganese, Molybdenum,
+  Nickel, Silver, Zinc, Lead, Selenium, Thallium, Mercury) and the lab's
+  own charge-balance QC rows (Anions/Cations/Error) are left unmapped
+  (logged, not dropped) -- not needed for major-ions/PHREEQC purposes
+  this session.
+- **Real, positive result**: the two Galena 2 injection-composite
+  samples (2025-07-09, 2026-04-07) are the **first NDEP-PRR-sourced
+  samples ever to pass `get_phreeqc_eligible()`** (real pH+temperature+
+  Na+Cl from the *same* sample). Ran the real PHREEQC speciation
+  pipeline against both (`run_phreeqc_pipeline(con, sample_ids = ...)`,
+  auto-recommended WATEQ4F for trace-metal speciation), storing 54 real
+  result rows.
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_prr_outlets_<timestamp>.sqlite`;
+  every step verified against a scratch copy first): 228 new outlet
+  Lab_Analyses rows, 84 new WETLAB Lab_Analyses rows, 4 Sampling_Ports
+  location_id fields filled, `vw_major_ions`/`create_gis_views()`
+  rebuilt, `PHREEQC_Solutions` rebuilt (1522 rows, 314 complete),
+  GeoPackage re-exported cleanly (16 layers; `major_ions` 2824 -> 4355,
+  `locations` 198). QC re-run clean -- the only 2
+  `PHREEQC_Run_Failures` rows are pre-existing (2026-09-26, unrelated
+  wells `21-5`/`83A-6`), confirmed nothing new broke.
+- **CRLF editing note for future sessions**: `scripts/ingest/
+  promote_staged_ndep.R` and `scripts/ingest/ingest_ndep_prr.R` turned
+  out to have *inconsistent* internal line endings (some physical lines
+  LF, others CRLF, within the same file) -- worse than the usual
+  "whole file is CRLF" caveat documented in many prior sessions. Even
+  the established `readLines()`/`writeLines()` round-trip wasn't tried
+  here; instead, every multi-line `edit` old_string on these two files
+  failed unpredictably regardless of content correctness (verified
+  byte-for-byte against the actual file each time), while every
+  **single-physical-line** old_string succeeded reliably, including
+  when the new_string itself spanned many lines. Worth trying
+  single-line-anchored edits first on any file that mysteriously
+  rejects an exact-match multi-line edit, before assuming the content
+  itself is wrong.
+- **Not done this session**: no attempt to recover chemistry for named
+  individual production wells (24-5, 78-29, etc.) from any other source
+  -- the TFT reports don't have it and no other candidate source is on
+  file; DEMO database untouched.
+
+### Correction (same session, continued): real U230 field pH/temperature/conductivity added for the Galena 2 injection composite
+
+The "six outlet samples lack field pH/temperature" statement above is
+about a *different, separate* NDEP document (the 2024 Semi-Annual
+Digital Submittal) and remains accurate for those six. It does NOT
+apply to the Galena 2 Injection Composite (TFT) sample from Task 1 --
+the user supplied direct photos of that same sample's UIC Form U230
+(Field Sampling & Monitoring Summary), a document `ingest_ndep_prr.R`
+had previously skipped entirely as scanned/no-text-layer. That form
+gives a real, field-measured pH (6.25), temperature (24.4C), and
+specific conductance (3560 uS/cm) for the 2025-07-09 11:15 sample --
+independent of, and different from, the WETLAB lab's own re-measured
+pH (6.75) and temperature (24C) for the same sample (the lab report's
+own "Were any holding times exceeded? YES, pH" flag on the U230 form
+plausibly explains the divergence: the pH held past its holding time
+before lab analysis).
+
+- **Applied to the real database**: a new `Data_Sources` row ("Nevada
+  DEP (Public Records Request) - U230 Field Form", distinct from the
+  WETLAB lab report's own source) and 3 new `Field_Measurements` rows
+  (pH, temperature, conductivity) for sample_id 1530. Backed up first
+  to `database/archive/geochem_operational_pre_u230_field_data_<timestamp>.sqlite`.
+- **Real effect, confirmed by design, not a bug**:
+  `build_phreeqc_solutions()` already prioritizes `Field_Measurements`
+  over `Lab_Analyses` for the same sample's pH/temperature (a real
+  field instrument reading over a lab-reported one) -- rebuilding
+  `PHREEQC_Solutions` correctly shifted sample 1530's modeled pH/
+  temperature from 6.75/24.0C to 6.25/24.4C with no code change needed.
+  Re-ran real PHREEQC speciation for this one sample with the updated
+  values (27 result rows). QC re-run clean afterward.
+- **Not done**: no equivalent U230 form has been supplied yet for the
+  second real sample (sample_id 1531, 2026-04-07) -- it still uses its
+  lab-reported pH/temperature only.
+
+This session's file changes are not
+  yet committed/pushed to git.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
