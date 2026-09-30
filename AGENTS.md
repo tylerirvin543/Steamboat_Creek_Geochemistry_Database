@@ -5119,7 +5119,62 @@ before lab analysis).
   values (27 result rows). QC re-run clean afterward.
 - **Not done**: no equivalent U230 form has been supplied yet for the
   second real sample (sample_id 1531, 2026-04-07) -- it still uses its
-  lab-reported pH/temperature only (kept below, unmodified, for context).
+  lab-reported pH/temperature only.
+
+### Addendum: NDEP_compiled_U230_Steamboat_reports.pdf -- OCR unblocked, one real field sample added, SB2 Outlet coordinate upgraded
+
+User asked to review this 138-page compiled U230 document (previously
+recorded, Session 3, as "scanned, no extractable text, OCR required,
+not attempted"). Retested using the already-built well-log OCR
+helpers (`.ensure_tesseract()`/`.ocr_pdf()` from
+`parse_well_log_pdf.R`) -- **OCR now succeeds on the whole document**
+(138 pages, ~205,000 characters, confirmed via page-separator count).
+
+- **Structural fields are legible; handwritten numeric fields
+  mostly are not.** The document is a repeating ~2-page-per-event
+  U230 (Field Sampling & Monitoring Summary + Facility/Permit Info)
+  pattern, 68 distinct "SAMPLING INFORMATION" pages found. The typed/
+  stamped `Location sample taken` field reliably distinguishes three
+  real sample-type groups across many repeat rounds: the five named
+  outlets (Galena 1/2/3, SB2, SBHR -- SB3 not yet confirmed in the
+  pages checked), several "From Monitoring well pump outlet" events,
+  and several "Water discharged from residence" / "Water from
+  external faucet of residence" events (real domestic-well samples) --
+  confirming the user's own description of monitoring-well samples
+  appearing later in the report. The specific well/residence name for
+  each (on the paired Facility/Permit page) and the handwritten
+  pH/S.Conductivity/Temperature values were NOT reliably recovered by
+  automated OCR (e.g. "pH: 7 -9@", "S. Conductivity :37 of") -- unlike
+  the well-log driller's-report OCR work (Sessions 9-11), where the
+  target fields are typed/stamped, not handwritten. A real, tolerant
+  parser for this document (mirroring `parse_well_log_pdf.R`'s
+  multi-fallback approach) is a concrete, scoped next step, not
+  attempted this session given OCR's demonstrated unreliability on
+  the numeric fields specifically.
+- **One real event added directly from the two page-images the user
+  supplied** (read directly, not via the noisy OCR of the same page):
+  SB2 Outlet, 2025-08-04 14:20, sampler Bruce Wilkes, field pH = 7.56,
+  temperature = 13.1 C, specific conductance = 3704 uS/cm (new
+  `Field_Measurements` rows, new `Data_Sources` row distinguishing
+  this bulk compiled document from the single TFT-report-specific
+  U230 form added earlier this session). No accompanying lab
+  chemistry exists for this date/tap, so this is a field-parameter-
+  only sample (real, but not major-ion-complete).
+- **SB2 Outlet's coordinate upgraded**: the same form gives a real,
+  precise DMS coordinate for SB2 Outlet specifically (39 23'46.39"N,
+  119 44'45.27"W) -- not a borrowed port centroid like the earlier
+  `sampling_port_facility_centroid` approximation (~130-150 m away).
+  Replaced, with the old value and reasoning kept in `notes` for
+  context, `coordinate_source = 'ndep_u230_form'`,
+  `coordinate_uncertainty_m = 15`.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_u230_compiled_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean.
+- **Not done**: no attempt to transcribe the other ~67 events (the
+  remaining outlets, monitor wells, and domestic-well residences) --
+  awaiting either more user-supplied images (the working pattern used
+  for SB2 Outlet and the Galena 2 TFT sample) or a decision to invest
+  in a real tolerant OCR parser for this specific form layout.
 
 ### Addendum: IW-3/Cox I-1 marked Plugged & Abandoned from the 2025 TFT Report's Table 2
 
@@ -5155,7 +5210,6 @@ injection wells (IW-1 through IW-6, 23-33, 64A-32, 43-33, 21-32,
   coordinate gap above); QC re-run clean. No git-trackable file
   changed (this was a direct, documented database update, not a new
   script/CSV), so nothing new to commit for this addendum.
-  lab-reported pH/temperature only.
 
 This session's file changes are not
   yet committed/pushed to git.
