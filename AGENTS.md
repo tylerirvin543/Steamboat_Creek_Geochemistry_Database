@@ -5217,6 +5217,30 @@ Galena 3 Outlet.
   Views rebuilt, QC re-run clean.
 - **Not done**: SB3, Galena 1, SBHR outlet U230 forms and the
   monitoring-well/residence pages from the compiled document remain
+  unprocessed as of the previous paragraph -- SB3 Outlet is now done,
+  see below.
+
+### Addendum: SB3 Outlet added, same 2025-08-04 field-visit round
+
+User supplied the SB3 Outlet U230 form pair from the same 2025-08-04
+compiled-document field-visit round as SB2/Galena 3 Outlet, plus
+confirmed Galena 3 Outlet's temperature reading (135 -> 13.5 C,
+degrees with no unit letter specified on the form, following the same
+Celsius convention already used for the other outlets this session).
+
+- **New real sample: SB3 Outlet, 2025-08-04 14:10** -- field
+  pH = 6.93, temperature = 13.5 C, specific conductance = 3825 uS/cm.
+- **SB3 Outlet's coordinate upgraded** the same way SB2/Galena 3's
+  were: a real, precise DMS coordinate from its own U230 form
+  (39 23'36.92"N, 119 44'47.97"W) replaces the shared `SB2/3`
+  Sampling_Ports facility-centroid approximation -- **~163 m away**,
+  and now measurably different from SB2 Outlet's own (independently
+  upgraded) coordinate, confirming these really are two distinct
+  physical taps rather than two names sharing one point.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_sb3_outlet_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean.
+- **Not done**: Galena 1, SBHR outlet U230 forms and the monitoring-
   unprocessed, per the same OCR-unreliability caveat as the prior
   addendum.
 
