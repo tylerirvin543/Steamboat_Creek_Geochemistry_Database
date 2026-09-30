@@ -5176,6 +5176,50 @@ helpers (`.ensure_tesseract()`/`.ocr_pdf()` from
   for SB2 Outlet and the Galena 2 TFT sample) or a decision to invest
   in a real tolerant OCR parser for this specific form layout.
 
+### Addendum: 2026 Table 2 (wellhead/flow re-observation), Galena 3 Outlet added, second P&A re-confirmation
+
+User supplied the 2026-04-07 TFT Report's own Table 2 (same document
+as the already-ingested 2026-04-07 Galena 2 injection composite,
+`sample_id 1531`) plus a second compiled-U230 form pair, this time for
+Galena 3 Outlet.
+
+- **All 13 wells' `Wells.notes` got a second, appended entry** with
+  the 2026-04-07 flow rate, enthalpy temperature, wellhead temperature,
+  and wellhead pressure (per the user's explicit "account for pressure
+  and flow too" instruction, mirrored from the 2025 table's own
+  treatment) -- e.g. `24-5` flow dropped from 883.3 to 835 kph and
+  wellhead temperature from 310 to 301.5 F between the two reports, a
+  real, small production change now on record for both dates rather
+  than only the most recent.
+- **IW-3 and Cox I-1 re-confirmed P&A**: a second `Well_Work_Events`
+  row (`event_date = '2026-04-07'`) was added for each -- a real,
+  independently-dated re-observation of the same status, not a
+  duplicate of the 2025-07-09 row, so the status history correctly
+  shows P&A persisting across both reports rather than only being
+  recorded once.
+- **New real sample: Galena 3 Outlet, 2025-08-04 13:15** (from the
+  compiled U230 document, same field-visit day as the already-added
+  SB2 Outlet sample, different tap/time) -- field pH = 7.42,
+  temperature = 13.5 C, specific conductance = 3705 uS/cm (the
+  conductivity and temperature digits are the least legible of the
+  three on the handwritten form; recorded as read, not independently
+  verified against a second source the way SB2's values were not
+  either).
+- **Galena 3 Outlet's coordinate upgraded** the same way SB2 Outlet's
+  was: a real, precise DMS coordinate from its own U230 form
+  (39 23'04.32"N, 119 44'48.62"W) replaces the `Sampling_Ports`
+  facility-centroid approximation -- **a ~498 m difference**, notably
+  larger than SB2's ~140 m, flagged explicitly (not silently accepted)
+  since it suggests the real G3 sample tap sits meaningfully off the
+  G3 facility polygon's centroid, more so than at SB2/3's pad.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_tft_table2_2026_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean.
+- **Not done**: SB3, Galena 1, SBHR outlet U230 forms and the
+  monitoring-well/residence pages from the compiled document remain
+  unprocessed, per the same OCR-unreliability caveat as the prior
+  addendum.
+
 ### Addendum: IW-3/Cox I-1 marked Plugged & Abandoned from the 2025 TFT Report's Table 2
 
 User supplied the same 2025 TFT Report Technical Memorandum's Table 2
