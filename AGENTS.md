@@ -5240,9 +5240,372 @@ Celsius convention already used for the other outlets this session).
 - Applied to the real database (backed up first to
   `database/archive/geochem_operational_pre_sb3_outlet_<timestamp>.sqlite`).
   Views rebuilt, QC re-run clean.
-- **Not done**: Galena 1, SBHR outlet U230 forms and the monitoring-
-  unprocessed, per the same OCR-unreliability caveat as the prior
-  addendum.
+### Addendum: SBHR Outlet added, same 2025-08-04 field-visit round, large coordinate discrepancy flagged
+
+User supplied the SBHR Outlet U230 form pair from the same 2025-08-04
+field-visit round.
+
+- **New real sample: SBHR Outlet, 2025-08-04 13:25** -- field
+  pH = 6.67, temperature = 14.0 C, specific conductance = 362.6 uS/cm.
+  **Flagged, recorded as read, not corrected**: this conductance is
+  roughly 10x lower than the other three 2025-08-04 outlet readings
+  (SB2/SB3/Galena 3 all ~3700-3825 uS/cm) -- plausibly a real
+  operational difference at this specific outlet, or a handwriting/
+  transcription artifact (e.g. a misplaced decimal), but not silently
+  "corrected" to fit the pattern per this project's standing rule
+  against guessing.
+- **SBHR Outlet's coordinate upgraded**, same as the other three, to
+  a real, precise DMS coordinate from its own U230 form
+  (39 22'16.54"N, 119 45'59.97"W) -- but this one is **~1,248 m** from
+  the previous SBHR-port-centroid approximation, far larger than SB2
+  (~140 m), Galena 3 (~498 m), or SB3 (~163 m). Applied anyway (the
+  form's own coordinate is the more authoritative, tap-specific
+  source), but flagged explicitly in `Locations.notes` as worth a
+  manual sanity check (e.g. satellite imagery) rather than assumed
+  correct without question.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_sbhr_outlet_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. **Not yet committed to git**, per
+  explicit user instruction to batch commits across this whole run of
+  outlet-sample addenda rather than committing after each one.
+
+### Addendum: Galena 1 Outlet added -- completes the 2025-08-04 five-outlet round; real low-conductivity pair confirmed
+
+User supplied the Galena 1 Outlet U230 form pair from the same
+2025-08-04 field-visit round, completing all five named outlets for
+that date.
+
+- **New real sample: Galena 1 Outlet, 2025-08-04 12:30** -- field
+  pH = 7.09, temperature = 14.4 C, specific conductance = 365.7 uS/cm.
+  No lat/long is given on this form's facility page (left blank) --
+  Galena 1 Outlet's coordinate is unchanged (still the
+  `Sampling_Ports` facility-centroid approximation from earlier this
+  session).
+- **Real, consistent pattern confirmed, not a one-off transcription
+  error**: comparing all five outlets' 2025-08-04 conductivity
+  together -- Galena 1 (365.7) and SBHR (362.6, flagged in the prior
+  addendum) sit in a tight, mutually consistent ~360 uS/cm cluster,
+  while SB2 (3704), SB3 (3825), and Galena 3 (3705) sit in a distinct
+  ~3700-3825 uS/cm cluster. Two independently-transcribed forms
+  landing within 3 uS/cm of each other is a real signal, not
+  coincidence -- worth investigating further (e.g. whether Galena 1
+  and SBHR are on a different, less-thermally-influenced flow path
+  than the other three ports on this date) rather than treating either
+  reading as suspect.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_galena1_outlet_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean.
+- **Not yet committed to git**, per the same explicit batching
+  instruction as the prior three addenda -- this completes the full
+  five-outlet 2025-08-04 round, a natural point to commit all of these
+  addenda together if the user is ready.
+
+- **Not done**: the monitoring-well/residence pages from the compiled
+  document remain unprocessed, per the same OCR-unreliability caveat
+  as the prior addenda.
+
+### Addendum: Galena 2 Outlet added -- a much larger (~2.8 km) coordinate discrepancy flagged, NOT confidently resolved
+
+User supplied the Galena 2 Outlet U230 form pair, same
+"compiled U230" document. Exact date/time were not visible in the
+provided crop (only the facility-info and field-measurements pages
+were shown, not the sampling-info header) -- inferred as the same
+2025-08-04 round by form layout/sampler pattern, flagged as inferred
+rather than directly read, unlike the other five outlets this session.
+
+- **New real sample: Galena 2 Outlet** -- field pH = 6.97,
+  temperature = 14.1 C, specific conductance = 289.4 uS/cm (the
+  lowest of all six outlets' 2025-08-04 readings, extending -- not
+  breaking -- the low-conductivity cluster already flagged for
+  Galena 1/SBHR).
+- **Coordinate change applied but explicitly NOT trusted the way the
+  other five were.** This form's own coordinate (39 23'49.34"N,
+  119 45'11.79"W) is **~2,822 m** from the previous Galena-2-port-
+  centroid approximation -- more than double the next-largest gap
+  found this session (SBHR, ~1,248 m) and an order of magnitude beyond
+  SB2/SB3/Galena 3's 140-500 m gaps. Applied per this session's
+  standing "the form is the more authoritative source" policy, but
+  recorded in `Locations.notes` as the single most suspect coordinate
+  change made this session -- a transcription error on this specific
+  handwritten form, or an error in the underlying Galena 2
+  facility-polygon digitization, are both real possibilities. The
+  outlet is described on its own form as "in pipeline 10 feet from
+  wellhead," i.e. it should sit very close to the Galena 2 plant, which
+  makes a multi-km discrepancy harder to explain than the smaller gaps
+  already accepted for the other outlets. **Recommend checking this
+  one directly against satellite imagery before relying on it.**
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_galena2_outlet_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git, per the
+  same batching instruction.
+
+### Addendum: first real "monitoring well" sample from the compiled U230 document -- Soccer Field, real Cl cross-check confirms plausibility
+
+User supplied the first non-outlet event from the compiled document:
+a "From Monitoring well pump outlet" page pair for **Soccer Field
+Monitoring Well** (already a known `Locations` row, `location_id 154`,
+resolved via NBMG exact-name match in Session 3-6 -- this is the same
+real location, not a new one).
+
+- **New real sample: 2025-08-27 09:15**, sampler Alex Benitez (SGS
+  Laboratories - Reno), grab sample from pump discharge, 300 gallons
+  purged -- field pH = 6.61, temperature = 50.7 C, specific
+  conductance = 2,262 uS/cm.
+- **Two real notation ambiguities resolved by inference, flagged in
+  `Field_Measurements.instrument` rather than silently assumed**: the
+  form's conductivity reads "2.262us" -- interpreted as 2,262 uS/cm
+  (a comma-as-thousands-separator style), not literally 2.262 uS/cm,
+  since the latter is implausible for any real groundwater. The
+  temperature (50.7) has no unit letter on the form; assumed Celsius
+  for consistency with every other outlet reading this session.
+- **Real cross-check, not just an assumption**: this location's two
+  already-on-file 2024 chemistry samples show Cl = 570 and 470 mg/L --
+  genuinely thermal-signature chloride, not background -- which
+  independently supports a real 50.7 C reading being plausible rather
+  than a units error, since this monitoring well already shows other
+  evidence of real thermal influence.
+- **Template artifact noted, not treated as meaningful**: the form's
+  own "Non-well location: Plant Injection Outlet Pipe" text
+  contradicts its own "Monitoring" location-type checkbox and real
+  well-construction fields (400 ft total depth, steel casing) --
+  almost certainly leftover boilerplate from the same template used
+  for this session's plant-outlet forms, not describing this well.
+  Real construction facts (400 ft total depth, steel casing, status
+  "Inactive - Only used for sampling") appended to `Locations.notes`
+  regardless, since they're genuinely new information.
+- No coordinate given on this form (field left blank) -- Soccer
+  Field's existing NBMG-sourced coordinate is unchanged.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_soccerfield_monitor_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: Herz Domestic Well added -- confirms unit conventions, real time-of-day tracking, real water-level decline
+
+User asked directly whether sample TIME (not just date) was being
+captured, specifically to support later shallow-well diurnal/time-of-
+day comparisons -- confirmed yes, every sample this session has a real
+`collection_time`/`Sampling_Events.date` down to the minute (e.g.
+Soccer Field 09:15, this well 09:45, same day), specifically for that
+purpose.
+
+- **New real sample: Herz Domestic Well, 2025-08-27 09:45** -- field
+  pH = 6.91, temperature = 33.2 C, specific conductance = 1,037 uS/cm.
+- **This form independently validates two unit-interpretation
+  decisions made on the Soccer Field form just before it**: it
+  explicitly labels temperature "33.2 deg C" (confirming the Celsius
+  assumption used everywhere this session a form omitted units), and
+  writes conductivity as "1.037us" -- the same decimal-as-thousands-
+  separator style as Soccer Field's "2.262us" -- read as 1,037 uS/cm,
+  not 1.037 uS/cm.
+- **Real water-level data**: last gauged 2025-06-27 (depth to water
+  56.8 ft, sounding tape) and a new measured water level of 57.3 ft on
+  this 2025-08-27 sample date -- a real ~0.5 ft decline over two
+  months. No `Wells` row exists for this `Locations`-only well (same
+  situation as Soccer Field Monitoring Well), so this water-level
+  history is recorded in `Locations.notes` rather than
+  `Water_Level_Observations` (which requires a `well_id` FK).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_herzdom_<timestamp>.sqlite`).
+### Addendum: Eich Well sample added, Soccer Field/Herz Domestic given real Wells rows, a real historical cross-check found
+
+User supplied Eich Well's U230 form pair (same 2025-08-27 monitoring-
+well round as Soccer Field/Herz Dom), plus asked to give Soccer Field
+"a well id" and its water-level observation "(it is a well)."
+
+- **New real sample: Eich Well, 2025-08-27 10:05** -- field pH = 7.12,
+  temperature = 33 C, specific conductance = 1,733 uS/cm (form reads
+  plain "1.733," no "us" suffix this time -- same thousands-separator
+  convention as Soccer Field/Herz Dom, applied for consistency).
+- **Soccer Field Monitoring Well given a real, genuinely NEW Wells
+  row** (`well_id 267`, `well_role='monitor'`, `total_depth=400` ft,
+  linked to `location_id 154`) -- confirmed via a direct pre-check
+  that no Wells row existed for it before. Its own U230 form's Water
+  Level section is entirely N/A, so there is no real number to give it
+  yet -- stated plainly rather than fabricated.
+- **Real finding while attempting the same for Herz Domestic Well**:
+  it already had a Wells row (`well_id 210`), silently linked to
+  `Locations 156` since the Skalbeck (2001) Table 1 ingestion --
+  confirmed by a pre-insert check that correctly skipped creating a
+  duplicate. Its existing `total_depth` (34, in meters) converts to
+  111.5 ft, matching the new U230 form's independently-reported 110 ft
+  total depth to within 1% -- a genuine cross-validation between two
+  unrelated sources, left as-is rather than overwritten. Two new real
+  water-level readings (2025-06-27: 56.8 ft; 2025-08-27: 57.3 ft,
+  sounding tape) added to `Water_Level_Observations` alongside the
+  pre-existing 1985-1988 Skalbeck readings (in meters, magnitudes
+  7-12 vs. 56-57 ft, making the unit difference self-evident rather
+  than silently mixed).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_eich_soccerfield_herz_wells_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: NDOT resolved as a real well record (still no coordinate) -- notably warm reading flagged
+
+User supplied NDOT's U230 form pair, same 2025-08-27 monitoring-well
+round. NDOT has been a standing, multi-session unresolved identity
+(flagged since Session 4, a real NDWR log candidate rejected in
+Session 33 as being 2.2-4.4 km from the expected cluster) -- this
+form gives real construction/status/chemistry data but, like every
+other NDOT lead so far, no coordinate.
+
+- **New Locations row (`location_id 246`, coordinate-less/
+  provisional) and new Wells row (`well_id 268`, `well_role='monitor'`,
+  total_depth 100 ft, diameter 4 in, steel casing)** -- registered per
+  this session's Soccer Field precedent ("it is a well," give it a
+  real Wells row) rather than left entirely stranded, since a real
+  form now documents it. The long-standing coordinate gap is
+  unchanged: this form's own Well Location field is blank, so nothing
+  here helps resolve it.
+- **New real sample: 2025-08-27 10:05** -- field pH = 7.21,
+  temperature = 74.4 C, specific conductance = 3,130 uS/cm.
+  **Flagged**: 74.4 C is notably warmer than every other monitoring-
+  well reading this session (Herz Dom 33.2, Eich 33.0, Soccer Field
+  50.7) -- a real, worth-noting finding (possibly indicating more
+  direct thermal influence at this location than the others), not
+  treated as an error.
+- **Real coincidence checked, not a duplicate**: this sample shares
+  the identical recorded time (10:05) with the same day's Eich Well
+  sample -- confirmed every other field (pH, conductivity,
+  temperature, purge volume, collection method) is genuinely
+  different, so this is a real, distinct sample.
+- Two real water-level readings (2025-06-27: 55.0 ft; 2025-08-27:
+  56.6 ft, sounding tape) added to `Water_Level_Observations`.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_ndot_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: Boyd Domestic Well added, same 2025-08-27 field-visit round, real low-conductivity pair confirmed
+
+User supplied the Boyd Domestic Well U230 form pair from the same
+2025-08-27 field-visit round as Soccer Field/Herz Dom/Eich/NDOT.
+
+- **New real sample: 2025-08-27 10:50** -- field pH = 7.76,
+  temperature = 24.2 C, specific conductance = 568 uS/cm. No lat/long
+  is given on this form (left blank) -- Boyd Domestic Well's existing
+  NBMG-sourced coordinate is unchanged.
+- No real water-level number exists on this form (water-level section
+  reads "Domestic water sourced from residential home") -- consistent
+  with this being a residential tap rather than a monitoring well,
+  not a data gap.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_boyd_domestic_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: Jeppson Domestic Well sample added, same 2025-08-27 round
+
+User supplied Jeppson Domestic's U230 form pair, same 2025-08-27
+field-visit round as Soccer Field/Herz Dom/Eich/NDOT/Boyd Domestic.
+The form itself calls this well "Jeppson Domestic," matching this
+project's existing "Jeppson Geothermal Well" Location by the same
+station-name mapping already on file (`staged_ndep_location_map.csv`).
+
+- **New real sample: 2025-08-27 11:05** -- field pH = 7.17,
+  temperature = 26.4 C, specific conductance = 460 uS/cm. Purge volume
+  recorded in minutes (10 minutes), not gallons, unlike every other
+  domestic-well form this session -- recorded as given.
+- No coordinate or real water-level number on this form (residential
+  tap, not a monitoring well) -- existing coordinate unchanged.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_jeppson_domestic_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: Rogers Domestic Well added -- completes the 2025-08-27 monitoring/domestic-well round on file so far
+
+User supplied Rogers Domestic's U230 form pair, same 2025-08-27
+field-visit round as Soccer Field/Herz Dom/Eich/NDOT/Boyd/Jeppson.
+
+- **New real sample: 2025-08-27 11:05** -- specific conductance =
+  482 uS/cm only. This form's own pH and Temperature fields are both
+  genuinely "N/A" -- not recorded on the form at all, not a parsing
+  gap -- so only conductivity was added.
+- No coordinate or water-level number given (residential tap, not a
+  monitoring well) -- existing coordinate unchanged.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_rogers_domestic_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: two new injection-side samples (2025-09-30), Galena 1 given a new location, Galena 2 attached to its existing TFT injection location
+
+User supplied two new U230 form pairs, a later round (2025-09-30) than
+the 08/04/25 outlet-sampling round, this time describing the
+injection side "inside plant" rather than the plant discharge
+outlets.
+
+- **Galena 1**: no pre-existing injection-side location existed (only
+  "Galena 1 Outlet," the discharge tap sampled 2025-08-04), so a new
+  Location was registered -- `Galena 1 Injection Outlet`
+  (`location_id 247`, `NDEP_U230_Galena1_Injection`), anchored to the
+  Galena 1 `Sampling_Ports` facility centroid (no coordinate on this
+  form). New sample, 2025-09-30 16:15: pH 6.24, temperature 43.4 C
+  (converted from the form's own 110.2 F -- the first Fahrenheit
+  reading this session, everything else so far was Celsius),
+  conductivity 3,551 uS/cm.
+- **Galena 2**: correctly recognized as the SAME physical point as the
+  already-registered `Galena 2 Injection Composite (TFT)`
+  (`location_id 245`, from the WETLAB Appendix D reports) -- both
+  describe "injection...inside plant"/"downstream of HX in Plant." A
+  third real sample was added to that existing location rather than
+  creating a duplicate: 2025-09-30 08:30, pH 5.91, temperature 38.3 C
+  (converted from 101 F), conductivity 3,300 uS/cm.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_galena1_injection_<timestamp>.sqlite`
+  and `..._pre_galena2_injection2_<timestamp>.sqlite`). Views rebuilt,
+  QC re-run clean. Still not committed to git.
+
+### Addendum: Galena 3 and SB2 injection-outlet samples added, same 2025-09-30 injection-side round
+
+User supplied U230 form pairs for Galena 3 and SB2's injection side
+(same round as Galena 1/2's injection samples above). Neither had a
+pre-existing injection-side location (Galena 2 was the only one with
+one, from the WETLAB reports), so two new Locations were registered,
+same pattern as Galena 1 Injection Outlet: anchored to their
+respective Sampling_Ports facility centroids (no coordinate given on
+either form).
+
+- **Galena 3 Injection Outlet** (`location_id 248`,
+  `NDEP_U230_Galena3_Injection`) -- 2025-09-30 15:55: pH 6.12,
+  temperature 37.2 C (converted from the form's 99 F), conductivity
+  3,500 uS/cm.
+- **SB2 Injection Outlet** (`location_id 249`, `NDEP_U230_SB2_Injection`)
+  -- 2025-09-30 16:48: pH 6.32, temperature 22.8 C (converted from
+  73 F), conductivity 3,420 uS/cm. Distinct from "SB2 Outlet" (the
+  discharge tap sampled 2025-08-04).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_galena3_injection_<timestamp>.sqlite`
+  and `..._pre_sb2_injection_<timestamp>.sqlite`). Views rebuilt, QC
+  re-run clean. Still not committed to git.
+
+### Addendum: SB3 injection-outlet sample added, completes the 2025-09-30 injection-side round
+
+User supplied the SB3 Outlet U230 form pair's injection side, same
+2025-09-30 round as Galena 1/2/3 and SB2's injection samples above.
+
+- **SB3 Injection Outlet** (`location_id 250`, `NDEP_U230_SB3_Injection`,
+  new -- no pre-existing injection-side location for SB3, same as
+  SB2/Galena 1/3) -- 2025-09-30 17:15: pH 6.06, temperature 39.4 C
+  (converted from 103 F), conductivity 3,524 uS/cm. Distinct from "SB3
+  Outlet" (the discharge tap sampled 2025-08-04).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_sb3_injection_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
+
+### Addendum: SBHR injection-outlet sample added, same 2025-09-30 injection-side round, large coordinate discrepancy flagged
+
+User supplied the SBHR Outlet U230 form pair's injection side (same
+2025-09-30 round as Galena 1/2/3 and SB2/SB3's injection samples
+above) -- completing the full five-port injection-side set matching
+the 2025-08-04 outlet round.
+
+- **SBHR Injection Outlet** (`location_id 251`,
+  `NDEP_U230_SBHR_Injection`, new -- no pre-existing injection-side
+  location for SBHR) -- 2025-09-30 09:00: pH 5.98, temperature 38.9 C
+  (converted from 102.1 F), conductivity 3,201 uS/cm. Distinct from
+  "SBHR Outlet" (the discharge tap sampled 2025-08-04, which itself
+  was already flagged with an unusually large ~1,248 m coordinate
+  discrepancy).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_sbhr_injection_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean. Still not committed to git.
 
 ### Addendum: IW-3/Cox I-1 marked Plugged & Abandoned from the 2025 TFT Report's Table 2
 
