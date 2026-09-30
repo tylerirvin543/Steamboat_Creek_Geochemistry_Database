@@ -10,18 +10,19 @@ prose-first, figure-forward, with proper citations via `references.bib`
 
 | File | Status |
 |---|---|
-| `01_introduction.qmd` | Stub -- not yet drafted |
-| `02_geochemical_background.qmd` | **Drafted** -- chemistry/PHREEQC/statistics background and methods, with real citations |
-| `03_methods.qmd` | Partial draft (sampling design section complete, field/lab methods still stub) |
-| `04_results.qmd` | Partial draft (real-findings inventory as a checklist; not yet written as manuscript prose/figures) |
-| `05_discussion_and_future_work.qmd` | Stub -- not yet drafted |
-| `06_calibration_sampling_proposal.qmd` | **Drafted** -- a decision-facing mini-proposal (n needed, analyte/isotope pairing, fissure/SBW site cost-benefit, tiered 20/40/60+ sample-count recommendation), kept separate from `notebooks/09`'s raw statistics per explicit request |
-| `references.bib` | Starter set of ~15 core citations (Sorey, Dhakal, Klein, Collar & Huntley, Mariner & Janik, White, Giggenbach, Fournier, D'Amore & Panichi, PHREEQC, Akerley). Extend as needed -- see `docs/literature/annotated_bibliography.qmd` for the full 39-document reading-notes bibliography this can draw from. |
+| `00_thesis_proposal.qmd` | **New master document** -- title page, abstract, and `{{< include >}}` assembly of all six chapters into one ~40-page thesis proposal PDF/HTML. Mirrors `notebooks/00_full_report.qmd`'s transclusion pattern (and inherits its one known cosmetic limitation -- see that file's own note). |
+| `01_introduction.qmd` | **Drafted** -- study area/setting, a chronological table + timeline figure of Steamboat Hills events (1950-2026), the chloride-tracer/conductivity-proxy motivation, and the three thesis questions. |
+| `02_geochemical_background.qmd` | **Drafted** -- chemistry/PHREEQC/statistics background and methods, with real citations, plus a "related literature" subsection summarizing reservoir-engineering/structural/regional-analog sources. |
+| `03_methods.qmd` | **Drafted** -- database architecture/data sources/QA-QC, field methods (spring remapping, temperature/conductivity loggers), a condensed sampling plan, statistical/PHREEQC methods, and a hydrologic/Leapfrog/fault modeling-directions subsection. |
+| `04_results.qmd` | **Drafted** -- real findings as flowing prose with figures: a live discharge estimate, the Cl/B ratio stability test, geothermometer divergence, hydrochemical facies clustering, and the sampling-frequency Monte Carlo result, closing with an explicit "what these results do not yet show" section. |
+| `05_discussion_and_future_work.qmd` | **Drafted** -- revisits the three thesis questions, restates the chemistry-first modeling principle, and lays out the three sequenced roadblocks (real paired Cl/EC samples, in-field water levels, digitized faults) and what resolving each would make possible. |
+| `06_calibration_sampling_proposal.qmd` | **Drafted** -- a decision-facing mini-proposal (n needed, analyte/isotope pairing, fissure/SBW site cost-benefit, tiered 20/40/60+ sample-count recommendation), kept separate from `notebooks/09`'s raw statistics per explicit request. |
+| `references.bib` | Expanded to ~35 real citations (Sorey, Dhakal, Klein, Collar & Huntley, Mariner & Janik, Skalbeck, White/Thompson/Silberman, Lindsey et al. 2026, McCleskey et al., Giggenbach, Fournier, D'Amore & Panichi, PHREEQC, Akerley, Bjornsson, Combs & Goranson, Arehart, Johnson & Hulen, Cohen & Loeltz, Newman, Janik et al. -- the last two explicitly flagged as different-system methodological analogs). Drawn from `docs/literature/annotated_bibliography.qmd`'s 48-document reading-notes bibliography; extend further as needed. |
 
 ## Rendering
 
 ```r
-quarto::quarto_render("manuscript")                          # everything
+quarto::quarto_render("manuscript/00_thesis_proposal.qmd")         # the full ~40-page proposal
 quarto::quarto_render("manuscript/02_geochemical_background.qmd")  # one chapter
 ```
 
@@ -39,10 +40,17 @@ LuaLaTeX toolchain already used for `notebooks/00_full_report.qmd`).
 - `notebooks/09_sampling_campaign_design.qmd` -- the full, reproducible
   sampling-design analysis this manuscript's Methods chapter condenses.
 
-## Honest status (2026-09-26)
+## Honest status (2026-09-30)
 
-Built this session: the project skeleton, `references.bib`, and Chapter 2
-(geochemical background) drafted in full. Chapters 1, 5 are stubs;
-Chapters 3-4 are partial. Full narrative prose for the remaining chapters
-is real, ongoing work -- not something finished in one session -- and is
-tracked as such rather than silently left incomplete.
+All six chapters are now drafted in full, and a new master document
+(`00_thesis_proposal.qmd`) assembles them into a single ~40-page thesis
+proposal with a title page, abstract, table of contents, and a
+references section generated from `references.bib`. `references.bib`
+was expanded from ~15 to ~35 entries. Two new figures
+(`steamboat_timeline.png`, `discharge_through_time.png`) were added via
+`scripts/analysis/manuscript_figures.R`. This is a first complete
+draft, not a final thesis proposal -- see Chapter 5's own "concrete
+roadblocks" section for what substantive work (real paired Cl/EC
+samples, in-field water levels, digitized faults) still needs to
+happen before the thesis's three central questions can be fully
+answered, and expect further editorial passes as that work lands.

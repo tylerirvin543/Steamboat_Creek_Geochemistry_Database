@@ -181,6 +181,46 @@ implementation is correct, independent of whether this project has its
 own real gas chemistry to apply it to yet (it does not, as of this
 writing).
 
+## Related literature: reservoir engineering, structure, and regional analogs
+
+Beyond the geochemical and tracer-method literature cited above, a
+broader body of work informs how this project's chemistry connects to
+the reservoir's physical structure and history, and is worth
+summarizing briefly here even where it is not used directly in this
+proposal's own calculations. Early reservoir estimates at Steamboat
+[@nehring1979] used enthalpy-chloride and deuterium-chloride diagrams
+on 1977 spring samples to infer a deep thermal fluid similar in
+character to the one this project's own samples still show. Later
+reservoir-engineering work -- three 1991 slim holes characterizing
+high fracture permeability in granodiorite [@combs1994], multi-year
+water-level and temperature monitoring at those same holes correlated
+against regional precipitation and creek discharge [@goranson2000],
+and pressure-temperature-spinner logging of the injection wells this
+project's own well-alias table already tracks [@goranson1995] -- gives
+a real precedent for the hydraulic-gradient and creek-discharge
+correlation work this thesis's own hydrologic-modeling direction
+(Chapter 3) is aimed at eventually reproducing at finer resolution. A
+3D numerical reservoir model calibrated against more than 130 wells
+[@bjornsson2014] and trace-element/gas evidence for a magmatic, rather
+than purely extensional, heat source [@arehart2003] both provide
+reservoir-scale context this project's own well-network schema and
+gas-geochemistry modules are positioned to eventually engage with more
+directly. A directional drilling account for well 83C-6ST1
+[@akerley2021] supplied this project's only real, non-assumed-vertical
+well survey and a real lithologic interval, both now reflected in the
+Leapfrog export described in Chapter 3. Regionally, Cohen and Loeltz's
+[@cohenloeltz1964] characterization of Truckee Meadows groundwater
+gives background context for the wells this project draws from outside
+the Steamboat field itself (used, for example, in Chapter 4's
+barometric-efficiency calculation). Finally, two methodologically
+relevant but geographically distinct studies -- a spring-susceptibility
+analysis at a different Steamboat Springs, in Colorado [@newman2026],
+and a geochemical study of Anderson Springs at the SE Geysers field in
+California [@janik2000] -- are cited only as analogs for method (spring
+temperature-variance ranking, and a stated fault-digitizing accuracy
+convention this project should eventually adopt for its own Leapfrog
+work) and are explicitly not descriptions of the Nevada system.
+
 ## R statistical methods used throughout this work
 
 Beyond PHREEQC itself, this project uses standard, appropriately-chosen

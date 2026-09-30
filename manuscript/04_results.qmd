@@ -1,6 +1,6 @@
 ---
 title: "Results"
-subtitle: "Chapter 4 -- Steamboat Hills Geothermal Outflow (partial draft)"
+subtitle: "Chapter 4 -- Steamboat Hills Geothermal Outflow"
 date: today
 format:
   html:
@@ -9,19 +9,40 @@ format:
     toc: true
 ---
 
-::: {.callout-warning}
-## Status: partial draft
-
-This chapter presents the strongest real findings on file today as
-figures with concise, question-first prose. It is not yet a complete
-results chapter -- several real analyses (the naive Cl-vs-time trend,
-the full PHREEQC mixing/inverse runs, barometric efficiency) are
-described in prose only, pending a full editorial pass once the ArcGIS
-potentiometric-surface and fault-digitizing work (see `ROADMAP.md`)
-lands. Every figure below is regenerated on demand from
-`scripts/analysis/plot_theme.R` and the notebooks cited in its
-caption -- none is a static, hand-made image.
+::: {.callout-note}
+Every figure in this chapter is regenerated on demand from
+`scripts/analysis/plot_theme.R`, `scripts/analysis/manuscript_figures.R`,
+and the notebooks cited in each caption -- none is a static, hand-made
+image. This chapter presents the strongest real findings on file to
+date, organized to follow the same three questions posed in Chapter 1,
+and states plainly, in its final section, what remains unresolved.
 :::
+
+## How much thermal water is discharging to Steamboat Creek today?
+
+```{r discharge-fig}
+#| echo: false
+#| fig-cap: "Thermal-water discharge to Steamboat Creek, 1955-2026, from White (1968) through this project's own live, database-computed estimate (see `scripts/analysis/chloride_mass_balance.R`, `notebooks/07`)."
+knitr::include_graphics("../output/figures/manuscript/discharge_through_time.png")
+```
+
+Extending Sorey and Spielman's own chloride-flux method
+[@sorey2008; @sorey2017] into a reproducible database query (rather
+than a one-time spreadsheet calculation) gives a discharge estimate of
+58.7 liters per second for the one date, May 1, 2026, on which this
+project has a real, paired chloride-and-discharge measurement at both
+the Rhodes Road (SBRR) and Bella Vista (SBBV) stations. This is a
+single day, not the multi-date average this project's own 2026 poster
+reported (roughly 27 L/s, [@irvinlindsey2026]), and the two numbers
+are not expected to agree: Sorey and Spielman [@sorey2017] themselves
+document real seasonal chloride-flux variability at these same sites,
+and a 70-year record spanning 1955-2026 shows discharge estimates
+ranging roughly 30-90 L/s depending on year and method. Read in that
+context, this project's own values sit at the lower end of a long,
+variable record rather than representing an unambiguous before/after
+step change. Establishing enough real, paired samples to build a true
+seasonal average, rather than one date, is precisely what Chapter 6's
+sampling plan is designed to produce.
 
 ## Has Steamboat's thermal-water signature persisted for three decades?
 
@@ -31,19 +52,22 @@ caption -- none is a static, hand-made image.
 knitr::include_graphics("../output/figures/manuscript/cl_b_ratio_by_era.png")
 ```
 
-Cl/B is a conservative-element ratio: both chloride and boron behave
-as near-inert tracers of the deep thermal fluid, so a stable ratio
-across decades is evidence the *same* reservoir fluid is still
-discharging, not a chemically different source. A Welch two-sample
-t-test on the curated end-member set (n = 7 historical, n = 6 modern,
-excluding the Cox well per Sorey & Colvard's own convention and the
-SBRR/SBBV creek mixing points) finds the ratio is similar in
-magnitude but not statistically identical: 19.6 (1950-1991) vs. 21.9
-(2024-2026), t(9.9) = -2.92, p = 0.015. The practical reading is
-conservative: this is evidence *against* a wholesale change in source
-water, with a small, real shift whose cause (analytical-method
-difference vs. a genuine ~12% geochemical shift) is an open question,
-not resolved here.
+Chloride-to-boron ratio is a conservative-element ratio: both
+elements behave as near-inert tracers of the deep thermal fluid, so a
+stable ratio across decades is evidence the *same* reservoir fluid is
+still discharging, not a chemically distinct source. A Welch
+two-sample t-test on the curated end-member set (n = 7 historical
+samples from Sorey and Colvard [@sorey1992], n = 6 modern samples from
+this project's own field campaign, excluding the Cox well per Sorey
+and Colvard's own convention and the SBRR/SBBV creek mixing points)
+finds the ratio is similar in magnitude but not statistically
+identical: 19.6 for 1950-1991 versus 21.9 for 2024-2026,
+t(9.9) = -2.92, p = 0.015. The practical reading is deliberately
+conservative: this is real evidence *against* a wholesale change in
+source water, alongside a small, real shift whose cause -- an
+analytical-method difference between decades, versus a genuine
+geochemical shift of roughly 12% -- remains an open question that this
+result alone cannot settle.
 
 ## Do independent geothermometers agree on how much the outflow has cooled?
 
@@ -53,34 +77,18 @@ not resolved here.
 knitr::include_graphics("../output/figures/manuscript/geothermometer_comparison.png")
 ```
 
-Two independent geothermometers -- Na/K (Giggenbach) and
-quartz/chalcedony -- are both applied to the same real thermal
-samples and compared against each other's *disagreement*, not just
-their individual estimates. Quartz sits systematically below measured
-discharge temperature (partial re-equilibration/dilution on the way
-up) while Na/K sits systematically above it (a deeper, hotter
-reservoir signature that re-equilibrates more slowly than silica).
-This divergence is itself the finding: it is consistent with a single
-cooling/dilution flow path from a genuinely hot (~150-250 C) reservoir,
-not two disconnected water types.
-
-## How coarse can chloride sampling be without losing the discharge signal?
-
-```{r sampfreq-fig}
-#| echo: false
-#| fig-cap: "Monte Carlo reconstruction-error curve for candidate chemistry-sampling intervals, computed from the real ~5-week 2026 SBRR/SBGG specific-conductance record (see `notebooks/09`)."
-knitr::include_graphics("../output/figures/manuscript/sampling_frequency_error_curve.png")
-```
-
-This directly answers the thesis's own sampling-design question, using
-specific conductance as a stand-in dense proxy since no dense real
-chloride series exists yet. Daily sampling keeps reconstruction error
-under ~5% of the mean at both logger sites; weekly sampling costs
-~6-8%; the error grows smoothly rather than showing a sharp cliff at
-any one interval. This motivates the two-tier calibration-sampling
-recommendation in `manuscript/06_calibration_sampling_proposal.qmd`
-(an intensive daily/sub-daily 2-4 week window, followed by biweekly-
-to-monthly ongoing sampling).
+Two independent geothermometers -- sodium/potassium (Giggenbach
+[@giggenbach1988]) and quartz/chalcedony -- are applied to the same
+real thermal samples and compared against each other's disagreement,
+not just their individual estimates. Quartz sits systematically below
+measured discharge temperature (partial re-equilibration and dilution
+on the way up), while sodium/potassium sits systematically above it (a
+deeper, hotter reservoir signature that re-equilibrates more slowly
+than silica does). This divergence is itself the finding, not a
+modeling error to be resolved away: it is exactly what is expected for
+a single cooling, diluting flow path from a genuinely hot (roughly
+150-250 degree Celsius) reservoir, rather than two disconnected water
+types with independent thermal histories.
 
 ## Hydrochemical facies: does unsupervised clustering recover known geochemistry?
 
@@ -97,32 +105,57 @@ knitr::include_graphics("../output/figures/facies/facies_rf_importance.png")
 ```
 
 Clustering every real sample with complete major-ion chemistry into
-hydrochemical facies (Ward hierarchical clustering, k selected by
-silhouette width, cross-checked against an independent Gaussian
-mixture fit and k-means) recovers a pure Na-Cl thermal cluster, a
-dilute background-water cluster, and an intermediate/mixed cluster
-without being told the samples' site types in advance. PCA
-independently confirms the same structure: PC1 (Cl/Na/K/SO4, the
-thermal-dilution axis) and PC2 (Ca/Mg) together explain ~97% of
-variance, and the clusters separate cleanly along PC1. A random-forest
-classifier trained on the same seven major ions ranks Na, Cl, and K as
-the strongest discriminators of facies membership, consistent with the
-same thermal-dilution axis PCA finds -- three independent methods
-(PCA, unsupervised clustering, and supervised variable importance)
-converging on the same chemical explanation is a real, non-trivial
-cross-validation of the underlying pattern, not an artifact of any one
-method's own assumptions.
+hydrochemical facies (Ward hierarchical clustering, with k selected by
+silhouette width and cross-checked against an independent Gaussian
+mixture fit and k-means) recovers a pure sodium-chloride thermal
+cluster, a dilute background-water cluster, and an intermediate mixed
+cluster, without being told each sample's site type in advance.
+Principal component analysis independently confirms the same
+structure: the first two principal components, dominated respectively
+by chloride/sodium/potassium/sulfate and by calcium/magnesium,
+together explain roughly 97% of variance, and the clusters separate
+cleanly along the first axis. A random-forest classifier trained on
+the same seven major ions ranks sodium, chloride, and potassium as the
+strongest discriminators of facies membership -- the same
+thermal-dilution axis principal component analysis finds
+independently. Three different methods converging on the same
+chemical explanation is a genuine, non-trivial cross-validation of the
+underlying pattern, not an artifact of any one method's own
+assumptions.
+
+## How coarse can chloride sampling be without losing the discharge signal?
+
+```{r sampfreq-fig}
+#| echo: false
+#| fig-cap: "Monte Carlo reconstruction-error curve for candidate chemistry-sampling intervals, computed from the real ~5-week 2026 SBRR/SBGG specific-conductance record (see `notebooks/09`)."
+knitr::include_graphics("../output/figures/manuscript/sampling_frequency_error_curve.png")
+```
+
+This result answers this thesis's second objective directly, using
+specific conductance as a stand-in dense proxy since no dense real
+chloride series exists yet. Daily sampling keeps reconstruction error
+under roughly 5% of the mean at both logger sites; weekly sampling
+costs roughly 6-8%; the error grows smoothly rather than showing a
+sharp cliff at any one interval. This result is what motivates the
+two-tier calibration-sampling recommendation in Chapter 6: a short,
+intensive daily-to-sub-daily window, followed by a lower-frequency,
+biweekly-to-monthly campaign for the remainder of the year.
 
 ## What these results do not yet show
 
-Stated plainly, for scope: a naive Cl-vs-year regression across all
-thermal-influenced samples is only marginally significant once known
-confounders are excluded (`notebooks/07`, `08` walk through why, and
-disagree with each other on the honest interpretation) -- this project
-does **not** yet claim a confirmed multi-decade chloride trend, and
-this chapter will not overstate one. Real two-end-member PHREEQC
-mixing and inverse-modeling runs exist (`notebooks/06`) but use a
-representative, not a time-paired, end-member set, since no real
-chemistry sample yet overlaps the conductivity-logger deployment
-window closely enough to name a confident synoptic pair. Both are
-flagged here rather than silently omitted.
+Stated plainly, for scope: a naive chloride-versus-year regression
+across all thermal-influenced samples is only marginally significant
+once known confounders (which wells count as "thermal") are excluded,
+and different statistical framings of the same question do not fully
+agree with each other -- this project does **not** yet claim a
+confirmed multi-decade chloride trend, and does not overstate one
+here. The real two-end-member PHREEQC mixing and inverse-modeling runs
+described in Chapter 3 use a representative, not a time-paired,
+end-member set, since no real chemistry sample yet overlaps the
+conductivity-logger deployment window closely enough to name a
+confident synoptic pair. A real barometric efficiency has been
+computed for two wells near, but not inside, the Steamboat field
+itself, and cannot yet be treated as representative of a true thermal
+spring or production well. Each of these gaps is a concrete, testable
+target for the coming field season, not an oversight -- they are
+picked up again in Chapter 5.

@@ -4833,6 +4833,101 @@ questions.
   built); this session's file changes are not yet committed/pushed to
   git as of this note.
 
+## Session 41 (2026-09-30): ~40-page thesis proposal assembled from the manuscript/ chapter skeleton
+
+Built the full thesis-proposal document requested: a single, cohesive,
+grad-student-voiced ~40-page PDF assembled from the six `manuscript/`
+chapter files, covering background/chronology, geochemical background,
+database/methods/QA-QC, results, discussion/future work, and the
+calibration sampling proposal, with a real summarized bibliography and
+a handful of curated figures. Planned in Plan mode
+(`.posit/assistant/plans/2026-09-30-2226-plan.md`) and executed in full
+in the same session.
+
+- **New master document**: `manuscript/00_thesis_proposal.qmd` --
+  title page, abstract, and `{{< include >}}` assembly of all six
+  chapters, mirroring `notebooks/00_full_report.qmd`'s already-proven
+  transclusion pattern (no duplicate chunk labels across the six
+  chapters, confirmed by grep before assembling). Renders cleanly to a
+  43-page PDF via the existing TinyTeX/LuaLaTeX toolchain. Inherits,
+  and explicitly documents inheriting (in its own front-matter note),
+  the same known cosmetic stray-title-page limitation
+  `notebooks/00_full_report.qmd` already has and deliberately does not
+  fix, for the same reason (fixing it would require stripping YAML
+  from all six chapter files, breaking their standalone rendering).
+- **All six chapters drafted/expanded from their prior stub/partial
+  state**: `01_introduction.qmd` (new -- study area, a chronology
+  table + new timeline figure spanning 1950-2026, the chloride-tracer/
+  conductivity-proxy motivation, three explicit thesis questions);
+  `03_methods.qmd` (expanded -- new "Database architecture, data
+  sources, and quality control" section covering sources/pipeline
+  design/real QC fixes at a top level, field methods, conductivity-
+  as-Cl-proxy methods, a condensed sampling plan, and a new
+  "Hydrologic and geologic modeling directions" section covering
+  potentiometric mapping and the Leapfrog/ArcGIS fault-digitizing
+  workflow); `04_results.qmd` (rewritten from a findings checklist
+  into flowing prose, adding a new live discharge-through-time section
+  and figure); `05_discussion_and_future_work.qmd` (new -- revisits
+  the three thesis questions, restates the chemistry-first modeling
+  principle, sequences the three real roadblocks from `ROADMAP.md`
+  into prose, closes with a summary). `02_geochemical_background.qmd`
+  and `06_calibration_sampling_proposal.qmd` (already drafted) were
+  left largely as-is; `02` gained one new subsection (below).
+- **`references.bib` expanded from ~15 to ~35 real entries**, pulled
+  from `docs/literature/annotated_bibliography.qmd`'s 48
+  already-read, individually-verified sources (Skalbeck 2001, Lindsey
+  et al. 2026, the Irvin & Lindsey 2026 poster, McCleskey et al.
+  2012/2016, Thompson & White 1964, Silberman et al. 1979, Cohen &
+  Loeltz 1964, Nehring 1979, Arehart 2003, Johnson & Hulen 2006,
+  Bjornsson 2014, Combs & Goranson 1994, Goranson 1995/2000, Newman
+  2026 and Janik et al. 2000 -- the last two kept explicitly flagged
+  as different-system methodological analogs, not Steamboat, Nevada
+  data). A new "Related literature: reservoir engineering, structure,
+  and regional analogs" subsection was added to `02_geochemical_
+  background.qmd` specifically to give the less-central sources (slim-
+  hole monitoring, magmatic-heat-source evidence, the 83C-6ST1
+  directional-drilling account, regional Truckee Meadows hydrogeology)
+  a real, brief summary and a citation, rather than leaving them in
+  the bibliography unused. Confirmed via render log + a
+  literal-`@`-leftover grep that every citation key resolves and the
+  generated References section (pandoc citeproc, cites only what's
+  actually referenced in prose -- about 27 of the ~35 entries) renders
+  correctly.
+- **Two new figures**, built via a new script,
+  `scripts/analysis/manuscript_figures.R`
+  (`build_manuscript_figures(con)`): `discharge_through_time.png`
+  (factored out of `notebooks/07`'s own `discharge-plot` chunk into a
+  reusable function so the manuscript and the notebook stay in sync
+  automatically, using `chloride_mass_balance.R`'s real, corrected
+  Q_TW calculation -- confirmed the real live value, 58.7 L/s for the
+  single 2026-05-01 paired SBRR/SBBV date, matches Session 39's
+  already-documented result exactly) and `steamboat_timeline.png` (a
+  new, simple horizontal timeline figure spanning 1950-2026, built
+  from dates already documented elsewhere in this project --
+  `website/timeline.Rmd`, notebook 07's own discharge table, the
+  annotated bibliography -- not estimated fresh). Both regenerated on
+  demand, consistent with this project's "no static committed
+  figures" convention; verified visually before use. The chapters
+  otherwise reuse three already-existing figures
+  (`cl_b_ratio_by_era.png`, `geothermometer_comparison.png`,
+  `sampling_frequency_error_curve.png`) plus the facies PCA/RF-
+  importance pair.
+- **`manuscript/README.md` updated**: status table now shows all six
+  chapters (plus the new master document) as drafted rather than
+  stub/partial, and the "Honest status" note dated to this session.
+- **Not done this session**: no new database ingestion, schema
+  changes, or PHREEQC runs (this was a documentation/writing task
+  only, reusing already-computed real results); no fault digitization
+  or Leapfrog build-out (the proposal describes both as future work,
+  per the existing README "Planned:" section); DEMO database untouched.
+  This session's file changes are not yet committed/pushed to git.
+  Also flagged to the user, separately from the plan: several
+  standing action items remain open independent of this proposal --
+  the NDEP/Ormat data requests, digitizing Collar & Huntley (1990)
+  Figure 1, resolving the remaining ambiguous well identities, and the
+  still-deferred notebook-07 restructuring (Session 40) -- none
+  addressed this session.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

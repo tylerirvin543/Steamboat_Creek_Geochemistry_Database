@@ -1,6 +1,6 @@
 ---
 title: "Discussion and Future Work"
-subtitle: "Chapter 5 -- Steamboat Hills Geothermal Outflow (stub -- not yet drafted)"
+subtitle: "Chapter 5 -- Steamboat Hills Geothermal Outflow"
 date: today
 format:
   html:
@@ -9,24 +9,156 @@ format:
     toc: true
 ---
 
-::: {.callout-warning}
-## Status: stub, not yet drafted
+## Revisiting the three thesis questions
 
-This chapter should synthesize `ROADMAP.md` into manuscript prose once
-Chapter 4 (Results) is written in full. Key threads to weave together:
+**Has thermal-water outflow at Steamboat changed since Sorey's own
+studies?** The clearest answer this proposal can give today is "not
+in kind, though perhaps somewhat in magnitude." The chloride-to-boron
+signature of the real thermal end-member is statistically
+distinguishable between the 1950-1991 baseline and the 2024-2026
+samples (19.6 versus 21.9, p = 0.015), but the shift is small, and its
+cause -- a genuine geochemical change of roughly 12%, versus a
+difference in analytical method between eras separated by three
+decades -- cannot be disentangled from the data on hand. The
+discharge estimate is even less settled: this project's single real
+paired chloride-and-discharge measurement (58.7 L/s) and its own
+2026 poster's multi-date average (roughly 27 L/s) both sit within,
+not clearly below, the range of discharge estimates reported across
+the 1955-2026 record, and Sorey and Spielman [@sorey2017] themselves
+document real seasonal variability large enough to explain much of
+that spread on its own. What this proposal can rule out, at least
+provisionally, is a wholesale change in source water: the conservative
+Cl/B signature is essentially the same fluid three decades later, and
+the two independent geothermometers (Chapter 4) diverge in exactly the
+way expected for a single cooling, diluting reservoir, not two
+disconnected water types. What it cannot yet answer is Sorey
+[@sorey2000]'s specific open question: whether any of the same vents
+that stopped flowing by 1989 and had still not resumed by 2000 are
+flowing again in 2026. That is a direct, field-checkable question this
+thesis's own spring-remapping survey is positioned to answer, and it
+has not yet been formally cross-checked against Sorey's own named
+site list.
 
-- What the real findings (Chapter 4) do and don't yet settle about
-  long-term thermal-water discharge trends.
-- The chemistry-first, spatial-connectivity-second modeling principle
-  (Chapter 2) and how it should shape any future Leapfrog/MODFLOW-
-  informed remodeling.
-- The concrete roadblocks and their sequencing from `ROADMAP.md` Sections
-  2-3 (real overlapping Cl/EC samples, in-field well water levels,
-  digitized faults, a MODFLOW-ready hydrostratigraphic model).
-- Whether this thesis's own 2026 spring-remapping fieldwork confirms or
-  overturns Sorey (2000)'s [@sorey2000] finding that natural spring flow
-  had not resumed even after the groundwater-decline driver partly
-  blamed for its 1987-89 cessation had itself reversed by 2000 -- a real,
-  directly testable question raised while preparing this manuscript
-  (Chapter 1).
-:::
+**Can continuous conductivity substitute for discrete chloride
+sampling?** The Monte Carlo result in Chapter 4 is encouraging in
+principle -- reconstruction error grows smoothly and stays under about
+5% for daily sampling using specific conductance's own record as a
+proxy for itself -- but this is not yet a real test of whether
+chloride actually tracks conductance closely at Steamboat, because no
+real chloride sample yet overlaps the period the loggers have been
+running. This is the single most direct, most tractable gap this
+thesis can close with one field season of the calibration sampling
+proposed in Chapter 6, and it should be treated as the highest
+priority of the concrete next steps below.
+
+**What does the subsurface plumbing actually look like?** This is the
+least resolved of the three questions, and honestly so. It depends on
+two things that do not yet exist: water-level data from wells inside
+the Steamboat field itself (not the wider South Truckee Meadows basin,
+which is hydrogeologically distinct), and a digitized fault geometry
+to build a real three-dimensional geologic model on top of. Both are
+concrete, identifiable blockers with a known path to resolving them,
+laid out below, rather than open-ended unknowns.
+
+## The chemistry-first modeling principle, and what it implies going forward
+
+A theme running through Chapters 2 and 3 is worth restating here
+explicitly, because it will matter more, not less, once a three-
+dimensional geologic model exists to tempt a shortcut: a defensible
+mixing or reaction-path model should be built from which samples are
+genuinely distinct, chemically credible end-members, not from which
+samples happen to be close together on a map. Two locations can be
+close and hydraulically unconnected, or far apart and connected
+through a fracture network that a map alone would not suggest. The
+real mixing model already run in this project followed this logic --
+its two end-members were chosen because they are chemically distinct
+(chloride concentrations of 815 and 45 mg/L), not because they are
+near each other -- and the same discipline should be carried forward
+once fault geometry and a Leapfrog model exist: those tools should be
+used to test which chemically-plausible end-members are worth pairing,
+not to define the chemistry itself.
+
+## Concrete roadblocks and how they are sequenced
+
+Three roadblocks currently limit how far this work can go, and they
+are listed here in the order that resolving each one unblocks the
+next.
+
+1. **No real chloride sample yet overlaps the conductivity-logger
+   deployment window.** This blocks the entire chloride-conductivity
+   calibration objective (Chapter 4's Monte Carlo result is a
+   preparatory analysis, not yet a real calibration) and blocks real,
+   time-paired end-member selection for PHREEQC mixing and inverse
+   modeling. It is resolved by collecting new chloride samples during
+   an active logger deployment -- exactly the campaign proposed in
+   Chapter 6.
+2. **Too few wells inside the Steamboat field itself have current,
+   usable water-level data.** This blocks a real, field-specific
+   potentiometric surface and a site-specific barometric efficiency
+   (Chapter 4's two real barometric-efficiency values come from wells
+   outside the field, in the wider South Truckee Meadows basin, and
+   should not be treated as representative of a true thermal well or
+   spring). A standing data request to NDEP for daily water levels and
+   pressure at several named production and monitor wells, and for
+   more precise surveyed well locations, is already drafted and sent;
+   receiving that data is the concrete next step.
+3. **No fault trace has been digitized anywhere in this project.**
+   This blocks the Leapfrog three-dimensional geologic model, any
+   fault-aware regrouping of PHREEQC end-members, and any future
+   groundwater-flow-model zonation. The recommended path is digitizing
+   the fault-and-lineament map in Collar and Huntley [@collar1990] in
+   ArcGIS, using this project's own well coordinates as control
+   points; the ingestion pathway for the resulting shapefile is
+   already built and waiting.
+
+## What resolving these would make possible
+
+Once real, temporally-paired chloride and conductance samples exist,
+a genuine calibration regression (not a synthetic self-test) can be
+fit, and the resulting relationship can be used to reconstruct a
+continuous chloride-flux record, and by extension a continuous
+discharge estimate, rather than the single-date or multi-date-average
+snapshots this proposal currently reports. Once field-specific water
+levels exist, a real potentiometric surface can be interpolated in
+ArcGIS around the Lower Sinter Terrace, giving an independent,
+non-chemical line of evidence about flow direction to compare against
+the facies and mixing results in Chapter 4. Once fault geometry
+exists, a real Leapfrog model can be built from well collars,
+completions, and the digitized structure, letting the chemistry-first
+mixing results be tested against an actual candidate geometry for the
+first time, and providing the hydrostratigraphic zonation a future
+groundwater flow model would need. None of these three steps depends
+on the others in a way that would force a particular order beyond what
+is listed above; all three can, in principle, proceed in parallel
+during the coming field season.
+
+## Longer-term directions, out of scope for this proposal
+
+A full MODFLOW-style groundwater flow model is the natural longer-term
+destination for this line of work, but it depends on the Leapfrog
+model and the potentiometric surface both existing first, plus a real
+recharge estimate -- for which the one real precipitation-response
+signal already detected at a South Truckee Meadows monitoring well is
+a start, not a calibration. Expanded PHREEQC reaction-path and gas-
+geochemistry modeling (the D'Amore-Panichi gas geothermometer and
+gas-mixing modules are already built and validated against published
+Mariner and Janik [@mariner1995] values, but have never been run
+against this project's own real gas chemistry, because no real
+dissolved-gas sample yet exists) would benefit from the same
+temporally-paired sampling this proposal's calibration campaign is
+designed to produce. Both are named here as explicit future work, not
+as part of the thesis this proposal describes.
+
+## Closing
+
+This proposal argues that Steamboat's thermal-water chemistry has not
+changed in kind since Sorey's own studies, that a workable method for
+turning continuous conductivity into a chloride proxy is close to
+being testable for the first time, and that the tools needed to
+finally connect this chemistry to a real subsurface geometry -- a
+water-level network and a digitized fault map -- are identified,
+requested, and in one case already partially built and simply waiting
+for real input. The remaining work is not open-ended: it is a specific
+field season of calibration sampling, a specific data request, and a
+specific GIS digitizing task, each already scoped in the chapters
+above.

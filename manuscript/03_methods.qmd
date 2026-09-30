@@ -1,6 +1,6 @@
 ---
 title: "Methods"
-subtitle: "Chapter 3 -- Steamboat Hills Geothermal Outflow (partial draft)"
+subtitle: "Chapter 3 -- Steamboat Hills Geothermal Outflow"
 date: today
 format:
   html:
@@ -9,47 +9,239 @@ format:
     toc: true
 ---
 
-## Sampling design
+## Database architecture, data sources, and quality control
 
-See `notebooks/09_sampling_campaign_design.qmd` for the full, reproducible
-analysis behind the SBRR/SBGG calibration campaign design; condensed here:
+Every method described in this chapter, and every result in Chapter
+4, is built on top of a single relational database
+(`database/geochem_operational.sqlite`) rather than a collection of
+spreadsheets. This was a deliberate choice: this project draws on more
+than a dozen independent data sources with incompatible formats,
+units, and naming conventions, and keeping them in one queryable
+schema is what makes it possible to ask a question like "what is the
+chloride-to-boron ratio of every real thermal sample from 1950 to
+2026" as a single reproducible query rather than a manual
+spreadsheet-merging exercise repeated every time the question is
+asked slightly differently.
 
-::: {.callout-note}
-A two-tier design is recommended: a short (2-4 week), daily-to-sub-daily
-intensive chloride-sampling window at both SBRR and SBGG early in the
-field season (to establish a real Cl-EC calibration relationship for the
-first time), followed by a lower-frequency (biweekly-to-monthly) campaign
-for the remainder of the year, with extra samples deliberately bracketing
-large storms/spring runoff. A real Monte Carlo subsampling analysis on
-the existing conductivity record shows daily sampling keeps reconstruction
-error under ~5% of the mean specific conductance at both sites, growing
-smoothly (not sharply) as the interval lengthens -- see the notebook for
-the full error-vs-interval curve and its caveats.
-:::
+**Data sources.** The database is populated from field sampling
+(chemistry, isotopes, and temperature at the Lower Sinter Terrace
+wells and springs); the Nevada Division of Environmental Protection
+(NDEP), both a bulk historical chemistry export and public-records-
+request compliance documents for Ormat's production wells; the Nevada
+Division of Water Resources (NDWR), which supplies well construction
+logs and water-rights records; the Nevada Division of Minerals (NDOM),
+which supplies the official state permit record for every Ormat well
+(permit number, API number, well type, and status); the U.S.
+Geological Survey, for streamflow, water level, and historical
+specific-conductance time series; NOAA, for weather and, most recently,
+hourly barometric pressure; the Nevada Bureau of Mines and Geology's
+statewide geothermal-well compilation; and a set of historical
+literature sources -- principally Sorey and Colvard [@sorey1992],
+Mariner and Janik [@mariner1995], and Skalbeck [@skalbeck2001] -- whose
+own tables of dated chemistry, well completions, and subsurface depth
+points have been transcribed and ingested directly rather than merely
+cited.
 
-## Field and laboratory methods
+**Pipeline design.** Each source has its own ingestion script under
+`scripts/ingest/`, and every script follows the same two rules: it is
+idempotent (re-running it against a database that already has its
+data does not create duplicates), and it never silently overwrites a
+value that is already on file. New, less-certain information (for
+example, a well identity inferred from a scanned drilling report, or a
+station name that does not exactly match anything already in the
+database) is staged into a review table and only promoted into the
+core schema once a human has confirmed it -- a pattern used throughout
+for exactly the situations where guessing would be easy but wrong.
+`scripts/run_pipeline.R` orchestrates the full set of ingestion and
+analysis stages and reports, stage by stage, what ran, what was
+skipped, and how long each step took.
 
-::: {.callout-warning}
-Stub -- to be drafted: field sampling protocol (locations, sampling
-events, field measurements per `scripts/ingest/ingest_field.R`), lab
-chemistry methods (major ions, alkalinity, trace elements per
-`scripts/ingest/ingest_lab.R`), isotope analysis methods, temperature/
-conductivity logger deployment methods.
-:::
+**Quality control.** Several real, substantive data-quality problems
+were found and fixed over the course of building this database, and
+they are worth naming because they materially affect how much the
+results in Chapter 4 can be trusted. A missing alkalinity parameter
+in the NDEP chemistry feed meant charge-balance error initially looked
+like roughly 60% for most samples; once alkalinity was correctly
+mapped and unit-converted, the median charge-balance error for the
+same samples dropped to about 0.7%, with the majority now passing the
+standard plus-or-minus 5% quality threshold. Several analytes (silica,
+arsenic, boron, iron, manganese) were found stored in mixed units
+(micrograms and milligrams per liter) within the same column and are
+now converted consistently before use. A systematic elevation-unit
+error (feet stored as if they were meters) was found and corrected
+project-wide. A join-correctness bug in the code that pairs chemistry
+samples with the nearest streamflow reading silently returned a
+0-minute time difference for every match for years before it was
+caught; fixing it revealed that only a small, specific subset of
+samples actually overlap the U.S. Geological Survey's live discharge
+record closely enough to be paired at all, which is itself an
+important, previously-hidden limitation on Chapter 4's discharge
+calculation. A standing, automated quality-control pass
+(`scripts/qc/qc_data_integrity_checks.R`) checks for missing data,
+implausible values, PHREEQC convergence failures, and near-duplicate
+locations on every pipeline run, and its results are summarized in a
+standing status report rather than checked only when something looks
+wrong.
+
+## Field methods
+
+**Spring and well remapping.** Ormat's own records list several
+springs at the Lower Sinter Terrace as inactive; a central field task
+of this thesis is walking that terrace and confirming, for each one,
+whether it is in fact dry, seeping, or actively discharging, and
+recording its condition with a GPS-tagged field photograph and
+observation. This same photo-to-location pipeline is used for every
+field visit, not just the terrace survey: a photograph's embedded GPS
+and timestamp, where present, can register a new monitoring location
+or check an existing one's coordinate without a coordinate ever being
+typed in by hand.
+
+**Chemistry and isotope sampling.** Water samples are collected at
+springs, wells, and creek stations, with field measurements (pH,
+temperature, specific conductance) taken at the time of collection and
+laboratory analyses (major ions, alkalinity, trace elements, and
+delta-18-O/delta-D isotopes) run afterward. Chapter 6 lays out, in
+detail, the calibration-sampling plan this thesis proposes for the
+year ahead.
+
+**Temperature logger network.** Continuous temperature loggers are
+deployed at springs, wells, and along the eruption fissure itself,
+recording at a regular interval since deployment began in 2025. These
+loggers are the most direct way to see whether the 2025 eruption's
+thermal signature has been stable, cooling, or shifting laterally
+since it was capped, without needing a person physically present at
+the vent.
+
+**Conductivity loggers as a chloride proxy.** Two continuous specific-
+conductance loggers were deployed in Steamboat Creek in mid-2025: one
+co-located with the existing U.S. Geological Survey gauge near Rhodes
+Road (SBRR, serving as the upstream/control site) and one further
+downstream near Geiger Grade (SBGG, the downstream site), matching the
+same two site roles Sorey and Spielman used for their own chloride-
+flux calculations [@sorey2008; @sorey2017]. The premise, following
+the same method already demonstrated at Yellowstone [@mccleskey2012;
+@mccleskey2016], is that specific conductance should track chloride
+(and other conservative geothermal solutes) closely enough to serve
+as a continuous, inexpensive proxy for a quantity that is otherwise
+only obtainable from discrete, lab-analyzed samples. Establishing that
+relationship for the first time at Steamboat, with a real calibration
+dataset, is this thesis's second central objective, and is the
+subject of the sampling plan below and in Chapter 6.
+
+## Proposed chloride sampling plan (condensed)
+
+A full, reproducible statistical analysis behind this plan is given in
+`notebooks/09_sampling_campaign_design.qmd`, and a complete
+decision-facing version, including cost-benefit tiers and candidate
+additional sites, is given in Chapter 6. In brief: because no real
+chloride sample yet overlaps the period the conductivity loggers have
+been running, the single highest-priority field task is a short (two
+to four week), daily-to-sub-daily intensive chloride-sampling campaign
+at both SBRR and SBGG early in the coming field season, specifically
+to establish a first real chloride-to-conductance calibration
+relationship. That intensive window should be followed by a lower-
+frequency (biweekly-to-monthly) sampling campaign for the remainder of
+the year, with additional samples deliberately timed around large
+storms and spring runoff, when the relationship is most likely to
+break down. A Monte Carlo subsampling analysis on the existing
+conductivity record (Chapter 4) supports this design quantitatively:
+reconstructing the mean specific conductance from daily sampling keeps
+error under about 5%, while weekly sampling costs 6-8%, with the error
+growing smoothly rather than showing a sharp cliff at any particular
+interval. Every calibration sample should also carry major-ion and,
+for a subset, isotope chemistry, since chloride alone cannot
+distinguish simple mixing from evaporative concentration.
 
 ## Statistical methods
 
-See Chapter 2's closing section for a summary of which statistical method
-was used where and why. Full statistical reporting (test statistic,
-effect size, confidence interval, assumption checks) for every real test
-run in this project lives in `notebooks/07_historical_context_sorey1992.qmd`
-and `notebooks/08_statistical_synthesis.qmd`.
+A range of standard, appropriately-chosen statistical methods is used
+throughout this work rather than a single default test applied
+everywhere. Two-sample comparisons use Welch's t-test where normality
+is reasonable and Kruskal-Wallis with pairwise Wilcoxon rank tests
+where it is not; multivariate ion relationships are explored with a
+significance-tested Pearson correlation matrix and principal component
+analysis; hydrochemical facies are identified by hierarchical (Ward)
+clustering and cross-checked against an independent Gaussian-mixture
+fit and k-means; linear mixed-effects models account for repeated
+sampling of the same well or location rather than pooling all
+observations as if independent; and nonparametric bootstrap confidence
+intervals are used where a real sample size is too small to trust a
+classical interval. Full statistical reporting -- test statistic,
+effect size, confidence interval, and assumption checks -- for every
+real test run against this project's data is given in
+`notebooks/07_historical_context_sorey1992.qmd` and
+`notebooks/08_statistical_synthesis.qmd`, paired with the exact code
+that produced each result.
 
-## PHREEQC modeling methods
+## PHREEQC and geochemical modeling methods
 
-See Chapter 2 for the full background on charge balance, saturation
+Chapter 2 gives the full background on charge balance, saturation
 index, the five thermodynamic databases used and why, and the two
-geothermometry approaches. Real speciation/saturation-index results exist
-for 233 eligible real samples; a real two-end-member mixing run and one
-real (partially-parsed, see Chapter 2's caveat) inverse-modeling run have
-also been completed.
+geothermometry approaches this project relies on. In brief, aqueous
+speciation and saturation-index modeling is run through the real
+PHREEQC 3 executable [@phreeqc] against every sample with complete
+enough chemistry to support it (233 real samples as of this writing),
+with a database auto-selected per sample by temperature and total
+dissolved solids and a documented fallback when the first choice fails
+to converge. A real two-end-member conservative-mixing model and one
+real PHREEQC inverse-modeling run (mixing plus mineral mass transfer)
+have also been completed, using chemically distinct, not merely
+spatially close, end-members, following the modeling principle laid
+out at the end of Chapter 2.
+
+## Hydrologic and geologic modeling directions
+
+The database described above is designed to support three further
+modeling steps beyond the chemistry itself, each at a different stage
+of readiness.
+
+**Potentiometric surface mapping.** A groundwater-elevation surface
+around the Lower Sinter Terrace would let hydraulic gradients, not
+just chemistry, speak to where thermal water is moving in the
+subsurface. Today, only two or three wells inside the Steamboat field
+itself carry continuous, current water-level data; the much larger
+pool of wells with real water-level records belongs to the wider,
+hydrogeologically distinct South Truckee Meadows basin. A standing
+data request to NDEP (Chapter 5) for daily water levels at several
+specific production and monitor wells is the concrete step that would
+unblock a real, field-specific potentiometric surface; ArcGIS Pro's
+Geostatistical Analyst (Empirical Bayesian Kriging), cross-checked
+with R's `gstat` package, is the recommended interpolation approach
+once enough wells qualify.
+
+**A Leapfrog three-dimensional geologic model.** Leapfrog is
+purpose-built for exactly the kind of implicit geologic modeling this
+system needs: well collars, lithology, and structural surfaces built
+into a 3D volume that a groundwater or reactive-transport model can
+then be built on top of. This project already exports well collar,
+survey, and completion-interval data into Leapfrog's input format for
+every well with adequate location and depth data (roughly half of the
+wells on file today), all vertical, since no well in this project has
+a recorded directional survey. The piece Leapfrog needs that does not
+yet exist is real fault geometry: no fault trace has yet been
+digitized anywhere in this project. The proposed path forward is
+squarely a field-and-GIS task rather than a database task: digitize
+the fault-and-lineament map in Collar and Huntley [@collar1990]
+(chosen because it is a real, published fault map that also locates
+several wells already resolved in this database, providing natural
+control points) in ArcGIS, using this project's own well coordinates
+as georeferencing anchors, and bring the resulting shapefile back into
+the database through an ingestion script (`ingest_fault_traces.R`)
+that is already built and waiting for real input. Once real faults
+exist, PHREEQC's own end-member and mixing results (Chapter 2's
+"chemistry first" principle) can be used to test, rather than assume,
+which wells the fault geometry says should or should not be
+hydraulically connected -- checking the geologic model against the
+chemistry, and vice versa, rather than letting either one dictate the
+other.
+
+**Toward a groundwater flow model.** A MODFLOW-style flow model is the
+natural longer-term destination for this work, once the potentiometric
+surface and the Leapfrog hydrostratigraphic zones both exist to
+inform its boundary conditions and zonation. This project's real,
+first calculation of barometric efficiency for two wells near the
+field (Chapter 4) is an early step in that direction -- a barometric
+efficiency implies something about how confined a given aquifer zone
+is -- but a groundwater flow model itself is explicitly out of scope
+for the work presented in this proposal and is discussed as future
+work in Chapter 5.

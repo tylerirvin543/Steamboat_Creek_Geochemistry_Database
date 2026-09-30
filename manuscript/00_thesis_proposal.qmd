@@ -1,0 +1,121 @@
+---
+title: "Steamboat Hills Geothermal Outflow: A Thesis Proposal"
+subtitle: "Chloride discharge, conductivity as a chemical proxy, and the subsurface plumbing of a reawakening geothermal system"
+author: "Tyler Irvin"
+date: today
+format:
+  pdf:
+    toc: true
+    toc-depth: 2
+    number-sections: true
+    fig-pos: "H"
+    keep-tex: false
+    code-overflow: wrap
+    include-in-header:
+      text: |
+        \usepackage{fvextra}
+        \fvset{breaklines=true, breakanywhere=true}
+  html:
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    embed-resources: true
+title-block-style: none
+bibliography: references.bib
+execute:
+  warning: true
+  message: true
+  cache: false
+---
+
+::: {.content-visible when-format="pdf"}
+\begin{titlepage}
+\centering
+\vspace*{3cm}
+{\LARGE \textbf{Steamboat Hills Geothermal Outflow:}}\\[0.3cm]
+{\LARGE \textbf{A Thesis Proposal}}\\[1cm]
+{\Large Chloride discharge, conductivity as a chemical proxy, and the}\\
+{\Large subsurface plumbing of a reawakening geothermal system}\\[2cm]
+{\large Tyler Irvin}\\[0.3cm]
+{\large University of Nevada, Reno}\\[0.3cm]
+{\large \today}
+\end{titlepage}
+:::
+
+# Steamboat Hills Geothermal Outflow: A Thesis Proposal {.unnumbered}
+
+**Chloride discharge, conductivity as a chemical proxy, and the
+subsurface plumbing of a reawakening geothermal system**
+
+Tyler Irvin, University of Nevada, Reno
+
+> **Known cosmetic limitation (PDF output only)**: page 1 of the
+> rendered PDF is a stray, auto-generated title page carrying whichever
+> transcluded chapter's own YAML title happened to win pandoc's
+> last-wins frontmatter merge -- the correct title page is page 3,
+> immediately after the table of contents. This is the same,
+> previously-documented limitation described in
+> `notebooks/00_full_report.qmd`'s own body and `ROADMAP.md` Section 7;
+> it is not chased further here for the same reason (a real fix would
+> require stripping YAML front matter from all six chapter files,
+> which would break their ability to render standalone).
+
+## Abstract {.unnumbered}
+
+The Steamboat Hills geothermal system, south of Reno, Nevada, has been
+studied since the 1950s and produced commercially since the 1980s, but
+its surface expression has not been static: natural hot-spring flow at
+the Lower Sinter Terrace declined and ceased between 1986 and 1989, had
+still not resumed by 2000, and then, beginning around 2022, began
+reawakening, culminating in a geyser-like eruption on June 3, 2025.
+This proposal describes a relational geodatabase and analysis pipeline
+built to support a thesis investigating that reawakening along three
+lines: whether the thermal-water outflow chemistry has genuinely
+changed since Michael Sorey's foundational studies, whether continuous
+specific-conductance monitoring can substitute for costly discrete
+chloride sampling as a proxy for thermal-water discharge, and what the
+subsurface plumbing feeding the terrace looks like. The database
+currently integrates field, state-agency, federal, and historical-
+literature chemistry and hydrologic data spanning 1950 through 2026,
+with a documented quality-control process, geochemical (PHREEQC)
+modeling capability, and a Monte Carlo-informed sampling-frequency
+analysis. Real findings to date include a statistically detectable but
+small shift in the thermal end-member's conservative chloride-to-boron
+ratio, a systematic divergence between two independent geothermometers
+consistent with a single cooling and diluting flow path, three
+independent statistical methods converging on the same hydrochemical
+facies structure, and a real, database-computed thermal-water discharge
+estimate. The proposal closes with a concrete calibration chloride-
+sampling plan, a data request that would unblock a real potentiometric
+surface, and a scoped path toward a fault-informed, Leapfrog-based
+three-dimensional geologic model -- the specific, sequenced steps
+remaining before this thesis's three central questions can be fully
+answered.
+
+\newpage
+
+{{< include 01_introduction.qmd >}}
+
+\newpage
+
+{{< include 02_geochemical_background.qmd >}}
+
+\newpage
+
+{{< include 03_methods.qmd >}}
+
+\newpage
+
+{{< include 04_results.qmd >}}
+
+\newpage
+
+{{< include 05_discussion_and_future_work.qmd >}}
+
+\newpage
+
+{{< include 06_calibration_sampling_proposal.qmd >}}
+
+\newpage
+
+# References {.unnumbered}

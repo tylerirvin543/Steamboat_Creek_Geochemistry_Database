@@ -1,6 +1,6 @@
 ---
 title: "Introduction and Study Objectives"
-subtitle: "Chapter 1 -- Steamboat Hills Geothermal Outflow (STUB -- not yet drafted)"
+subtitle: "Chapter 1 -- Steamboat Hills Geothermal Outflow"
 date: today
 format:
   html:
@@ -9,26 +9,169 @@ format:
     toc: true
 ---
 
-::: {.callout-warning}
-## Status: stub, not yet drafted
+## Study area and setting
 
-This chapter is a placeholder. Real content to write here (drawing on
-material already assembled across the project rather than starting from
-nothing):
+Steamboat Hills sits a few kilometers south of Reno, Nevada, at the
+northern end of a fault-bounded belt of Great Basin geothermal systems
+and is one of the longest-studied hydrothermal areas in the western
+United States. The system has been characterized geologically and
+hydrologically since the 1950s [@thompsonwhite1964; @white1968;
+@white1968c; @silberman1979], produced commercially for electricity
+since the mid-1980s, and is currently operated by Ormat Technologies
+as a binary, fully-reinjected geothermal field generating on the order
+of 79 MW net [@dhakal2025]. Ormat's own production/injection network
+is conventionally divided into three thermal zones -- Upper, Middle,
+and Lower Steamboat -- reflecting a natural-state upflow of roughly
+220-240 degrees Celsius beneath Upper Steamboat that cools along
+northeast-striking faults toward the Middle and Lower fields
+[@dhakal2025; @johnsonhulen2006].
 
-- Study area and setting: Steamboat Hills geothermal field, operated by
-  Ormat Technologies, the Lower Sinter Terrace eruption context that
-  motivates this thesis's spring-remapping fieldwork.
-- Chloride discharge as a tracer of geothermal outflow -- Sorey's own
-  framing [@sorey1992; @sorey2008; @sorey2017], extended in this project
-  via continuous conductivity monitoring (SBRR/SBGG loggers) as a Cl
-  proxy.
-- The three stated thesis objectives (see `README.md`'s "Scientific
-  Context and Purpose"): outflow characterization, Cl-conductivity
-  calibration, and potentiometric/transport mapping.
-- What has changed since Sorey & Colvard (1992) [@sorey1992] and Sorey
-  (2000) [@sorey2000] -- both document a spring-flow cessation that had,
-  as of 2000, not reversed even after the groundwater-level driver
-  partly blamed for it did reverse; whether this remains true in 2026 is
-  a live, testable question this thesis's own fieldwork can answer.
-:::
+At the surface, this deep system expresses itself through the Lower
+Sinter Terrace: an area of active and historically active fumaroles,
+seeps, and hot springs at the Steamboat Springs Area of Critical
+Environmental Concern. This surface expression has not been static.
+Sorey and Colvard [@sorey1992] documented a near-total cessation of
+natural spring flow at the main and low silica terraces between 1986
+and 1989, attributing most (though not all) of the decline to regional
+shallow-groundwater drawdown rather than to Ormat's (then CPI/SB GEO's)
+own geothermal production. Sorey [@sorey2000] revisited the same
+terrace roughly a decade later and found that although regional
+groundwater levels had by then recovered, natural spring flow on the
+main terrace had not resumed. That non-recovery is the single most
+important piece of historical context for this thesis: it establishes
+that surface discharge at Steamboat is not simply a mirror of
+groundwater level, and that a system which goes quiet does not
+necessarily reawaken on its own.
+
+It was against that backdrop that, beginning around 2022, steaming
+ground at the Lower Sinter Terrace began to expand again, and on
+June 3, 2025, an uncapped, shallow abandoned well erupted without
+warning, sending boiling water roughly 30 meters into the air -- the
+first geyser-like activity documented at Steamboat in decades
+[@lindsey2026]. The well was capped in the following days to weeks,
+but discharge did not stop; it moved laterally, opening new seeps and
+spitting vents along nearby fractures. This event, and the still-open
+question of what it means for the system's deeper plumbing, motivates
+essentially everything in this thesis: a remapping of springs at the
+Lower Sinter Terrace that Ormat's own records list as inactive, a
+renewed chemistry and isotope sampling program at the wells and
+springs there, a re-examination of Sorey's own chloride-discharge
+method against the modern system, continuous temperature and
+conductivity monitoring at the creek and at the eruption site itself,
+and the geodatabase and geospatial-analysis platform, described in the
+chapters that follow, built to hold all of it together.
+
+## A brief chronology
+
+Table 1.1 traces this study area from its first systematic USGS
+characterization through the present monitoring effort; the
+corresponding figure (Figure 1.1) places the same events on a single
+timeline. Three broad periods are worth distinguishing. The
+**historical/characterization period** (roughly 1950-1968) established
+the regional geology, structure, and hydrology that every later study,
+including this one, still relies on [@thompsonwhite1964; @white1968;
+@white1968c]. The **development period** (1986-2007) covers the
+transition from a natural system to a commercially produced one, the
+1987-89 spring-flow decline documented by Sorey and Colvard
+[@sorey1992], its documented non-recovery by 2000 [@sorey2000], and
+the buildout of the groundwater/geothermal monitor-well network that
+Klein, Johnson, and Spielman [@klein2007] describe. The **reawakening
+period** (2022-present) covers the renewed steaming, the June 2025
+eruption, and this project's own response.
+
+```{r timeline-fig}
+#| echo: false
+#| fig-cap: "Steamboat Hills events, 1950-2026, spanning the historical USGS characterization era, the development/production era (including the 1987-89 spring-flow decline and its documented non-recovery by 2000), and the current reawakening (see `scripts/analysis/manuscript_figures.R`)."
+knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
+```
+
+| Year | Event |
+|---|---|
+| 1950 | USGS thermal-gradient and chemistry test holes (GS-1 through GS-8) drilled [@white1968]. |
+| 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1968c]. |
+| 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968]. |
+| 1986 | SB GEO's first power plants begin production; commercial development of the field begins in earnest. |
+| 1987-1989 | Natural hot-spring flow at the main and low silica terraces declines and ceases [@sorey1992]. |
+| 1990 | Ormat consolidates Steamboat production under a single operator. |
+| 1992 | Sorey and Colvard attribute most of the spring-flow decline to regional groundwater drawdown, not geothermal production [@sorey1992]. |
+| 2000 | Groundwater levels recover, but natural spring flow does not resume on the main terrace [@sorey2000]. |
+| 2007 | The groundwater/geothermal monitor-well network is documented in detail [@klein2007]. |
+| 2022 | Renewed steaming ground is first noted at the Lower Sinter Terrace [@lindsey2026]. |
+| 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. This project's temperature and conductivity logger network is deployed. |
+| 2026 | Lindsey et al. publish the first full account of the eruption [@lindsey2026]; spring/well remapping and chemistry/isotope sampling continue under this thesis. |
+
+: A brief chronology of Steamboat Hills, from first characterization to the current reawakening. {#tbl-chronology}
+
+## Chloride discharge as a tracer of geothermal outflow
+
+Michael Sorey's own framing of this system -- developed across
+[@sorey1992], [@sorey2008], and [@sorey2017] -- is the conceptual
+backbone of this thesis. Because chloride behaves conservatively in
+this system (it is neither added nor removed by mineral reactions or
+degassing on the way to discharge), the difference in chloride mass
+flux between two points on Steamboat Creek can be used to estimate how
+much thermal water is entering the creek between them, without needing
+to locate or measure every individual spring or seep along the way.
+Sorey and Spielman applied this method at two gauging sites, Rhodes
+Road (SBRR) and Bella Vista (SBBV), reporting 730-1,214 gallons per
+minute for 2007-08 [@sorey2008] and an average of 60 liters per second
+(range 45-90 L/s) across 24 sampling events from 2008 to 2016
+[@sorey2017]. This project's own 2026 poster used the same method and
+sites to estimate a post-eruption average discharge of roughly 27 L/s
+[@irvinlindsey2026], and Chapter 4 of this proposal extends that
+calculation into a real, reproducible database query rather than a
+one-off spreadsheet result.
+
+The practical problem with the chloride-flux method has always been
+that it requires discrete water samples, collected and analyzed in a
+lab, at a temporal resolution most field campaigns cannot sustain for
+long. This thesis's second major thread is testing whether continuous,
+field-deployable specific-conductance monitoring -- already
+demonstrated as a workable chloride proxy for geothermal solute flux
+in Yellowstone's rivers [@mccleskey2012; @mccleskey2016] -- can do the
+same job at Steamboat, letting a much sparser chloride-sampling
+campaign be calibrated against a continuous conductance record rather
+than trying to sample chloride itself at high frequency indefinitely.
+
+## Thesis objectives
+
+This proposal is organized around three questions, each revisited
+explicitly in the Results and Discussion chapters once the data on
+hand can actually speak to it:
+
+1. **Has thermal-water outflow at Steamboat changed since Sorey's own
+   studies, and if so, how?** This requires comparing modern chemistry
+   and discharge estimates against the historical baseline Sorey and
+   Colvard [@sorey1992], Sorey [@sorey2000], and Sorey and Spielman
+   [@sorey2008; @sorey2017] established, using the same conservative
+   tracers (chloride, and the chloride-to-boron ratio) wherever
+   possible so that a real change is not confused with a change in
+   method.
+2. **Can continuous conductivity substitute for discrete chloride
+   sampling, and at what sampling frequency does that substitution
+   stop being reliable?** This is directly testable against the
+   conductivity record already collected at SBRR and SBGG, and its
+   answer determines how a real field-sampling budget should be spent
+   (Chapter 3's sampling plan, Chapter 4's Monte Carlo result).
+3. **What does the subsurface plumbing feeding the Lower Sinter
+   Terrace actually look like, and can it be reconstructed well enough
+   to test whether the 2025 eruption reactivated an existing conduit
+   or opened something new?** This is the least resolved of the three
+   questions today -- it depends on well water-level data this
+   project has requested but not yet received, and on fault traces
+   that have not yet been digitized -- and Chapters 3 and 5 lay out
+   concretely what would need to happen for it to be answerable.
+
+## What this proposal covers
+
+Chapter 2 lays out the geochemical background and modeling methods
+(PHREEQC, geothermometry, mixing) this thesis relies on. Chapter 3
+describes how the supporting database was built, what data feed it,
+how its quality is controlled, and the field and computational methods
+-- temperature and conductivity logging, chemistry sampling, and the
+hydrologic/geologic modeling this database is meant to support.
+Chapter 4 presents the real findings produced so far. Chapter 5
+discusses what those findings do and do not settle, and lays out the
+remaining work. Chapter 6 is a focused, decision-facing proposal for
+the calibration chloride-sampling campaign that Objective 2 above
+depends on.
