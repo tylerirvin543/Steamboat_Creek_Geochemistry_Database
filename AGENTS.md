@@ -5119,6 +5119,42 @@ before lab analysis).
   values (27 result rows). QC re-run clean afterward.
 - **Not done**: no equivalent U230 form has been supplied yet for the
   second real sample (sample_id 1531, 2026-04-07) -- it still uses its
+  lab-reported pH/temperature only (kept below, unmodified, for context).
+
+### Addendum: IW-3/Cox I-1 marked Plugged & Abandoned from the 2025 TFT Report's Table 2
+
+User supplied the same 2025 TFT Report Technical Memorandum's Table 2
+("Well Summary During Tracer Flow Testing", tracer test date
+2025-07-09) as a clean image, covering 24-5 (production) and 12
+injection wells (IW-1 through IW-6, 23-33, 64A-32, 43-33, 21-32,
+42A-32, Cox-1). Cross-referenced against `Wells`/`Well_Aliases`:
+
+- **IW-3 (well_id 103) and Cox I-1 (well_id 190, alias `COX-1`)** are
+  listed "P&A" (0 flow, 0 wellhead temperature/pressure, not tested) --
+  added a real `Well_Work_Events` row for each (`work_type =
+  'abandonment'`, `event_date = '2025-07-09'`, `source_document_id`
+  NULL since this is an NDEP PRR document, not a `Well_Log_Documents`
+  driller's report -- provenance instead recorded in `notes`). Cox I-1
+  now correctly shows `display_status = 'plugged_abandoned'` in
+  `vw_wells_gis`; IW-3 does not yet (no coordinate on file for it at
+  all, so it's outside `vw_wells_gis`'s coordinate-having filter --
+  the event itself is recorded and will surface the moment IW-3 gets a
+  real coordinate).
+- **IW-2 is "Idle"**, a real, different status from P&A -- not
+  recorded as a `Well_Work_Events` abandonment (would misrepresent it),
+  captured only in its `Wells.notes` entry below.
+- **All 13 wells** (including the 11 "Online"/"Normal" ones) got a
+  real, appended (never overwritten) `Wells.notes` entry transcribing
+  this table's own status/flow-rate/enthalpy-temperature/wellhead-
+  temperature/wellhead-pressure/comments for each -- so the table's
+  real data isn't only captured for the two P&A wells.
+- Applied directly to the real database (backed up first to
+  `database/archive/geochem_operational_pre_tft_table2_<timestamp>.sqlite`).
+  GIS views/GeoPackage re-exported (`well_work_events` layer 42 -> 43
+  rows -- only Cox I-1's new event is currently mappable, per the
+  coordinate gap above); QC re-run clean. No git-trackable file
+  changed (this was a direct, documented database update, not a new
+  script/CSV), so nothing new to commit for this addendum.
   lab-reported pH/temperature only.
 
 This session's file changes are not
