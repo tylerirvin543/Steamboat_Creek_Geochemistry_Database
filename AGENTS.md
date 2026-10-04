@@ -6710,3 +6710,61 @@ restructuring, and a citation-completeness audit.
   presented to the user as recommendations, not auto-applied, pending
   their choice; this session's changes are committed and pushed to git
   (see commit history) immediately following this entry.
+
+## Session 45 (2026-10-04, continued): declarative tone pass, real crossref figure numbering, explicit method counts
+
+Follow-up to Session 44, per direct request: switch to a more declarative
+tone, add explicit counts under Methods subsections, and reference figures
+by number in the prose -- all three implemented directly in
+`manuscript/00_thesis_proposal.qmd` (the actual deliverable), verified in
+rendered output, not just planned.
+
+- **Real figure numbering and in-text cross-references, not just
+  captions.** The six `show_fig()`-embedded figures were previously plain
+  markdown images with a caption -- visually fine, but with no "Figure N"
+  numbering and no way to write "shown in Figure 3" in prose. Fixed by
+  giving `show_fig()` a new `id` parameter that sets a Quarto crossref id
+  directly on the image (`![caption](path){#fig-id fig-alt="..."}`), then
+  citing each one from the relevant sentence via `@fig-id`. **Verified,
+  not assumed**: confirmed in rendered HTML that `@fig-timeline` through
+  `@fig-mc` resolve to real, hyperlinked "Figure 1" through "Figure 6" in
+  document order (`class="quarto-xref"` anchors), and confirmed the same
+  numbering (plain "Figure 1"-"Figure 6") appears in the rendered PDF via
+  `pdftotext`. This works because Quarto's crossref filter recognizes the
+  `{#fig-...}` attribute on a markdown image regardless of whether the
+  image came from a real code-chunk plot or, as here, from a chunk that
+  emits raw markdown via `knitr::asis_output()` -- the crossref filter
+  only looks at the final pandoc document, not how a chunk produced its
+  output.
+- **Explicit real counts added to Methods subsections**, pulled live from
+  `geochem_operational.sqlite` rather than estimated: the monitoring-
+  network paragraph now states 1,600 samples across 269 wells; spring/
+  well remapping now states 51 real, GPS-tagged Lower Sinter Terrace
+  survey points (28 seeps, 13 steaming-ground observations, 7 springs, 3
+  creek points, from the `SBO_*`-prefixed photo-survey locations);
+  chemistry/isotope sampling now states 71 real water samples collected
+  by this project's own field campaign (`Samples.data_source = 'FIELD'`);
+  the temperature-logger-network subsection now states 11 real logger
+  sites (`Temperature_Loggers` row count); hydrochemical endmember
+  characterization now states 157 samples (the real, persisted latest
+  `Facies_Cluster_Assignments` run). **Real, stale-number bug caught and
+  fixed in the same pass**: the PHREEQC workflow section's "233 real
+  samples" figure was stale -- a live count of distinct `sample_id`s in
+  `PHREEQC_Results` now returns 312, reflecting samples added by later
+  sessions (the NDEP PRR outlet/WETLAB promotions) after that number was
+  first written; corrected to 312.
+- **Declarative tone pass**: removed or rewrote roughly a dozen hedging/
+  meta-commentary constructions project-wide in this one file --
+  "is worth distinguishing," "is treated as [X] rather than Y," "one
+  concrete example worth noting here," "In the interest of being upfront
+  about where this actually stands," "That's named here rather than
+  papered over," "cannot be produced honestly from" -- replaced with
+  direct declarative statements that keep the same honest content (real
+  limitations are still stated plainly, just without the hedge framing
+  around them).
+- **Verified end-to-end**: re-rendered all three formats (html/pdf/docx)
+  after every change; 0 citeproc warnings, 0 undefined-citation markers,
+  figure numbering/crossrefs confirmed in both HTML and PDF as described
+  above, no stray duplicate output files left in `manuscript/`.
+- Committed and pushed to `origin/main` in the same batch as this
+  session's changes (see commit history).
