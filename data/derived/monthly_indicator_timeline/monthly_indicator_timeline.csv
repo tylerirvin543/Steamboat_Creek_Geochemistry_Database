@@ -1,8 +1,8 @@
 month,indicator,metric,site,value,n
-2026-07-01,conductivity,mean_sc25c_uScm,Conductivity Logger 1,1037.4411461630832,4657
-2026-08-01,conductivity,mean_sc25c_uScm,Conductivity Logger 1,1143.6613310694192,6309
-2026-07-01,conductivity,mean_sc25c_uScm,Conductivity Logger 2,330.88137630944595,4637
-2026-08-01,conductivity,mean_sc25c_uScm,Conductivity Logger 2,380.75614936877713,6298
+2026-07-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1037.4411461630832,4657
+2026-08-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1143.6613310694192,6309
+2026-07-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",330.88137630944595,4637
+2026-08-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",380.75614936877713,6298
 2025-08-01,field_chemistry,conductivity,Boyd Domestic Well,568,1
 2025-09-01,field_chemistry,conductivity,Boyd Domestic Well,611,1
 2025-10-01,field_chemistry,conductivity,Boyd Domestic Well,553,1

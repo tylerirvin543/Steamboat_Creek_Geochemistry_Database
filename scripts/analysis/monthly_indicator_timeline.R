@@ -60,18 +60,29 @@ suppressPackageStartupMessages({
 
 .monthly_conductivity <- function(con) {
   df <- DBI::dbGetQuery(con, "
-    SELECT co.timestamp, cl.logger_name, co.sc_25c
+    SELECT co.timestamp, cl.logger_name, cl.role, co.sc_25c
     FROM Conductivity_Observations co
     JOIN Conductivity_Loggers cl ON cl.logger_id = co.logger_id
     WHERE co.sc_25c IS NOT NULL
   ")
   if (nrow(df) == 0) return(NULL)
   df %>%
-    dplyr::mutate(month = .month_floor(as.Date(timestamp))) %>%
-    dplyr::group_by(month, logger_name) %>%
+    dplyr::mutate(
+      month = .month_floor(as.Date(timestamp)),
+      # Real station names (SBRR = Rhodes Road upstream control, SBGG
+      # = Geiger Grade downstream), not the generic logger_name, per
+      # direct user feedback -- mapped from the logger's deployment
+      # role rather than hardcoding a logger_id, so this still works
+      # if loggers are swapped/replaced in the future.
+      site = dplyr::case_when(
+        role == "upstream_control" ~ "SBRR (Rhodes Road, upstream control)",
+        role == "downstream" ~ "SBGG (Geiger Grade, downstream)",
+        TRUE ~ logger_name
+      )
+    ) %>%
+    dplyr::group_by(month, site) %>%
     dplyr::summarise(value = mean(sc_25c, na.rm = TRUE), n = dplyr::n(), .groups = "drop") %>%
-    dplyr::mutate(indicator = "conductivity", metric = "mean_sc25c_uScm") %>%
-    dplyr::rename(site = logger_name)
+    dplyr::mutate(indicator = "conductivity", metric = "mean_sc25c_uScm")
 }
 
 .monthly_field_chemistry <- function(con) {

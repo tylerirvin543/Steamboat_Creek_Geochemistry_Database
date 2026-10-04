@@ -6429,6 +6429,126 @@ populations belong in separate figures, add a CSV-pointer caption to
   description there is unaffected); this session's file changes are
   not yet committed/pushed to git.
 
+## Session 43 continued (2026-10-04, part 6): real SBRR/SBGG conductivity labels, water-level correlation investigation
+
+Two direct user follow-ups: rename the generic conductivity logger
+labels, and investigate whether the newly-split field-well water-level
+decline (Herz Domestic/Herz Deep/NDOT) correlates with the STMGID
+regional trend or is locally distinct.
+
+- **Conductivity logger labels fixed**:
+  `.monthly_conductivity()` (`scripts/analysis/monthly_indicator_timeline.R`)
+  now maps each logger's real `role` (`upstream_control`/`downstream`,
+  from `Conductivity_Loggers`) to its real station name --
+  `"SBRR (Rhodes Road, upstream control)"` / `"SBGG (Geiger Grade,
+  downstream)"` -- instead of the generic `logger_name` ("Conductivity
+  Logger 1"/"2"). Mapped by role rather than hardcoded `logger_id`, so
+  it stays correct if loggers are ever swapped/replaced (as already
+  happened once in this project's history, per Session on
+  2026-09-05's SBRR/SBGG serial-swap correction). Confirmed against
+  real serials: `22575724` (role `upstream_control`) = SBRR, `22575725`
+  (role `downstream`) = SBGG -- matches the existing project
+  convention exactly. Regenerated figure confirmed: SBGG (downstream)
+  reads consistently higher EC (~1040-1150 uS/cm) than SBRR (upstream,
+  ~330-365 uS/cm), as expected.
+- **Real water-level correlation investigation**
+  (`scripts/analysis/water_level_correlation_check.R`,
+  `check_water_level_correlation(con)`): restricted to the real
+  overlapping window (2025-06 through 2025-12, the only months both
+  populations have data), computed a linear trend (ft/month) and
+  pairwise Pearson correlations between each of the three field wells
+  and each of the two STMGID wells. **Real, substantive result**: the
+  field wells are NOT simply "locally distinct" from the regional
+  signal -- **Herz Domestic Well correlates strongly and
+  significantly with STMGID MW3** (r=0.94, p=0.005, n=6) in both
+  timing and direction, while showing **no significant relationship
+  with STMGID MW10** (r=-0.57, p=0.23, n=6). NDOT shows the same
+  pattern more weakly (r=0.75 vs. MW3, p=0.089, marginal; r=-0.21 vs.
+  MW10, n.s.). Herz Deep's n=4 points is too short to read with any
+  confidence (r~0 vs. MW3, r=0.31 vs. MW10, both n.s.). **Trend
+  magnitudes**: Herz Domestic (+0.27 ft/month) and NDOT (+0.24
+  ft/month) are declining faster than STMGID MW3's own regional trend
+  (+0.16 ft/month) over the same window, while STMGID MW10 shows
+  essentially no trend at all (-0.02 ft/month) -- so the real picture
+  is a **partial regional connection** (shared timing/direction with
+  MW3, consistent with a common seasonal recharge/pumping driver in
+  the shallower part of the basin) **plus an additional, faster local
+  component** at the field wells, not a purely local or purely
+  regional signal. Consistent with, and not contradicting, the
+  already-documented physical distinction between MW3 (100 ft
+  screened interval, 186-286 ft) and MW10 (480 ft screened interval,
+  220-700 ft) from the barometric-efficiency work -- MW3's shallower
+  completion is the more plausible candidate to share a signal with
+  the shallow field wells, MW10's long, deep interval is not.
+  **Verified visually, not just numerically**: a z-score-standardized
+  comparison figure
+  (`output/figures/monthly_indicator_timeline/water_level_field_vs_stmgid_standardized.png`)
+  shows Herz Domestic Well and STMGID MW3 tracking the same
+  rise-fall-rise shape across the full window, while STMGID MW10
+  visibly diverges (especially in the first half of the window).
+  Underlying tables written to
+  `data/derived/monthly_indicator_timeline/water_level_overlap_window.csv`
+  and `water_level_field_vs_stmgid_correlation.csv`. **Explicitly
+  caveated**: this is a small-n (4-7 months per well) screening
+  analysis on real but sparse data, not a definitive causal test --
+  stated in the figure's own caption and the console output, not just
+  here.
+- Not wired into `run_pipeline.R` (standalone, manually-invoked
+  analysis script, consistent with how the other recent analysis
+  scripts in this thread started).
+- Not done this turn: no update to
+  `docs/action_items_for_user.md`/notebooks beyond this AGENTS.md
+  entry; this session's file changes are not yet committed/pushed to
+  git.
+
+## Session 43 continued (2026-10-04, part 7): precipitation checked as a driver of MW3's seasonal signal -- real gap, real negative result
+
+Direct follow-up to part 6's water-level correlation finding: checked
+whether real NOAA precipitation data explains STMGID MW3's seasonal
+decline (the one that correlates with the Steamboat-field wells).
+
+- **Real, upfront data gap confirmed before running any statistics**:
+  `Weather_Observations` has zero `PRCP` rows before 2025-10-17 -- the
+  2025-06 to 2025-10-16 portion of the water-level correlation window
+  (most of it) **cannot be tested against precipitation at all**, not
+  because of a missed data source, but because none exists on file for
+  that period. Stated plainly in the new script's own first log
+  message, not glossed over.
+- **New script**: `scripts/analysis/water_level_precipitation_check.R`
+  / `check_water_level_precipitation(con)` -- for the real overlapping
+  window that does have PRCP (2025-10-17 to 2025-12-31), merges daily
+  PRCP with daily STMGID MW3/MW10 depth-to-water, computes same-day
+  precip-vs-next-day-depth-change correlations, and specifically
+  isolates the one real, identifiable storm in the record (2025-12-21
+  to 12-26, ~4.5 in total) as a natural experiment.
+- **Real result, and it's a negative one for MW3**: the Dec storm
+  produced a clear, visible ~0.26 ft drop in depth-to-water (water
+  table rising) at **STMGID MW10**, consistent with and independently
+  reproducing Session 32's already-documented finding for this same
+  event -- but produced **no comparable response at STMGID MW3**
+  (effectively 0 ft change), confirmed both numerically
+  (`data/derived/monthly_indicator_timeline/water_level_december_storm_response.csv`)
+  and visually (new figure
+  `output/figures/monthly_indicator_timeline/water_level_vs_precipitation.png`,
+  MW3's line stays essentially flat across the entire Oct-Dec window
+  regardless of precipitation, while MW10 visibly dips at the storm).
+  Same-day correlation confirms this: MW10 r=-0.24 (p=0.025, a real,
+  if modest, same-day response), MW3 r=0.14 (p=0.175, not significant,
+  wrong sign for a recharge response anyway).
+- **Answer to the actual question asked**: precipitation does **not**
+  appear to explain MW3's seasonal pattern -- not within the one real
+  storm available to test it, and the earlier, larger portion of the
+  decline (June-October) has no precipitation data on file to test at
+  all. This points away from precipitation/recharge as the shared
+  driver behind the MW3-field-well correlation found in part 6, and
+  leaves the mechanism (plausibly a shared seasonal pumping/extraction
+  cycle in the shallower part of the basin, per part 6's own framing)
+  unconfirmed -- a real open question, not resolved by this check.
+- Not wired into `run_pipeline.R` (standalone script, same pattern as
+  the other recent analysis scripts in this thread).
+- Applied read-only against the real `geochem_operational.sqlite` (no
+  database writes).
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram
