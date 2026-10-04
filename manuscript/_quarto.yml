@@ -15,6 +15,7 @@ format:
     fig-pos: "H"
 
 bibliography: references.bib
+csl: gsa.csl
 
 execute:
   freeze: auto

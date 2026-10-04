@@ -122,7 +122,13 @@ re-equilibrates toward ambient conditions faster than the Na/K ratio does
 as water cools and dilutes on its way to discharge, so the two
 geothermometers are expected to diverge exactly this way for a cooling,
 diluting outflow path -- the divergence itself is evidence for that
-process, not a modeling error.
+process, not a modeling error. This divergence-as-evidence approach
+follows Shevenell and De Rocher's [@shevenell2005] own evaluation of
+multiple geothermometers across several Nevada geothermal power plants,
+which found that no single geothermometer is reliable in isolation and
+that comparing several against each other is itself diagnostic of the
+system's mixing/cooling history, not just a reservoir-temperature
+estimate.
 
 ## Two-end-member mixing and inverse modeling
 

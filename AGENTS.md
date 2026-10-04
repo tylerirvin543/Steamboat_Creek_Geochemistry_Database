@@ -6571,3 +6571,142 @@ decline (the one that correlates with the Steamboat-field wells).
 - PHREEQC for geochemical modelling
 - RMarkdown documentation website
 - Use base R pipe `|>`
+
+## Session 44 (2026-10-04): thesis-proposal GSA citations, accessibility pass,
+## docx output, detailed PHREEQC methods subsection, full-year sampling plan
+
+Large documentation-only session on `manuscript/00_thesis_proposal.qmd` and
+its companion chapter files, per a user plan covering citation style,
+accessibility, output formats, a new PHREEQC methods subsection, timeline
+restructuring, and a citation-completeness audit.
+
+- **New detailed PHREEQC methods subsection** ("PHREEQC workflow: sample
+  eligibility, databases, and interpretation") added to both
+  `manuscript/00_thesis_proposal.qmd` (Methods chapter) and
+  `manuscript/03_methods.qmd` -- covers sample eligibility criteria (minimum
+  pH/temperature/Cl/Na/K/Ca/Mg/alkalinity set, field-over-lab preference),
+  real data provenance/unit handling (the CaCO3-to-HCO3 alkalinity
+  conversion and the charge-balance bug it fixed, per Session 15-16),
+  end-member grouping, the four-ratio conservative-tracer check, and an
+  honest statement of the mixing/inverse-modeling workflow's real current
+  limits (one representative, not time-paired, end-member pair; the known
+  inverse-model parser gap). Written to cross-reference rather than repeat
+  the equations/database table already given in the Background chapter.
+- **Citations switched project-wide to GSA ("References Cited") style**:
+  new `manuscript/gsa.csl` (the standard Geological Society of America CSL
+  from the public Zotero/CSL style repository), wired in via
+  `manuscript/_quarto.yml`'s `csl:` key -- matches UNR's own Geology
+  graduate-handbook guidance ("follow the guidelines of a refereed journal
+  in your field for ... citations ... and references cited") and both
+  attached example UNR Geology thesis proposals (McConville 2017, Craig
+  2017), which use exactly this convention. **Real bug found and fixed**:
+  pandoc's BibTeX reader auto-converts Title Case article titles to
+  sentence case, which was silently lowercasing every proper noun in
+  `references.bib`'s title fields ("steamboat hills", "washoe county",
+  etc.) since they weren't protected with `{braces}` -- fixed across all
+  ~37 entries.
+- **Accessibility pass on `00_thesis_proposal.qmd`** (per
+  unr.edu/accessibility's WCAG 2.1 AA-aligned guidance): added `lang: en`
+  metadata; rewrote the `show_fig()` helper so every figure carries a
+  short, distinct screen-reader description (via Quarto's `fig-alt`)
+  separate from its longer visible caption, instead of one long string
+  doing double duty as both. Verified in rendered output, not just
+  planned: the HTML exposes the short description via `aria-label` on the
+  `<img>`, and the `.docx` exposes it via Word's own Alt Text
+  "Description" field (confirmed by unzipping the `.docx` and inspecting
+  `word/document.xml`). **Documented, not solved, limitation**: LaTeX-
+  produced PDFs aren't reliably tagged for screen readers, so per UNR's
+  own stated workflow, the real submission-accessible PDF should ultimately
+  come from exporting the `.docx` in Word with "Document structure tags
+  for accessibility" checked, not from this pipeline's direct LaTeX build
+  -- noted in `manuscript/README.md`, not something this environment can
+  do itself. One minor known cosmetic artifact left as-is: each image's
+  Word "Title" field (distinct from the real "Description" alt text)
+  shows the local absolute render-time file path -- harmless, worth a
+  manual clear in Word before final submission if wanted.
+- **Word (`.docx`) output added** alongside the existing html/pdf formats
+  for `00_thesis_proposal.qmd`.
+- **Sampling plan moved earlier and extended to a full year**, per direct
+  user request ("do the calibration earlier and sample monthly longer to
+  see how the system behaves almost on a full year timelapse"): the
+  intensive daily-to-sub-daily Cl-conductance calibration window -- which
+  the Background/Methods chapters had planned for "the coming field
+  season" (effectively spring/summer 2027) -- is now planned to start as
+  soon as possible (fall/winter 2026), since the conductivity loggers have
+  already been running since mid-2025 and there's no real reason to wait.
+  Monthly chloride sampling then continues for a full annual cycle (not
+  just "the remainder of the year") so the eventual calibration can
+  actually be tested against winter baseflow, spring runoff, summer, and
+  fall conditions before being treated as final -- directly extending
+  RQ1's seasonal-stability question from a stated hypothesis into
+  something testable with real data. Updated consistently across
+  `00_thesis_proposal.qmd` (Methods narrative + a new detailed,
+  month-by-month "Preliminary schedule" table replacing the old coarse
+  semester table, running Oct 2026 through the newly-explicit December
+  2027 completion target), `03_methods.qmd`'s condensed sampling-plan
+  paragraph, and `06_calibration_sampling_proposal.qmd`'s tiered
+  recommendation (20/40/60+ analyses) and its own explicit
+  "Updated direction" callout.
+- **GRC 2026 poster cited as prior work with full context**: confirmed via
+  web search that the 2026 Geothermal Rising Conference was held
+  September 20-23, 2026 at the Marriott Marquis in Houston, Texas; added
+  `address = {Houston, Texas}` to the `irvinlindsey2026` bib entry and
+  added an explicit "presented as a poster at the 2026 Geothermal Rising
+  Conference in Houston, Texas" sentence to both `00_thesis_proposal.qmd`'s
+  Previous Work section and `01_introduction.qmd`'s existing poster
+  mention (previously only cited inline without conference context in
+  either place).
+- **Citation-completeness audit**: cross-checked
+  `docs/literature/annotated_bibliography.qmd`'s ~30+ read/annotated
+  sources against `references.bib` and the proposal's actual in-text
+  citations. Found and fixed one real, concrete gap: `nehring1979`,
+  `cohenloeltz1964`, and `akerley2021` were already real citations used in
+  `02_geochemical_background.qmd`'s "Related literature" subsection but
+  had never been pulled into `00_thesis_proposal.qmd`'s own Previous Work
+  section (the actual deliverable) -- added there now. Two new real
+  sources added project-wide (bib entry + an actual supporting sentence,
+  not just padding): **Vaughan et al. (2005)** (airborne thermal-infrared
+  surface-mineral mapping at Steamboat Springs, distinguishing active
+  opaline sinter from older chalcedony sinter and mapping the acid-sulfate
+  alteration halo around the fumaroles -- directly relevant to this
+  thesis's own spring-remapping fieldwork, cited in Previous Work) and
+  **Shevenell and De Rocher (2005)** (a Nevada-wide geothermometer
+  evaluation supporting the Na/K-vs-silica divergence-as-evidence
+  argument, cited in both `00` and `02`'s Geothermometry sections).
+  Deliberately NOT added (read/annotated but no specific claim in the
+  proposal text they'd support without padding): Janik & Mariner (1994),
+  Mariner & Janik (1996), Romeis et al. (1999/2002), Skalbeck et al.
+  (2002), other Shevenell-coauthored papers, Huebner et al., and Nehring
+  (1980) (a second, distinct Nehring paper from the already-cited
+  `nehring1979`) -- flagged as real, legitimate candidates for a future
+  pass if a specific claim comes to need one of them, not silently
+  dropped.
+- **CRLF/exact-match editing note (same recurring pattern as many prior
+  sessions)**: the `edit` tool's exact-string matching failed
+  unpredictably against `references.bib`, `02_geochemical_background.qmd`,
+  `03_methods.qmd`, and even the LF-only `06_calibration_sampling_
+  proposal.qmd` for several of this session's edits, despite
+  byte-verified-correct `old_string` values each time; every failure was
+  worked around with the established `readLines()`/`writeLines()`
+  (default `"\n"` separator) splice fallback via `executeCode`, run,
+  then verified with a `grep -c $'\r\r'` check afterward (0 matches every
+  time) -- this continues to be the reliable fallback regardless of a
+  file's actual line-ending format, not just CRLF files as earlier
+  sessions assumed.
+- **Also fixed this session, unrelated to the plan but found while
+  re-rendering**: the PDF output's move-to-`output/reports/manuscript/`
+  step failed twice with a Windows `PermissionDenied` error because the
+  previously-rendered PDF was open in a viewer on the user's machine --
+  not a pipeline bug, just a reminder that `quarto::quarto_render()`'s
+  final file-move step needs the destination file closed first on
+  Windows. Resolved once the user closed the file.
+- Verified end-to-end: all three formats (html/pdf/docx) render cleanly
+  with 0 citeproc warnings and 0 undefined-citation markers after every
+  change in this session, including the two new bib entries.
+- **Not done this session**: no database/pipeline/schema changes (pure
+  documentation/writing); the broader style-matching recommendations
+  (adding a real study-area map figure, explicit in-text "Figure N"
+  references, itemized sample counts under each Methods subsection) were
+  presented to the user as recommendations, not auto-applied, pending
+  their choice; this session's changes are committed and pushed to git
+  (see commit history) immediately following this entry.

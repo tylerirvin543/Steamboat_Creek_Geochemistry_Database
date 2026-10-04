@@ -18,6 +18,17 @@ writing, what should a real chloride sampling program at SBRR and SBGG
 actually look like, at what cost, and what does each tier of effort
 answer?
 
+**Updated direction**: rather than waiting for a conventional spring
+field season to start the intensive calibration window, this proposal
+now plans to begin it as soon as possible (this fall/winter), since
+the conductivity loggers are already running and a delay only wastes
+already-accumulating baseline conductance record. The intensive window
+should then be followed by roughly monthly chloride sampling for a
+full annual cycle -- not just through one field season -- specifically
+so the calibration can be tested against winter, spring-runoff,
+summer, and fall conditions, rather than extrapolated from a single
+season.
+
 ## How many calibration pairs (n) are actually needed?
 
 There is no real Cl-EC paired dataset yet to run a formal power analysis
@@ -33,7 +44,9 @@ Standard practical guidance for a simple linear calibration regression:
   considered -- a single season's worth of pairs risks fitting a
   relationship that doesn't generalize to winter/spring conditions (a
   real, stated limitation of the current ~5-week summer-only EC record
-  used in `notebooks/09`).
+  used in `notebooks/09`). A full year of monthly sampling plus the
+  intensive window (below) comfortably clears this target without
+  relying on one season's data.
 - Once a first real regression exists, its own residual variance can be
   used to compute an actual power/precision target for any further
   refinement -- a genuine next step, not possible to pre-compute now.
@@ -81,16 +94,19 @@ Two real, complementary additions:
 
 | Tier | Total analyses/year | What it buys | What it can't answer |
 |---|---|---|---|
-| **20** | ~20 Cl-only or Cl+major-ion analyses | A bare-minimum first Cl-EC calibration point per site, likely just for the intensive summer window | No seasonal resolution; can't test whether the calibration holds in winter/spring; no isotope cross-check |
-| **40** | ~40 analyses, Cl+major ions on all, isotopes on a subset | Real seasonal resolution (Tier 1 intensive window + Tier 2 biweekly/monthly follow-through, per `notebooks/09`); a real mixing-model check on every sample | Isotope coverage still partial; fissure/resort sites only lightly sampled |
-| **60+** | 60+ analyses, isotopes on most/all, includes SBW_0001/0002 routinely and the fissure site if access is granted | The most complete real dataset: seasonal Cl-EC calibration, mixing-model validation, isotope-based evaporation/mixing discrimination, and a real fissure/resort-well comparison | Cost and lab-turnaround logistics become the real constraint, not the science |
+| **20** | ~20 Cl-only or Cl+major-ion analyses | A bare-minimum first Cl-EC calibration point per site, likely just for the intensive window | No seasonal resolution; can't test whether the calibration holds across a full year; no isotope cross-check |
+| **40** | ~40 analyses, Cl+major ions on all, isotopes on a subset | Real seasonal resolution across a full year (intensive fall/winter window + roughly monthly follow-through through the following fall, per `notebooks/09`); a real mixing-model check on every sample | Isotope coverage still partial; fissure/resort sites only lightly sampled |
+| **60+** | 60+ analyses, isotopes on most/all, includes SBW_0001/0002 routinely and the fissure site if access is granted | The most complete real dataset: full-year seasonal Cl-EC calibration, mixing-model validation, isotope-based evaporation/mixing discrimination, and a real fissure/resort-well comparison | Cost and lab-turnaround logistics become the real constraint, not the science |
 
 **Recommendation**: Tier 2 (~40 analyses) is the realistic target for a
 one-person thesis field campaign within a year -- it is the smallest
 tier that actually closes the calibration-and-seasonality gap this whole
-project's Cl-EC-proxy premise depends on. Tier 3 is worth pursuing
-opportunistically (e.g. if Ormat grants fissure access, or lab budget
-allows) rather than being a hard requirement.
+project's Cl-EC-proxy premise depends on, and now explicitly assumes an
+earlier (fall/winter, not spring) start to the intensive window so the
+full year of monthly follow-through sampling fits inside the proposed
+timeline. Tier 3 is worth pursuing opportunistically (e.g. if Ormat
+grants fissure access, or lab budget allows) rather than being a hard
+requirement.
 
 ## Cross-references
 

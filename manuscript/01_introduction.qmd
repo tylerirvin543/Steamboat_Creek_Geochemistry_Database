@@ -116,9 +116,10 @@ Sorey and Spielman applied this method at two gauging sites, Rhodes
 Road (SBRR) and Bella Vista (SBBV), reporting 730-1,214 gallons per
 minute for 2007-08 [@sorey2008] and an average of 60 liters per second
 (range 45-90 L/s) across 24 sampling events from 2008 to 2016
-[@sorey2017]. This project's own 2026 poster used the same method and
-sites to estimate a post-eruption average discharge of roughly 27 L/s
-[@irvinlindsey2026], and Chapter 4 of this proposal extends that
+[@sorey2017]. This project's own poster, presented at the 2026
+Geothermal Rising Conference in Houston, Texas, used the same method
+and sites to estimate a post-eruption average discharge of roughly
+27 L/s [@irvinlindsey2026], and Chapter 4 of this proposal extends that
 calculation into a real, reproducible database query rather than a
 one-off spreadsheet result.
 

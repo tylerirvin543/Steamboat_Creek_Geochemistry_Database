@@ -137,20 +137,27 @@ additional sites, is given in Chapter 6. In brief: because no real
 chloride sample yet overlaps the period the conductivity loggers have
 been running, the single highest-priority field task is a short (two
 to four week), daily-to-sub-daily intensive chloride-sampling campaign
-at both SBRR and SBGG early in the coming field season, specifically
-to establish a first real chloride-to-conductance calibration
-relationship. That intensive window should be followed by a lower-
-frequency (biweekly-to-monthly) sampling campaign for the remainder of
-the year, with additional samples deliberately timed around large
-storms and spring runoff, when the relationship is most likely to
-break down. A Monte Carlo subsampling analysis on the existing
-conductivity record (Chapter 4) supports this design quantitatively:
-reconstructing the mean specific conductance from daily sampling keeps
-error under about 5%, while weekly sampling costs 6-8%, with the error
-growing smoothly rather than showing a sharp cliff at any particular
-interval. Every calibration sample should also carry major-ion and,
-for a subset, isotope chemistry, since chloride alone cannot
-distinguish simple mixing from evaporative concentration.
+at both SBRR and SBGG -- and since the loggers have already been
+running since mid-2025, this window is now planned to start as soon as
+possible (this fall/winter) rather than waiting for a conventional
+spring/summer field season. Following that intensive window, chloride
+sampling should continue at roughly monthly intervals for a full
+annual cycle -- not just the remainder of one field season -- so the
+calibration can be tested against winter baseflow, spring runoff,
+summer, and fall conditions before being treated as final, with
+additional samples deliberately timed around large storms and spring
+snowmelt, when the relationship is most likely to break down. A Monte
+Carlo subsampling analysis on the existing conductivity record
+(Chapter 4) supports the underlying sampling-frequency logic
+quantitatively: reconstructing the mean specific conductance from
+daily sampling keeps error under about 5%, while weekly sampling costs
+6-8%, with the error growing smoothly rather than showing a sharp
+cliff at any particular interval -- though that analysis still only
+has a five-week, summer-only record to draw on, which a full year of
+monthly sampling is specifically meant to extend. Every calibration
+sample should also carry major-ion and, for a subset, isotope
+chemistry, since chloride alone cannot distinguish simple mixing from
+evaporative concentration.
 
 ## Statistical methods
 
@@ -187,7 +194,98 @@ to converge. A real two-end-member conservative-mixing model and one
 real PHREEQC inverse-modeling run (mixing plus mineral mass transfer)
 have also been completed, using chemically distinct, not merely
 spatially close, end-members, following the modeling principle laid
-out at the end of Chapter 2.
+out at the end of Chapter 2. The rest of this section describes the
+actual workflow -- which samples get modeled, how their chemistry is
+assembled and cleaned up before PHREEQC ever sees it, and what the
+output is actually used to decide -- rather than re-deriving the
+equations and database choices already given in Chapter 2.
+
+**Sample eligibility.** Not every sample in the database gets run
+through PHREEQC. A sample qualifies once it has pH, temperature, and
+major-ion concentrations for chloride, sodium, potassium, calcium,
+magnesium, and alkalinity -- the minimum set a real speciation
+calculation needs, not just whatever happens to be on hand. Field-
+measured pH and temperature are preferred over laboratory-reported
+values when both exist, since a lab reading taken days after
+collection has already drifted from in-situ conditions; lab values are
+used only when no field measurement exists. Additional analytes --
+silica, sulfate, lithium, boron, and a handful of trace metals -- are
+pulled in when available but aren't themselves gatekeeping. Samples
+that don't clear this bar aren't silently dropped, either: each is
+logged with the specific field it's missing, so the real, and
+currently still substantial, gap between how many samples exist and
+how many are PHREEQC-ready stays visible instead of disappearing into
+an unexplained smaller number.
+
+**Assembling and cleaning the chemistry first.** Samples come from
+several sources spanning more than seventy years -- field sampling,
+NDEP's routine and public-records-request chemistry, and historical
+literature (Sorey and Colvard, Mariner and Janik, and Skalbeck)
+transcribed directly rather than merely cited -- and those sources
+don't agree on units or on how alkalinity is reported. Every
+concentration is standardized to mg/L before it reaches a SOLUTION
+block, and any alkalinity value reported on a CaCO3 basis is converted
+to this project's standard HCO3-mass-equivalent basis using the real
+50.05/61.02 equivalent-weight ratio (a conversion factor of 1.2189).
+Getting this right turned out to matter more than it sounds like it
+should: an earlier version of this pipeline simply left alkalinity out
+for one major chemistry source, which alone pushed median charge-
+balance error from a real ~0.7% up to a misleadingly bad ~60% for the
+exact same samples -- a data-handling artifact, not an actual
+analytical problem, and a good reminder to check a "bad" charge
+balance before assuming the chemistry itself is at fault.
+
+**End-member grouping.** Samples with complete chemistry are assigned
+to one of three groups -- a thermal end-member (outlet and thermal-well
+samples), mixed waters (chemistry carrying a partial but real thermal
+signature), and dilute background waters -- using the hydrochemical-
+facies clustering described above, cross-checked against PHREEQC's own
+fluid-type classification rather than just asserted from the site-type
+label on file. This is what makes the conservative-tracer check below,
+and the Chapter 4 Cl/B comparison, real chemically-defined groups
+rather than an arbitrary site-based split.
+
+**Conservative-tracer evaluation.** Four ratios -- Cl/B, Na/Cl, Li/Cl,
+and SiO2/Cl -- are tracked across every era of chemistry on file (the
+1950s, the 1990s, and the present) specifically to ask whether the real
+thermal end-member's composition has stayed stable over seven decades,
+independent of whatever a chloride-conductance calibration eventually
+finds. A ratio that drifts meaningfully through time, or differs
+systematically between eras, is treated as real evidence about
+source-fluid stability -- see Chapter 4's Cl/B result -- rather than
+folded quietly into one pooled average that would hide exactly that
+question.
+
+**Mixing and inverse modeling.** A two-end-member conservative-mixing
+fraction is computed directly from chloride, then used to build a real
+PHREEQC `MIX` block combining the two end-member solutions at that
+fraction and comparing PHREEQC's own predicted speciation against the
+sample's observed chemistry -- a genuine test of the mixing hypothesis,
+not just an arithmetic ratio. `INVERSE_MODELING` goes further, solving
+for mixing fractions and mineral mass transfer simultaneously, within
+stated elemental uncertainty bounds. In the interest of being upfront
+about where this actually stands: only one real mixing run and one
+real inverse-modeling run exist as of this writing, both using a
+representative rather than a time-paired thermal/meteoric end-member
+pair, because no two chloride samples have yet been collected close
+enough together in time to serve as a genuinely paired end-member set
+-- exactly the gap the calibration sampling plan above is meant to
+close. The automated parser for PHREEQC's own inverse-modeling text
+output also has a known, real gap: it correctly identifies that a
+feasible solution was found, but hasn't yet correctly pulled that
+solution's mineral-mass-transfer numbers out of PHREEQC's raw text
+report. That's named here rather than papered over with a number that
+hasn't actually been verified.
+
+**Interpretation framework.** Every PHREEQC run in this project is
+ultimately answering one of three questions, not run just because the
+chemistry happened to be complete enough to try: are the real water
+types here chemically distinct from each other, is conductance
+behaving conservatively enough to stand in for chloride, and has the
+thermal end-member's own composition held up over the full
+seventy-year record. A modeling result that doesn't actually bear on
+one of those three questions isn't reported here just because it's
+available.
 
 ## Hydrologic and geologic modeling directions
 
