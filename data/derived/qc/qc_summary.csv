@@ -2,10 +2,10 @@
 "extreme_gradient","WARN",10
 "invalid_detection_limit","ERROR",838
 "invalid_solution","WARN",1273
-"missing_coordinates","ERROR",48
+"missing_coordinates","ERROR",49
 "missing_field_parameters","WARN",1523
-"missing_major_ions","WARN",1214
+"missing_major_ions","WARN",1264
 "negative_value","ERROR",162
-"no_active_logger","WARN",1549
+"no_active_logger","WARN",1599
 "no_observations","WARN",1
 "phreeqc_convergence_failure","WARN",2

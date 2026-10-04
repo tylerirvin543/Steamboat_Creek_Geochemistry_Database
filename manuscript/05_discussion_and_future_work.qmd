@@ -60,6 +60,28 @@ to build a real three-dimensional geologic model on top of. Both are
 concrete, identifiable blockers with a known path to resolving them,
 laid out below, rather than open-ended unknowns.
 
+## What the new three-month field-parameter time series implies for modeling choice
+
+The real, roughly monthly pH/conductance/temperature record described
+in Chapter 4 (14 sites, late September through December 2025) bears
+directly on how the subsurface should eventually be modeled, not just
+on what is observed. The stable ~1.5-2 pH-unit gap between the
+injection-side ports and the shallow monitoring/domestic well network,
+present in every round rather than a single snapshot, is the kind of
+signal that favors a reactive-transport framing (geochemical
+speciation and water-rock buffering along a flow path, which this
+project's PHREEQC machinery already supports) over a purely
+conservative mixing model, at least for pH specifically. Conversely,
+Herz Deep's rising conductance and NDOT's falling temperature over the
+same window move in directions that are not explained by each other at
+the same well, which argues against treating any single field
+parameter as a universal stand-in for thermal fraction across the
+whole field -- a caution worth carrying into any future lumped-
+parameter or box-model attempt. Neither pattern is yet a resolved
+finding; both are concrete, data-grounded discussion points for
+choosing a defensible next modeling step, which is why they are raised
+here rather than treated as settled in Chapter 4.
+
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here

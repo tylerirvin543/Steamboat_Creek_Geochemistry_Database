@@ -1,0 +1,180 @@
+facility_page,sampling_page,well_name,non_well_loc,diameter,casing_type,total_depth,condition,last_gauged_date,depth_to_water_last,gauge_method_other,measured_water_level,sample_date,sample_time,sampler,location_taken,gallons,pH,conductivity,temperature,temp_unit,raw_field_meas,pH_final,pH_flag,sample_time_clean,temperature_flag
+55,56,Galena 1,Plant Iniection Outlet Pine,N/A,Steel PVC Other:NA,N/A,Active,,N/A,Cap Tube TapeMeasure Other; NA,NA a,10/29/2025,14220,Nicholas Crosby,Injection outlet DiIpe inside plant.,10-20 Gallons,6.06,3440,77.4,F,"FIELD MEASUREMENTS
+pH : 6.06
+S. Conductivity : 3440 us
+Temperature: 77 4°F
+",6.06,,4220,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+57,58,Galena 2,Plant Injection Outlet Pipe,N/A,NA,N/A,Active,,N/A,N”A,nya,10/29/2025,4435,Nicholas Crosby,Injection outlet pipe inside ola nt.,10-20 Gallons 1 a ee oil,6.01,3485,108,F,"FIELD MEASUREMENTS
+oH : 6.01
+S. Conductivity : 3485 us
+Temperature: 498°F
+",NA,,4435,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+59,60,Galena 3,Plant Iniection Outlet Pipe,N/A,Steel PVC Other: .NiA,N/A,Active,,N/A,N/A,NA,10/29/2025,1325,Nicholas Crosby,Injection outlet DiIpe inside plant.,10-20 Gallons,6.04,3405,72.4,F,"FIELD MEASUREMENTS
+S. Conductivity :3405us
+Temperature: 79 4°F
+",NA,,1325,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+61,62,sB2,Plant Iniection Outlet Pipe,N/A,Steel PVC Other:.NA,na,Active,,N/A,N/A,WA,10/29/2025,1315,Nicholas Crosby,[Injection outlet DIpe inside plant.,10-20 Gallons,6.08,3401,95.1,F,"FIELD MEASUREMENTS
+S. Conductivity: 3401us
+Temperature : Q5 14°F
+",NA,,1315,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+63,64,SB3,Plant Injection Outlet Pine,N/A,Steel PVC Other:.NA,n/a,Active,,N/A,NA,NA,10/29/2025,1250,Nicholas Crosby,[Injection outlet pipe inside plant.,10-20 Gallons,6.15,3411,66.5,F,"FIELD MEASUREMENTS
+pH: 6.15
+S. Conductivity :3411us
+Temperature : 66 5°F
+",6.15,,1250,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+65,66,sBHR,Pjant Iniection Outlet Pipe,N/A,Steel PVC Other:.NA,n/a,Active,,N/A,N/A,NA,10/29/2025,1200,Nicholas Crosby,Injection outlet DIDe inside pla nt.,—_ | 10-20 Gallons,6.03,3288,54,F,"""IELD MEASUREMENTS
+S. Conductivity : 3288 us
+Temperature: 54°F
+",NA,,1200,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+67,68,soccer field,Plant Iniection Outlet Pine,N/A,PVC Other,400,inactive - Only used for sampling,NA,N/A,Ni,WA,10/24/2025,9:32,Alex Benitez,From Monitoring well DUMP outlet,300 gallons,6.94,2.187,58.6,NA,"FIELD MEASUREMENTS
+S. Conductivity :2?.187us
+Temperature: 58 6°
+",NA,,9:32,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+69,70,Herz Dom,Pjant Injection Outlet Pipe,N/A,PVC Other:,110,Inactive - Only used for sampling,9/15/2025,57.5,Sounding Tape,57.8,10/24/2025,{40:06,Alex Benitez,From Mon itor! Ng well DU mM D outlet,=| 300 gallons,7.33,9.933,33.6,C,"“IELD MEASUREMENTS
+S. Conductivity: 9.933us
+Temperature: 322 6°C
+",1.33,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",40:06:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+71,72,Herz Deep,Plant Injection Outlet Pipe,"5""",PVC = Other:,"552""",Inactive - Only used for sampling,9/15/2025,61.9,Sounding Tape,61.2,10/24/2025,NA,Alex Benitez,port in pipeline 10 feet from wellhead” From Monitoring well pump outlet,[225 gallons,7.82,2.56,34.3,C,"FIELD MEASUREMENTS
+S. Conductivity : 2.560us
+Temperature : 34 32°C
+",NA,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+73,74,Eich - Monitoring Well,Plant Injection Outlet Pipe,"10""",PVC Other:,(Estimated) 45°,inactive - Only used for sampling,N/A,N/A,Nia,N/A,10/24/2025,[10:40,NA,F rom M On Ito rin Q wel | e um e O ut! et,100 gallons,7.31,2.102,33.9,C,"FIELD MEASUREMENTS
+nH: 7.31
+S. Conductivity :2.102us
+Temperature : 339°C
+",1.31,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",10:40,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+75,76,NDOT,Plant Injection Outlet Pipe,"4""",PVC Other:,100°,inactive - Only used for sampling,9/15/2025,55.9,Sounding Tape,56.8,10/24/2025,11:02,Alex Benitez,Water bai led from well,85 gallons ri) oe,7.37,3.027,76,C,"IELD MEASUREMENTS
+S. Conductivity: 3.027us
+Temperature: 76 09°C
+",1.37,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",11:02,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+77,78,Boyd Domestic,Plant Injection Outlet Pipe,N/A,Steel PVC Other: unknown,N/A,This is a domestic water source.,N/A,N/A,N/A,Domestic water sourced from residential home.,10/24/2025,11:35,Alex Benitez,Water discharged from residence,90 gallons | fg git al,8.12,0.553,21.6,C,"“IELD MEASUREMENTS
+pH: 8.12
+S. Conductivity :0.553us
+Temperature: 94 6°C
+",8.12,,11:35,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+79,80,Jeppson Domestic,Plant Injection Outlet Pipe,N/A,Steel PVC  Other:_unknown,N/A,This is a domestic water source.,N/A,N/A,NA,Domestic water sourced from residential home.,10/24/2025,11:50,Alex Benitez,Water from external faucet of residence,10 minutes,7.58,0.447,19.1,C,"FIELD MEASUREMENTS
+S. Conductivity :0.447us
+Temperature: 49 4°C
+",7.58,,11:50,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+81,82,Rogers Domestic,Plant Injection Outlet Pipe,N/A,Steel PVC Other: unknown,N/A,This is a domestic water source.,NA,N/A,NA,Domestic water sourced from residential home.,10/24/2025,NA,Alex Benitez,NA,50 gallons,7.47,0.401,27.4,C,"FIELD MEASUREMENTS
+5. Conductivity: 0.401us
+Temperature : 97 A°CC
+",NA,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+83,84,Galena 1,Plant Injection Outlet Pipe =,N/A,Steel PVC Other: N/A,NA,Active,,N/A,N/A,nya,NA,NA,NA,nection outlet pipe inside plant.,10-20 Gallons,6.21,3401,77.7,F,"FIELD MEASUREMENTS
+S. Conductivity: 3401us
+Temperature: 77 7°F
+",NA,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+85,86,Galena 2,Plant Injection Outlet Pipe,N/A,Steel PVC Other: NA,N/A,Active,,N/A,N/A,NA,11/25/2025,11006,Nicholas Crosby,Injection outlet Dipe inside plant.,10-20 Gallons,6.03,3227,101,F,"FIELD MEASUREMENTS
+nH: 6.03
+S. Conductivity : 322 /US
+Temperature: 4094 °F
+",NA,,1006,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+87,88,Galena 3,Plant Injection Outlet Pipe,N/A,Steel PVC  Other:.NA,nya,Active,,N/A,NA,[N/a =,11/25/2025,1208,Nicholas Crosby,‘Injection outlet DIipe inside olant.,10-20 Gallons,6.32,3411,70.5,F,"FIELD MEASUREMENTS
+pH : 6.32
+S. Conductivity : 3411us
+Temperature : 79 5°F
+",6.32,,1208,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+89,90,sB2,Plant Injection Outlet Pipe,N/A,Steel PVC  Other:.NiA,ya,Active,,N/A,N/A /,N/a,44/25/25,4345,Nicholas Crosby,are [Injection outiet Dipe inside plant.,10-20 Gallons,6.22,3327,66.5,F,"FIELD MEASUREMENTS
+S. Conductivity : 3327
+Temperature : 66 5°F
+",NA,,4345,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+91,92,sB3,Plant Injection Outlet Pipe,N/A,Steel PVC Other:.NA,y/A,Active,,"N/A ,",N/A,Nya 7,11/25/2025,4255,Nicholas Crosby,Injection outlet Dipe inside plant.,10-20 Gallons,6.14,3361,80,F,"FIELD MEASUREMENTS
+oH: 6.14
+S. Conductivity : 3361us
+Temperature: 80°F
+",6.14,,4255,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+93,94,SBHR,Plant Injection Outlet Pipe,N/A,Steet PVC  Other:.NA,N/A,Active,,N/A,NA,j N/A =!,11/25/2025,[1028,Nicholas Crosby,Injection outlet pipe inside plant.,10-20 Gallons,5.82,3362,93.1,F,"FIELD MEASUREMENTS
+S. Conductivity : 3362us
+Temperature : 93. 1°F
+",NA,,1028,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+95,96,Soccer Field,Plant Injection Outlet Pipe,N/A,PVC = Other:,400°,inactive - Only used for sampling,N/A,N/A,NA,Na,11/21/2024,Sep-40,Atex Benitez,From Monitoring well pump outlet,300 gallons,6.81,2.338,51.5,NA,"FIELD MEASUREMENTS
+S. Conductivity: 2. 338us
+Temperature : 51.5°
+",6.81,,Sep-40,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+97,98,Herz Dom,Plant Injection Outlet Pipe,N/A,PVC = Other:,110,Inactive - Only used for sampling,10/24/2025,57.8,Sounding Tape,58.5,44/21/25,40:32:00,Alex Benitez,From Monitoring well DUMP outlet,300 gallons,7.1,1.08,31.4,C,"FIELD MEASUREMENTS
+S. Conductivity : 1.08Ous
+Temperature : 34 A°C
+",NA,,40:32:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+99,100,Herz Deep,Plant Injection Outlet Pipe,"5""",PVC Other:,552,Inactive - Only used for sampling,10/24/2025,61.2,Sounding Tape,61.6,41/21/25,10:42,Alex Benitez,From Monitoring well pump Oo utlet,"225 gallons Tin 2, cgi",7.64,2.84,35.8,C,"""IELD MEASUREMENTS
+S. Conductivity: 2. 840us
+Temperature : 35 8°C
+",NA,,10:42,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+101,102,Eich - Monitoring Well,Plant Injection Outlet Pipe,"10""",PVC = Other:,45,inactive - Only used for sampling,N/A,N/A,NA,[na,NA,41:10:00,Alex Benitez,From Monito ring well Dump outiet,100 gallons ~,7.21,2.286,35.8,C,"FIELD MEASUREMENTS
+S. Conductivity : 2. ?86us
+Temperature : 358°C
+",NA,,41:10:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+103,104,NDOT,Plant Injection Outlet Pipe,"4""",PVC Other:,100,Inactive - Only used for sampling,10/24/2025,56.8,Sounding Tape,57.2,11/21/2025,41:40:00,Atex Benitez,ort in pipeline 10 feet from wellhead’ - Water bailed from well.,85 gallons,7.3,3.16,67,C,"“IELD MEASUREMENTS
+S. Conductivity :3.16Q0us
+Temperature: 67 0°C
+",7.3,,41:40:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+105,106,Boyd Domestic,Pjant Injection Outlet Pipe,N/A,Steel PVC  Other:_unknown,N/A,This is a domestic water source.,N/A,N/A,N/A,Domestic water sourced from residential home.,44/21/25,12:00,] Alex Benitez,Water ad ischarg ed from residence sd,NA,7.66,0.601,20.2,C,"-IELD MEASUREMENTS
+S. Conductivity :0.601us
+Temperature : 99 93°C
+",NA,,12:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+107,108,Jeppson Domestic,Plant Iniection Outlet Pipe,N/A,Steel PVC  Other:unknown,N/A,This is a domestic water source.,N/A,N/A,Na,Domestic water sourced from residential home.,11/21/2025,42:12:00,Alex Benitez,Water from external faucet of residence,10 minutes,7.21,0.488,14.3,C,"“IELD MEASUREMENTS
+S. Conductivity: 0.488us
+Temperature: 44 32°C
+",1.21,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",42:12:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+109,110,Rogers Domestic,Plant Injection Outlet Pipe,N/A,Steel PVC Other:unknown,N/A,This is a domestic water source.,N/A,N/A,N/A,Domestic water sourced from residential home.,41/21/25,42:25:00,Alex Benitez,NA,50 gallons,7.4,0.515,17.6,C,"“IELD MEASUREMENTS
+S. Conductivity :0.515us
+Temperature: 47 6°C
+",1.4,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",42:25:00,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+111,112,Galena 1,Plant Injection Outlet Pipe,N/A,Steel PVC Other:.N/A,yA,Active,,N/A,NA,N/A,12/10/2025,11315,Nicholas Crosby,Injection outlet DIDe inside plant.,10-20 Gallons,6.25,3372,67.5,F,"-IELD MEASUREMENTS
+S. Conductivity: 3372us
+Temperature : 67 5°F
+",NA,,1315,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+113,114,Galena 2,Pjant Injection Outlet Pipe,N/A,Steel PVC Other:.NA,N/A,Active,,N/A,NA,{NA,12/10/2025,},Nicholas Crosby,Injection outlet pipe inside plant.,10-20 Gallons,6.06,3415,91.1,F,"“IELD MEASUREMENTS
+pH : 6.06
+S. Conductivity: 3415us
+Temperature : 94 41°F
+",6.06,,},OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+115,116,Galena 3,Plant Injection Outlet Pipe,N/A,Steel PVC  Other:_NiA,N/A,Active,,N/A,NA,N/A i,12/10/2025,1415,Nicholas Crosby,Injection outlet pipe inside plant.,10-20 Gallons,6.09,3415,83.4,F,"-IELD MEASUREMENTS
+S. Conductivity : 3415
+Temperature: 93 4°F
+",6.09,,1415,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+117,118,sB2,Pjant Injection Outlet Pipe,N/A,Steel PVC Other: Nia,N/A,Active,,N/A,A,N/a,12/10/2025,NA,Nicholas Crosby,NA,=| 10-20 Gallons,6.23,3384,69.3,F,"“IELD MEASUREMENTS
+S. Conductivity : 3384us
+Temperature: 69 3°F
+",6.23,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+119,120,sB3,Plant Injection Outlet Pipe,N/A,Steel PVC Other: N/A,n/a,Active,,N/A,NA,nya,12/10/2025,1335,Nicholas Crosby,njection outlet pipe inside plant.,=| 10-20 Gallons,6.2,3358,67.1,F,"“IELD MEASUREMENTS
+S. Conductivity : 3358
+Temperature : G67 41°F
+",NA,,1335,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+121,122,SBHR,Plant Injection Outlet Pipe,N/A,Steel PVC Other:,N/A,Active,,N/A,N/A,N/A,12/10/2025,NA,Nicholas Crosby,Injection outlet Dipe inside plant.,10-20 Gallons,5.94,3417,101,F,"-IELD MEASUREMENTS
+pH ' 5.94
+S. Conductivity : 3417
+Temperature: 49 4°F
+",5.94,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+123,124,Soccer Field,Plant Injection Outlet Pipe ;,N/A,PVC = Other:,NA,Inactive - Only used for sampling,N/A,N/A,N/A,Nya,NA,NA,Alex Benitez,From Monito giaie well Dump outlet,NA,7.26,2.52,55.6,NA,"“IELD MEASUREMENTS
+S. Conductivity : 2.520us
+Temperature: 55 6°
+",7.26,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+125,126,Herz Dom,Plant Injection Outlet Pipe,N/A,PVC Other:,NA,Inactive - Only used for sampling,11/21/2025,58.5,"Cap Tube Tape Measure Other, SounsngTae esesses—‘—sSSOSSCS",58.2,12/12/2025,10:25,Alex Benitez,From Monitoring well pump outlet,300 gallons f,7.48,1.425,32.3,C,"""IELD MEASUREMENTS
+S. Conductivity: 1.425us
+Temperature : 39 3°C
+",7.48,,10:25,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+127,128,Herz Deep,Plant Injection Outlet Pipe,"5""",PVC = Other:,552,inactive - Only used for sampling,11/21/2025,61.6,Sounding Tape,61.9,42/12/25,10:15,Alex Benitez,ort in pipeline 10 feet from wellhead” From Monitoring well pump outlet,225 gallons,8.01,3.024,29.5,C,"IELD MEASUREMENTS
+S. Conductivity :3.024us
+Temperature : 99 5°G
+",8.01,,10:15,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+129,130,Eich - Monitoring Well,Plant Injection Outlet Pipe,"10""",PVC Other:,45,inactive - Only used for sampling,NA,N/A,Nia,[na,12/12/2025,NA,Alex Benitez,From Monitoring well DUMP outlet,—_| +00 gallons,7.52,2.395,37,C,"“IELD MEASUREMENTS
+S. Conductivity: 2.395us
+Temperature : 37 09°C
+",1.52,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+131,132,NDOT,Plant Injection Outlet Pipe,4”,PVC Other:,100,Inactive - Only used for sampling i,11/21/2025,57.2,Sounding Tape,56.2,12/12/2025,NA,Alex Benitez,NA,85 gallons,7.63,3.464,61,C,"FIELD MEASUREMENTS
+S. Conductivity: 3.464us
+Temperature : 67 0°C
+",7.63,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+133,134,Boyd Domestic,Plant Injection Outlet Pipe,N/A,Steel PVC Other: unknown,N/A,This is a domestic water source.,N/A,N/A,N/A,Domestic water sourced from residential home.,42/12/25,NA,Alex Benitez,Water disch alg ed from residence,—| 50 gallons,7.94,0.65,19.4,C,"FIELD MEASUREMENTS
+S. Conductivity :0.650us
+Temperature: 49 4°C
+",NA,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+135,136,Jeppson Domestic,Pjant Injection Outlet Pipe,N/A,Steel PVC  Other;_unknown,N/A,This is a domestic water source.,N/A,N/A,NA,Domestic water sourced from residential home.,12/12/2025,411:45:00,Alex Benitez,NA,10 minutes,7.73,0.482,17.1,C,"""IELD MEASUREMENTS
+S. Conductivity :0.482us
+Temperature: 474°C
+",1.73,"LIKELY MISREAD - probably 7.xx not 1.xx, verify visually",11:45,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible
+137,138,Rogers Domestic,Plant Injection Outlet Pipe :,N/A,Steel PVC = Other: unknown,NA,This is a domestic water source.,N/A,N/A,Na,Domestic water sourced from residential home.,12/12/2025,NA,Alex Benitez,NA,=| 50 gallons,7.71,0.514,28.5,C,"IELD MEASUREMENTS
+pH: 7.71
+S. Conductivity: 0.514us
+Temperature: 98 56°C
+",7.71,,NA,OCR digit errors possible (e.g. transposed/dropped digit) - verify against raw_field_meas or original photo if value looks implausible

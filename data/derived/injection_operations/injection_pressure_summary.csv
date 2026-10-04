@@ -1,0 +1,15 @@
+well_name,status,document_date,document_name,max_allowable,historic_peak,current,new_authorized
+IW-1 (45-28),injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,350,142,108,138
+IW-2,idle,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,243,NA,NA,NA
+IW-4 (35-28),injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,260,121,88,118
+IW-5 (46-28),injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,171,94,68,98
+IW-6,injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,192,100,74,104
+64A-32,injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,450,73,52,92
+23-33,injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,375,120,NA,120
+23-33,exceeds_new_authorized_limit,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,NA,NA,135,NA
+14-33,idle,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,322,NA,NA,NA
+14A-33,production_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,151,NA,NA,NA
+43-33,injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,148,138,NA,138
+43-33,not_provided,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,NA,NA,NA,NA
+21-32,injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,237,80,113,120
+42A-32,injection_well,2025-05-30,NDEP UIC Temporary Permit UNEV2007204T2025-1,225,53,62,93

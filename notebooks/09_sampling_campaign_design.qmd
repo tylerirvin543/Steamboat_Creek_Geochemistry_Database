@@ -16,7 +16,7 @@ execute:
   message: true
 ---
 
-## Purpose
+## Purpose {.unnumbered}
 
 This notebook answers a concrete field-planning question directly: **given
 one year before writing the thesis, how often should chloride be sampled
@@ -37,6 +37,7 @@ library(RSQLite)
 library(dplyr)
 library(ggplot2)
 
+
 db_path <- file.path("database", "geochem_operational.sqlite")
 if (!file.exists(db_path)) db_path <- file.path("..", "database", "geochem_operational.sqlite")
 con <- dbConnect(SQLite(), db_path)
@@ -44,9 +45,16 @@ con <- dbConnect(SQLite(), db_path)
 mc_script <- file.path("scripts", "analysis", "sampling_frequency", "04_monte_carlo_subsampling.R")
 if (!file.exists(mc_script)) mc_script <- file.path("..", mc_script)
 source(mc_script)
+
+cl_model_script <- file.path("scripts", "analysis", "sampling_frequency", "03_chloride_models.R")
+if (!file.exists(cl_model_script)) cl_model_script <- file.path("..", cl_model_script)
+.old_wd_09 <- getwd()
+if (basename(.old_wd_09) == "notebooks") setwd("..")
+source(file.path("scripts", "analysis", "sampling_frequency", "03_chloride_models.R"))
+setwd(.old_wd_09)
 ```
 
-## 1. How much does real EC actually vary day to day?
+## How much does real EC actually vary day to day?
 
 ```{r ec-pull}
 ec <- dbGetQuery(con, "
@@ -90,15 +98,524 @@ and ACF findings. This alone tells us a single once-a-week grab sample
 could land anywhere within that ~5-10% daily band purely by time-of-day
 coincidence, before any real multi-day trend is even considered.
 
-## 2. Monte Carlo: how much reconstruction error does each candidate sampling interval produce?
+### The one real Cl/discharge point on file so far
 
-Reusing the existing Monte Carlo subsampling framework, applied to the
-real EC series itself (standing in for the dense reference a real Cl-EC
-regression would eventually predict from): repeatedly subsample at
-1/2/3/7/14-day intervals (varying the random start offset 200 times per
-interval), linearly reconstruct the full series from just those points,
-and measure the reconstruction error against the real, fully-resolved
-record.
+Before running the Monte Carlo on EC alone, it's worth being explicit
+about what real chloride/discharge data already exists at these two
+sites -- because it is not, currently, part of the analysis below.
+
+```{r sbrr-real-point-09}
+sbrr_sample <- dbGetQuery(con, "
+  SELECT sf.sample_id, sf.datetime AS matched_usgs_time, sf.discharge_m3_s,
+         sm.value AS cl_mgl, sm.units
+  FROM sample_flow sf
+  JOIN vw_sample_master sm ON sm.sample_id = sf.sample_id AND sm.analyte = 'Cl'
+  WHERE sf.sample_id = 819
+")
+sbrr_sample$matched_usgs_time <- as.POSIXct(sbrr_sample$matched_usgs_time, tz = "UTC")
+sbrr_sample$discharge_cfs <- sbrr_sample$discharge_m3_s * 35.3147
+
+sbrr_field <- dbGetQuery(con, "SELECT parameter, value, units FROM Field_Measurements WHERE sample_id = 819")
+sbrr_sample$lab_ec_uScm <- sbrr_field$value[sbrr_field$parameter == "conductivity"]
+sbrr_sample$cl_field_ppm <- sbrr_field$value[sbrr_field$parameter == "Cl_field"]
+sbrr_sample$cl_ec_ratio <- sbrr_sample$cl_mgl / sbrr_sample$lab_ec_uScm
+knitr::kable(sbrr_sample[, c("sample_id", "matched_usgs_time", "cl_mgl", "units", "lab_ec_uScm", "cl_ec_ratio", "discharge_m3_s", "discharge_cfs")],
+             col.names = c("Sample", "Matched time", "Lab Cl (mg/L)", "Units", "Lab EC (uS/cm)", "Cl:EC ratio", "Discharge (m3/s)", "Discharge (cfs)"),
+             digits = c(0, 0, 1, 0, 0, 4, 3, 1),
+             caption = "The one real, paired lab Cl + lab specific conductance + discharge measurement at SBRR currently on file (SBGG has none)")
+```
+
+```{r sbrr-real-point-plot-09}
+#| fig-width: 8
+#| fig-height: 4
+sbrr_ec <- ec %>% filter(site == "SBRR")
+gap_days <- as.numeric(difftime(min(sbrr_ec$timestamp), sbrr_sample$matched_usgs_time, units = "days"))
+
+ggplot(sbrr_ec, aes(x = timestamp, y = sc_25c)) +
+  geom_line(linewidth = 0.3, color = "steelblue") +
+  geom_vline(xintercept = as.numeric(sbrr_sample$matched_usgs_time), linetype = "dashed", color = "firebrick") +
+  geom_hline(yintercept = sbrr_sample$lab_ec_uScm, linetype = "dotted", color = "darkorange") +
+  annotate("label", x = sbrr_sample$matched_usgs_time, y = max(sbrr_ec$sc_25c),
+           label = sprintf("Real sample 819 (2026-05-01)\nCl = %.1f mg/L\nLab EC = %.0f uS/cm\nQ = %.1f cfs",
+                            sbrr_sample$cl_mgl, sbrr_sample$lab_ec_uScm, sbrr_sample$discharge_cfs),
+           hjust = -0.05, size = 3, color = "firebrick", fill = "white") +
+  scale_x_datetime(limits = c(sbrr_sample$matched_usgs_time - as.difftime(5, units = "days"), max(sbrr_ec$timestamp))) +
+  labs(x = NULL, y = "Specific conductance (uS/cm, 25C), SBRR",
+       title = "The single real Cl/EC/discharge sample vs. the SBRR conductivity-logger record",
+       subtitle = sprintf("Dotted line = the sample's own lab EC (%.0f uS/cm); the sample predates the logger record by ~%.0f days", sbrr_sample$lab_ec_uScm, gap_days))
+```
+
+**Reading**: this is a real, dated triplet -- lab Cl (17.1 mg/L), lab
+specific conductance (241 uS/cm), and discharge (~11.2 cfs) -- and it is
+specifically useful because it gives a real, if single-point, Cl:EC
+ratio (~0.071 mg Cl per uS/cm) to sanity-check any future regression or
+simulated Tier 1 dataset against. Two real caveats temper how far to
+trust it: (1) the sample's lab EC of 241 uS/cm is well below SBRR's
+mid-summer logger mean of ~360 uS/cm (Section 1) -- plausibly a real
+seasonal effect (more spring-runoff dilution in May than in the
+July-August baseflow period the logger record covers), but not
+confirmable from a single point; (2) the lab conductivity's
+temperature-compensation convention is not confirmed to match the
+logger's own 25C-normalized `sc_25c`, so the two numbers, while both
+real, may not be perfectly comparable on a like-for-like basis. A
+related, separately useful QC note: this sample's quick field Cl-strip
+reading (30.0 ppm) came in nearly double the lab-analyzed Cl (17.1
+mg/L) -- consistent with the known low precision of Cl test strips at
+low concentrations, and a reminder that the lab value, not the field
+strip, is what this project treats as authoritative throughout.
+
+This same sample is also, separately, a real, dated Cl and discharge
+(~11.2 cfs) measurement -- not synthetic -- but it sits roughly two and a
+half months before the conductivity logger record even begins, so it
+cannot be overlaid *on* the EC series in any meaningful sense; the blank
+space between the dashed line and the blue trace in the plot above is
+the point. With n=1 and zero real overlap, this cannot validate
+anything statistically (no Cl-EC relationship can be fit from a single
+sample against a period with no EC data at all), and SBGG has no real
+Cl sample on file to even attempt this with. This is the clearest
+possible illustration of the exact gap Tier 1 is designed to close: a
+real Cl value and a real paired discharge value already exist as
+*proof the pairing pipeline works* (`sample_flow`, built in Session 36),
+but a temporally-overlapping, densely-repeated version of this same
+pairing is what's actually missing.
+
+### A second real reference point: SBBV
+
+```{r sbbv-real-point-09}
+sbbv_sample <- dbGetQuery(con, "
+  SELECT sf.sample_id, sf.datetime AS matched_usgs_time, sf.discharge_m3_s,
+         sm.value AS cl_mgl, sm.units
+  FROM sample_flow sf
+  JOIN vw_sample_master sm ON sm.sample_id = sf.sample_id AND sm.analyte = 'Cl'
+  WHERE sf.sample_id = 818
+")
+sbbv_sample$matched_usgs_time <- as.POSIXct(sbbv_sample$matched_usgs_time, tz = "UTC")
+sbbv_sample$discharge_cfs <- sbbv_sample$discharge_m3_s * 35.3147
+
+sbbv_field <- dbGetQuery(con, "SELECT parameter, value, units FROM Field_Measurements WHERE sample_id = 818")
+sbbv_sample$lab_ec_uScm <- sbbv_field$value[sbbv_field$parameter == "conductivity"]
+sbbv_sample$cl_field_ppm <- sbbv_field$value[sbbv_field$parameter == "Cl_field"]
+sbbv_sample$cl_ec_ratio <- sbbv_sample$cl_mgl / sbbv_sample$lab_ec_uScm
+
+both_points <- bind_rows(
+  cbind(site = "SBRR", sbrr_sample[, c("sample_id", "matched_usgs_time", "cl_mgl", "lab_ec_uScm", "cl_ec_ratio", "discharge_cfs")]),
+  cbind(site = "SBBV", sbbv_sample[, c("sample_id", "matched_usgs_time", "cl_mgl", "lab_ec_uScm", "cl_ec_ratio", "discharge_cfs")])
+)
+knitr::kable(both_points,
+             col.names = c("Site", "Sample", "Matched time", "Lab Cl (mg/L)", "Lab EC (uS/cm)", "Cl:EC ratio", "Discharge (cfs)"),
+             digits = c(0, 0, 0, 1, 0, 4, 1),
+             caption = "Both real lab Cl/EC/discharge points currently on file, same sampling day (2026-05-01)")
+```
+
+**Reading**: SBBV (sample 818) has no conductivity logger at all, so
+unlike SBRR it can't be plotted against a continuous EC record -- but
+it's still a real, useful second reference point, sampled the same day
+(2026-05-01) as the SBRR point above, at a different real USGS gauge
+(10349849, downstream of SBRR's 10349300). Its Cl:EC ratio (126.0 / 877
+= 0.144 mg Cl per uS/cm) is roughly double SBRR's (0.071 mg Cl per
+uS/cm) -- a real, physically sensible difference, not noise: SBBV sits
+further downstream, closer to a more concentrated thermal signature
+(consistent with its higher absolute Cl, and the same SBRR/SBBV pair
+already used for the Session 30 chloride-mass-balance discharge
+estimate). The key methodological takeaway for Tier 1: **a single
+Cl:EC ratio does not transfer between sites** -- SBRR and SBGG will
+each need their own fitted relationship, and SBBV's ratio here is a
+reminder of how much that relationship can vary over just a few
+kilometers of stream, not a number to reuse elsewhere. A smaller,
+separate note: SBBV's field-strip Cl (119.0 ppm) landed much closer to
+its lab Cl (126.0 mg/L) than SBRR's own field-strip reading did to its
+lab value -- a real, if anecdotal, hint that Cl-strip accuracy may
+depend on concentration range, worth watching during Tier 1's own
+field collection.
+
+### Testing a hypothesis: does the high Cl:EC ratio at springs/wells reflect boiling, not just dilution?
+
+A natural question raised by the SBRR/SBBV comparison above: the two
+creek (diffuse-mixing) sites show much lower Cl:EC ratios (0.071,
+0.144) than the direct spring/well/fumarole samples (0.21-0.24). Is
+that because the spring/well fluid has taken a **boiling pathway** from
+above -- steam loss concentrating chloride relative to conductivity --
+while the creek sites instead reflect **diffuse subsurface mixing**
+with cold creek water? This project already has real, independently
+measured delta-18O/delta-D data for all 8 of these same samples, which
+lets this be tested directly rather than left as speculation.
+
+```{r boiling-vs-mixing-09}
+boil_df <- dbGetQuery(con, "
+  SELECT sm.sample_id, l.external_station_code, sm.value AS cl_mgl, fm.value AS lab_ec_uScm
+  FROM vw_sample_master sm
+  JOIN Field_Measurements fm ON fm.sample_id = sm.sample_id AND fm.parameter = 'conductivity'
+  JOIN Locations l ON sm.location_id = l.location_id
+  WHERE sm.analyte = 'Cl'
+")
+iso <- dbGetQuery(con, "
+  SELECT sample_id,
+    MAX(CASE WHEN analyte='d18O' THEN value END) AS d18O,
+    MAX(CASE WHEN analyte='d2H' THEN value END) AS d2H
+  FROM Isotope_Analyses GROUP BY sample_id
+")
+boil_df <- boil_df |>
+  left_join(iso, by = "sample_id") |>
+  mutate(cl_ec_ratio = cl_mgl / lab_ec_uScm, d_excess = d2H - 8 * d18O) |>
+  arrange(cl_mgl)
+
+knitr::kable(boil_df, digits = c(0, 0, 1, 0, 2, 2, 3, 2),
+             col.names = c("Sample", "Site", "Cl (mg/L)", "Lab EC (uS/cm)", "d18O", "d2H", "Cl:EC ratio", "d-excess"),
+             caption = "All 8 real samples with paired lab Cl, lab EC, and isotopes, sorted by Cl")
+```
+
+```{r boiling-vs-mixing-plot1-09}
+#| fig-width: 6.5
+#| fig-height: 4.5
+ggplot(boil_df, aes(x = cl_mgl, y = d_excess, label = external_station_code)) +
+  geom_point(size = 2.5, color = "darkorange") +
+  ggrepel::geom_text_repel(size = 3) +
+  labs(x = "Chloride (mg/L)", y = "d-excess (permil) = d2H - 8*d18O",
+       title = "d-excess falls sharply as Cl rises across these 8 real samples",
+       subtitle = sprintf("Pearson r = %.2f -- a strong, real (if n=8) correlation", cor(boil_df$cl_mgl, boil_df$d_excess)))
+```
+
+```{r boiling-vs-mixing-plot2-09}
+#| fig-width: 6.5
+#| fig-height: 5
+ggplot(boil_df, aes(x = d18O, y = d2H, label = external_station_code)) +
+  geom_abline(slope = 8, intercept = 10, linetype = "dashed", color = "steelblue") +
+  geom_point(size = 2.5, color = "darkorange") +
+  ggrepel::geom_text_repel(size = 3) +
+  annotate("text", x = min(boil_df$d18O), y = 8 * min(boil_df$d18O) + 10 + 3,
+           label = "Global Meteoric Water Line (reference only)", hjust = 0, size = 3, color = "steelblue") +
+  labs(x = "delta-18O (permil)", y = "delta-2H (permil)",
+       title = "d18O-d2H diagram for the 8 real thermal/creek samples",
+       subtitle = "No project-specific local meteoric water line has been independently established yet")
+```
+
+**Reading**: d-excess drops from +7.3 at SBRR (the most dilute sample)
+to as low as -18.3 at the most concentrated well sample -- a strong
+correlation (r = -0.99 with Cl, r = -0.97 with the Cl:EC ratio itself).
+A falling d-excess is the classic signature of either (a) evaporative/
+boiling steam loss, or (b) high-temperature water-rock oxygen exchange
+in the deep reservoir -- both shift a sample below the meteoric water
+line, and **this project's own 8-point dataset cannot yet distinguish
+between them**. This matters because the two explanations lead to
+different conclusions about the Cl:EC pattern itself:
+
+- **If the shift is a deep, ancient water-rock oxygen exchange** (a
+  well-documented, common feature of high-temperature geothermal
+  reservoirs generally, not something happening freshly at each spring),
+  then the low d-excess is simply a fixed property of the one deep
+  parent thermal fluid, and the whole observed pattern -- both the
+  Cl:EC ratio and the d-excess -- reduces to a single two-end-member
+  conservative **dilution** gradient between that one thermal
+  end-member and creek/meteoric water. Under this explanation, boiling
+  plays no special role in why springs differ from the creek sites --
+  the creek sites are simply more diluted.
+- **If instead real, near-surface steam loss is happening at the
+  spring/well/fumarole sites specifically** (plausible given the active
+  2025 eruption and steaming ground this thesis is built around), that
+  would independently push their d-excess down *and* concentrate Cl
+  and the other major EC-contributing ions together -- largely
+  preserving or even slightly raising their Cl:EC ratio, on top of
+  whatever dilution gradient also exists. Boiling itself is a weak
+  direct explanation for a *change* in the Cl:EC ratio (steam loss
+  concentrates essentially all non-volatile conservative solutes
+  together), but it is a strong, real explanation for the *depressed
+  d-excess*, which is the piece dilution alone does not obviously
+  predict unless the parent fluid already carries that signature.
+
+**What would resolve this**: (1) an independently-established local
+meteoric water line (this project currently only has the reference
+Global Meteoric Water Line plotted above, not a locally-fitted one --
+Steamboat-area precipitation/shallow-groundwater isotope samples would
+be needed); (2) checking whether the *creek* samples (SBRR/SBBV) fall on
+the *same* straight line as the spring/well samples in d18O-d2H space
+(consistent with simple dilution of one shared parent fluid) or whether
+the spring/well cluster sits measurably below an SBRR-to-thermal-endmember
+line (consistent with an added boiling step specific to those sites);
+(3) `scripts/phreeqc/12_run_phreeqc_gas_phase.R`'s gas-phase module could
+quantitatively test how much steam/CO2 loss would be needed to produce
+the observed Cl differences via Rayleigh distillation, and whether that
+is consistent with the observed d-excess shift; (4) any available gas
+chemistry, via the D'Amore-Panichi gas geothermometer/gas-mixing tools
+(`13_gas_geothermometry.R`/`14_gas_mixing.R`), since gas ratios are
+especially sensitive to boiling/steam separation. None of this is run
+here -- this section documents a real, testable hypothesis and the
+specific real data that already exists to start addressing it, not a
+resolved finding.
+
+### A richer historical reference: NDEP's SB5/SB7 Cl-EC record
+
+Section 1.1/1.2 relied on a single real 2026 Cl-EC pair at SBRR and one
+at SBBV. A much larger real historical dataset already exists in this
+database and was not previously connected to this analysis: NDEP's own
+water-quality monitoring stores chloride and specific conductance
+together as `Lab_Analyses` rows (not `Field_Measurements`, a different
+table than the FIELD-source pairing used above), and two of those NDEP
+stations are, per `Location_Aliases`, real-world matches (or close
+neighbors) of SBRR and SBGG.
+
+```{r sb5-sb7-historical-09}
+hist_pairs <- dbGetQuery(con, "
+  SELECT l.external_station_code, cl_a.sample_id, cl_a.value AS cl_mgl, ec_a.value AS ec_uScm
+  FROM Lab_Analyses cl_a
+  JOIN Lab_Analyses ec_a ON cl_a.sample_id = ec_a.sample_id AND ec_a.analyte = 'conductivity'
+  JOIN vw_sample_master sm ON sm.sample_id = cl_a.sample_id AND sm.analyte = 'Cl'
+  JOIN Locations l ON sm.location_id = l.location_id
+  WHERE cl_a.analyte = 'Cl' AND cl_a.value > 0 AND l.external_station_code IN ('SB5', 'SB7')
+")
+
+hist_summary <- hist_pairs |>
+  group_by(external_station_code) |>
+  summarise(n = n(), mean_cl = mean(cl_mgl), mean_ec = mean(ec_uScm),
+            mean_ratio = mean(cl_mgl / ec_uScm), .groups = "drop")
+knitr::kable(hist_summary, digits = c(0, 0, 1, 1, 4),
+             col.names = c("NDEP station", "n", "Mean Cl (mg/L)", "Mean EC (uS/cm)", "Mean Cl:EC ratio"),
+             caption = "Real historical NDEP Cl+EC pairs at SB5 (aliased to SBRR) and SB7 (near SBGG)")
+```
+
+**Reading**: `Location_Aliases` records SB5 ("Steamboat Creek @ Rhodes
+Road") as ~12 m from SBRR's own coordinate -- confirmed the same
+real-world point -- and SB7 ("Steamboat Creek @ Geiger Grade") sits
+about 420 m from SBGG's registered coordinate, a close but not
+confirmed-identical neighbor. **SB5's 142 real historical pairs give a
+mean Cl:EC ratio of ~0.051, close to SBRR's own single 2026 point
+(0.071)** -- an encouraging, independent cross-check that the single
+2026 value isn't an outlier. **SB7's 113 pairs give ~0.153, close to
+SBBV's 0.144** -- both well above SBRR's ratio, consistent with SB7/SBGG
+sitting further downstream/closer to the thermal signature, same
+pattern as SBRR-vs-SBBV. Real caveats: this is decades of NDEP grab
+samples using different lab methods/instrumentation than the current
+HOBO conductivity loggers or the FIELD lab work, spans a wide and
+(per this project's own documented `Sampling_Events.date` dual-epoch
+ambiguity) not yet cleanly resolved date range, and SB7 is a nearby
+neighbor of SBGG rather than a confirmed identical point the way SB5 is
+for SBRR. It is not a substitute for real, temporally-overlapping Tier 1
+pairs -- but it is a far richer, real historical anchor than a single
+point, and `get_chloride_conductance_pairs()` (`03_chloride_models.R`)
+now pulls this same SB5 dataset automatically as a clearly-tagged
+`historical_ndep` calibration set (see that script's own header for
+details).
+
+### Fitting real historical regressions: SBRR group vs. SB7
+
+Section 1.4 reported summary ratios; a real linear regression on each
+group's own points gives a fuller comparison -- including against the
+synthetic self-test's seeded slope (`CL_EC_RATIO_SEED`, `03_chloride_models.R`)
+-- and a direct, testable answer to whether SBGG can reuse SBRR's
+relationship or needs its own.
+
+```{r historical-regression-09}
+hist_all_fit <- get_chloride_conductance_pairs(con)
+sbrr_hist_fit <- hist_all_fit |> filter(pairing_type == "historical_ndep")
+
+sb7_fit <- dbGetQuery(con, "
+  SELECT cl_a.value AS cl_mgl, ec_a.value AS ec_uScm
+  FROM Lab_Analyses cl_a
+  JOIN Lab_Analyses ec_a ON cl_a.sample_id = ec_a.sample_id AND ec_a.analyte = 'conductivity'
+  JOIN vw_sample_master sm ON sm.sample_id = cl_a.sample_id AND sm.analyte = 'Cl'
+  JOIN Locations l ON sm.location_id = l.location_id
+  WHERE cl_a.analyte = 'Cl' AND cl_a.value > 0 AND l.external_station_code = 'SB7'
+")
+
+m_sbrr_hist <- lm(chloride_mgL ~ sc_25c, data = sbrr_hist_fit)
+m_sb7_hist  <- lm(cl_mgl ~ ec_uScm, data = sb7_fit)
+
+reg_summary <- data.frame(
+  group = c("SBRR group (SB5/SB6/STBT02Steamboat-2a)", "SB7 (near SBGG)"),
+  n = c(nrow(sbrr_hist_fit), nrow(sb7_fit)),
+  intercept = c(coef(m_sbrr_hist)[1], coef(m_sb7_hist)[1]),
+  slope = c(coef(m_sbrr_hist)[2], coef(m_sb7_hist)[2]),
+  r_squared = c(summary(m_sbrr_hist)$r.squared, summary(m_sb7_hist)$r.squared)
+)
+knitr::kable(reg_summary, digits = c(0, 0, 2, 4, 3),
+             col.names = c("Group", "n", "Intercept (mg/L)", "Slope (mg/L per uS/cm)", "R-squared"),
+             caption = "Real fitted historical Cl ~ EC regressions, SBRR group vs. SB7")
+
+combined_hist <- bind_rows(
+  sbrr_hist_fit |> transmute(site_group = "SBRR group", ec_uScm = sc_25c, cl_mgl = chloride_mgL),
+  sb7_fit |> transmute(site_group = "SB7 (near SBGG)", ec_uScm, cl_mgl)
+)
+m_interaction <- lm(cl_mgl ~ ec_uScm * site_group, data = combined_hist)
+interaction_p <- anova(m_interaction)["ec_uScm:site_group", "Pr(>F)"]
+cat(sprintf("Interaction test (does the slope differ by group?): F = %.1f, p = %.3g\n",
+            anova(m_interaction)["ec_uScm:site_group", "F value"], interaction_p))
+```
+
+```{r historical-regression-plot-09}
+#| fig-width: 7
+#| fig-height: 5
+ggplot(combined_hist, aes(x = ec_uScm, y = cl_mgl, color = site_group)) +
+  geom_point(alpha = 0.5, size = 1.5) +
+  geom_smooth(method = "lm", se = TRUE) +
+  labs(x = "Lab specific conductance (uS/cm)", y = "Chloride (mg/L)",
+       title = "Real historical NDEP Cl vs EC: SBRR group vs SB7",
+       subtitle = "Distinct fitted lines -- an interaction test confirms the slopes differ significantly")
+```
+
+**Reading**: the SBRR group's real fitted slope (0.061 mg Cl per
+uS/cm, n=181, R-squared=0.65) sits reasonably close to the synthetic
+self-test's seeded value (`CL_EC_RATIO_SEED = 0.071`) -- a real,
+independent cross-check that the seed was a sensible anchor, though the
+real fit also reveals a small negative intercept (-3.26 mg/L) that the
+ratio-only seed can't capture (an artifact of extrapolating a straight
+line down toward zero EC, not evidence of real negative chloride).
+**SB7's fitted slope (0.266) is more than four times steeper, with a
+much tighter fit (R-squared=0.98, n=113)**, and an interaction term in
+the combined model confirms this is a real, highly significant
+difference (p < 2e-16), not sampling noise around one shared line. This
+directly answers the practical Tier 1 planning question: **SBGG cannot
+reuse whatever Cl-EC relationship ends up fit at SBRR, even
+approximately -- it needs its own independently fitted calibration**,
+exactly as Section 1.2 already suspected from the single 2026 SBRR/SBBV
+point pair, now confirmed with real historical breadth (SB7's real
+range reaches ~750 mg/L Cl at ~3000 uS/cm, far beyond what the single
+2026 SBBV point alone would suggest). The same caveats as Section 1.4
+still apply -- decades of NDEP grab samples on different instruments
+than the current loggers, not a substitute for real Tier 1 pairs -- but
+the qualitative conclusion (SBRR and SBGG need separate calibrations)
+is now well-supported by real data, not just an assumption.
+
+#### Why is SBRR-group's fit (R-squared=0.65) looser than SB7's (0.98)?
+
+A natural follow-up: is that gap driven by a subset of low-Cl,
+near-detection-limit samples at SBRR/SB5 that could be flagged or
+excluded? Tested directly rather than assumed.
+
+```{r sbrr-residual-check-09}
+hist_check <- get_chloride_conductance_pairs(con) |> filter(pairing_type == "historical_ndep")
+m_check <- lm(chloride_mgL ~ sc_25c, data = hist_check)
+hist_check$std_resid <- rstandard(m_check)
+
+dl_info <- dbGetQuery(con, sprintf(
+  "SELECT sample_id, value, detection_limit FROM Lab_Analyses WHERE analyte = 'Cl' AND sample_id IN (%s)",
+  paste(hist_check$sample_id, collapse = ",")
+))
+hist_check$dl_flag <- ifelse(
+  hist_check$sample_id %in% dl_info$sample_id[!is.na(dl_info$detection_limit) & dl_info$value <= dl_info$detection_limit],
+  "at/below detection limit", "above detection limit"
+)
+
+knitr::kable(
+  hist_check |> group_by(dl_flag) |> summarise(n = n(), mean_abs_std_resid = mean(abs(std_resid)), .groups = "drop"),
+  digits = c(0, 0, 3),
+  col.names = c("Group", "n", "Mean |standardized residual|"),
+  caption = "Do near-detection-limit samples show worse residuals? (No -- the opposite.)"
+)
+
+hist_check$year <- as.numeric(format(hist_check$collection_time, "%Y"))
+hist_check$era <- ifelse(hist_check$year < 2000, "1987-1999", "2000-2025")
+era_fits <- hist_check |> group_by(era) |>
+  summarise(n = n(), .groups = "drop") |>
+  rowwise() |>
+  mutate(model = list(lm(chloride_mgL ~ sc_25c, data = hist_check[hist_check$era == era, ]))) |>
+  mutate(slope = coef(model)[2], intercept = coef(model)[1], r_squared = summary(model)$r.squared) |>
+  select(-model)
+knitr::kable(era_fits, digits = c(0, 0, 4, 2, 3),
+             col.names = c("Era", "n", "Slope", "Intercept", "R-squared"),
+             caption = "Splitting the SBRR-group historical fit by era reveals a real secular shift")
+
+m_era_interaction <- lm(chloride_mgL ~ sc_25c * era, data = hist_check)
+era_p <- anova(m_era_interaction)["sc_25c:era", "Pr(>F)"]
+cat(sprintf("Interaction test (does the slope differ by era?): p = %.3g\n", era_p))
+```
+
+**Reading**: the detection-limit hypothesis is **not supported --
+if anything, the opposite is true**. The 13 samples at or below their
+own reported detection limit have *smaller* standardized residuals
+(0.16) than the 168 samples above it (0.76); excluding them barely
+moves R-squared (0.65 -> 0.62), and excluding the entire bottom quartile
+of Cl values makes the fit noticeably *worse* (R-squared drops to
+0.47). The real driver is instead a genuine **secular shift**: this
+historical record spans 1987-2025, and splitting it at year 2000 shows
+the slope nearly doubling, from 0.039 (1987-1999) to 0.073 (2000-2025)
+-- a highly significant difference (interaction p < 1e-8), not noise.
+A single straight line fit across a 38-year span that has genuinely
+drifted will always show more scatter than either sub-period fit alone
+(1987-1999: R-squared=0.58; 2000-2025: R-squared=0.78) -- this, not
+detection-limit noise, is what explains SBRR-group's looser overall
+fit compared to SB7's. A genuinely useful side effect: the more recent
+(2000-2025) sub-period's slope (0.073) is even closer to the synthetic
+self-test's seeded value (`CL_EC_RATIO_SEED = 0.071`) than the full
+181-sample pooled fit was -- the post-2000 subset is the more relevant
+historical prior for comparing against a 2026-era logger relationship,
+used as such in Section 1.6 below.
+
+### Using the historical fits as an informed prior for Tier 1
+
+Sections 1.4/1.5 give two real historical relationships (SBRR-group,
+SB7); the practical next question is how to actually use them once
+real Tier 1 logger-era pairs start arriving. `03_chloride_models.R`'s
+new `compare_historical_vs_logger_fit()` does this: it fits the
+post-2000 historical prior, checks whether enough real logger pairs
+exist yet, and -- once they do -- runs the same interaction-test
+approach as Section 1.5 to formally check whether the modern
+relationship is statistically consistent with, or has drifted from,
+the historical one.
+
+```{r historical-prior-09}
+prior_check <- compare_historical_vs_logger_fit(con)
+```
+
+**Right now** (0 real logger-based pairs), it correctly reports the
+historical prior alone and declines to fabricate a comparison. To
+confirm the mechanism itself works correctly for when real data does
+arrive, `demo_compare_historical_vs_logger_fit()` self-tests it against
+a synthetic stand-in for logger pairs, temporarily substituted in place
+of real data and restored immediately afterward:
+
+```{r historical-prior-demo-09}
+cat("--- Self-test: a synthetic logger-era relationship that MATCHES the historical prior ---\n")
+demo_match <- demo_compare_historical_vs_logger_fit(con, slope_multiplier = 1.0)
+
+cat("\n--- Self-test: a synthetic logger-era relationship that has DRIFTED from the prior ---\n")
+demo_drift <- demo_compare_historical_vs_logger_fit(con, slope_multiplier = 2.0)
+```
+
+**Reading**: both self-test scenarios behave correctly -- a synthetic
+logger relationship matching the prior is correctly flagged
+`consistent = TRUE` (interaction p=0.85), and one with a 2x slope
+drift is correctly flagged `consistent = FALSE` (interaction p < 1e-19).
+This is exactly the check to run the moment real Tier 1 SBRR/SBGG pairs
+exist: if the modern logger-era relationship comes back `consistent`
+with the historical prior, that's real, independent evidence the
+Cl-EC relationship at these sites has been stable for decades and the
+historical data remains a useful long-term reference; if it comes back
+significantly different, that itself would be a real, substantive
+finding (e.g. consistent with a change in thermal outflow since the
+2025 eruption this thesis is built around) rather than a modeling
+inconvenience to explain away.
+
+## Monte Carlo: how much reconstruction error does each candidate sampling interval produce?
+
+Reusing the existing Monte Carlo subsampling framework
+(`monte_carlo_sampling_frequency()` in
+`scripts/analysis/sampling_frequency/04_monte_carlo_subsampling.R`),
+applied to the real EC series itself (standing in for the dense
+reference a real Cl-EC regression would eventually predict from). Concretely,
+for each candidate chemistry-sampling interval (1, 2, 3, 7, and 14 days):
+
+1. Pick a random start offset within the first interval (e.g. for a
+   7-day interval, the first "sample" might fall on day 2, day 5, or
+   any other day of that first week).
+2. Subsample the real, dense EC record at that fixed interval starting
+   from the chosen offset -- this mimics "what if we had only grabbed a
+   sample every N days, starting on this particular day."
+3. Linearly interpolate between just those sparse points to reconstruct
+   an approximation of the full continuous series, exactly as if the
+   sparse samples were all the information available.
+4. Compare the reconstruction to the real, fully-resolved record
+   point-by-point (RMSE, MAE) and, when a paired discharge series is
+   available, as a mass-flux percent error.
+5. Repeat steps 1-4 200 times per interval, each time with a new random
+   offset, and summarize the resulting 200 RMSE values.
+
+Step 5 is why this is a *Monte Carlo* exercise rather than a single
+calculation: which specific days a real field campaign happens to land
+on is arbitrary, and a sampling schedule that is unlucky enough to
+always catch the daily peak (or always catch the trough) will look
+artificially better or worse than one that samples more evenly through
+the cycle. Repeating with many random offsets characterizes that
+phase-dependent uncertainty directly, rather than reporting a single
+number that might just reflect a lucky or unlucky start day.
 
 ```{r monte-carlo-real}
 run_mc_for_site <- function(site_code) {
@@ -128,9 +645,12 @@ mc_combined <- bind_rows(
 )
 ggplot(mc_combined, aes(x = frequency_days, y = pct_of_mean, color = site)) +
   geom_line() + geom_point(size = 2) +
+  geom_vline(xintercept = c(1, 2), linetype = "dotted", color = "grey40") +
+  annotate("text", x = 1, y = max(mc_combined$pct_of_mean), label = "Option A\n(daily)", size = 3, hjust = -0.1, vjust = 1, color = "grey30") +
+  annotate("text", x = 2, y = max(mc_combined$pct_of_mean), label = "Option B\n(every-other-day)", size = 3, hjust = -0.1, vjust = 1, color = "grey30") +
   labs(x = "Candidate sampling interval (days)", y = "Reconstruction RMSE (% of mean EC)",
        title = "Real error-vs-sampling-frequency curve, SBRR and SBGG",
-       subtitle = "Computed from the real ~5-week 2026 conductivity record; steeper for SBGG's already-noisier record")
+       subtitle = "Dotted lines mark Tier 1 Option A (daily) and Option B (every-other-day)")
 ```
 
 **Reading**: daily sampling keeps reconstruction error under ~5% of the
@@ -139,7 +659,102 @@ by biweekly, error reaches ~8-13%. There's no sharp "cliff" -- error grows
 smoothly -- which means the choice of interval is a real cost/precision
 trade-off, not a hard threshold.
 
-## 3. Recommendation: a two-tier campaign
+**Precision loss, Option A (daily) vs. Option B (every-other-day), explicit real numbers**: at SBRR, mean reconstruction error rises from 4.74% (daily) to 5.38% (every-other-day) -- a modest ~0.6 percentage-point increase in the typical case, but the worst-case (95th percentile across the 200 draws) rises more, from 5.05% to 6.46% (+1.4 points, a ~28% relative jump). At SBGG the pattern is the same shape: mean error rises from 3.07% to 3.46%, while the worst case rises from 3.21% to 4.34% (+1.1 points, a ~35% relative jump). In plain terms: switching from daily to every-other-day costs relatively little in the typical case, but meaningfully widens how bad an unlucky-start-day campaign could be -- exactly the trade-off Section 2.1's boxplot below visualizes directly.
+
+### How much does the random start-offset itself matter?
+
+The line plot above only shows the *mean* RMSE across the 200 draws per
+interval -- it hides how much a single real field campaign's result
+could vary just from which day it happened to start on. Plotting the
+full distribution of draws (not just their mean) makes that spread
+visible directly:
+
+```{r mc-spread-09}
+#| fig-width: 7
+#| fig-height: 4.5
+run_mc_raw <- function(site_code) {
+  df <- ec %>% filter(site == site_code) %>% arrange(timestamp) %>%
+    transmute(time = timestamp, chloride_mgL = sc_25c)
+  mc <- monte_carlo_sampling_frequency(df, frequencies_days = c(1, 2, 3, 7, 14), n_draws = 200, seed = 7391)
+  mc$site <- site_code
+  mc$pct_of_mean <- 100 * mc$rmse / ec_summary$mean_ec[ec_summary$site == site_code]
+  mc
+}
+mc_raw_combined <- bind_rows(run_mc_raw("SBRR"), run_mc_raw("SBGG"))
+
+ggplot(mc_raw_combined, aes(x = factor(frequency_days), y = pct_of_mean, fill = site)) +
+  geom_boxplot(outlier.size = 0.6, alpha = 0.8) +
+  annotate("text", x = 1, y = max(mc_raw_combined$pct_of_mean) * 1.02, label = "Option A", size = 3, color = "grey30") +
+  annotate("text", x = 2, y = max(mc_raw_combined$pct_of_mean) * 1.02, label = "Option B", size = 3, color = "grey30") +
+  labs(x = "Candidate sampling interval (days)", y = "Reconstruction RMSE (% of mean EC, one draw)",
+       title = "Spread across the 200 Monte Carlo draws (random start-offset), by interval and site",
+       subtitle = "Each box summarizes 200 different 'what if the campaign started on a different day' outcomes -- Option A/B marked")
+```
+
+**Reading**: the boxes widen noticeably at longer intervals -- at 14
+days, a real SBGG campaign could plausibly land anywhere from roughly
+6% to 18% RMSE depending purely on which day it started, whereas at 1-2
+days nearly every draw lands in a tight band near the mean. This is the
+concrete, quantified reason Tier 1's daily cadence (Section 4 below) is
+recommended over a coarser interval: not only is the *average* error
+lower, the *worst-case* outcome from an unlucky start day is far less
+severe. Comparing just the two marked boxes (Option A vs. Option B): both stay in a tight, low band relative to the 7- and 14-day boxes' much wider spread -- the real cost of every-other-day sampling is a modestly wider box, not a jump into a different regime the way weekly or biweekly sampling is.
+
+## Time of day: does it matter when during the day you sample?
+
+Section 1 already showed a real, modest diurnal EC cycle at both sites.
+That matters for a grab-sample campaign for a different reason than the
+day-to-day interval question above: if the sampling time of day drifts
+from visit to visit, part of the apparent day-to-day change in Cl/EC
+will really just be a change in what point of the daily cycle was
+caught, not a real trend. The fix is cheap: sample at a consistent time
+of day, chosen to sit close to each site's own 24-hour mean so it is
+also reasonably representative of "typical" conditions.
+
+```{r diurnal-timing-09}
+ec$hour_bin <- floor(as.numeric(format(ec$timestamp, "%H")) + as.numeric(format(ec$timestamp, "%M")) / 60)
+hourly <- ec %>% group_by(site, hour_bin) %>% summarise(mean_ec = mean(sc_25c), .groups = "drop")
+
+hourly_summary <- hourly %>% group_by(site) %>%
+  summarise(peak_hour = hour_bin[which.max(mean_ec)], peak_ec = max(mean_ec),
+            trough_hour = hour_bin[which.min(mean_ec)], trough_ec = min(mean_ec))
+knitr::kable(hourly_summary, digits = 1,
+             caption = "Real hourly mean specific conductance: peak and trough clock hour, both sites")
+```
+
+```{r diurnal-timing-plot-09}
+#| fig-width: 7
+#| fig-height: 4
+ggplot(hourly, aes(x = hour_bin, y = mean_ec, color = site)) +
+  geom_line() + geom_point(size = 1.5) +
+  geom_vline(xintercept = c(10, 13), linetype = "dashed", color = "grey40") +
+  labs(x = "Hour of day (local, 24-hr)", y = "Mean specific conductance (uS/cm, 25C)",
+       title = "Real diurnal cycle by clock hour, both sites",
+       subtitle = "Dashed lines mark the recommended 10:00-13:00 sampling window")
+```
+
+**Reading**: the two sites are close to *anti-phased* -- SBRR peaks
+around mid-morning to early afternoon (roughly hours 8-14) and troughs
+overnight, while SBGG peaks overnight and troughs during that same
+mid-morning-to-afternoon window. There is no single clock hour where
+both sites sit exactly at their own daily mean simultaneously, but a
+**late-morning-to-early-afternoon window (about 10:00-13:00 local
+time)** comes closest for both -- SBRR is within its own plateau there,
+and SBGG's midday values sit close to (within a few percent of) its
+overall mean, well inside the day-to-day noise already quantified in
+Section 1. This window is also the most practical one for a single
+field day covering both sites (daylight, travel time between Rhodes
+Road and Geiger Grade, and typical safety/access considerations).
+
+**Recommendation for Tiers 1 and 2 alike**: visit both sites within the
+same ~10:00-13:00 window on every sampling day, and keep the order and
+approximate visit time consistent trip to trip (e.g. always SBRR first,
+then SBGG, or vice versa) so that any residual within-window drift is at
+least systematic rather than random. This is a small logistical
+constraint that removes a real, quantifiable source of noise from every
+downstream Cl-EC comparison.
+
+## Recommendation: a two-tier campaign
 
 **Tier 1 -- short, intensive calibration window (2-4 weeks, early field
 season):** Daily (or, resources permitting, sub-daily/every-other-day)
@@ -151,6 +766,38 @@ calibration relationship (Section 3 of `01_conductivity_temporal_structure.qmd`,
 data) and to directly test whether short-term Cl variability tracks EC's
 own real diurnal signal (Section 1/2 above) or behaves differently.
 
+**Isotopes (delta-18O/delta-D) at SBRR and SBGG:** yes, worth including
+for a subset of Tier 1 visits at *both* sites, not necessarily every
+single day. SBRR and SBGG are surface-water stream sites, so any real
+Cl/EC increase observed between them could in principle reflect either
+real thermal loading along that reach or simple evaporative
+concentration during transit -- Cl and EC alone cannot tell those apart,
+since both rise under either mechanism. Isotopes can: evaporative
+concentration shifts delta-18O/delta-D together along a local
+evaporation line, while conservative thermal mixing does not. Pairing
+isotope samples with the every-3rd-day cadence in the Tier 1 calendar
+below (Section 4.1) is enough to test this without isotope costs
+dominating the whole campaign; see
+`manuscript/06_calibration_sampling_proposal.qmd` for the broader,
+project-wide isotope/major-ion rationale.
+
+**Discharge measurement, every visit, both tiers:** every Cl grab sample
+must be paired with an instantaneous discharge value taken at the same
+time. Concentration alone cannot support the chloride mass-flux
+calculation (`scripts/analysis/chloride_mass_balance.R`, the two-station
+flux formula introduced in Session 39) that this project's actual
+thermal-discharge estimates depend on -- a Cl-EC calibration without
+paired Q only ever answers "what is the concentration," never "how much
+thermal water is discharging." **SBRR** is co-located with USGS gauge
+10349300, so pairing is just reading the live gauge at sample time
+(exactly how the real Section 1.1 point was obtained). **SBGG has no
+permanent gauge**, so a manual discharge measurement (wading-rod
+current-meter transect, using the `stream_discharge.xlsx` transect
+template already built into the schema) is a hard requirement at every
+SBGG visit, not an optional add-on -- without it, SBGG can only ever
+contribute to the Cl-EC concentration calibration, never to a real flux
+estimate.
+
 **Tier 2 -- lower-frequency campaign for the rest of the year (biweekly to
 monthly):** Once Tier 1 establishes the calibration relationship, routine
 monitoring can drop to biweekly-or-monthly grab samples with a
@@ -160,6 +807,10 @@ event**, since `notebooks/07`/`notebooks/08` already found a real,
 detectable water-level response to large storms (the Dec-2025 event at
 STMGID MW10) -- the same logic likely applies to Cl/EC at SBRR/SBGG and is
 worth testing directly with real paired data once Tier 1 samples exist.
+The same discharge-pairing requirement above continues at Tier 2's lower
+frequency -- a Cl value without a paired Q still can't be converted into
+a real Q_TW estimate, no matter how infrequently it's collected -- and
+the same 10:00-13:00 sampling window from Section 3 still applies.
 
 **Why not just do one long daily campaign for the whole year?** The
 Section 2 error curve shows diminishing returns below about a week's
@@ -170,13 +821,223 @@ most statistically ideal choice but is very unlikely to be logistically
 realistic for a one-person thesis field campaign; the two-tier design is
 the pragmatic compromise, explicitly justified rather than assumed.
 
-## 4. What this does and doesn't tell us yet
+### Timing: should Tier 1 start now, in the fall wet-season transition?
+
+This proposal is being finalized 2026-09-29. A real practical
+constraint -- funding/reporting deadlines favor real Tier 1 data
+existing before 2027 -- pushes toward starting in October or November
+2026 rather than waiting for a more hydrologically "ideal" window. That
+means Tier 1 will likely run during the fall wet-season transition, not
+the dry summer baseflow period the conductivity record (Section 1) and
+Monte Carlo results (Section 2) are built from. Worth stating plainly,
+with real benefits and drawbacks, rather than leaving it implicit.
+
+```{r timing-precip-09}
+precip_by_month <- dbGetQuery(con, "
+  SELECT strftime('%Y-%m', date) AS year_month,
+         SUM(CASE WHEN value > 0 THEN 1 ELSE 0 END) AS wet_days,
+         ROUND(SUM(value), 1) AS total_mm
+  FROM Weather_Observations
+  WHERE parameter = 'PRCP'
+  GROUP BY year_month ORDER BY year_month
+")
+knitr::kable(precip_by_month, col.names = c("Year-month", "Wet days", "Total precip (mm)"),
+             caption = "Real NOAA precipitation record at Reno Airport -- the only fall/winter season currently on file")
+```
+
+**Reading**: the only real fall/winter record on file (2025-2026) shows
+October was notably dry (2 wet days, 0.2 mm total in Oct 2025), while
+November and December each had ~8 wet days and several mm of real
+precipitation, with January-February 2026 the wettest months on
+record. This is a single real year, not a multi-year climatology -- a
+real limitation, stated honestly -- but it is consistent with this
+region's broadly known dry-fall/wet-winter pattern. Starting Tier 1 in
+the first half of October has some real historical basis for still
+being in a relatively dry window, with wet-season risk increasing
+noticeably by November.
+
+**Benefits of running Tier 1 now (fall 2026), even with real storm
+risk**:
+
+- Meets the real funding/reporting deadline -- real Tier 1 data before
+  2027 is more useful than a scientifically "ideal" campaign that
+  arrives too late to matter for that deadline.
+- If a real storm does occur during Tier 1, that is not purely a cost:
+  `notebooks/07`/`notebooks/08` already found a real water-level
+  response to the Dec-2025 storm at STMGID MW10 -- a storm captured
+  *during* Tier 1 would be the first real chance to test whether Cl/EC
+  at SBRR/SBGG show an analogous response, a genuinely valuable dataset
+  this project doesn't have yet.
+- Broadens the conductivity record's seasonal coverage beyond the
+  current July-August-only window (Section 1's own stated limitation),
+  which matters directly for the diurnal-timing caveat below.
+
+**Drawbacks of running Tier 1 during a precipitation event**:
+
+- A storm mid-campaign introduces a real third end-member (fresh
+  meteoric precipitation) into what Section 1.3's mixing discussion
+  already treats as a two-end-member (thermal/creek) system --
+  storm-affected Tier 1 samples should be analyzed and flagged
+  separately, not pooled uncritically into the same simple linear
+  Cl-EC fit the rest of Tier 1 is meant to establish.
+- Section 3's 10:00-13:00 sampling-window recommendation was derived
+  from a July-August, solar-heating-driven diurnal cycle -- that
+  physical driver is real but weaker in fall (lower sun angle, shorter
+  days) and could be masked entirely on a storm day. The specific
+  clock-hour recommendation should be treated as provisional for a
+  fall campaign, not assumed to transfer directly from the summer
+  record.
+- SBGG's manual current-meter discharge measurement (the paired-discharge
+  requirement above) becomes both more hazardous and less accurate
+  during a real high-turbidity, high-turbulence storm flow -- a real
+  field-safety and data-quality consideration, not just an
+  inconvenience.
+
+**Recommendation**: proceed with Tier 1 in fall 2026 given the real
+funding constraint, but explicitly flag any storm-affected sampling
+days (directly joinable against this same real `Weather_Observations`
+PRCP record) as a distinct analysis subset -- both a genuine bonus
+dataset for storm-response testing and a necessary exclusion from the
+"clean baseflow" calibration fit Tier 1 is primarily designed to
+produce.
+
+### Tier 1 Option A: 14 consecutive days
+
+A concrete, complete 14-consecutive-day version of Tier 1, generated
+directly (not hand-typed) so it stays consistent with the recommendations
+above -- isotopes on roughly every 3rd visit, discharge paired every
+visit, both sites within the same time window each day:
+
+**Why 14 samples specifically?** Two real constraints, not one, set this number. First, Section 2's error-vs-frequency graph (marked "Option A" above) shows daily sampling already sits in a low, flat part of the error curve (4.7-4.9% of mean EC) -- sampling *more often* than daily buys essentially nothing further, since there is no sub-daily structure left to resolve once inside that band. Second, a practical statistical floor matters more than the interval curve does here: `manuscript/06_calibration_sampling_proposal.qmd` cites n=15-20 real paired samples as the conventional minimum for a stable simple linear calibration regression. 14 consecutive days is a deliberate, honest compromise against that guidance -- it is the longest single intensive block a one-person thesis field campaign can realistically sustain, and it sits just *under* the ideal n=15-20 floor rather than comfortably above it. In practice, real-world attrition (a missed day, an equipment issue, a field-access problem) will likely pull the realized n toward the low end of 14 anyway, so extending to a full 3 weeks (n=21), resources permitting, would be a real improvement worth considering rather than treating 14 as untouchable.
+
+```{r tier1-calendar-09}
+tier1_days <- 1:14
+tier1_calendar <- data.frame(
+  day = tier1_days,
+  time_window = "10:00-13:00",
+  sites = "SBRR & SBGG",
+  cl_major_ions = "Yes (both sites)",
+  isotopes_d18O_dD = ifelse(tier1_days %% 3 == 1, "Yes (both sites)", ""),
+  discharge_measurement = "SBRR: USGS gauge reading | SBGG: current-meter transect"
+)
+knitr::kable(tier1_calendar,
+             col.names = c("Day", "Time window", "Sites", "Cl + major ions", "Isotopes (d18O/dD)", "Discharge measurement"),
+             caption = "Proposed Tier 1 sampling calendar: 14 consecutive days, example start (isotopes on days 1, 4, 7, 10, 13)")
+```
+
+This 14-consecutive-day layout is the tightest, highest-information
+version of Tier 1. An equally valid variant, if daily field visits
+aren't logistically realistic, is the same structure stretched to
+**every-other-day over 4 weeks** (14 visits total, same isotope/discharge
+cadence relative to visit number rather than calendar day) -- Section
+2.1's spread analysis shows this costs some precision at longer gaps
+but is far better than jumping straight to Tier 2's biweekly/monthly
+cadence without ever establishing the calibration.
+
+### Tier 1 Option B: every-other-day over 4 weeks (lower logistical cost)
+
+If committing to 14 *consecutive* days isn't realistic (competing
+obligations, no coverage for other fieldwork, etc.), the same 14 visits
+can instead be spread across a 4-week window, one visit every other
+day. This is generated the same way as Option A, indexed by visit
+number rather than calendar day so the isotope/discharge cadence stays
+identical:
+
+```{r tier1-option-b-09}
+visit_number <- 1:14
+tier1b_calendar <- data.frame(
+  visit = visit_number,
+  calendar_day = 2 * visit_number - 1,
+  time_window = "10:00-13:00",
+  sites = "SBRR & SBGG",
+  cl_major_ions = "Yes (both sites)",
+  isotopes_d18O_dD = ifelse(visit_number %% 3 == 1, "Yes (both sites)", ""),
+  discharge_measurement = "SBRR: USGS gauge reading | SBGG: current-meter transect"
+)
+knitr::kable(tier1b_calendar,
+             col.names = c("Visit #", "Calendar day (of 28)", "Time window", "Sites",
+                           "Cl + major ions", "Isotopes (d18O/dD)", "Discharge measurement"),
+             caption = "Tier 1 Option B: every-other-day over 4 weeks (14 visits across 28 calendar days; isotopes on visits 1, 4, 7, 10, 13)")
+```
+
+**What this option costs and buys, honestly**: the total real lab
+cost is *identical* to Option A -- same 14 Cl+major-ion analyses, same
+5 isotope pairs, same 14 paired discharge measurements -- this option
+only trades calendar time, not lab budget, for reduced field-logistics
+pressure (no 14-day unbroken commitment). The real statistical cost,
+stated explicitly rather than left to the graph alone: mean
+reconstruction error rises from 4.74% to 5.38% at SBRR and from 3.07%
+to 3.46% at SBGG (Section 2's marked graph); the worst-case (95th
+percentile) cost is larger -- 5.05% to 6.46% at SBRR, 3.21% to 4.34% at
+SBGG (Section 2.1's marked boxplot). Both intervals still sit
+in the
+tight, low-error band, well short of weekly's roughly-doubled error --
+so an every-other-day cadence is a genuinely reasonable compromise, not
+a steep step down from daily. If the real limiting factor is a hard
+budget cap on lab *analyses* rather than field days, neither option
+reduces cost -- that would mean cutting the total visit count itself
+(e.g. daily for 7 days instead of 14), which would need to be weighed
+directly against Section 2.1's real precision-loss curve before
+recommending it.
+
+### Tier 2 sampling timeline (the rest of the year)
+
+Tier 2 was described qualitatively above (biweekly-to-monthly, plus
+storm-triggered extras); here is a concrete, generated timeline picking
+up right after either Tier 1 option ends (week 4), transitioning from
+biweekly to monthly cadence over the rest of the year, with periodic
+isotope re-checks:
+
+```{r tier2-timeline-09}
+transition_weeks <- seq(5, 11, by = 2)     # biweekly for ~2 months after Tier 1
+steady_weeks <- seq(16, 52, by = 4)         # monthly for the remaining ~10 months
+tier2_weeks <- c(transition_weeks, steady_weeks)
+tier2_phase <- c(rep("Transition (biweekly)", length(transition_weeks)),
+                  rep("Steady-state (monthly)", length(steady_weeks)))
+
+tier2_calendar <- data.frame(
+  visit = seq_along(tier2_weeks),
+  week = tier2_weeks,
+  approx_month = ceiling(tier2_weeks / 4.345),
+  phase = tier2_phase,
+  cl_major_ions = "Yes (both sites)",
+  isotopes_d18O_dD = ifelse(seq_along(tier2_weeks) %% 4 == 1, "Yes (quarterly check)", ""),
+  discharge_measurement = "SBRR: USGS gauge reading | SBGG: current-meter transect"
+)
+knitr::kable(tier2_calendar,
+             col.names = c("Visit #", "Week (post Tier-1 start)", "Approx. month", "Phase",
+                           "Cl + major ions", "Isotopes (d18O/dD)", "Discharge measurement"),
+             caption = "Tier 2 timeline: biweekly transition (months 2-3), then monthly (months 4-12), quarterly isotope re-checks")
+```
+
+**Reading**: this gives 14 routine Tier 2 visits across the year (4
+biweekly transition visits, 10 monthly steady-state visits) -- combined
+with Tier 1's own 14 visits, that's 28 core Cl+major-ion visits/year,
+broadly in line with the ~40-total-analyses "Tier 2" target already
+recommended in `manuscript/06_calibration_sampling_proposal.qmd` once
+the isotope subset and any storm-triggered extras are added. **This
+fixed calendar is deliberately a floor, not a ceiling**: per Section
+4's own recommendation, any large storm or spring-runoff event
+identified in real time should add extra, unscheduled visits bracketing
+it (before/during/after), the same way `notebooks/07`/`notebooks/08`
+found a real water-level response to the Dec-2025 storm at STMGID MW10
+-- those extra visits are not pre-datable and so are intentionally not
+in the fixed table above.
+
+## What this does and doesn't tell us yet
 
 - This analysis uses **EC as a stand-in for chloride** because no dense
   real Cl record exists yet -- exactly the gap Tier 1 above is designed to
   close. Once Tier 1 samples exist, this same Monte Carlo framework should
   be re-run on the *real* Cl series (via the fitted `03_chloride_models.R`
   relationship), not just EC, for a final, fully-real recommendation.
+- **Neither real ALS lab chemistry nor a paired discharge series currently
+  feeds the Monte Carlo above** -- Section 1.1's single real Cl/discharge
+  pair at SBRR (and SBGG's complete absence of one) is shown for context
+  only; it predates the conductivity record by ~2.5 months and is nowhere
+  near enough (n=1, zero overlap) to validate or calibrate anything.
+  Discharge pairing at every Tier 1/2 visit (Section 4) is what will
+  finally make a real flux-based version of this Monte Carlo possible.
 - The ~5-week record used here (mid-July to late-August 2026) does not yet
   span a full season -- the daily-range/diurnal-amplitude numbers above may
   not hold in winter/spring; this is itself a reason to keep sampling

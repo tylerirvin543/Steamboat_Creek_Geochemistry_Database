@@ -134,9 +134,72 @@ build_steamboat_timeline_figure <- function(
   invisible(p)
 }
 
-#' Convenience wrapper: build both new manuscript figures.
+#' Real Sept-Dec 2025 U230 field-parameter time series (14 sites, 6
+#' injection-side ports + 8 shallow monitoring/domestic wells; see
+#' AGENTS.md's Session 42 "42-row OCR batch" addendum for provenance).
+#' Two panels: (1) the systematic pH gap between the injection ports and
+#' the shallow well network, held across all rounds; (2) two concrete,
+#' real multi-month trends (NDOT cooling, Herz Deep's rising
+#' conductivity) that motivate a mixing/transport modeling discussion.
+build_u230_timeseries_figure <- function(con,
+    out_png = "output/figures/manuscript/u230_timeseries.png") {
+
+  ts <- dbGetQuery(con, "
+    SELECT l.name AS location, se.date, fm.parameter, fm.value
+    FROM Field_Measurements fm
+    JOIN Samples s ON fm.sample_id = s.sample_id
+    JOIN Sampling_Events se ON s.event_id = se.event_id
+    JOIN Locations l ON s.location_id = l.location_id
+    WHERE s.data_source IN ('NDEP_U230_Compiled_OCR', 'NDEP_U230_Compiled')
+  ")
+
+  ts <- ts |>
+    mutate(
+      date_parsed = as.Date(sub(" .*$", "", date), format = "%m/%d/%Y"),
+      group = ifelse(grepl("Injection", location), "Injection-side port", "Shallow monitoring/domestic well")
+    ) |>
+    filter(!is.na(date_parsed))
+
+  # Panel A: pH by group, all real rounds pooled
+  p_ph <- ggplot(ts |> filter(parameter == "pH"), aes(x = group, y = value, color = group)) +
+    geom_jitter(width = 0.15, size = 2, alpha = 0.7, show.legend = FALSE) +
+    stat_summary(fun = mean, geom = "crossbar", width = 0.4, color = "black", linewidth = 0.4) +
+    scale_color_manual(values = c("Injection-side port" = "#D55E00", "Shallow monitoring/domestic well" = "#0072B2")) +
+    labs(x = NULL, y = "pH", title = "A. A systematic pH gap, injection side vs. shallow network") +
+    theme_steamboat(base_size = 11) +
+    theme(axis.text.x = element_text(size = rel(0.8)))
+
+  # Panel B: two concrete real trends
+  highlight <- ts |>
+    filter(location %in% c("NDOT", "Herz Deep"),
+           parameter %in% c("temperature", "conductivity")) |>
+    filter((location == "NDOT" & parameter == "temperature") |
+           (location == "Herz Deep" & parameter == "conductivity")) |>
+    mutate(series = paste0(location, " ", ifelse(parameter == "temperature", "temperature (C)", "specific conductance (uS/cm)")))
+
+  p_trend <- ggplot(highlight, aes(x = date_parsed, y = value, color = series)) +
+    geom_line() + geom_point(size = 2) +
+    facet_wrap(~series, scales = "free_y", ncol = 1) +
+    scale_color_manual(values = c(
+      "NDOT temperature (C)" = "#D55E00",
+      "Herz Deep specific conductance (uS/cm)" = "#0072B2"
+    )) +
+    labs(x = NULL, y = NULL, title = "B. Two real multi-month trends, Sept-Dec 2025") +
+    theme_steamboat(base_size = 11) +
+    theme(legend.position = "none")
+
+  p <- patchwork::wrap_plots(p_ph, p_trend, ncol = 2, widths = c(1, 1.3))
+
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 11, height = 5, dpi = 300)
+  message("  -> Wrote ", out_png)
+  invisible(p)
+}
+
+#' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
   build_discharge_through_time_figure(con)
   build_steamboat_timeline_figure()
+  build_u230_timeseries_figure(con)
   invisible(TRUE)
 }

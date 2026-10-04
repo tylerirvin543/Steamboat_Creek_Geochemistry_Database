@@ -1,0 +1,203 @@
+month,indicator,metric,site,value,n
+2026-07-01,conductivity,mean_sc25c_uScm,Conductivity Logger 1,1037.4411461630832,4657
+2026-08-01,conductivity,mean_sc25c_uScm,Conductivity Logger 1,1143.6613310694192,6309
+2026-07-01,conductivity,mean_sc25c_uScm,Conductivity Logger 2,330.88137630944595,4637
+2026-08-01,conductivity,mean_sc25c_uScm,Conductivity Logger 2,380.75614936877713,6298
+2025-08-01,field_chemistry,conductivity,Boyd Domestic Well,568,1
+2025-09-01,field_chemistry,conductivity,Boyd Domestic Well,611,1
+2025-10-01,field_chemistry,conductivity,Boyd Domestic Well,553,1
+2025-11-01,field_chemistry,conductivity,Boyd Domestic Well,601,1
+2025-08-01,field_chemistry,conductivity,Eich Well,1733,1
+2025-09-01,field_chemistry,conductivity,Eich Well,2144,1
+2025-10-01,field_chemistry,conductivity,Eich Well,2102,1
+2025-09-01,field_chemistry,conductivity,Galena 1 Injection Outlet,3551,1
+2025-08-01,field_chemistry,conductivity,Galena 1 Outlet,365.7,1
+2025-07-01,field_chemistry,conductivity,Galena 2 Injection Composite (TFT),3560,1
+2025-09-01,field_chemistry,conductivity,Galena 2 Injection Composite (TFT),3300,1
+2025-09-01,field_chemistry,conductivity,Galena 3 Injection Outlet,3500,1
+2025-08-01,field_chemistry,conductivity,Galena 3 Outlet,3705,1
+2025-09-01,field_chemistry,conductivity,Herz Deep,1877,1
+2025-11-01,field_chemistry,conductivity,Herz Deep,2840,1
+2025-12-01,field_chemistry,conductivity,Herz Deep,3024,1
+2025-08-01,field_chemistry,conductivity,Herz Domestic Well,1037,1
+2025-09-01,field_chemistry,conductivity,Herz Domestic Well,1050,1
+2025-12-01,field_chemistry,conductivity,Herz Domestic Well,1425,1
+2025-08-01,field_chemistry,conductivity,Jeppson Geothermal Well,460,1
+2025-09-01,field_chemistry,conductivity,Jeppson Geothermal Well,480,1
+2025-10-01,field_chemistry,conductivity,Jeppson Geothermal Well,447,1
+2025-12-01,field_chemistry,conductivity,Jeppson Geothermal Well,482,1
+2025-08-01,field_chemistry,conductivity,NDOT,3130,1
+2025-09-01,field_chemistry,conductivity,NDOT,3254,1
+2025-10-01,field_chemistry,conductivity,NDOT,3027,1
+2025-08-01,field_chemistry,conductivity,Rogers Domestic Well,482,1
+2025-09-01,field_chemistry,conductivity,Rogers Domestic Well,478,1
+2025-09-01,field_chemistry,conductivity,SB2 Injection Outlet,3420,1
+2025-08-01,field_chemistry,conductivity,SB2 Outlet,3704,1
+2025-09-01,field_chemistry,conductivity,SB3 Injection Outlet,3524,1
+2025-08-01,field_chemistry,conductivity,SB3 Outlet,3825,1
+2026-05-01,field_chemistry,conductivity,SBBV,877,1
+2026-05-01,field_chemistry,conductivity,SBF_0001,3380,1
+2025-09-01,field_chemistry,conductivity,SBHR Injection Outlet,3201,1
+2025-08-01,field_chemistry,conductivity,SBHR Outlet,362.6,1
+2026-05-01,field_chemistry,conductivity,SBRR,241,1
+2026-04-01,field_chemistry,conductivity,SBS_0001,3070,1
+2026-05-01,field_chemistry,conductivity,SBS_0002,2750,1
+2026-05-01,field_chemistry,conductivity,SBS_0003,3110,1
+2026-05-01,field_chemistry,conductivity,SBW_0001,2220,1
+2026-05-01,field_chemistry,conductivity,SBW_0002,3560,1
+2025-08-01,field_chemistry,conductivity,Soccer Field Monitoring Well,2262,1
+2025-09-01,field_chemistry,conductivity,Soccer Field Monitoring Well,2227,1
+2025-10-01,field_chemistry,conductivity,Soccer Field Monitoring Well,2187,1
+2025-08-01,field_chemistry,pH,Boyd Domestic Well,7.76,1
+2025-09-01,field_chemistry,pH,Boyd Domestic Well,7.9,1
+2025-10-01,field_chemistry,pH,Boyd Domestic Well,8.12,1
+2025-11-01,field_chemistry,pH,Boyd Domestic Well,7.66,1
+2025-08-01,field_chemistry,pH,Eich Well,7.12,1
+2025-09-01,field_chemistry,pH,Eich Well,7.49,1
+2025-10-01,field_chemistry,pH,Eich Well,7.31,1
+2025-09-01,field_chemistry,pH,Galena 1 Injection Outlet,6.24,1
+2025-08-01,field_chemistry,pH,Galena 1 Outlet,7.09,1
+2025-07-01,field_chemistry,pH,Galena 2 Injection Composite (TFT),6.25,1
+2025-09-01,field_chemistry,pH,Galena 2 Injection Composite (TFT),5.91,1
+2025-09-01,field_chemistry,pH,Galena 3 Injection Outlet,6.12,1
+2025-08-01,field_chemistry,pH,Galena 3 Outlet,7.42,1
+2025-09-01,field_chemistry,pH,Herz Deep,7.88,1
+2025-11-01,field_chemistry,pH,Herz Deep,7.64,1
+2025-12-01,field_chemistry,pH,Herz Deep,8.01,1
+2025-08-01,field_chemistry,pH,Herz Domestic Well,6.91,1
+2025-09-01,field_chemistry,pH,Herz Domestic Well,7.39,1
+2025-12-01,field_chemistry,pH,Herz Domestic Well,7.48,1
+2025-08-01,field_chemistry,pH,Jeppson Geothermal Well,7.17,1
+2025-09-01,field_chemistry,pH,Jeppson Geothermal Well,7.57,1
+2025-10-01,field_chemistry,pH,Jeppson Geothermal Well,7.58,1
+2025-12-01,field_chemistry,pH,Jeppson Geothermal Well,7.73,1
+2025-08-01,field_chemistry,pH,NDOT,7.21,1
+2025-09-01,field_chemistry,pH,NDOT,7.45,1
+2025-10-01,field_chemistry,pH,NDOT,7.37,1
+2025-09-01,field_chemistry,pH,Rogers Domestic Well,7.65,1
+2025-09-01,field_chemistry,pH,SB2 Injection Outlet,6.32,1
+2025-08-01,field_chemistry,pH,SB2 Outlet,7.56,1
+2025-09-01,field_chemistry,pH,SB3 Injection Outlet,6.06,1
+2025-08-01,field_chemistry,pH,SB3 Outlet,6.93,1
+2026-05-01,field_chemistry,pH,SBBV,8.3,1
+2026-05-01,field_chemistry,pH,SBF_0001,8.3,1
+2025-09-01,field_chemistry,pH,SBHR Injection Outlet,5.98,1
+2025-08-01,field_chemistry,pH,SBHR Outlet,6.67,1
+2026-05-01,field_chemistry,pH,SBRR,7.9,1
+2026-04-01,field_chemistry,pH,SBS_0001,7.7,1
+2026-05-01,field_chemistry,pH,SBS_0002,7.6,1
+2026-05-01,field_chemistry,pH,SBS_0003,8.2,1
+2026-05-01,field_chemistry,pH,SBW_0001,8.2,1
+2026-05-01,field_chemistry,pH,SBW_0002,9,1
+2025-08-01,field_chemistry,pH,Soccer Field Monitoring Well,6.61,1
+2025-09-01,field_chemistry,pH,Soccer Field Monitoring Well,6.94,1
+2025-10-01,field_chemistry,pH,Soccer Field Monitoring Well,6.94,1
+2025-08-01,field_chemistry,temperature,Boyd Domestic Well,24.2,1
+2025-09-01,field_chemistry,temperature,Boyd Domestic Well,23.8,1
+2025-10-01,field_chemistry,temperature,Boyd Domestic Well,21.6,1
+2025-11-01,field_chemistry,temperature,Boyd Domestic Well,20.2,1
+2025-08-01,field_chemistry,temperature,Eich Well,33,1
+2025-09-01,field_chemistry,temperature,Eich Well,33.2,1
+2025-10-01,field_chemistry,temperature,Eich Well,33.9,1
+2025-09-01,field_chemistry,temperature,Galena 1 Injection Outlet,43.44,1
+2025-08-01,field_chemistry,temperature,Galena 1 Outlet,14.4,1
+2025-07-01,field_chemistry,temperature,Galena 2 Injection Composite (TFT),24.4,1
+2025-09-01,field_chemistry,temperature,Galena 2 Injection Composite (TFT),38.33,1
+2025-09-01,field_chemistry,temperature,Galena 3 Injection Outlet,37.22,1
+2025-08-01,field_chemistry,temperature,Galena 3 Outlet,13.5,1
+2025-09-01,field_chemistry,temperature,Herz Deep,30.1,1
+2025-11-01,field_chemistry,temperature,Herz Deep,35.8,1
+2025-12-01,field_chemistry,temperature,Herz Deep,29.5,1
+2025-08-01,field_chemistry,temperature,Herz Domestic Well,33.2,1
+2025-09-01,field_chemistry,temperature,Herz Domestic Well,33.3,1
+2025-12-01,field_chemistry,temperature,Herz Domestic Well,32.3,1
+2025-08-01,field_chemistry,temperature,Jeppson Geothermal Well,26.4,1
+2025-09-01,field_chemistry,temperature,Jeppson Geothermal Well,28.1,1
+2025-10-01,field_chemistry,temperature,Jeppson Geothermal Well,19.1,1
+2025-12-01,field_chemistry,temperature,Jeppson Geothermal Well,17.1,1
+2025-08-01,field_chemistry,temperature,NDOT,74.4,1
+2025-09-01,field_chemistry,temperature,NDOT,74.5,1
+2025-10-01,field_chemistry,temperature,NDOT,76,1
+2025-09-01,field_chemistry,temperature,Rogers Domestic Well,26.8,1
+2025-09-01,field_chemistry,temperature,SB2 Injection Outlet,22.78,1
+2025-08-01,field_chemistry,temperature,SB2 Outlet,13.1,1
+2025-09-01,field_chemistry,temperature,SB3 Injection Outlet,39.44,1
+2025-08-01,field_chemistry,temperature,SB3 Outlet,13.5,1
+2026-05-01,field_chemistry,temperature,SBBV,74.66,1
+2026-04-01,field_chemistry,temperature,SBF_0001,191,1
+2026-05-01,field_chemistry,temperature,SBF_0001,152.6,1
+2025-09-01,field_chemistry,temperature,SBHR Injection Outlet,38.94,1
+2025-08-01,field_chemistry,temperature,SBHR Outlet,14,1
+2026-05-01,field_chemistry,temperature,SBRR,59.36,1
+2026-04-01,field_chemistry,temperature,SBS_0001,118,1
+2026-04-01,field_chemistry,temperature,SBS_0002,148,1
+2026-05-01,field_chemistry,temperature,SBS_0002,162.14,1
+2026-05-01,field_chemistry,temperature,SBS_0003,103.28,1
+2026-04-01,field_chemistry,temperature,SBS_0005,110,1
+2026-04-01,field_chemistry,temperature,SBS_0006,137,1
+2026-05-01,field_chemistry,temperature,SBS_0006,137,1
+2026-04-01,field_chemistry,temperature,SBW_0001,160,1
+2026-05-01,field_chemistry,temperature,SBW_0001,159.62,1
+2026-05-01,field_chemistry,temperature,SBW_0002,149,1
+2025-08-01,field_chemistry,temperature,Soccer Field Monitoring Well,50.7,1
+2025-09-01,field_chemistry,temperature,Soccer Field Monitoring Well,46,1
+2025-10-01,field_chemistry,temperature,Soccer Field Monitoring Well,58.6,1
+2025-05-01,injection_pressure,mean_current_psig,field_mean,87.5,8
+2025-04-01,tracer_ratios,Cl_B,"Background / non-thermal (NDEP, domestic wells, creeks)",0.44,1
+2025-07-01,tracer_ratios,Cl_B,"Background / non-thermal (NDEP, domestic wells, creeks)",22.055555555555557,1
+2026-04-01,tracer_ratios,Cl_B,"Background / non-thermal (NDEP, domestic wells, creeks)",20.666666666666668,1
+2026-05-01,tracer_ratios,Cl_B,"Background / non-thermal (NDEP, domestic wells, creeks)",786.3505370709983,2
+2026-04-01,tracer_ratios,Cl_B,Thermal end-member (Sorey & Colvard 1992 + FIELD),21.741741741741745,1
+2026-05-01,tracer_ratios,Cl_B,Thermal end-member (Sorey & Colvard 1992 + FIELD),21.921923530659193,5
+2025-04-01,tracer_ratios,Na_Cl,"Background / non-thermal (NDEP, domestic wells, creeks)",1.1363636363636365,1
+2025-07-01,tracer_ratios,Na_Cl,"Background / non-thermal (NDEP, domestic wells, creeks)",0.7556675062972292,1
+2026-04-01,tracer_ratios,Na_Cl,"Background / non-thermal (NDEP, domestic wells, creeks)",0.8797653958944281,1
+2026-05-01,tracer_ratios,Na_Cl,"Background / non-thermal (NDEP, domestic wells, creeks)",1.0030284043441937,2
+2026-04-01,tracer_ratios,Na_Cl,Thermal end-member (Sorey & Colvard 1992 + FIELD),0.7720994475138122,1
+2026-05-01,tracer_ratios,Na_Cl,Thermal end-member (Sorey & Colvard 1992 + FIELD),0.8192404241333875,5
+2025-09-01,water_level,mean_depth_to_water_ft,Herz Deep,61.9,1
+2025-10-01,water_level,mean_depth_to_water_ft,Herz Deep,61.2,1
+2025-11-01,water_level,mean_depth_to_water_ft,Herz Deep,61.6,1
+2025-12-01,water_level,mean_depth_to_water_ft,Herz Deep,61.9,1
+2025-06-01,water_level,mean_depth_to_water_ft,Herz Domestic Well,56.8,1
+2025-08-01,water_level,mean_depth_to_water_ft,Herz Domestic Well,57.3,1
+2025-09-01,water_level,mean_depth_to_water_ft,Herz Domestic Well,57.5,1
+2025-10-01,water_level,mean_depth_to_water_ft,Herz Domestic Well,57.8,1
+2025-11-01,water_level,mean_depth_to_water_ft,Herz Domestic Well,58.5,1
+2025-12-01,water_level,mean_depth_to_water_ft,Herz Domestic Well,58.2,1
+2025-06-01,water_level,mean_depth_to_water_ft,NDOT,55,1
+2025-08-01,water_level,mean_depth_to_water_ft,NDOT,56.6,1
+2025-09-01,water_level,mean_depth_to_water_ft,NDOT,55.9,1
+2025-10-01,water_level,mean_depth_to_water_ft,NDOT,56.8,1
+2025-11-01,water_level,mean_depth_to_water_ft,NDOT,57.2,1
+2025-12-01,water_level,mean_depth_to_water_ft,NDOT,56.2,1
+2025-01-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.7548759014392,31
+2025-02-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.4443760020558,28
+2025-03-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.2894412973683,31
+2025-04-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.2196983789831,30
+2025-05-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.0882885402223,31
+2025-06-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.1335779317983,30
+2025-07-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.2058108397529,31
+2025-08-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.1878495929046,31
+2025-09-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.16428577557355,30
+2025-10-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.0501201209888,31
+2025-11-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.108039648141,30
+2025-12-01,water_level,mean_depth_to_water_ft,STMGID MW10,368.0245029783063,30
+2025-01-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.18830066208318,31
+2025-02-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.02421254999086,28
+2025-03-01,water_level,mean_depth_to_water_ft,STMGID MW3,211.8257968413804,31
+2025-04-01,water_level,mean_depth_to_water_ft,STMGID MW3,211.6881649053258,30
+2025-05-01,water_level,mean_depth_to_water_ft,STMGID MW3,211.60084924803513,31
+2025-06-01,water_level,mean_depth_to_water_ft,STMGID MW3,211.85740845774416,30
+2025-07-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.00246477439242,31
+2025-08-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.24528933310083,31
+2025-09-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.44845196680146,30
+2025-10-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.57812373113057,31
+2025-11-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.6869881726347,30
+2025-12-01,water_level,mean_depth_to_water_ft,STMGID MW3,212.7401775029253,30
+2025-07-01,well_production,flow_gpm,field_mean,4220.4000000000005,12
+2026-04-01,well_production,flow_gpm,field_mean,4198.833333333333,12
+2025-07-01,well_production,flow_kph,field_mean,883.3,1
+2026-04-01,well_production,flow_kph,field_mean,835,1
+2025-07-01,well_production,wellhead_pressure_psig,field_mean,74.13076923076923,13
+2026-04-01,well_production,wellhead_pressure_psig,field_mean,73.46153846153847,13

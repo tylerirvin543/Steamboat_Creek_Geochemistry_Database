@@ -1,0 +1,72 @@
+well_name,canonical_well_name,parameter,metric_type,value,value_min,value_max,unit,status,document_name,document_date,permit_number,notes
+IW-1 (45-28),45-28,pressure_psig,max_allowable,350,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-1 (45-28),45-28,pressure_psig,historic_peak,142,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-1 (45-28),45-28,pressure_psig,current,108,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-1 (45-28),45-28,pressure_psig,new_authorized,138,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-2,IW-2,pressure_psig,max_allowable,243,,,psig,idle,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B; well currently idle, no historic/current/new values reported
+IW-4 (35-28),35-28,pressure_psig,max_allowable,260,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-4 (35-28),35-28,pressure_psig,historic_peak,121,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-4 (35-28),35-28,pressure_psig,current,88,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-4 (35-28),35-28,pressure_psig,new_authorized,118,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-5 (46-28),46-28,pressure_psig,max_allowable,171,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-5 (46-28),46-28,pressure_psig,historic_peak,94,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-5 (46-28),46-28,pressure_psig,current,68,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-5 (46-28),46-28,pressure_psig,new_authorized,98,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-6,IW-6,pressure_psig,max_allowable,192,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-6,IW-6,pressure_psig,historic_peak,100,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-6,IW-6,pressure_psig,current,74,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-6,IW-6,pressure_psig,new_authorized,104,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+64A-32,64A-32,pressure_psig,max_allowable,450,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+64A-32,64A-32,pressure_psig,historic_peak,73,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+64A-32,64A-32,pressure_psig,current,52,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+64A-32,64A-32,pressure_psig,new_authorized,92,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+23-33,23-33RD,pressure_psig,max_allowable,375,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B; canonical_well_name uncertain -- NBMG match was for a plain 23-33 not 23-33RD, flagged since Session 6
+23-33,23-33RD,pressure_psig,historic_peak,120,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+23-33,23-33RD,pressure_psig,current,135,,,psig,exceeds_new_authorized_limit,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,FLAG: current injection pressure (135 psig) already exceeds this well's own newly-authorized limit (120 psig) per the permit's own Table B -- transcribed as given, not corrected. Worth checking whether this reflects a real exceedance or a reporting lag.
+23-33,23-33RD,pressure_psig,new_authorized,120,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B; see FLAG on the current-pressure row -- the new authorized limit (120) is below the well's own currently-reported pressure (135)
+14-33,14-33,pressure_psig,max_allowable,322,,,psig,idle,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B; well currently idle
+14A-33,14A-33,pressure_psig,max_allowable,151,,,psig,production_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B; currently utilized as a production well, not injection. Distinct from 14A-22 (Table C) -- confirmed by user 2026-10-04 that these are two separate, real wells, both currently production wells, not a transcription duplicate.
+43-33,43-33,pressure_psig,max_allowable,148,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+43-33,43-33,pressure_psig,historic_peak,138,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+43-33,43-33,pressure_psig,current,,,,psig,not_provided,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B; current pressure listed as "Not Provided"
+43-33,43-33,pressure_psig,new_authorized,138,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+21-32,21-32,pressure_psig,max_allowable,237,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+21-32,21-32,pressure_psig,historic_peak,80,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+21-32,21-32,pressure_psig,current,113,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+21-32,21-32,pressure_psig,new_authorized,120,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+42A-32,42A-32,pressure_psig,max_allowable,225,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+42A-32,42A-32,pressure_psig,historic_peak,53,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+42A-32,42A-32,pressure_psig,current,62,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+42A-32,42A-32,pressure_psig,new_authorized,93,,,psig,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table B
+IW-1 (45-28),45-28,rate_gpm,max_flow_at_allowable_pressure,4475,4250,4700,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source gives a 4250-4700 gpm range, value is the midpoint
+IW-1 (45-28),45-28,rate_gpm,flow_full_production,2682,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-1 (45-28),45-28,rate_gpm,change_authorized,325,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-2,IW-2,rate_gpm,max_flow_at_allowable_pressure,,,,gpm,idle,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; well currently idle
+IW-4 (35-28),35-28,rate_gpm,max_flow_at_allowable_pressure,9000,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-4 (35-28),35-28,rate_gpm,flow_full_production,6233,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-4 (35-28),35-28,rate_gpm,change_authorized,866,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-5 (46-28),46-28,rate_gpm,max_flow_at_allowable_pressure,15000,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-5 (46-28),46-28,rate_gpm,flow_full_production,12061,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-5 (46-28),46-28,rate_gpm,change_authorized,1738,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-6,IW-6,rate_gpm,max_flow_at_allowable_pressure,11200,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-6,IW-6,rate_gpm,flow_full_production,8592,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+IW-6,IW-6,rate_gpm,change_authorized,1242,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+64A-32,64A-32,rate_gpm,max_flow_at_allowable_pressure,3750,3500,4000,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source gives a 3500-4000 gpm range, value is the midpoint
+64A-32,64A-32,rate_gpm,flow_full_production,2406,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+64A-32,64A-32,rate_gpm,change_authorized,105,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+23-33,23-33RD,rate_gpm,max_flow_at_allowable_pressure,9000,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+23-33,23-33RD,rate_gpm,flow_full_production,6375,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+23-33,23-33RD,rate_gpm,change_authorized,0,,,gpm,no_change,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source lists "No Change"
+14-33,14-33,rate_gpm,max_flow_at_allowable_pressure,,,,gpm,idle,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; well currently idle
+14A-22,14A-22,rate_gpm,max_flow_at_allowable_pressure,,,,gpm,production_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; currently utilized as a production well. Confirmed by user 2026-10-04 to be a real, distinct well from 14A-33 (Table B) -- both are currently production wells, not a transcription duplicate; previously (incorrectly) assumed to be a typo for 14A-33.
+43-33,43-33,rate_gpm,max_flow_at_allowable_pressure,1400,1250,1550,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source gives a 1250-1550 gpm range, value is the midpoint
+43-33,43-33,rate_gpm,flow_full_production,1231,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+43-33,43-33,rate_gpm,change_authorized,0,,,gpm,no_change,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source lists "No Change"
+21-32,21-32,rate_gpm,permitted_limit,2800,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; the only well in this table with a real stated permitted flow limit
+21-32,21-32,rate_gpm,max_flow_at_allowable_pressure,3250,3000,3500,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source gives a 3000-3500 gpm range, value is the midpoint
+21-32,21-32,rate_gpm,flow_full_production,2351,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+21-32,21-32,rate_gpm,change_authorized,320,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+42A-32,42A-32,rate_gpm,max_flow_at_allowable_pressure,15500,15000,16000,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C; source gives a 15000-16000 gpm range, value is the midpoint
+42A-32,42A-32,rate_gpm,flow_full_production,12986,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+42A-32,42A-32,rate_gpm,change_authorized,862,,,gpm,injection_well,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C
+TOTAL,TOTAL,rate_gpm,combined_field_limit,55000,,,gpm,field_total,NDEP UIC Temporary Permit UNEV2007204T2025-1,2025-05-30,UNEV2007204T2025-1,Table C footnote: "The combined injection rate for all wells averaged over a one-month period will not exceed 55,000 gpm" (up from the prior permit's 49,500 gpm limit, per the cover letter)

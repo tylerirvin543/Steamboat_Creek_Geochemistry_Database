@@ -44,6 +44,19 @@
 # assuming more features/complexity helps: here, removing two
 # redundant ones was the single biggest improvement found.
 #
+# get_chloride_conductance_pairs()'s `include_historical` (2026-09-29):
+# real chemistry at a conductivity-logger location still returns 0
+# logger-based rows (Cl samples predate the logger deployment -- see
+# notebooks/09_sampling_campaign_design.qmd Section 1.1). A real,
+# much larger historical dataset exists at NDEP stations that are the
+# same real-world point (or a close, documented neighbor) as a
+# logger site, via `Location_Aliases` -- e.g. SB5 for SBRR, 142 real
+# Cl+conductivity pairs. `get_historical_ndep_chloride_conductance_pairs()`
+# pulls these; `get_chloride_conductance_pairs()` now appends them by
+# default, tagged `pairing_type = "historical_ndep"` vs `"logger"` so
+# callers never silently blend two different instruments/eras as
+# equivalent. See notebooks/09_sampling_campaign_design.qmd Section 1.4.
+#
 # Model artifacts are saved to models/chloride_prediction/*.rds and
 # logged in models/MODEL_REGISTRY.csv.
 # ------------------------------------------------------------
@@ -55,13 +68,63 @@ library(ranger)
 
 source("scripts/ingest/helpers/parse_datetime.R")
 
+#' Real historical (non-logger) Cl-EC pairs at NDEP stations that are,
+#' per `Location_Aliases`, the same real-world point (or a close,
+#' documented neighbor) as a conductivity-logger location -- e.g. SB5
+#' for SBRR. NDEP stores chloride and specific conductance together as
+#' plain `Lab_Analyses` rows (analytes `'Cl'` and `'conductivity'`), a
+#' different table/pathway than the FIELD-source `Field_Measurements`
+#' pairing used elsewhere in this project. Kept deliberately distinct
+#' from the logger-based pairs (different instrumentation/era spanning
+#' decades of NDEP grab samples, not silently blended as equivalent) --
+#' see `get_chloride_conductance_pairs()`'s `pairing_type` column, and
+#' `notebooks/09_sampling_campaign_design.qmd` Section 1.4 for the full
+#' write-up (currently: 142 real SB5 pairs for SBRR, mean ratio ~0.051,
+#' close to SBRR's own single 2026 point of 0.071).
+get_historical_ndep_chloride_conductance_pairs <- function(con) {
+  logger_locations <- dbGetQuery(con, "SELECT DISTINCT location_id FROM Conductivity_Loggers")
+  if (nrow(logger_locations) == 0) return(data.frame())
+
+  alias_locations <- dbGetQuery(con, sprintf(
+    "SELECT location_id AS canonical_location_id, alias FROM Location_Aliases WHERE location_id IN (%s)",
+    paste(logger_locations$location_id, collapse = ",")
+  ))
+  if (nrow(alias_locations) == 0) {
+    message("No Location_Aliases entries for any conductivity-logger location -- no historical NDEP pairs to pull.")
+    return(data.frame())
+  }
+
+  alias_codes <- paste(sprintf("'%s'", alias_locations$alias), collapse = ",")
+  result <- dbGetQuery(con, sprintf("
+    SELECT cl_a.sample_id, l.external_station_code, l.location_id,
+           s.collection_time, cl_a.value AS chloride_mgL, ec_a.value AS sc_25c
+    FROM Lab_Analyses cl_a
+    JOIN Lab_Analyses ec_a ON cl_a.sample_id = ec_a.sample_id AND ec_a.analyte = 'conductivity'
+    JOIN Samples s ON cl_a.sample_id = s.sample_id
+    JOIN Locations l ON s.location_id = l.location_id
+    WHERE cl_a.analyte = 'Cl' AND cl_a.value > 0 AND l.external_station_code IN (%s)
+  ", alias_codes)) |>
+    mutate(collection_time = parse_datetime_safe(collection_time)) |>
+    left_join(alias_locations, by = c("external_station_code" = "alias"))
+
+  message("Pulled ", nrow(result), " real historical NDEP Cl+EC pair(s) from station(s): ",
+          paste(unique(result$external_station_code), collapse = ", "))
+  result
+}
+
 #' Pull paired chloride + specific-conductance observations
 #'
 #' Joins Lab_Analyses (analyte = 'Cl') to the nearest-in-time
 #' Conductivity_Observations row for a logger at the same location,
-#' within `tolerance_min` minutes. Returns 0 rows (with a message)
-#' until paired field chemistry exists for SBRR/SBGG.
-get_chloride_conductance_pairs <- function(con, tolerance_min = 60) {
+#' within `tolerance_min` minutes ("logger" pairs). Real chemistry at a
+#' conductivity-logger location still returns 0 logger-based rows (see
+#' this file's own header) -- but when `include_historical = TRUE`
+#' (default), real historical NDEP Cl+EC pairs at aliased stations
+#' (e.g. SB5 for SBRR, via `get_historical_ndep_chloride_conductance_pairs()`)
+#' are appended too, each tagged via `pairing_type` ("logger" vs.
+#' "historical_ndep") so callers never silently blend the two eras/
+#' instruments as equivalent.
+get_chloride_conductance_pairs <- function(con, tolerance_min = 60, include_historical = TRUE) {
 
   cl <- dbGetQuery(con, "
     SELECT la.sample_id, s.location_id, s.collection_time, la.value AS chloride_mgL
@@ -75,33 +138,150 @@ get_chloride_conductance_pairs <- function(con, tolerance_min = 60) {
 
   cl <- cl |> inner_join(loggers, by = "location_id")
 
+  logger_result <- data.frame()
   if (nrow(cl) == 0) {
-    message("No chloride samples yet at a conductivity-logger location — returning 0 rows.")
-    return(cl)
-  }
+    message("No chloride samples yet at a conductivity-logger location.")
+  } else {
+    obs <- dbGetQuery(con, "
+      SELECT logger_id, timestamp, ec_raw, temperature_c, sc_25c, qc_flag
+      FROM Conductivity_Observations
+      WHERE qc_flag IS NULL OR qc_flag NOT IN ('spike', 'field_visit_disturbance')
+    ") |>
+      mutate(timestamp = as.POSIXct(timestamp, tz = "UTC"))
 
-  obs <- dbGetQuery(con, "
-    SELECT logger_id, timestamp, ec_raw, temperature_c, sc_25c, qc_flag
-    FROM Conductivity_Observations
-    WHERE qc_flag IS NULL OR qc_flag NOT IN ('spike', 'field_visit_disturbance')
-  ") |>
-    mutate(timestamp = as.POSIXct(timestamp, tz = "UTC"))
-
-  out <- vector("list", nrow(cl))
-  for (i in seq_len(nrow(cl))) {
-    cand <- obs |> filter(logger_id == cl$logger_id[i])
-    if (nrow(cand) == 0) next
-    diffs <- abs(as.numeric(difftime(cand$timestamp, cl$collection_time[i], units = "mins")))
-    j <- which.min(diffs)
-    if (diffs[j] <= tolerance_min) {
-      out[[i]] <- cbind(cl[i, c("sample_id", "chloride_mgL", "collection_time")], cand[j, ])
+    out <- vector("list", nrow(cl))
+    for (i in seq_len(nrow(cl))) {
+      cand <- obs |> filter(logger_id == cl$logger_id[i])
+      if (nrow(cand) == 0) next
+      diffs <- abs(as.numeric(difftime(cand$timestamp, cl$collection_time[i], units = "mins")))
+      j <- which.min(diffs)
+      if (diffs[j] <= tolerance_min) {
+        out[[i]] <- cbind(cl[i, c("sample_id", "chloride_mgL", "collection_time")], cand[j, ])
+      }
     }
+
+    logger_result <- bind_rows(out)
+    if (nrow(logger_result) > 0) logger_result$pairing_type <- "logger"
+    message("Matched ", nrow(logger_result), " chloride sample(s) to a conductivity observation ",
+            "within ", tolerance_min, " minutes.")
   }
 
-  result <- bind_rows(out)
-  message("Matched ", nrow(result), " chloride sample(s) to a conductivity observation ",
-          "within ", tolerance_min, " minutes.")
-  result
+  if (!include_historical) return(logger_result)
+
+  hist_result <- get_historical_ndep_chloride_conductance_pairs(con)
+  if (nrow(hist_result) > 0) hist_result$pairing_type <- "historical_ndep"
+
+  combined <- bind_rows(logger_result, hist_result)
+  message("Total: ", nrow(logger_result), " logger-based + ", nrow(hist_result),
+          " historical NDEP pair(s) = ", nrow(combined), " row(s).")
+  combined
+}
+
+#' Compare a historical (NDEP-derived) Cl-EC relationship -- used as an
+#' informed prior -- against the real logger-era relationship, once
+#' real Tier 1 SBRR/SBGG pairs exist
+#' (`get_chloride_conductance_pairs()`'s `pairing_type == "logger"`
+#' subset). Until then, this reports the historical prior alone and
+#' states plainly that no comparison is possible yet -- it never
+#' fabricates a comparison from too few (or zero) real logger pairs.
+#' See `notebooks/09_sampling_campaign_design.qmd` Section 1.6.
+#' @param min_logger_n Minimum real logger pairs required before a
+#'   formal slope-comparison (interaction) test is attempted (default
+#'   10 -- fewer points make an interaction test unreliable).
+#' @param historical_era Restrict the historical prior to samples at
+#'   or after this year (default 2000). Session 2026-09-29's real
+#'   finding: the SBRR-group historical Cl-EC slope roughly doubled
+#'   between 1987-1999 (0.039) and 2000-2025 (0.073) -- a real,
+#'   significant secular shift (interaction p < 1e-8), not sampling
+#'   noise -- so the post-2000 subset is the more relevant prior for
+#'   comparing against a 2026-era logger relationship. Pass
+#'   `historical_era = NULL` to use the full historical record instead.
+compare_historical_vs_logger_fit <- function(con, min_logger_n = 10, historical_era = 2000) {
+  pairs <- get_chloride_conductance_pairs(con)
+
+  hist_df <- pairs |> filter(pairing_type == "historical_ndep")
+  if (!is.null(historical_era)) {
+    hist_df <- hist_df |> filter(as.numeric(format(collection_time, "%Y")) >= historical_era)
+  }
+  logger_df <- pairs |> filter(pairing_type == "logger")
+
+  if (nrow(hist_df) < 5) {
+    message("Not enough historical pairs to fit a prior relationship (n=", nrow(hist_df), ").")
+    return(invisible(NULL))
+  }
+
+  m_hist <- lm(chloride_mgL ~ sc_25c, data = hist_df)
+  hist_summary <- list(n = nrow(hist_df), slope = unname(coef(m_hist)[2]),
+                        intercept = unname(coef(m_hist)[1]), r_squared = summary(m_hist)$r.squared)
+  message(sprintf("Historical prior (n=%d%s): slope=%.4f, intercept=%.2f, R2=%.3f",
+                   hist_summary$n, if (is.null(historical_era)) "" else paste0(", >=", historical_era),
+                   hist_summary$slope, hist_summary$intercept, hist_summary$r_squared))
+
+  if (nrow(logger_df) < min_logger_n) {
+    message(sprintf(
+      "Only %d real logger-based Cl-EC pair(s) exist (need >= %d) -- reporting the historical prior only, no comparison yet.",
+      nrow(logger_df), min_logger_n
+    ))
+    return(list(historical = hist_summary, logger = NULL, comparison = NULL))
+  }
+
+  m_logger <- lm(chloride_mgL ~ sc_25c, data = logger_df)
+  logger_summary <- list(n = nrow(logger_df), slope = unname(coef(m_logger)[2]),
+                          intercept = unname(coef(m_logger)[1]), r_squared = summary(m_logger)$r.squared)
+
+  combined <- bind_rows(
+    hist_df |> mutate(group = "historical") |> select(chloride_mgL, sc_25c, group),
+    logger_df |> mutate(group = "logger") |> select(chloride_mgL, sc_25c, group)
+  )
+  m_interaction <- lm(chloride_mgL ~ sc_25c * group, data = combined)
+  interaction_p <- anova(m_interaction)["sc_25c:group", "Pr(>F)"]
+  consistent <- interaction_p >= 0.05
+
+  message(sprintf(
+    "Logger-era fit (n=%d): slope=%.4f, intercept=%.2f, R2=%.3f -- interaction p=%.3g (%s the historical prior)",
+    logger_summary$n, logger_summary$slope, logger_summary$intercept, logger_summary$r_squared,
+    interaction_p, if (consistent) "CONSISTENT with" else "SIGNIFICANTLY DIFFERENT from"
+  ))
+
+  list(historical = hist_summary, logger = logger_summary,
+       interaction_p = interaction_p, consistent = consistent)
+}
+
+#' Self-test `compare_historical_vs_logger_fit()` end-to-end using a
+#' synthetic stand-in for real logger pairs (since real Tier 1 data
+#' doesn't exist yet) -- demonstrates the mechanism and its two
+#' possible outcomes, not a real result. Temporarily monkeypatches
+#' `get_chloride_conductance_pairs()` for the duration of the call so
+#' no synthetic rows are ever written to the real database.
+#' @param slope_multiplier Synthetic logger slope, as a multiple of the
+#'   real historical prior's own slope. 1.0 simulates a logger-era
+#'   relationship that matches the historical prior (expect
+#'   `consistent = TRUE`); a value far from 1.0 (e.g. 2.0) simulates a
+#'   real drift (expect `consistent = FALSE`).
+demo_compare_historical_vs_logger_fit <- function(con, slope_multiplier = 1.0, n_synthetic = 25, seed = 9142) {
+  set.seed(seed)
+  real_pairs <- get_chloride_conductance_pairs(con)
+  hist_prior <- real_pairs |> filter(pairing_type == "historical_ndep",
+                                      as.numeric(format(collection_time, "%Y")) >= 2000)
+  if (nrow(hist_prior) < 5) {
+    message("No real historical prior available -- cannot run this self-test meaningfully.")
+    return(invisible(NULL))
+  }
+  m_prior <- lm(chloride_mgL ~ sc_25c, data = hist_prior)
+
+  sc_synth <- runif(n_synthetic, min(hist_prior$sc_25c), max(hist_prior$sc_25c))
+  cl_synth <- coef(m_prior)[1] + slope_multiplier * coef(m_prior)[2] * sc_synth + rnorm(n_synthetic, 0, 2)
+  synthetic_logger <- data.frame(sample_id = -seq_len(n_synthetic), chloride_mgL = pmax(cl_synth, 0.1),
+                                  sc_25c = sc_synth, pairing_type = "logger",
+                                  collection_time = as.POSIXct("2026-08-01", tz = "UTC"))
+
+  # Monkeypatch just for this call, restored via on.exit() even on error
+  real_fn <- get_chloride_conductance_pairs
+  get_chloride_conductance_pairs <<- function(con, ...) bind_rows(real_pairs, synthetic_logger)
+  on.exit(get_chloride_conductance_pairs <<- real_fn, add = TRUE)
+
+  message(sprintf("[SELF-TEST, synthetic logger data, slope_multiplier=%.2f] ", slope_multiplier))
+  compare_historical_vs_logger_fit(con, min_logger_n = 10)
 }
 
 #' Simulate a synthetic paired dataset for self-testing the pipeline
@@ -117,6 +297,18 @@ get_chloride_conductance_pairs <- function(con, tolerance_min = 60) {
 #'   so this gives that feature genuine signal to detect, without
 #'   pretending this is anything more than a synthetic self-test
 #'   until real paired Cl/conductivity data exists.
+#' Real, single-point Cl:EC ratio observed at SBRR (sample 819,
+#' 2026-05-01: Cl = 17.1 mg/L at lab specific conductance = 241 uS/cm;
+#' see `notebooks/09_sampling_campaign_design.qmd` Section 1.1). Used
+#' below only as a rough seed for the synthetic slope's magnitude --
+#' one real point, not a fitted regression -- so the self-test's
+#' synthetic chloride range stays in a physically plausible ballpark
+#' instead of an arbitrary made-up slope. A second real point at SBBV
+#' (Section 1.2 of the same notebook) gives a ratio roughly double
+#' this (0.144), confirming the ratio is site-specific and should not
+#' be read as a universal calibration constant.
+CL_EC_RATIO_SEED <- 0.071
+
 simulate_synthetic_pairs <- function(n = 60, seed = 4218, lag_days = 6) {
   set.seed(seed)
   t <- seq(as.POSIXct("2026-05-01", tz = "UTC"), by = "3 days", length.out = n)
@@ -137,7 +329,11 @@ simulate_synthetic_pairs <- function(n = 60, seed = 4218, lag_days = 6) {
     temp_lag <- temp
   }
 
-  cl_true <- 5 + 0.03 * sc_lag + 0.1 * temp_lag + rnorm(n, 0, 1.2)
+  # Slope seeded from the real SBRR Cl:EC ratio (CL_EC_RATIO_SEED, see
+  # above); intercept/noise kept modest so the resulting synthetic
+  # chloride values land near the real observed SBRR/SBBV range
+  # (roughly 15-25 mg/L) rather than an arbitrary earlier value.
+  cl_true <- 1 + CL_EC_RATIO_SEED * sc_lag + 0.1 * temp_lag + rnorm(n, 0, 1.5)
 
   tibble::tibble(
     collection_time = t,

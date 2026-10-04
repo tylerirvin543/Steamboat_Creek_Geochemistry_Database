@@ -5645,6 +5645,790 @@ injection wells (IW-1 through IW-6, 23-33, 64A-32, 43-33, 21-32,
 This session's file changes are not
   yet committed/pushed to git.
 
+### Addendum: a third real field round (2025-09-15) for Soccer Field and Herz Domestic Well
+
+User supplied two more U230 form pairs -- Soccer Field Monitoring Well
+and Herz Domestic Well -- from a THIRD, later field-visit round
+(2025-09-15), following the same two locations' 2025-08-27 samples
+already on file.
+
+- **New real sample: Soccer Field Monitoring Well, 2025-09-15 09:30**
+  -- field pH = 6.94, temperature = 46.0 C (form gives no unit letter;
+  assumed Celsius, consistent with this well's own prior 08/27/25
+  reading, which was equally unitless), specific conductance =
+  2,227 uS/cm (form reads "2.227us"; same comma/decimal-as-thousands-
+  separator convention as this well's prior "2.262us" = 2,262 uS/cm
+  reading). Real trend: temperature dropped from 50.7 C (08/27) to
+  46.0 C (09/15), conductivity dropped slightly (2,262 -> 2,227
+  uS/cm) -- a real, modest cooling/dilution signal across the two
+  visits, not treated as anomalous.
+- **New real sample: Herz Domestic Well, 2025-09-15 09:55** -- field
+  pH = 7.39, temperature = 33.3 C (form explicitly labels "33.3 deg
+  C"), specific conductance = 1,050 uS/cm (form reads "1.050us"; same
+  convention as the prior "1.037us" = 1,037 uS/cm reading). Real,
+  small changes from 08/27 (pH 6.91->7.39, temp 33.2->33.3 C, cond
+  1,037->1,050 uS/cm) -- broadly stable, consistent with a domestic-
+  use well rather than a highly dynamic thermal feature.
+- **New real water-level reading for Herz Domestic Well**: this
+  form's Facility page gives "Last date well/sample location gauged:
+  08/27/25, Depth to water - last event: 57.3'" (matching, not
+  contradicting, the 57.3 ft reading already on file for that date)
+  and a NEW "Measured Water Level: 57.5'" for this 2025-09-15 visit --
+  a real, small ~0.2 ft further decline (56.8 -> 57.3 -> 57.5 ft
+  across the three real readings now on file: 06/27, 08/27, 09/15).
+  No equivalent water-level section exists on Soccer Field's own form
+  (still N/A, same as every prior visit for this well).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_soccerfield_herzdom_0915_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean (2 pre-existing, unrelated PHREEQC
+  failures unchanged). Still not committed to git.
+
+### Addendum: "Herz Deep" resolved as a real, distinct monitoring well for the first time; Eich given a real Wells row; same 2025-09-15 field round
+
+User supplied U230 form pairs for "Herz Deep" and "Eich - Monitoring
+Well," both from the same 2025-09-15 field-visit round as Soccer
+Field/Herz Dom above. "Herz Deep" is a long-standing (Session 3/4)
+unresolved NDEP monitoring-station name with no Locations row and no
+coordinate found in any NDWR/NBMG source checked -- this is the first
+real data on file for it under any source.
+
+- **New Locations row for "Herz Deep"** (`location_id 252`,
+  `NDEP_HerzDeep`, coordinate-less/provisional -- this form's own Well
+  Location field is blank too, so the coordinate gap remains open) and
+  a new Wells row (`well_id 269`, `well_role='monitor'`, real total
+  depth 552 ft, 5 in steel casing -- per this session's "it is a well"
+  precedent). **New real sample, 2025-09-15 10:10**: field pH = 7.88,
+  temperature = 30.1 C, specific conductance = 1,877 uS/cm (form reads
+  "1.877us," same convention as every other outlet/well reading this
+  session). **New real water-level reading**: measured water level
+  61.9 ft (sounding tape) -- the first on file for this well; no prior
+  gauging date given (N/A).
+- **Eich Well given a real Wells row for the first time**
+  (`well_id 270`, linked to the existing `location_id 155`,
+  `well_role='monitor'`, total depth 45 ft [estimated], 10 in steel
+  casing) -- same precedent as Soccer Field/Herz Deep. **Real, noted-
+  not-reconciled discrepancy**: this form's 45 ft matches the NDEP
+  permit table's own "Eich (Shallow, 45 ft.)" description already
+  flagged in this Location's notes, while the existing NDWR-log-
+  derived total depth on file (log 10437) is 100 ft -- left as two
+  real, differently-sourced numbers, not merged. **New real sample,
+  2025-09-15 10:40**: field pH = 7.49, temperature = 33.2 C, specific
+  conductance = 2,144 uS/cm (form reads "2.144us," same convention).
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_herzdeep_eich_0915_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean (same 2 pre-existing, unrelated
+  PHREEQC failures). Still not committed to git.
+
+### Addendum: NDOT and Boyd Domestic Well given a second real sample, same 2025-09-15 round -- a real reversal in NDOT's water-level trend
+
+User supplied U230 form pairs for NDOT and Boyd Domestic Well, both
+from the same 2025-09-15 field-visit round as Herz Deep/Eich above --
+both locations already exist on file with a first real sample from
+2025-08-27.
+
+- **New real sample: NDOT, 2025-09-15 10:50** -- field pH = 7.45,
+  temperature = 74.5 C (form gives no unit letter; assumed Celsius,
+  consistent with this well's own prior 08/27/25 reading of 74.4 C,
+  also unitless) -- confirms NDOT is a genuinely, consistently warm
+  well rather than a one-off anomalous reading. Specific conductance =
+  3,254 uS/cm (form reads "3.254us," same convention used throughout
+  this session).
+- **Real reversal in NDOT's water-level trend, not a monotonic
+  decline like the other wells this session**: this form's facility
+  page confirms the prior 08/27/25 gauging (56.6 ft) as its own
+  last-gauged value, then gives a NEW measured water level of 55.9 ft
+  for this 2025-09-15 visit -- a real ~0.7 ft DECREASE in depth to
+  water (i.e., the water level rose), the opposite direction from the
+  small declines already seen at Herz Domestic Well this session.
+  Recorded as a real, dated `Water_Level_Observations` row, not
+  smoothed or flagged as suspect.
+- **New real sample: Boyd Domestic Well, 2025-09-15 11:15** -- field
+  pH = 7.90, temperature = 23.8 C (form explicitly labels "23.8 deg
+  C"), specific conductance = 611 uS/cm (form reads "0.611us," same
+  convention). No coordinate or water-level number on this form
+  (residential tap, "Domestic water sourced from residential home") --
+  existing coordinate unchanged.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_ndot_boyd_0915_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean (same 2 pre-existing, unrelated
+  PHREEQC failures). Still not committed to git.
+
+### Addendum: Jeppson Domestic Well and Rogers Domestic Well given a second real sample, same 2025-09-15 round
+
+User supplied U230 form pairs for Jeppson Domestic Well and Rogers
+Domestic Well, both from the same 2025-09-15 field-visit round as
+Herz Deep/Eich/NDOT/Boyd Domestic above -- both locations already
+exist on file with a first real sample from 2025-08-27.
+
+- **New real sample: Jeppson Domestic Well, 2025-09-15 11:30** --
+  field pH = 7.57, temperature = 28.1 C (form explicitly labels
+  "28.1 deg C"), specific conductance = 480 uS/cm (form reads
+  "0.480us," same comma/decimal-as-thousands-separator convention
+  used throughout this session). Purge volume recorded in minutes
+  (10 minutes), consistent with this well's own prior 08/27/25 form.
+  No coordinate or water-level number given (residential tap, "This
+  is a domestic water source") -- existing coordinate unchanged.
+- **New real sample: Rogers Domestic Well, 2025-09-15 11:45** --
+  field pH = 7.65, temperature = 26.8 C (form explicitly labels
+  "26.8 deg C"), specific conductance = 478 uS/cm (form reads
+  "0.478us," same convention). No coordinate or water-level number
+  given (residential tap) -- existing coordinate unchanged. Unlike
+  this well's own prior 08/27/25 form (pH and temperature both "N/A"
+  and only conductivity recorded), this visit's form has a complete
+  set of all three field parameters.
+- Applied to the real database (backed up first to
+  `database/archive/geochem_operational_pre_jeppson_rogers_0915_<timestamp>.sqlite`).
+  Views rebuilt, QC re-run clean (same 2 pre-existing, unrelated
+  PHREEQC failures). Still not committed to git.
+
+### Addendum: 42-row OCR batch (pages 55-138) inserted after user review -- real 3-month, 14-site time series now on file
+
+User reviewed/corrected the OCR draft CSV from the prior addendum
+(fixed all temperature values, fixed every previously-flagged
+"1.xx"-misread pH to its correct "6-8.xx" value, added new real
+water-level readings for Herz Dom/Herz Deep/NDOT) and asked for it to
+be applied to the database.
+
+- **All 42 rows inserted** (`data_source = 'NDEP_U230_Compiled_OCR'`,
+  `Data_Sources.source_id` reused from the existing "Compiled U230
+  Field Forms" source): 6 injection-side outlets (Galena 1/2/3, SB2,
+  SB3, SBHR) x 3 rounds (10/29, 11/25, 12/10/2025) + 8 monitoring/
+  domestic wells (Soccer Field, Herz Dom, Herz Deep, Eich, NDOT, Boyd,
+  Jeppson, Rogers) x 3 rounds (10/24, 11/21, 12/12/2025) = 42 real new
+  Field_Measurements-bearing samples, extending every one of these 14
+  sites' already-on-file 2025-08/09 U230 samples into a real, roughly
+  monthly time series spanning September through December 2025.
+- **Garbled OCR dates fixed by cross-validating against round-mates**:
+  several rows had a clearly-wrong digit (e.g. "44/25/25", "41/21/25",
+  "42/12/25", one row even showed the wrong YEAR, "11/21/2024") --
+  corrected to the shared round date by matching against the other
+  13 sites sampled the same day (not guessed in isolation), since
+  every site within a round was visited within minutes to hours of
+  each other per the already-established field-visit pattern.
+- **Garbled OCR times left NULL rather than guessed** for any row
+  where the extracted string wasn't a clean, valid `H:MM` (hour <= 23)
+  -- about half of the 42 rows kept a real time, the rest store
+  date-only, consistent with how several other NDEP-sourced dates in
+  this database already work.
+- **One conductivity value flagged, not excluded**: Herz Domestic
+  Well's 10/24/2025 reading (9,933 uS/cm) is ~7-9x every other reading
+  on file for this well (1,037-1,425 uS/cm across all other rounds
+  this session and prior sessions) -- the user's edits fixed this
+  round's temperature and pH but didn't touch this specific value.
+  Inserted as-is (not silently corrected or dropped) with an explicit
+  flag in the `Field_Measurements.instrument` text calling it out as
+  very likely an OCR misread, pending a check against the original
+  scanned page.
+- **9 new `Water_Level_Observations` rows** (Herz Dom well_id 210,
+  Herz Deep well_id 269, NDOT well_id 268; 3 rounds each): 57.8/58.5/
+  58.2 ft (Herz Dom), 61.2/61.6/61.9 ft (Herz Deep), 56.8/57.2/56.2 ft
+  (NDOT) for 10/24, 11/21, 12/12/2025 respectively -- each round's
+  facility-page "last gauged"/"depth to water last event" fields
+  independently reproduce the prior round's own measured value exactly
+  (e.g. Herz Deep's 11/21 form reports "last gauged 10/24, depth 61.2"
+  -- matches the 10/24 round's own new 61.2 ft reading), a real,
+  internally-consistent cross-validation chain across all three wells
+  and all three rounds, not just a single unverified reading per round.
+- **Conductivity convention applied per-row, not globally**: the
+  6 injection-outlet rows were already OCR'd as full-scale numbers
+  (3200-3500 range, e.g. "3440") needing no conversion; the 8 well
+  rows were OCR'd in the "X.XXXus" small-decimal form (e.g. "2.187us")
+  and converted via this project's established x1000 convention.
+  Detected automatically per-row by magnitude (<20 -> multiply), not
+  hardcoded by site.
+- **A real, substantive pattern across the full 14-site dataset,
+  worth noting for the modeling-approach discussion below**: the
+  6 injection-side ports consistently read pH 5.8-6.3 (acidic-of-
+  neutral) across all 3 new rounds, while every shallow monitoring/
+  domestic well consistently reads pH 7.0-8.1 (neutral-to-mildly-
+  alkaline) -- a systematic ~1.5-2 pH-unit gap between the injection
+  fluid and the shallow groundwater network that holds across every
+  round, not just one snapshot.
+- Applied to the real `geochem_operational.sqlite` (backed up first to
+  `database/archive/geochem_operational_pre_ocr_bulk_insert_<timestamp>.sqlite`).
+  Views rebuilt; QC re-run clean (1,600 total samples, up from 1,558;
+  same 2 pre-existing, unrelated PHREEQC failures). Still not committed
+  to git. The review CSV and its README remain on file at
+  `data/derived/u230_ocr_extraction/` as the documented provenance
+  trail for this batch.
+- **Not done**: the remaining non-well-construction facility-page
+  fields (diameter/casing/total depth/non-well-location text) in the
+  same CSV were not inserted -- these are mostly unchanged boilerplate
+  ("N/A") for already-fully-documented sites and weren't part of the
+  user's requested "apply these changes" scope this round.
+
+### Addendum: new figure + manuscript/action-items/talking-points docs built on the real 42-row U230 time series
+
+Follow-up to the 42-row OCR batch addendum above, per explicit user
+request to reflect the new data in the thesis proposal, the project's
+own documentation, and a standalone PDF for a groundwater-hydrology
+advisor meeting.
+
+- **New figure**: `build_u230_timeseries_figure()` added to
+  `scripts/analysis/manuscript_figures.R` (now a 3-figure module,
+  wired into `build_manuscript_figures()`) -- a 2-panel plot (pH by
+  injection-port vs. shallow-well group, pooled across all 3 real
+  rounds; and NDOT temperature / Herz Deep conductance trends,
+  Sept-Dec 2025), saved to
+  `output/figures/manuscript/u230_timeseries.png`. Required adding
+  `patchwork` to combine the two ggplot panels (newly installed).
+- **`manuscript/04_results.qmd`**: new section, "A real three-month,
+  14-site field-parameter time series (Sept-Dec 2025)," presenting the
+  new figure and both real patterns (the stable injection-vs-shallow
+  pH gap; Herz Deep's rising conductance / NDOT's falling temperature)
+  in prose, with the one flagged Herz Dom conductivity outlier
+  explicitly excluded from the characterization.
+- **`manuscript/05_discussion_and_future_work.qmd`**: new short
+  section, "What the new three-month field-parameter time series
+  implies for modeling choice," framing the pH gap as favoring a
+  reactive-transport read over conservative mixing (at least for pH),
+  and the two wells' uncorrelated trends as a caution against treating
+  any single field parameter as a universal thermal-fraction proxy --
+  explicitly flagged as discussion points, not resolved findings.
+- **`manuscript/README.md`**: "Honest status" section updated
+  (2026-10-01) to record the third figure and both new chapter
+  sections. Edited via the established `readLines()`/`writeLines()`
+  round-trip (CRLF file, `edit` tool's exact-string matching failed
+  against it, same recurring caveat as many prior sessions).
+- **`docs/action_items_for_user.md`**: item 1's "chemistry for the
+  standing monitoring network" bullet annotated as partially
+  addressed (real field parameters now exist for these 7 wells
+  through 12/12/2025, but lab chemistry/chloride is still the real
+  gap); new item 4b added specifically flagging the Herz Dom
+  conductivity outlier (9,933 uS/cm, ~7-9x this well's established
+  range) for a 2-minute check against the original scanned page next
+  time it's open.
+- **New standalone document**: `docs/outreach/professor_talking_points.qmd`
+  (+ rendered `professor_talking_points.pdf`, 4 pages) -- written for a
+  15-20 minute spoken conversation with the user's groundwater
+  hydrology advisor, not a thesis excerpt: why the new dataset matters,
+  the same 2-panel figure, the discharge-estimate long-run context (27-
+  59 L/s now vs. 60-90 L/s 2008-2016 vs. >1,000 L/s in the 1950s-60s,
+  per White 1968/Sorey & Spielman/this project's own poster), four
+  direct discussion questions (reactive transport vs. mixing; how to
+  read two wells trending in uncorrelated directions; what first
+  modeling step fits the current real water-level data density; how
+  this bears on prioritizing the Cl-conductivity calibration field
+  season), the same outlier-value transparency note, and a one-
+  paragraph spoken summary for if time is short. Mirrors
+  `docs/outreach/ndep_data_request.qmd`/`ormat_data_request.qmd`'s
+  existing pattern (Quarto -> PDF, `format: pdf`, no toc/section
+  numbers). **Real bug hit and fixed while rendering**: the same
+  `knitr::include_graphics()`-mishandles-a-pinned-`root.dir` issue
+  already flagged for `notebooks/07`/`00_full_report.qmd` in Session
+  34 recurred here -- fixed the same way, bypassing
+  `include_graphics()` with a `knitr::asis_output()`-emitted raw
+  markdown image tag built from `normalizePath(getwd())` at execution
+  time.
+- **Verified**: both manuscript chapters (`04_results.qmd`,
+  `05_discussion_and_future_work.qmd`) re-rendered to HTML cleanly
+  with the new sections/figure; `professor_talking_points.pdf`
+  rendered cleanly and was visually spot-checked (title page +
+  figure page) via `pdftools::pdf_convert()` + the `read` image tool,
+  not just assumed correct from the render log.
+- **Not done**: no attempt to regenerate `00_thesis_proposal.qmd`'s
+  own combined PDF in this pass (the two edited chapters were each
+  verified standalone only); this session's file changes are not yet
+  committed/pushed to git.
+
+## Session 43 (2026-10-04): injection pressure/rate history from NDEP UIC Temporary Permit UNEV2007204T2025-1
+
+User supplied a new NDEP UIC Temporary Permit (UNEV2007204T2025-1,
+issued 2025-05-30, authorizing a field-wide injection-rate-limit
+increase from 49,500 to 55,000 gpm for `IW-1`, `IW-4`, `IW-5`, `IW-6`,
+`21-32`, `42A-32`, `64A-32`) and raised a substantial research
+direction: whether subsurface pressure/chemistry changes from
+geothermal operations correlated with, and may have contributed to,
+the hydrothermal changes preceding the Lower Sinter Terrace eruption.
+
+- **New `Injection_Operating_History` table**
+  (`database/schema/20_injection_operations_schema.R`, sourced after
+  01-19, both at initial connection and in the DEMO reset block) --
+  long-format (well, parameter [`pressure_psig`/`rate_gpm`],
+  metric_type, value, document_name, document_date, permit_number,
+  notes), one row per transcribed value per document, so future NDEP
+  permits/reports with the same table structure accumulate as
+  additional dated snapshots rather than requiring a schema change.
+- **New source CSV**: `data/raw/ndep/injection_pressure_rate_history.csv`
+  -- Tables B (wellhead pressure: max allowable / historic peak /
+  current / newly authorized, psig) and C (injection rate: permitted
+  limit / max flow at allowable pressure / flow at full production /
+  change authorized, gpm) transcribed in full for all 12 named
+  injection wells plus the field-wide 55,000 gpm combined limit.
+  Ranges given in the source (e.g. "4,250-4,700 gpm") are stored as a
+  midpoint `value` plus explicit `value_min`/`value_max` columns, not
+  silently collapsed. Two real transcription notes flagged, not
+  silently resolved: `23-33`'s current pressure (135 psig) exceeds its
+  own newly-authorized limit (120 psig) per the permit's own table
+  (recorded as-given); Table C's "14A-22" row is almost certainly a
+  typo for `14A-33` (matches Table B's own row and the well's known
+  production-well status), noted but not silently renamed in the raw
+  CSV.
+- **New ingest script**: `scripts/ingest/ingest_injection_operating_history.R`
+  / `ingest_injection_operating_history(con)` -- idempotent on
+  `(well_name, parameter, metric_type, document_date, document_name)`;
+  resolves `well_id` via exact `Wells.well_name` match on
+  `canonical_well_name`, falling back to `Well_Aliases`, left `NULL`
+  (never guessed) when unresolved (e.g. `TOTAL`).
+- **New figure/summary script**: `scripts/analysis/injection_pressure_plot.R`
+  / `build_injection_pressure_plot(con)` -- a historic-peak/current/
+  newly-authorized grouped bar chart for the most recent document on
+  file (`output/figures/injection_operations/injection_pressure_by_well.png`)
+  plus tidy wide-format summary CSVs
+  (`data/derived/injection_operations/injection_pressure_summary.csv`,
+  `injection_rate_summary.csv`).
+- **Wired into `run_pipeline.R`** as `RUN_INGEST$injection_operating_history`
+  (`TRUE` in profiles 1/2, `FALSE` in 3), calling both the ingest and
+  the plot/summary builder in one step. **Two real CRLF-editing
+  corruptions hit and fixed while wiring this in** (same recurring
+  class of issue flagged in many prior sessions for this file, but
+  unusually bad this time -- two separate `edit` calls each silently
+  spliced into the wrong/overlapping text): one merged the DEMO-reset
+  block's `17_formation_unit_schema.R`/`18_logger_uncertainty_schema.R`
+  source lines into a malformed `}ource(...)` token; the other left a
+  duplicated, malformed `})source("scripts/ingest/ingest_ndom_wells.R")`
+  tail after the new `injection_operating_history` run_step block.
+  Both fixed via a direct `readLines()`/`writeLines(sep="\n")`
+  round-trip rather than further `edit` attempts, then verified with
+  `parse()` and a `grep -U $'\r\r'` check (0 matches).
+- **Applied and verified against the real `geochem_operational.sqlite`**
+  (no backup needed -- pure additive insert into a brand-new table, no
+  existing data touched): 71 new rows inserted, idempotent re-run
+  confirmed (0 new rows), figure and summary CSVs generated and
+  visually confirmed correct.
+- **The user's broader research question is documented, not
+  implemented.** Added as a new item 8 in
+  `docs/action_items_for_user.md`, quoting the full proposed
+  methodology (master monthly timeline; pressure-driven vs.
+  fluid-migration hypotheses distinguished via conservative Cl/B,
+  Na/Cl, Li/Cl, SiO2/Cl ratios; cross-correlation/lag analysis; PCA on
+  chemistry; a null-model check against pre-eruption periods with no
+  eruption) -- flagged as a substantial, multi-session analysis
+  project in its own right, not built this session. This table is
+  explicitly a **one-permit snapshot today**; it becomes a real
+  multi-document time series only once more NDEP permits/annual
+  reports are transcribed into the same CSV.
+- **Not done this session**: no master timeline, cross-correlation,
+  tracer-ratio-stability, PCA, or null-model analysis was built --
+  only the concrete, bounded deliverable (store + visualize this one
+  document's pressure/rate table) was completed, per this project's
+  scope-discipline convention for a documentation-adjacent request.
+  `data/raw/ndep/injection_pressure_rate_history.csv` is untracked
+  (gitignored `data/raw/`) and will need the usual `git add -f`
+  treatment alongside the other new/modified files from this session.
+
+## Session 43 continued (2026-10-04): corrections, Lindsey (2026) timeline, tracer ratios, master-timeline design
+
+Follow-up to the same session's `Injection_Operating_History` work,
+executed via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-10-04-0210-plan.md`), per direct user
+corrections and three follow-on requests.
+
+- **Two real data corrections, user-caught**: `14A-22` was previously
+  (incorrectly) assumed to be an OCR/transcription typo for `14A-33`
+  (Session 43's first pass) -- the user confirmed it's a real, distinct
+  well, and both `14A-22` and `14A-33` are currently production wells,
+  not injection. Fixed: `14A-22` registered as its own provisional
+  `Wells` row (`well_id=271`, `well_role='production'`), the "typo"
+  notes removed from both CSV rows and replaced with the user's
+  correction. `23-33`'s current pressure (135 psig) already exceeding
+  its own newly-authorized limit (120 psig) is now a dedicated,
+  explicitly flagged `status = "exceeds_new_authorized_limit"` row
+  (previously only in free-text notes) -- visible in the CSV, the
+  pivoted summary table (as its own split row, same pattern as the
+  pre-existing `43-33`/`not_provided` split), and the figure's caption
+  (`build_injection_pressure_plot()` now dynamically lists any
+  exceeding well). Every row with a real reported numeric value
+  (previously `status = NA`) now reads `status = "injection_well"`,
+  consistent with the user's request to label active injection wells
+  explicitly rather than leaving the column blank. The entire
+  document's 71 rows were deleted and re-ingested from the corrected
+  CSV (not just appended) since well identities/statuses changed, not
+  just new rows.
+- **Real eruption timeline extracted from Lindsey et al. (2026)**,
+  read directly via `pdftotext` (not reconstructed from memory or the
+  existing website Timeline page without re-verifying):
+  `data/raw/historical/lindsey2026_eruption_timeline.csv` -- 2022
+  renewed-activity onset (steaming ground, water reappearing along
+  fractures), 2023 diffuse-steaming expansion across the lower sinter
+  terrace, 2024 shift to discrete seeps/vents (first shallow boiling),
+  early-2025 vents becoming more energetic, the 2025-06-03 geyser-like
+  eruption (per the abstract; body text says "mid-June 2025" and
+  confirms the pipe was capped shortly after with discharge shifting
+  laterally rather than ceasing -- consistent with, not contradicting,
+  Session 13's earlier reading of this same point), the June 2025 NBMG
+  monitoring-program start, and the two calibrated nighttime
+  thermal-drone surveys (2025-07-07/08, 2025-10-01). Stored with a
+  `date_precision` column (`year`/`approximate`/`month`/`day`/
+  `day_range`) since several of these are deliberately not
+  day-precision in the source text -- not fabricated to look more
+  precise than the paper states.
+- **Conservative tracer ratios (Cl/B, Na/Cl, Li/Cl, SiO2/Cl) built**:
+  `scripts/analysis/conservative_tracer_ratios.R` /
+  `compute_tracer_ratios(con)`. Per the plan's user-approved default,
+  includes both the curated thermal end-member set (Sorey & Colvard
+  1992 + FIELD, excluding Cox/SBRR/SBBV -- the same scoping already
+  established in notebook 07's Cl/B t-test) and background/domestic
+  samples, labeled via `sample_group` rather than excluding either.
+  Output: `data/derived/tracer_ratios/tracer_ratios_by_site.csv` (1455
+  sample rows, 16 thermal end-member) and a log-scale, faceted figure
+  (`output/figures/tracer_ratios/tracer_ratios_by_site.png`).
+  **Real bug hit and fixed while building this**: a first-draft
+  Excel-serial-day date-parsing fallback produced nonsense dates (e.g.
+  year 1539981) for several `collection_time` values that are actually
+  stored as Unix-epoch *seconds*, not days -- the same class of
+  dual-epoch issue already flagged project-wide for
+  `Sampling_Events.date`/`.collection_time` in earlier sessions. Fixed
+  by reusing notebook 07's own already-proven `.parse_any_date()`
+  logic verbatim (tries Unix-epoch-seconds via `as.POSIXct`, then
+  `MM/DD/YYYY H:MM`, then ISO) rather than inventing a new parser.
+  **Real, if small-n, observation**: the 16 thermal end-member points'
+  Cl/B (~13-17) and Na/Cl (~0.7-0.8) ratios sit in a visually tight
+  band across the full 1950-2026 span on file, while the much larger
+  background/other population is far noisier -- consistent with (not
+  proof of) a largely stable thermal source composition. Framed
+  explicitly as a stability check, not a conclusion about the eruption.
+- **Master-monthly-timeline project scoped as a design document**
+  (per the plan's Phase 4, design-only), added to
+  `docs/action_items_for_user.md` item 8: a table mapping each proposed
+  indicator (injection pressure/rate, production, water levels,
+  chemistry/tracer-ratios, conductivity, surface-observation/eruption-
+  precursor dates) to its real source table and current data-coverage
+  status, a proposed `build_monthly_indicator_timeline(con, start,
+  end)` function signature for a future session to implement directly,
+  and an explicit, honestly-stated gap: the window with genuinely dense
+  multi-indicator coverage on file today is *after* the 2025-06-03
+  eruption (conductivity loggers from 2026-07-15, the U230
+  field-parameter rounds, this one injection permit), not the
+  2022-2025 pre-eruption buildup Lindsey et al. (2026) describes --
+  almost no subsurface monitoring data (injection history, water
+  levels, chemistry) exists for that earlier window yet. Stated
+  up front so a future cross-correlation/lag-analysis attempt doesn't
+  get built against data that can't actually answer the "what led up
+  to it" question yet.
+- **Workflow for adding more NDEP permits documented** (no new code):
+  a 3-step note in `docs/action_items_for_user.md` (transcribe into the
+  same CSV -> re-run `ingest_injection_operating_history(con)` ->
+  re-run `build_injection_pressure_plot(con)`), plus a flagged concrete
+  follow-up (extend the bar-chart figure to a line-over-time view per
+  well once a second real `document_date` exists to compare against).
+- **Applied to the real `geochem_operational.sqlite`** (no backup
+  needed -- pure correction/re-ingest of the brand-new,
+  no-other-dependents `Injection_Operating_History` table from Session
+  43's first pass): 71 old rows deleted, 71 corrected rows re-inserted,
+  new `Wells` row for `14A-22`, figure and summary CSVs regenerated and
+  visually confirmed.
+- **CRLF/exact-match editing note**: `scripts/analysis/
+  injection_pressure_plot.R` and `scripts/analysis/
+  conservative_tracer_ratios.R` are both brand-new, LF-only files
+  (confirmed via `cat -A`) that nonetheless repeatedly rejected
+  multi-line `edit` tool calls with an exact, byte-verified
+  old_string match -- a new instance of the same class of mystery
+  exact-match failure documented for CRLF files in many prior
+  sessions, this time on files with no CRLF at all. Worked around each
+  time with a small standalone R script
+  (`readLines()`/`grep()`-anchored splice/`writeLines(sep="\n")`) run
+  via `Rscript`, then deleted -- worth trying this approach
+  immediately (rather than retrying `edit`) the next time a edit call
+  mysteriously fails against a verified-correct string, regardless of
+  the file's line-ending status.
+- **Not done this session**: no master timeline actually computed, no
+  cross-correlation/lag analysis, PCA, or null-model testing (Phase 4
+  was design-only, per the plan); no additional NDEP permits
+  transcribed (none supplied this session); `data/raw/ndep/
+  injection_pressure_rate_history.csv`,
+  `data/raw/historical/lindsey2026_eruption_timeline.csv` are
+  untracked (gitignored `data/raw/`) and need the usual `git add -f`
+  treatment.
+
+## Session 43 continued (2026-10-04, part 3): Well_Production_History, thermal-drift flagging, build_monthly_indicator_timeline()
+
+Follow-up to the corrections/Lindsey-timeline/tracer-ratio work above,
+via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-10-04-0210-plan.md`), building the three
+items flagged as "not yet built" in that same turn.
+
+- **`Well_Production_History` built** -- new
+  `database/schema/21_well_production_history_schema.R` (long format,
+  mirrors `Injection_Operating_History`'s shape: `well_id`, `well_name`,
+  `well_type`, `status`, `parameter` IN
+  `('flow','enthalpy_temperature_f','wellhead_temperature_f',
+  'wellhead_pressure_psig')`, `value`, `unit`, `comment`,
+  `document_name`, `document_date`) + new
+  `scripts/ingest/extract_well_production_history.R` /
+  `extract_well_production_history(con)`. **Confirmed this is a
+  structured distillation of already-transcribed data, not a new
+  document read**: 13 `Wells` rows (`45-28`, `35-28`, `46-28`, `24-5`,
+  `IW-6`, `IW-2`, `IW-3`, `23-33RD`, `43-33`, `42A-32`, `21-32`,
+  `64A-32`, `Cox I-1`) already carry one bracketed
+  `[<document>, Table 2: Well Summary During Tracer Flow Testing,
+  tracer test date <date>.] Well '<name>' (<type>): status <status>,
+  flow <value> <unit>, enthalpy temperature <NA|value> F, wellhead
+  temperature <value> F, wellhead pressure <value> psig -- '<comment>'.`
+  entry per TFT report document (2025-07-09, 2026-04-07) in their
+  `notes`, per Session 42's own addenda. A single regex
+  (`gregexpr`/`regexec`) extracts every match per row; `well_id` is
+  taken directly from the `Wells` row being scanned rather than
+  re-resolved by name, which sidesteps the `23-33` (bracket text) vs.
+  `23-33RD` (canonical `well_name`) naming mismatch entirely. Any
+  `Wells.notes` value that mentions "Table 2: Well Summary During
+  Tracer Flow Testing" but fails to fully match the regex triggers a
+  warning rather than silently vanishing. Idempotent on `(well_id,
+  parameter, document_date, document_name)`. Wired into
+  `run_pipeline.R` as `RUN_ANALYSIS$well_production_history` (default
+  `FALSE`, consistent with every other flag in that list). **Real
+  result**: exactly 104 rows (13 wells x 2 documents x 4 parameters,
+  including real `NA` enthalpy-temperature values for every injection
+  well except none -- those are genuinely not reported for injection
+  wells in this source). Flow units correctly kept as-reported, not
+  normalized (`gpm` for injection wells, `kph` for the one production
+  well, `24-5`).
+- **Thermal-drift flagging added to
+  `scripts/analysis/conservative_tracer_ratios.R`**
+  (`flag_thermal_drift()`, no new file): for every
+  `background_or_other` feature/ratio with >= 3 finite observations
+  spanning >= 180 days, fits `lm(log10(value) ~ date)`, and flags
+  `drifting_toward_thermal` when the fitted distance to the thermal-
+  endmember median (on a log scale, since these ratios span orders of
+  magnitude) decreases from the earliest to latest observed date AND
+  the slope's p-value < 0.1 -- a deliberately loose threshold, stated
+  explicitly as a screening step for human review, not a confirmatory
+  test. Writes `data/derived/tracer_ratios/thermal_drift_flags.csv`
+  every run (even when 0 rows are flagged, so a null result is visible,
+  not silent). **Real result**: 94 feature/ratio combinations
+  screened, 16 flagged -- several are geochemically sensible rather
+  than noise, e.g. "Brown's School Geothermal Well" (Cl/B, n=112,
+  p=2.3e-9) and "Curti Barn Well (geothermal)" (Cl/B, n=36, p=6.2e-6)
+  are themselves geothermal-influenced wells (per their own names),
+  just outside the curated `thermal_endmember` scoping used for the
+  Sorey & Colvard/FIELD comparison -- a real, plausible signal, not an
+  artifact. "Steamboat Creek @ Rhodes Road" (Cl_B and Na_Cl, n=24/62,
+  p<1.2e-5) also flags, consistent with it being SBRR, a known
+  thermally-influenced creek station. Figure extended with black-
+  outlined/yellow-filled points, connecting lines, and `ggrepel`
+  labels for the top 8 flagged feature/ratio pairs by significance
+  (labeling all 16 made the figure unreadable -- full list stays in
+  the CSV). New package used: `ggrepel` (already installed).
+- **`build_monthly_indicator_timeline()` built**
+  (`scripts/analysis/monthly_indicator_timeline.R`, new file) --
+  default `start = "2025-01-01"`, `end = Sys.Date()`, per the explicit
+  "start with whatever indicators have real post-eruption coverage"
+  instruction (not the full 2020-present range the original design
+  sketch described, since that would be mostly empty per the
+  already-documented gap). Six indicator helpers
+  (`.monthly_injection_pressure`, `.monthly_well_production`,
+  `.monthly_conductivity`, `.monthly_field_chemistry`,
+  `.monthly_tracer_ratios`, `.monthly_water_levels`), each querying
+  its own real source table/view and aggregating to
+  `(month, indicator, metric, site, value, n)`, `dplyr::bind_rows()`'d
+  into one long table. **Real bug hit and fixed**: a first attempt at
+  parsing `Field_Measurements`-joined `collection_time` with a plain
+  `as.Date(x, format=...)` + `coalesce()` fallback errored outright on
+  the same mixed-format (`MM/DD/YYYY H:MM` vs. Unix-epoch-seconds)
+  issue already fixed earlier this session in
+  `conservative_tracer_ratios.R` -- fixed by reusing
+  `.parse_any_date_ratios()` directly instead of writing a second,
+  slightly-different parser. **Real, second bug/design issue hit and
+  fixed**: the first build's `field_chemistry` panel legend had ~150+
+  entries, dominated by single-visit `SBO_000xx` steaming-ground
+  photo-survey points (session 13's field-observation pipeline, one or
+  two temperature readings each, not repeat monitoring) -- these are a
+  structurally different kind of data from the real named monitoring
+  wells/outlets and made the figure illegible. Fixed by excluding
+  `l.name GLOB 'SBO_*'` from that query (GLOB used instead of
+  LIKE+ESCAPE specifically because SQLite's LIKE treats `_` as a
+  single-character wildcard, which would have matched far more than
+  intended -- GLOB treats `_` as a literal character), leaving 29 real
+  named sites in that panel's legend -- still sizeable but legitimate,
+  not a bug. **Real coverage confirmed across all 6 indicators** for
+  2025-01-01 through today: injection_pressure (1 month, the one
+  permit on file), well_production (2 months, the two TFT report
+  dates), conductivity (2 months, 2026-07/08), field_chemistry (8
+  months, 2025-07 through 2026-05, the real U230 monitoring rounds),
+  tracer_ratios (4 months), water_level (12 months, 2025-01 through
+  2025-12 -- Herz Dom/Deep, NDOT, STMGID MW3/MW10). Figure: faceted by
+  indicator, 2025-06-03 eruption marked with a dashed reference line on
+  every panel (sourced from this session's own
+  `lindsey2026_eruption_timeline.csv`), colored by `site`. **Explicitly
+  does NOT include any cross-correlation, lag analysis, PCA, or
+  null-model testing** -- assembly and visualization only, exactly the
+  first phase of the original design sketch; the function's own header
+  comment states this as the next, separate, not-yet-built step. Not
+  wired into `run_pipeline.R` (standalone/manually-invoked for now,
+  since its indicator scope may still change based on review).
+- **`docs/action_items_for_user.md` item 8 updated**: a new "all three
+  follow-ons built" subsection records what shipped (with real numbers
+  -- 104 rows, 16 flagged, 6-indicator coverage), and the original
+  design-sketch table is kept, explicitly marked "superseded by the
+  build above, kept for reference" rather than deleted.
+- **CRLF/exact-match editing note (same pattern as earlier this
+  session)**: every new/modified file this turn (`run_pipeline.R`'s
+  two schema-source-line insertions, `conservative_tracer_ratios.R`'s
+  `geom_line()`/caption/top-8-cap edits, `monthly_indicator_timeline.R`'s
+  date-parser and SQL-filter fixes) hit the same mystery `edit`-tool
+  exact-match failures documented earlier this session, worked around
+  every time with a small standalone `Rscript`-run splice script
+  (`readLines()`/`grep()`-anchored/`writeLines(sep="\n")`), deleted
+  after use. Also hit one R-string-escaping-inside-SQL-string trap
+  while writing the `GLOB` fix (an `AND l.name NOT LIKE "SBO\_%" ESCAPE
+  "\\"` attempt failed to parse -- `\_` is not a valid R string escape
+  -- before landing on the simpler, escape-free `GLOB 'SBO_*'`
+  alternative).
+- **Applied and verified against the real `geochem_operational.sqlite`**
+  (no backup needed for `Well_Production_History` -- purely additive,
+  derived from existing `Wells.notes` text, no existing rows touched):
+  104 rows inserted, idempotent re-run confirmed (0 new rows). All
+  three figures regenerated and visually confirmed.
+- **Not done this turn**: no cross-correlation/lag/PCA/null-model
+  analysis (explicitly out of scope, per the plan's own phasing); no
+  new NDEP/TFT documents read; `RUN_ANALYSIS$well_production_history`
+  left default `FALSE` (consistent with every other flag in that
+  list, run manually this session); this session's file changes are
+  not yet committed/pushed to git.
+
+## Session 43 continued (2026-10-04, part 4): monthly indicator timeline split into one figure per indicator
+
+Direct user feedback: the single combined faceted
+`monthly_indicator_timeline.png` (6 indicators in one 2-column facet
+grid, colored by `site`) "doesn't make any sense and has too much
+information" -- confirmed by re-inspection: the `field_chemistry`
+panel alone had a 29-entry legend bleeding into the other panels'
+reading, and very different value scales (psig vs. uS/cm vs. ft vs.
+unitless ratios) made shared-figure comparison meaningless anyway. The
+separately-reviewed `injection_pressure_by_well.png` (Session 43,
+part 1) was confirmed good and left untouched.
+
+- **`build_monthly_indicator_timeline()` rewritten to save one PNG per
+  indicator** instead of one combined faceted figure:
+  `monthly_indicator_timeline_<indicator>.png` x6
+  (`injection_pressure`, `well_production`, `conductivity`,
+  `field_chemistry`, `tracer_ratios`, `water_level`) in the same
+  `output/figures/monthly_indicator_timeline/` directory. Each
+  indicator with more than one `metric` (e.g. `field_chemistry`'s
+  pH/temperature/conductivity, `well_production`'s flow/pressure) is
+  sub-faceted by metric *within its own figure* (`ncol = 1`) so
+  wildly different scales never share one y-axis. Indicators with more
+  than 15 distinct `site` values (`field_chemistry`'s 29 real named
+  wells/outlets) drop the legend entirely (color still shown, but an
+  unreadable 29-entry legend box is suppressed) -- full site detail
+  stays in the CSV. `invisible(list(timeline=, coverage=, plots=))` now
+  returns a **named list of plots** (one per indicator) instead of a
+  single `plot`.
+- **Real, independent bug caught while rebuilding `well_production`**:
+  its `metric` label read `"wellhead_pressure_psig_psig"` (a
+  literal-suffix duplication -- `parameter` was already
+  `"wellhead_pressure_psig"`, then `"_", unit` ("psig") was appended
+  again). Fixed with `ifelse(endsWith(parameter, paste0("_", unit)),
+  parameter, paste0(parameter, "_", unit))` -- first attempt used
+  `grepl(unit, parameter, ...)`, which warned/silently used only the
+  first element since `grepl()`'s pattern argument isn't vectorized
+  over both sides the way `endsWith()` is; fixed before relying on it.
+- Verified visually (all 6 regenerated PNGs read directly): each
+  figure is now self-contained and readable at a glance --
+  `field_chemistry` (3 metrics x real monitoring-well time series,
+  July 2025-May 2026, no legend clutter), `water_level` (5 real wells,
+  clean 5-entry legend, STMGID MW10/MW3's near-flat continuous records
+  clearly distinct from the three U230-round wells' shorter real
+  series), `well_production` (2 real TFT-report dates, corrected
+  3-metric labels), `tracer_ratios` (the real Cl/B spike and Na/Cl
+  dip/recovery pattern both legible), `injection_pressure` and
+  `conductivity` (simple single-series/few-series panels, unaffected
+  by the split other than now being standalone).
+- **Applied directly against the real `geochem_operational.sqlite`**
+  (read-only analysis function, no schema/data changes): re-ran
+  `build_monthly_indicator_timeline(con)` twice (once to catch the
+  `endsWith` fix's own bug, once clean) -- final run produced 0
+  warnings.
+- Not done this turn: `docs/action_items_for_user.md`'s description of
+  this function still describes "a faceted figure" in the singular;
+  not updated this turn since the per-indicator split is a
+  presentation detail, not a change to what data is covered -- worth a
+  quick wording pass next time that file is touched for another reason.
+
+## Session 43 continued (2026-10-04, part 5): readable group names, real captions/legends on every figure, water_level split reviewed and kept
+
+Direct follow-up to the per-indicator figure split, per explicit user
+feedback: rename the "background_or_other" group to something that
+says what it actually is, give every figure a real legend plus a
+short title/caption, review whether `water_level`'s two well
+populations belong in separate figures, add a CSV-pointer caption to
+`field_chemistry`, and define `field_mean`.
+
+- **`sample_group` renamed for display via a new `sample_group_label`
+  column** (`scripts/analysis/conservative_tracer_ratios.R`) --
+  `"thermal_endmember"` -> "Thermal end-member (Sorey & Colvard 1992 +
+  FIELD)", `"background_or_other"` -> "Background / non-thermal (NDEP,
+  domestic wells, creeks)". The short internal code values
+  (`sample_group`) are kept unchanged for filtering logic
+  (`flag_thermal_drift()`, the thermal-endmember scoping) -- only the
+  plot-facing label changed, in both `tracer_ratios_by_site.png`'s own
+  legend and the `tracer_ratios` panel of the monthly timeline (which
+  now colors by `sample_group_label` via `.monthly_tracer_ratios()`).
+- **`field_mean` defined once, referenced everywhere it's used**: a
+  new `.FIELD_MEAN_NOTE` constant
+  ("'field_mean' = the simple average across every well reporting a
+  value for that document date (not flow- or production-weighted)")
+  is included in both `injection_pressure`'s and `well_production`'s
+  figure captions.
+- **Every figure now has a real legend, a wrapped title/subtitle, and
+  a short (1-3 sentence) caption** describing what's shown, its real
+  data source, and (for `field_chemistry`) a pointer to the full CSV
+  since its legend is the one deliberately suppressed (29 real sites
+  -- confirmed via testing that even a 3-column legend at that
+  cardinality was unreadable, unlike every other indicator). A new
+  `.FIGURE_META` list centralizes title+caption text per indicator
+  (and per water-level subgroup, see below) instead of scattering
+  strings through the plotting code. **Real bug hit and fixed**: long
+  captions/subtitles were silently clipped at the figure's right edge
+  (ggplot does not auto-wrap `labs()` text) -- fixed with a `strwrap()`
+  -based `.wrap_text()` helper applied to every subtitle/caption in
+  both `monthly_indicator_timeline.R` and
+  `conservative_tracer_ratios.R`, plus `plot.caption =
+  element_text(hjust = 0)` so multi-line captions left-align instead
+  of centering.
+- **`water_level` reviewed and confirmed worth splitting**, per the
+  explicit follow-up request: STMGID MW3/MW10 (continuous since
+  2023-2024, in the wider South Truckee Meadows basin, not inside the
+  Steamboat field) and the three real 2025 U230-round wells (Herz
+  Domestic, Herz Deep, NDOT -- short series, genuinely field-local)
+  differ enough in both time span and geographic relevance that one
+  combined figure buried the field-specific signal under STMGID's much
+  longer flat lines. Split into two figures
+  (`monthly_indicator_timeline_water_level_stmgid_regional.png`,
+  `monthly_indicator_timeline_water_level_u230_field_wells.png`) via a
+  new `.WATER_LEVEL_GROUPS` list and a `.build_one_figure()` helper
+  called once per subgroup -- the underlying CSV still has one
+  `"water_level"` indicator value (no schema/column change, just a
+  presentation split). **Real, newly-visible pattern in the split-out
+  figure**: all three U230-round wells (Herz Deep, Herz Domestic,
+  NDOT) show the same small, real seasonal decline in water level
+  (depth-to-water increasing, i.e. the water table dropping) through
+  2025 -- invisible in the combined figure, where STMGID's near-flat
+  300+ ft lines compressed the 55-62 ft y-axis range into a sliver.
+- **Verified against the real `geochem_operational.sqlite`** (no
+  database changes -- pure presentation/plotting fix, read-only
+  analysis functions): re-ran `build_monthly_indicator_timeline(con)`
+  twice (once catching a transient `ggsave`/`agg` write failure caused
+  by stale files left over from the prior turn's figure inspection,
+  resolved by clearing `output/figures/monthly_indicator_timeline/`
+  and `output/figures/tracer_ratios/` before the final clean run) --
+  final run produced 8 total figures (7 monthly-indicator + 1 tracer-
+  ratio detail figure) with 0 warnings, each visually confirmed
+  readable (title, wrapped subtitle/caption, legend with real labels).
+- **CRLF/exact-match editing note (same recurring pattern)**: the
+  `edit` tool's exact-string matching again failed unpredictably
+  against `conservative_tracer_ratios.R` (an LF-only file) for the
+  caption/subtitle wrapping change; worked around with the same
+  `readLines()`/`grep()`-anchored splice via a standalone `Rscript`,
+  deleted after use -- now a well-established fallback for this
+  project whenever `edit` mysteriously rejects a byte-verified-correct
+  `old_string`.
+- **Not done this turn**: no new data, schema, or ingestion changes;
+  `docs/action_items_for_user.md`'s item 8 write-up was not updated
+  with these presentation-only figure changes (the data/coverage
+  description there is unaffected); this session's file changes are
+  not yet committed/pushed to git.
+
 ## Key Figures
 
 - `isotope_mixing_plot.png` — isotope mixing diagram

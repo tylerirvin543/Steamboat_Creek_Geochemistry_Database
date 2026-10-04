@@ -1,0 +1,120 @@
+---
+title: "Steamboat Hills: Talking Points for Groundwater Hydrology Advisor Meeting"
+subtitle: "Where the data stands, and how to think about modeling the system"
+date: today
+format:
+  pdf:
+    toc: false
+    number-sections: false
+---
+
+```{r setup}
+#| echo: false
+#| message: false
+#| warning: false
+if (basename(getwd()) == "outreach") {
+  root <- normalizePath(file.path(getwd(), "..", ".."))
+} else {
+  root <- normalizePath(getwd())
+}
+knitr::opts_knit$set(root.dir = root)
+```
+
+## Why this conversation, right now
+
+Over the last few weeks a set of scanned NDEP field-sampling forms got
+transcribed into the project database, turning a handful of one-off
+grab samples into a real, roughly **monthly time series (late
+September through December 2025) across 14 sites** -- six named
+injection-side ports (Galena 1/2/3, SB2, SB3, SBHR) and eight shallow
+monitoring/domestic wells (Soccer Field, Herz Domestic, Herz Deep,
+Eich, NDOT, Boyd, Jeppson, Rogers). This is the densest *repeated*
+field-parameter dataset the project has had to date, and it raises a
+concrete question worth a faculty opinion: **what modeling approach
+does data like this actually support?**
+
+## What the data shows
+
+```{r fig-main}
+#| echo: false
+#| results: asis
+#| message: false
+#| warning: false
+img_path <- file.path(normalizePath(getwd()), "output", "figures", "manuscript", "u230_timeseries.png")
+cap <- "Left: pH across the six injection-side ports vs. the eight shallow monitoring/domestic wells, pooled across three real monthly rounds. Right: two real multi-month trends at individual wells, Sept-Dec 2025."
+knitr::asis_output(sprintf("![%s](%s)", cap, img_path))
+```
+
+**1. A stable pH gap between the injection side and the shallow
+network.** Every one of the six injection-side ports reads pH 5.8-6.3
+at every round; every one of the eight shallow wells reads pH
+7.0-8.1. That ~1.5-2 unit gap holds across all three rounds, not just
+one snapshot -- a real, repeatable signature, not noise.
+
+**2. Two individual wells show real, opposite-direction trends over
+the same three months.** Herz Deep's specific conductance rises from
+1,877 to 3,024 uS/cm (roughly +60%) while its temperature stays
+essentially flat (~30-36 C). NDOT's temperature falls from about 76 C
+to 61 C while its conductance stays roughly flat (~3,000-3,500 uS/cm).
+Neither well's two parameters move together.
+
+**3. A broader context for these 14 sites**: this project's own
+poster finding puts current thermal-water discharge to Steamboat Creek
+at roughly 27-59 L/s (a single real paired Cl-discharge measurement
+gives 58.7 L/s; the poster's own multi-date average is ~27 L/s),
+compared to a historical range of roughly 60-90 L/s reported for
+2008-2016 and over 1,000 L/s reported by White (1968) in the 1950s-60s
+-- the long-run context this new monthly dataset sits inside.
+
+## Questions for the conversation
+
+- **Does the pH gap argue for reactive transport over conservative
+  mixing?** A stable, multi-round pH offset between an injected fluid
+  and the shallow network looks like water-rock buffering along a flow
+  path -- is that the right read, or could something simpler (e.g. a
+  measurement-method difference between the two sample types) explain
+  it just as well?
+- **How should two wells moving in opposite, uncorrelated directions
+  be interpreted?** Herz Deep's conductance rise and NDOT's temperature
+  fall don't look like the same mechanism. Is this two independent,
+  local processes, or a sign that neither temperature nor conductance
+  alone is a safe stand-in for "thermal influence" at this site?
+- **What's the right first modeling step given the real data density
+  we have?** A full 3-D reactive-transport model is the long-term goal,
+  but real continuous water-level coverage *inside* the Steamboat
+  field itself is currently limited to 2-3 wells (everything else with
+  continuous water level sits in the wider South Truckee Meadows
+  basin). Is a simpler lumped-parameter/box model (two- or
+  three-end-member mixing with a time-varying fraction) the
+  appropriate first step, or is it worth waiting on better spatial
+  coverage before committing to any specific model structure?
+- **Does this dataset make the planned Cl-conductivity calibration
+  campaign more or less urgent?** The project's sampling-frequency
+  statistical framework (Monte Carlo subsampling, rolling-origin
+  cross-validation) is fully built but still synthetic/proxy-only --
+  no real chloride sample yet overlaps the conductivity-logger
+  deployment window. Given the pH/trend patterns above, would a
+  professor prioritize that calibration field season over, say,
+  pursuing the fault-digitization/potentiometric-surface work in
+  parallel?
+
+## One flagged data-quality note, for transparency
+
+One value in this new batch (Herz Domestic Well, 10/24/2025 specific
+conductance, 9,933 uS/cm) is roughly 7-9x every other reading on file
+for that well and is flagged in the database as a likely OCR
+transcription error pending a check against the original scanned form
+-- not used in the trends described above.
+
+## One-paragraph summary, if time is short
+
+*"We just turned scattered grab samples into a real three-month,
+14-site monthly time series. Two patterns stand out: a stable pH gap
+between the injection fluid and the shallow groundwater network
+(suggesting real water-rock interaction along the flow path), and two
+wells trending in opposite directions on temperature vs. conductivity
+over the same window (suggesting neither parameter alone is a safe
+universal proxy for thermal influence here). I'd like your take on
+whether this points toward a reactive-transport framing over
+conservative mixing, and what the right first modeling step is given
+that our real water-level coverage inside the field is still thin."*

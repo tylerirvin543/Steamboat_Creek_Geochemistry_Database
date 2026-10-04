@@ -141,6 +141,40 @@ two-tier calibration-sampling recommendation in Chapter 6: a short,
 intensive daily-to-sub-daily window, followed by a lower-frequency,
 biweekly-to-monthly campaign for the remainder of the year.
 
+## A real three-month, 14-site field-parameter time series (Sept-Dec 2025)
+
+```{r u230-timeseries-fig}
+#| echo: false
+#| fig-cap: "Left: pH across six injection-side ports and eight shallow monitoring/domestic wells, pooled across three real monthly rounds (Oct-Dec 2025). Right: two concrete real multi-month trends -- Herz Deep's rising specific conductance and NDOT's cooling temperature (see `scripts/analysis/manuscript_figures.R`, `AGENTS.md` Session 42)."
+knitr::include_graphics("../output/figures/manuscript/u230_timeseries.png")
+```
+
+Beyond the single-snapshot chemistry used above, this project's NDEP
+compiled U230 field-form archive (hand-transcribed and OCR-assisted,
+then user-reviewed) now provides a real, roughly monthly field-
+parameter time series (pH, specific conductance, temperature) spanning
+late September through December 2025 at 14 sites: all six named
+injection-side ports (Galena 1/2/3, SB2, SB3, SBHR) and eight shallow
+monitoring/domestic wells (Soccer Field, Herz Domestic, Herz Deep,
+Eich, NDOT, Boyd, Jeppson, Rogers). Two patterns stand out. First, the
+injection-side ports hold a consistently acidic pH (5.8-6.3) across
+every round, while the shallow well network holds a consistently
+neutral-to-mildly-alkaline pH (7.0-8.1) -- a stable ~1.5-2 pH-unit gap,
+not a single-date artifact, consistent with water-rock buffering
+occurring somewhere between the injection fluid and the shallow
+monitoring points. Second, two individual wells show real, opposite-
+direction multi-month trends over the same window: Herz Deep's
+specific conductance rises from 1,877 to 3,024 uS/cm (roughly 60%)
+while NDOT's temperature falls from about 76 to 61 C. Neither trend is
+explained by a change in the other parameter at the same well
+(Herz Deep's temperature stays roughly flat; NDOT's conductance stays
+roughly flat), which argues against a single simple proxy relationship
+holding everywhere in the field and is picked up again in Chapter 5's
+modeling-approach discussion. One field-measured value (Herz Domestic
+Well's 10/24/2025 conductivity, 9,933 uS/cm) is flagged in the
+database as a likely OCR misread, pending a check against the original
+scanned form, and is excluded from this characterization.
+
 ## What these results do not yet show
 
 Stated plainly, for scope: a naive chloride-versus-year regression

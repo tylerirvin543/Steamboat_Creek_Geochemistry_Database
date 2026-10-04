@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -206,6 +206,7 @@ if (is.null(RUN_ANALYSIS$facies_clusters)) RUN_ANALYSIS$facies_clusters <- FALSE
 if (is.null(RUN_ANALYSIS$aquifer_classification)) RUN_ANALYSIS$aquifer_classification <- FALSE
 if (is.null(RUN_ANALYSIS$diagnostic_figures)) RUN_ANALYSIS$diagnostic_figures <- FALSE
 if (is.null(RUN_ANALYSIS$facies_rf_importance)) RUN_ANALYSIS$facies_rf_importance <- FALSE
+if (is.null(RUN_ANALYSIS$well_production_history)) RUN_ANALYSIS$well_production_history <- FALSE
 
 #' Print a quick reference of every RUN_INGEST/RUN_ANALYSIS flag with a
 #' one-line description and its current value, so a user does not have
@@ -237,7 +238,8 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     skalbeck2001 = "Skalbeck (2001) UNR dissertation: depth-to-bedrock points + well completions",
     barometric_pressure = "Hourly Reno Airport barometric pressure (IEM ASOS)",
     earthquakes = "USGS regional earthquake catalog",
-    fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)"
+    fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)",
+    injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)"
   )
   analysis_desc <- c(
     phreeqc = "PHREEQC speciation/saturation-index batch run (slow, opt-in)",
@@ -249,7 +251,8 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     facies_clusters = "Persist hydrochemical facies clustering to the database",
     aquifer_classification = "Derive Wells.aquifer_type from real barometric efficiency",
     diagnostic_figures = "Re-save facies/mixing/SI diagnostic PNGs from current data",
-    facies_rf_importance = "Random-forest variable importance for facies membership"
+    facies_rf_importance = "Random-forest variable importance for facies membership",
+    well_production_history = "Extract TFT Table 2 well production/injection snapshots from Wells.notes"
   )
   message("\n[FLAG REFERENCE] RUN_INGEST (set before sourcing to override):")
   for (nm in names(ingest_desc)) {
@@ -309,6 +312,8 @@ source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
+source("database/schema/20_injection_operations_schema.R")
+source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
 source("scripts/ingest/helpers/update_geometry.R")
@@ -397,6 +402,8 @@ source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
+source("database/schema/20_injection_operations_schema.R")
+source("database/schema/21_well_production_history_schema.R")
 }
 
 # ============================================================
@@ -724,10 +731,30 @@ run_step(RUN_INGEST$ndom_wells, "NDOM WELL-PERMIT DATA", {
   # rather than applied automatically. See
   # scripts/ingest/ingest_ndom_wells.R and
   # database/schema/09_ndom_wells_schema.R (also contains a one-time
-  # fix for a pre-existing Wells.elevation_m feet-vs-meters unit bug,
-  # found while scoping this ingestion).
   source("scripts/ingest/ingest_ndom_wells.R")
   ingest_ndom_wells(con)
+})
+
+run_step(RUN_INGEST$injection_operating_history, "NDEP UIC INJECTION PRESSURE/RATE HISTORY", {
+  # Ingests injection-well wellhead pressure and rate limits transcribed
+  # from NDEP UIC permits/temporary permits
+  # (data/raw/ndep/injection_pressure_rate_history.csv) into
+  # Injection_Operating_History -- one row per (well, metric,
+  # document). Currently populated from Temporary UIC Permit
+  # UNEV2007204T2025-1 (issued 2025-05-30, raised the field's combined
+  # injection-rate limit from 49,500 to 55,000 gpm for IW-1, IW-4,
+  # IW-5, IW-6, 21-32, 42A-32, 64A-32). Supports the question (flagged
+  # 2026-10-04) of whether permitted injection pressure/rate increases
+  # correlate with, and may have contributed to, the hydrothermal
+  # changes preceding the Lower Sinter Terrace eruption -- future NDEP
+  # permits/reports should be transcribed into the same CSV so this
+  # becomes a real multi-document time series. See
+  # scripts/ingest/ingest_injection_operating_history.R and
+  # database/schema/20_injection_operations_schema.R.
+  source("scripts/ingest/ingest_injection_operating_history.R")
+  ingest_injection_operating_history(con)
+  source("scripts/analysis/injection_pressure_plot.R")
+  build_injection_pressure_plot(con)
 })
 
 run_step(RUN_INGEST$historical_sorey1992, "SOREY & COLVARD 1992 HISTORICAL CHEMISTRY", {
@@ -954,6 +981,20 @@ run_step(RUN_ANALYSIS$facies_rf_importance, "RANDOM-FOREST FACIES VARIABLE IMPOR
   source("scripts/analysis/facies_random_forest.R")
   .fc_rf <- run_facies_clustering(con)
   run_facies_random_forest(.fc_rf)
+})
+
+run_step(RUN_ANALYSIS$well_production_history, "WELL PRODUCTION/INJECTION HISTORY (FROM WELLS.NOTES)", {
+  # Extracts structured production/injection-well operating snapshots
+  # (flow, enthalpy/wellhead temperature, wellhead pressure) from the
+  # NDEP TFT Compliance Report "Table 2: Well Summary During Tracer
+  # Flow Testing" entries already transcribed as free text into
+  # Wells.notes (AGENTS.md Session 42/43 addenda) -- no new document is
+  # read here, this is a structured distillation of existing data.
+  # Mirrors Injection_Operating_History's long-format shape. See
+  # scripts/ingest/extract_well_production_history.R and
+  # database/schema/21_well_production_history_schema.R.
+  source("scripts/ingest/extract_well_production_history.R")
+  extract_well_production_history(con)
 })
 
 

@@ -40,17 +40,32 @@ LuaLaTeX toolchain already used for `notebooks/00_full_report.qmd`).
 - `notebooks/09_sampling_campaign_design.qmd` -- the full, reproducible
   sampling-design analysis this manuscript's Methods chapter condenses.
 
-## Honest status (2026-09-30)
+## Honest status (2026-10-01)
 
 All six chapters are now drafted in full, and a new master document
 (`00_thesis_proposal.qmd`) assembles them into a single ~40-page thesis
 proposal with a title page, abstract, table of contents, and a
 references section generated from `references.bib`. `references.bib`
-was expanded from ~15 to ~35 entries. Two new figures
-(`steamboat_timeline.png`, `discharge_through_time.png`) were added via
+was expanded from ~15 to ~35 entries. Three figures
+(`steamboat_timeline.png`, `discharge_through_time.png`,
+`u230_timeseries.png`) are produced on demand via
 `scripts/analysis/manuscript_figures.R`. This is a first complete
 draft, not a final thesis proposal -- see Chapter 5's own "concrete
 roadblocks" section for what substantive work (real paired Cl/EC
 samples, in-field water levels, digitized faults) still needs to
 happen before the thesis's three central questions can be fully
 answered, and expect further editorial passes as that work lands.
+
+**2026-10-01 update**: Chapter 4 gained a new section ("A real
+three-month, 14-site field-parameter time series") covering the
+Sept-Dec 2025 U230 field-form data (AGENTS.md Session 42's "42-row OCR
+batch" addendum) -- the systematic pH gap between injection-side ports
+and the shallow monitoring/domestic well network, and two concrete
+real multi-month trends (Herz Deep's rising conductance, NDOT's
+falling temperature). Chapter 5 gained a matching short section on
+what this implies for modeling choice (reactive-transport vs.
+conservative mixing framing). A new, separate talking-points document
+for a groundwater-hydrology-advisor meeting,
+`docs/outreach/professor_talking_points.qmd`, draws on the same data
+and figure but is written for a 15-20 minute spoken conversation, not
+the thesis itself.
