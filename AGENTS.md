@@ -6768,3 +6768,59 @@ rendered output, not just planned.
   above, no stray duplicate output files left in `manuscript/`.
 - Committed and pushed to `origin/main` in the same batch as this
   session's changes (see commit history).
+
+## Session 46 (2026-10-04, continued): PDF title page/TOC pagination fixed at the root
+
+Direct follow-up to the user noticing the rendered PDF had a messy page
+1-4 sequence (an auto-generated title+TOC-start page, a TOC continuation
+page, the real hand-built title page, then a *fourth*, duplicate
+plain-text title page) -- fixed the actual cause rather than reshuffling
+page breaks.
+
+- **Root cause, confirmed by inspecting the generated `.tex`** (temporarily
+  set `keep-tex: true` to look): Quarto calls `\maketitle`
+  unconditionally right after `\begin{document}` for this PDF template
+  (`documentclass: scrartcl`), **regardless of `title-block-style:
+  none`** -- that setting does not suppress `\maketitle` here, only
+  Quarto's own fancier title-block decorations. Since `toc: true` was
+  also set, Quarto's auto-inserted `\tableofcontents` immediately
+  followed `\maketitle`, both *before* our own hand-written
+  `\begin{titlepage}...\end{titlepage}` block (which is just body
+  content, so it rendered third). A separate plain-markdown title
+  heading further down (kept for HTML/docx, which don't get the LaTeX
+  titlepage) was not format-gated, so it rendered a fourth time for PDF
+  too.
+- **Fix**: for the `pdf` format only, set `toc: false` (so Quarto no
+  longer auto-inserts a TOC) and add an `include-in-header` block that
+  redefines `\renewcommand{\maketitle}{}` (blanking Quarto's forced
+  call). The TOC is now hand-inserted exactly where wanted: right after
+  `\end{titlepage}`, wrapped in `\newpage ... \tableofcontents ...
+  \newpage` inside the same `{.content-visible when-format="pdf"}` div
+  as the title page, so it's a clean standalone page. The plain-markdown
+  title block (used by HTML/docx) is now wrapped in
+  `{.content-visible unless-format="pdf"}` so it no longer renders for
+  PDF at all -- closing the real gap, not just hiding it with another
+  page break.
+- **Title page typography reworked** to match the plainer hierarchy used
+  by the two attached example UNR Geology proposals (McConville 2017,
+  Craig 2017): title in `\LARGE \textbf{}` (bold, clearly the biggest
+  element), subtitle in `\large` (smaller, not bold, visually
+  subordinate -- previously title+subtitle were both `\Large \textbf{}`
+  as one undifferentiated four-line block), and everything below
+  (degree line, institution, author, committee, date) in plain
+  `\normalsize` text with generous `\vspace` gaps between groups,
+  instead of wrapping all of it in `\large` as before.
+- **Result, verified directly against the rendered PDF**: page 1 is now
+  only the title page; page 2 is only the table of contents; page 3
+  begins the Introduction immediately (previously page 5) -- net two
+  fewer front-matter pages, with all six figure numbers (`Figure
+  1`-`Figure 6`) still correct via `pdftotext`. HTML and docx outputs
+  were re-rendered and confirmed unaffected (same single title block as
+  before; no stray raw-LaTeX text leaked into either, since pandoc
+  already drops unmatched backslash commands for non-TeX output
+  targets).
+- Not done this session: no changes to the HTML/docx title-block
+  duplication (`title-block-style: none` also doesn't fully suppress
+  Quarto's own auto title block for HTML -- confirmed it still renders
+  once above the hand-written markdown title block there too -- but this
+  wasn't part of what was asked and was left alone).

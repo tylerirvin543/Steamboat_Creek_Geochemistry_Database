@@ -6,11 +6,17 @@ date: today
 lang: en
 format:
   pdf:
-    toc: true
+    toc: false
     toc-depth: 2
     number-sections: true
     fig-pos: "H"
     keep-tex: false
+    include-in-header:
+      text: |
+        % Quarto calls \maketitle unconditionally right after
+        % \begin{document} even with title-block-style: none; blank it
+        % out so only the hand-built title page below is used.
+        \renewcommand{\maketitle}{}
   html:
     toc: true
     toc-depth: 3
@@ -33,24 +39,43 @@ execute:
 ::: {.content-visible when-format="pdf"}
 \begin{titlepage}
 \centering
-\vspace*{2cm}
-{\Large \textbf{Using Specific Conductance as a Proxy for Chloride Discharge}}\\[0.2cm]
-{\Large \textbf{in the Steamboat Hills Geothermal System, Nevada:}}\\[0.2cm]
-{\Large \textbf{Implications for Monitoring Hydrothermal Outflow Following the}}\\[0.2cm]
-{\Large \textbf{2025 Lower Sinter Terrace Eruption}}\\[1.5cm]
-{\large Thesis proposal for the degree of}\\
-{\large Master of Science in Geology}\\[0.8cm]
-{\large University of Nevada -- Reno}\\
-{\large Nevada Bureau of Mines and Geology}\\
-{\large Great Basin Center for Geothermal Energy}\\[1.2cm]
-{\large Tyler Irvin}\\[0.5cm]
-{\large Advisor: Wendy Calvin}\\
-{\large Committee Member: Alex Lutz}\\
-{\large Committee Member: Jim Faulds}\\[1.5cm]
-{\large \today}
+\vspace*{2.5cm}
+
+{\LARGE \textbf{Using Specific Conductance as a Proxy for Chloride Discharge}}\\[0.3cm]
+{\LARGE \textbf{in the Steamboat Hills Geothermal System, Nevada}}\\[0.8cm]
+
+{\large Implications for Monitoring Hydrothermal Outflow Following the 2025 Lower Sinter Terrace Eruption}\\[2cm]
+
+Thesis proposal for the degree of\\
+Master of Science in Geology\\[1cm]
+
+University of Nevada -- Reno\\
+Nevada Bureau of Mines and Geology\\
+Great Basin Center for Geothermal Energy
+
+\vspace{2cm}
+
+Tyler Irvin
+
+\vspace{1cm}
+
+Advisor: Wendy Calvin\\
+Committee Member: Alex Lutz\\
+Committee Member: Jim Faulds
+
+\vfill
+
+\today
 \end{titlepage}
+
+\newpage
+\renewcommand*\contentsname{Table of contents}
+\setcounter{tocdepth}{2}
+\tableofcontents
+\newpage
 :::
 
+::: {.content-visible unless-format="pdf"}
 # Using Specific Conductance as a Proxy for Chloride Discharge in the Steamboat Hills Geothermal System, Nevada {.unnumbered}
 
 **Implications for Monitoring Hydrothermal Outflow Following the 2025 Lower Sinter Terrace Eruption**
@@ -63,6 +88,7 @@ Committee Member: Alex Lutz\
 Committee Member: Jim Faulds
 
 \newpage
+:::
 
 ```{r setup}
 #| include: false
