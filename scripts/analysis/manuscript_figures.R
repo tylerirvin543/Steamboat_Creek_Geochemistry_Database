@@ -196,8 +196,48 @@ build_u230_timeseries_figure <- function(con,
   invisible(p)
 }
 
+
+#' Resize/compress the September 27, 2026 Lower Sinter Terrace field
+#' photographs for embedding in the thesis proposal.
+#'
+#' Reads the real, full-resolution camera originals from
+#' `data/raw/images/image_drop/` (gitignored raw-media home, matching
+#' this project's existing photo-location pipeline convention) and
+#' writes resized (1600px wide), re-compressed (quality 85) copies to
+#' `output/figures/manuscript/`, at the exact filenames
+#' `manuscript/00_thesis_proposal.qmd`'s `show_fig()` calls reference.
+#' The originals are ~9-10 MB phone photos (5712x4284); this cuts each
+#' to well under 1 MB with no visible quality loss at print size.
+#' Requires the `magick` package.
+prepare_field_photo_figures <- function() {
+  if (!requireNamespace("magick", quietly = TRUE)) {
+    stop("prepare_field_photo_figures() requires the magick package")
+  }
+  map <- list(
+    c("IMG_5924.jpeg", "field_photo_new_hot_spring_20260927.jpg"),
+    c("IMG_5932.jpeg", "field_photo_sulfur_deposit_20260927.jpg"),
+    c("IMG_5916.jpeg", "field_photo_alluvium_sinter_seep_20260927.jpg")
+  )
+  src_dir <- "data/raw/images/image_drop"
+  out_dir <- "output/figures/manuscript"
+  if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+  for (pair in map) {
+    src <- file.path(src_dir, pair[1])
+    dst <- file.path(out_dir, pair[2])
+    if (!file.exists(src)) {
+      warning("Missing source photo: ", src, " -- skipping")
+      next
+    }
+    img <- magick::image_resize(magick::image_read(src), "1600x")
+    magick::image_write(img, path = dst, format = "jpeg", quality = 85)
+    message("  -> Wrote ", dst)
+  }
+  invisible(TRUE)
+}
+
 #' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
+  prepare_field_photo_figures()
   build_discharge_through_time_figure(con)
   build_steamboat_timeline_figure()
   build_u230_timeseries_figure(con)
