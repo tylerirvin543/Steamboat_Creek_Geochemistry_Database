@@ -207,7 +207,7 @@ show_fig(
 | 2007 | The groundwater/geothermal monitor-well network is documented in detail [@klein2007]. |
 | 2022 | Renewed steaming ground is first noted at the Lower Sinter Terrace [@lindsey2026]. |
 | 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. Continuous temperature and conductivity monitoring begins. |
-| 2026 | The eruption is formally documented [@lindsey2026]; spring and well remapping and renewed chemistry sampling continue under this thesis. |
+| 2026 | The eruption is formally documented [@lindsey2026]; spring and well remapping and renewed chemistry sampling continue under this thesis. By late September 2026, a new seep-fed hot spring and a growing, fresh sulfur deposit are documented at the terrace, independently corroborated by a nearby resident. |
 
 : A brief chronology of Steamboat Hills, from first characterization to the current reawakening. {#tbl-chronology}
 
@@ -225,11 +225,29 @@ Sorey and Spielman applied this method at two gauging sites, Rhodes
 Road (SBRR) and Bella Vista (SBBV), reporting 730-1,214 gallons per
 minute for 2007-08 [@sorey2008] and an average of 60 liters per second
 (range 45-90 L/s) across 24 sampling events from 2008 to 2016
-[@sorey2017]. A 2026 poster using the same method and sites estimated
-a post-eruption average discharge of roughly 27 L/s
-[@irvinlindsey2026]; this proposal's own preliminary results (below)
-extend that calculation into a repeatable, database-grounded estimate
-rather than a one-time spreadsheet result.
+[@sorey2017]. A 2026 poster using the same method and sites,
+co-authored with Cary Lindsey, asked a single leading question: did
+the 2025 Lower Sinter Terrace geysering event represent activation of
+a new geothermal source, or redistribution of fluids within an
+existing hydrothermal conduit network [@irvinlindsey2026]? That
+question is the direct ancestor of this proposal's own central
+question below. The poster's own evidence favored redistribution over
+a new source on two independent grounds: major-ion chemistry and
+stable isotopes showed the reactivated fissure discharging the same
+hydrothermal fluid already expressed in nearby springs and wells, and
+paired temperature loggers at the terrace showed a strong inverse
+relationship to each other (r = -0.68) -- as one logger warmed, the
+other cooled, consistent with discharge shifting between vents within
+a single connected, shallow, fracture-controlled flow system rather
+than a uniform, system-wide change or a chemically distinct new
+source. The poster's own chloride-flux calculation put post-eruption
+thermal inflow at roughly 27 L/s, below the 2008-2016 average of 60
+L/s [@sorey2017], meaning overall thermal discharge may have declined
+even as flow paths reorganized. This proposal's own preliminary
+results (below) extend that one-time calculation into a repeatable,
+database-grounded estimate, and its own field campaign (also below)
+finds that the system has kept changing since the poster was
+presented.
 
 The practical problem with the chloride-flux method has always been
 that it requires discrete water samples, collected and analyzed in a
@@ -933,6 +951,32 @@ change in the other monitored parameter at the same well, a pattern
 that cautions against treating any single field parameter as a
 universal proxy for thermal fraction across the whole system.
 
+**A still-changing system: September 2026 field observations.** Field
+photographs taken September 27, 2026 document that the terrace has
+continued to change since the 2026 poster was presented. Three
+observations stand out. First, a new seep-fed hot spring is now
+discharging at a location that was not an active feature previously;
+a nearby resident independently confirmed that this is a new
+development, consistent with the thesis's own field notes rather than
+resting on a single observer's judgment. Second, a sulfur deposit
+documented at the terrace has visibly grown in size and remains
+texturally fresh, again by both the resident's account and direct
+observation -- a real, physical sign of continuing near-surface
+fumarolic input, not a static relic of the 2025 event. Third, a
+separate point at the terrace shows a seep discharging from the
+alluvial cover directly onto the underlying hard sinter bedrock
+outcrop, a useful, concrete example of the alluvium-to-bedrock contact
+this thesis's own spring and well remapping is designed to document
+systematically rather than opportunistically. Together, these three
+observations are read as further, independent support for the
+poster's own conclusion -- fluids continuing to redistribute within an
+existing shallow conduit system, rather than the system having settled
+into a new, static state since the 2025 eruption -- and they are a
+direct, concrete motivation for why the remapping and monitoring work
+proposed below needs to happen now rather than later. These three
+photographs are not yet included as formal figures in this proposal;
+see the note on image sources below.
+
 ## Planned figures, not yet produced
 
 Three figures central to the finished thesis cannot be produced yet,
@@ -957,6 +1001,17 @@ single interpretive diagram, will be developed once the calibration,
 tracer-ratio, and geologic-context results above are complete -- it
 is deliberately not sketched in advance of that evidence.
 
+**The three September 27, 2026 field photographs** described above
+(the new seep-fed hot spring, the fresh and growing sulfur deposit,
+and the alluvium-to-bedrock seep contact) are real and already in
+hand, but are not yet registered in this project's own database or
+embedded as figures in this document. Once the image files are placed
+in this project's standard raw-photograph intake location, they will
+be run through the existing GPS/photo-location ingestion pipeline
+(registering each as a real, dated `Locations` entry rather than only
+living in this paragraph) and added here as numbered figures
+continuing the sequence above.
+
 # Preliminary schedule
 
 The schedule below moves the intensive calibration window up to this
@@ -966,7 +1021,17 @@ calibration can be tested against all four seasons before it is
 treated as final, consistent with the sampling-design reasoning above.
 Target dates are a planning structure, not fixed commitments, and will
 be adjusted against the real academic calendar and committee
-availability as the work proceeds.
+availability as the work proceeds. The most direct risk to this
+schedule is weather- or access-limited fieldwork during the
+fall/winter calibration window; the contingency is the same full-year
+monthly cadence shifted later into spring/summer 2027, at the cost of
+testing fewer distinct seasons before the calibration is finalized.
+A second risk is that the real chloride-conductance relationship
+turns out to be too noisy or site-specific to support a single
+practical calibration; the contingency there is reported directly in
+RQ1's own deliverable above (site-specific equations with stated
+uncertainty, not a forced single model) rather than treated as a
+schedule failure.
 
 | Target date | Milestone |
 |---|---|
@@ -1003,5 +1068,33 @@ availability as the work proceeds.
 - A three-dimensional conceptual geologic framework for the monitored
   wells and springs, explicitly scoped as context rather than a flow
   model.
+
+# Conclusion
+
+This proposal answers a question Sorey originally posed and this
+project's own 2026 poster [@irvinlindsey2026] re-asked after the 2025
+eruption: is Steamboat's renewed activity a new thermal source, or an
+old one finding a new way out? The poster's own evidence -- matching
+chemistry, a strong inverse relationship between paired temperature
+loggers, and continuing physical change at the terrace through at
+least September 2026 -- points toward the latter, but that evidence
+was gathered at poster speed, not thesis speed: a handful of samples,
+one representative mixing pair, and no real chloride-conductance
+calibration yet. What changes once this work is done is that the
+same question gets a real, stated-uncertainty answer instead of a
+preliminary one. A working chloride-to-conductance calibration turns
+a labor-intensive, infrequent sampling program into a continuous,
+field-deployable monitoring tool -- not just for this thesis, but for
+whoever manages this system's monitoring network after it. A
+PHREEQC-based accounting of why conductance should or should not track
+chloride turns that tool from a correlation into something with a
+stated physical basis and known limits. And a real, if still partial,
+three-dimensional geologic framework starts to connect the chemistry
+to the structure it is moving through, rather than leaving the two
+literatures to talk past each other. None of this closes the book on
+Steamboat -- the system is still visibly changing, as the September
+2026 field observations above show -- but it leaves whoever studies it
+next with a real, working method for tracking that change, rather
+than another one-time estimate.
 
 # References {.unnumbered}

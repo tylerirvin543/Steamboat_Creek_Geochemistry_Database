@@ -6824,3 +6824,52 @@ page breaks.
   Quarto's own auto title block for HTML -- confirmed it still renders
   once above the hand-written markdown title block there too -- but this
   wasn't part of what was asked and was left alone).
+
+## Session 47 (2026-10-04, continued): poster leading question, real inverse-relationship finding, September 2026 field observations, Conclusion section
+
+Read the actual GRC 2026 poster PDF (`docs/literature/GRC_2026_Steamboat.pdf`)
+directly rather than relying on paraphrased session notes, to get its exact
+leading question and evidence right before writing any of this into the
+thesis proposal.
+
+- **Poster's real leading question added verbatim-in-spirit**: "did the
+  2025 Lower Sinter Terrace geysering event represent activation of a new
+  geothermal source, or redistribution of fluids within an existing
+  hydrothermal conduit network?" -- framed in the "Chloride discharge as
+  a tracer" section as the direct ancestor of this proposal's own central
+  question.
+- **The real "inverse relationship" finding**: confirmed from the poster
+  text itself -- paired temperature loggers at the terrace show r = -0.68
+  (one warms as the other cools), read as evidence of discharge
+  redistributing within a single connected, shallow, fracture-controlled
+  flow system rather than a new, chemically distinct source. Added
+  alongside the poster's major-ion/isotope match and its ~27 L/s
+  chloride-flux estimate (vs. the 2008-2016 60 L/s average).
+- **New September 27, 2026 field observations** added as a new
+  preliminary-results item and folded into the chronology table: a new
+  seep-fed hot spring (independently confirmed by a nearby resident), a
+  visibly grown and texturally fresh sulfur deposit (same
+  corroboration), and a seep discharging from alluvium directly onto
+  hard sinter bedrock outcrop -- read as further, independent support for
+  the poster's own redistribution conclusion and as direct, concrete
+  motivation for why the remapping/monitoring work needs to happen now.
+  **The three source photographs could not be embedded as real figures
+  this session** -- they exist only as chat attachments, not as files on
+  disk in the project; a new bullet in "Planned figures, not yet
+  produced" states this plainly and names the concrete next step (drop
+  the files into the existing raw-photo intake location so they can go
+  through the real GPS/photo-location ingestion pipeline and be added as
+  numbered figures 7-9, continuing the existing sequence), rather than
+  fabricating a placeholder or guessing coordinates.
+- **New `# Conclusion` section** added (after Expected Products), per the
+  user's own PhD-proposal-framework reference image's fifth box
+  ("contribution / why it matters / so what") -- the prior document had
+  no explicit closing synthesis section.
+- **New risk/contingency sentences** added to the Preliminary Schedule's
+  intro paragraph (weather/access risk to the fall/winter calibration
+  window, and the risk that the real Cl-conductance relationship proves
+  too site-specific for one global model), per the same reference image's
+  fourth box ("risks and what you'd do").
+- Verified: all three formats (html/pdf/docx) render cleanly with 0
+  citeproc warnings; figure numbering (Figure 1-6) unaffected by this
+  session's prose-only changes.
