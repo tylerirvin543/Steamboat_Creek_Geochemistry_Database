@@ -190,3 +190,16 @@
 196,"Brown's School (Mariner & Janik 1995; = Wells 'Brown School Geothermal Well')","MJ1995_Brown_s_School","well",39.40842,-119.74852
 218,"21-5R",NA,"well",39.3742081728802,-119.768561526409
 219,"13-5R",NA,"well",39.3708963475173,-119.770310905677
+239,"SB2 Outlet","NDEP_SB2_Outlet","background",39.3962194444444,-119.745908333333
+240,"SB3 Outlet","NDEP_SB3_Outlet","background",39.3935888888889,-119.746658333333
+241,"Galena 1 Outlet","NDEP_Galena1_Outlet","background",39.3905276170753,-119.754917003276
+242,"Galena 2 Outlet","NDEP_Galena2_Outlet","background",39.3970388888889,-119.753275
+243,"Galena 3 Outlet","NDEP_Galena3_Outlet","background",39.3845333333333,-119.746838888889
+244,"SBHR Outlet","NDEP_SBHR_Outlet","background",39.3712611111111,-119.766658333333
+245,"Galena 2 Injection Composite (TFT)","NDEP_Galena2_InjComposite_TFT","background",39.3732304662238,-119.764545721886
+247,"Galena 1 Injection Outlet","NDEP_U230_Galena1_Injection","background",39.3905276170753,-119.754917003276
+248,"Galena 3 Injection Outlet","NDEP_U230_Galena3_Injection","background",39.3887187185334,-119.748889711082
+249,"SB2 Injection Outlet","NDEP_U230_SB2_Injection","background",39.3950049080943,-119.747132956251
+250,"SB3 Injection Outlet","NDEP_U230_SB3_Injection","background",39.3950049080943,-119.747132956251
+251,"SBHR Injection Outlet","NDEP_U230_SBHR_Injection","background",39.3813546295129,-119.760343367015
+253,"SBF_0002","SBF_0002","fumarole",39.382253,-119.740486

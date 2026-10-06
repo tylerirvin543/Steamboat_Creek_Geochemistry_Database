@@ -81,7 +81,7 @@ eruption, and this project's own response.
 
 ```{r timeline-fig}
 #| echo: false
-#| fig-cap: "Steamboat Hills events, 1950-2026, spanning the historical USGS characterization era, the development/production era (including the 1987-89 spring-flow decline and its documented non-recovery by 2000), and the current reawakening (see `scripts/analysis/manuscript_figures.R`)."
+#| fig-cap: "Steamboat Hills events, 1950-2026, in two panels: (A) the historical/development record, with the documented 1987-2022 absence of natural terrace spring flow shown as a shaded band; (B) the 2022-2026 reactivation in Lindsey et al. (2026)'s own stage-by-stage detail, with Ormat's May 2025 injection-limit increase flagged (triangle) as a candidate contributing factor, not a confirmed cause (see `scripts/analysis/manuscript_figures.R`)."
 knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
 ```
 
@@ -96,11 +96,76 @@ knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
 | 1992 | Sorey and Colvard attribute most of the spring-flow decline to regional groundwater drawdown, not geothermal production [@sorey1992]. |
 | 2000 | Groundwater levels recover, but natural spring flow does not resume on the main terrace [@sorey2000]. |
 | 2007 | The groundwater/geothermal monitor-well network is documented in detail [@klein2007]. |
-| 2022 | Renewed steaming ground is first noted at the Lower Sinter Terrace [@lindsey2026]. |
-| 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. This project's temperature and conductivity logger network is deployed. |
+| 2022 | Steaming ground expands and water reappears along natural fractures at the Lower Sinter Terrace, the first sign of renewed activity [@lindsey2026]. |
+| 2023 | Diffuse steaming measurably expands across the lower sinter terrace; no focused vents or flowing water yet [@lindsey2026]. |
+| 2024 | Activity shifts from diffuse degassing to localized seeps and vents; first evidence of shallow boiling [@lindsey2026]. |
+| 2025 (early) | Existing vents intensify and discharge points begin migrating along nearby fractures [@lindsey2026]. |
+| 2025-05-30 | Ormat's field-wide authorized injection limit is raised from 49,500 to 55,000 gpm (NDEP UIC Temporary Permit UNEV2007204T2025-1 [@nevadadep2025uic]) -- about two weeks before the eruption; a candidate contributing factor, not yet confirmed (see below). |
+| 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. NBMG begins an integrated monitoring program, and this project's temperature and conductivity logger network is deployed. |
 | 2026 | Lindsey et al. publish the first full account of the eruption [@lindsey2026]; spring/well remapping and chemistry/isotope sampling continue under this thesis. |
 
 : A brief chronology of Steamboat Hills, from first characterization to the current reawakening. {#tbl-chronology}
+
+## Candidate explanations for the reactivation
+
+What actually drove the 2022-2025 reactivation is an open question
+this thesis does not claim to resolve, but several candidate
+explanations already have real, if uneven, supporting evidence on
+file, and are worth stating together rather than leaving the single
+injection-permit event on Figure 1.1 unexplained.
+
+**Increased injection pressure/rate (Ormat).** The one real, dated
+regulatory document on file -- NDEP UIC Temporary Permit
+UNEV2007204T2025-1 [@nevadadep2025uic] -- raised the field's combined
+authorized injection-rate limit from 49,500 to 55,000 gpm on May 30,
+2025, about two weeks before the eruption. The timing is suggestive,
+and this is flagged explicitly on Figure 1.1 as a candidate
+contributing factor. It is not yet confirmed: the permit records newly
+*authorized* limits, not necessarily the rate actually injected in
+practice, and the same document's own reported current pressures sit
+below the prior allowable ceiling at most wells, so whether real
+injection pressure or rate increased *before* the eruption, rather than
+only becoming newly permitted to do so, is not resolvable from this one
+document alone. A real test would need a dated, well-by-well injection
+pressure/rate history spanning the 2022-2025 window, which does not yet
+exist in this project.
+
+**Conduit reactivation within the existing hydrothermal system, not a
+new fluid source.** This project's own 2026 poster [@irvinlindsey2026]
+found that the reactivated fissure's major-ion chemistry and stable
+isotopes match the hydrothermal fluid already expressed in nearby
+springs and wells, and that paired temperature loggers at the terrace
+show a real inverse correlation (r = -0.68) consistent with discharge
+redistributing between vents within one connected flow system. Of the
+explanations considered here, this one currently has the most direct
+observational support.
+
+**Regional groundwater-level recovery remobilizing existing pathways.**
+Sorey [-@sorey2000] found that groundwater levels had recovered by 2000
+without natural spring flow resuming, which argues that recovery alone
+has historically been insufficient to reactivate this system. Whether
+a slower, multi-decade continuation of that same recovery eventually
+crossed some threshold by 2022 is untested with the data on hand.
+
+**Local seismic triggering.** A real earthquake-catalog cross-check
+against this project's own water-level record found no detectable,
+co-located step-change at the three nearest real events (M1.5-1.6,
+2025), and no catalogued earthquake at all overlapping the actual
+temperature-logger deployment window. Current support for this
+explanation is weak.
+
+**Precipitation/recharge-driven.** A real, large December 2025 storm
+produced a modest water-level response at one regional monitoring
+well, but not at a second, nearby well with a different completion
+depth, and no precipitation record exists on file for most of the
+2022-2025 reactivation window. Support is mixed and incomplete, not
+absent.
+
+None of these explanations are mutually exclusive, and this thesis's
+own calibration and remapping work is designed to generate the kind of
+real, time-paired chemistry and discharge data that could eventually
+discriminate between them -- it is not designed, on its own, to settle
+the question now.
 
 ## Chloride discharge as a tracer of geothermal outflow
 

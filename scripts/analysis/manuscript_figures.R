@@ -81,55 +81,123 @@ build_discharge_through_time_figure <- function(con,
   invisible(p)
 }
 
-#' A simple, real-dates-only horizontal timeline of Steamboat Hills
+#' A professional, two-panel horizontal timeline of Steamboat Hills
 #' events spanning the pre-Ormat USGS-characterization era through this
-#' project's own 2026 monitoring network. Dates are drawn from sources
-#' already cited elsewhere in this project (Thompson & White 1964,
-#' White 1968, Sorey & Colvard 1992, Sorey 2000, Klein et al. 2007,
-#' Dhakal et al. 2025, Lindsey et al. 2026, website/timeline.Rmd's
-#' EXIF-dated photo timeline) -- nothing here is estimated fresh.
+#' project's own 2026 monitoring network. Panel A gives the long
+#' historical/development record (1950-2007) with the documented
+#' 1987-2022 absence of natural terrace spring flow shown as a shaded
+#' band (not just a dot), per Sorey and Colvard (1992) and Sorey
+#' (2000). Panel B zooms into the 2022-2026 reactivation using Lindsey
+#' et al. (2026)'s own stage-by-stage account (diffuse steaming in
+#' 2023, a shift to discrete seeps/vents in 2024, more energetic vents
+#' in early 2025) rather than a single 2022 dot. A distinct marker
+#' shape/color flags the one dated, documented event that is a
+#' candidate contributing factor rather than a directly observed
+#' surface change: Ormat's May 30, 2025 NDEP UIC permit raising the
+#' field's combined authorized injection limit from 49,500 to 55,000
+#' gpm, about two weeks before the eruption -- flagged as a plausible,
+#' unconfirmed hypothesis, not a demonstrated cause (see the
+#' "Candidate explanations for the reactivation" discussion in the
+#' surrounding text, which also covers the other candidate
+#' explanations this hypothesis marker does not visually represent).
+#' Dates are drawn from sources already cited elsewhere in this
+#' project (Thompson & White 1964, White 1968, Sorey & Colvard 1992,
+#' Sorey 2000, Klein et al. 2007, Dhakal et al. 2025, Lindsey et al.
+#' 2026, the NDEP UIC Temporary Permit UNEV2007204T2025-1, this
+#' project's own logger-deployment/field records) -- nothing here is
+#' estimated fresh.
 build_steamboat_timeline_figure <- function(
     out_png = "output/figures/manuscript/steamboat_timeline.png") {
 
-  events <- tibble::tribble(
+  events_hist <- tibble::tribble(
     ~year, ~label, ~era,
-    1950,  "USGS thermal-gradient/chemistry test holes (GS-1 to GS-8)",        "Historical",
-    1964,  "Thompson & White / White et al.: regional geology and structure",  "Historical",
-    1968,  "White: hydrology, activity, and heat flow of the thermal system",  "Historical",
-    1986,  "SB GEO's first power plants begin production",                    "Development",
-    1987,  "Natural hot-spring flow at the main/low terraces begins to fail",  "Development",
-    1990,  "Ormat consolidates Steamboat production under one operator",      "Development",
-    1992,  "Sorey & Colvard: spring-flow decline attributed largely to\nregional groundwater decline, not CPI production", "Development",
-    2000,  "Sorey: groundwater levels recover, but spring flow does not\nresume on the main terrace", "Development",
-    2007,  "Klein, Johnson & Spielman: monitor-well network documented",       "Development",
-    2022,  "Renewed steaming ground first noted at the Lower Sinter Terrace",  "Reawakening",
-    2025,  "Lower Sinter Terrace eruption (June 3); wellhead capped,\ndischarge redistributes laterally", "Reawakening",
-    2025,  "This project's temperature/conductivity logger network deployed", "This project",
-    2026,  "Lindsey et al. publish the first full eruption account (Feb);\nspring/well remapping and chemistry sampling continue", "This project"
+    1950,  "USGS thermal-gradient/chemistry\ntest holes (GS-1 to GS-8)",        "Historical",
+    1964,  "Thompson & White / White et al.:\nregional geology and structure",  "Historical",
+    1968,  "White: hydrology, activity, and\nheat flow of the thermal system",  "Historical",
+    1986,  "SB GEO's first power\nplants begin production",                    "Development",
+    1990,  "Ormat consolidates Steamboat\nproduction under one operator",      "Development",
+    1992,  "Sorey & Colvard: 1987-89 spring-flow\ndecline attributed largely to regional\ngroundwater decline, not CPI production", "Development",
+    2000,  "Sorey: groundwater levels recover, but\nspring flow still has not resumed\non the main terrace", "Development",
+    2007,  "Klein, Johnson & Spielman:\nmonitor-well network documented",      "Development"
   )
 
-  p <- ggplot(events, aes(x = year, y = 0)) +
+  events_recent <- tibble::tribble(
+    ~year,    ~label, ~era,
+    2022,     "Steaming ground expands; water\nreappears along natural fractures\nat the Lower Sinter Terrace", "Reawakening",
+    2023,     "Diffuse steaming measurably expands\nacross the lower sinter terrace\n(Lindsey et al. 2026)", "Reawakening",
+    2024,     "Shift to discrete seeps/vents; first\nshallow boiling observed\n(Lindsey et al. 2026)", "Reawakening",
+    2025.04,  "Existing vents become more energetic;\ndischarge points migrate along fractures", "Reawakening",
+    2025.41,  "Ormat's authorized field-wide injection\nlimit raised 49,500 -> 55,000 gpm\n(NDEP UIC permit, May 30)", "Hypothesis",
+    2025.42,  "Lower Sinter Terrace eruption (June 3):\nan uncapped well erupts boiling\nwater ~30 m high", "Reawakening",
+    2025.46,  "Wellhead capped; discharge does not\ncease, instead redistributes laterally", "Reawakening",
+    2025.47,  "NBMG begins an integrated\nmonitoring program", "This project",
+    2025.52,  "First calibrated thermal drone survey;\nthis project's temp./conductivity\nloggers deployed", "This project",
+    2025.75,  "Second calibrated thermal drone\nsurvey (cooler than July)", "This project",
+    2026,     "Lindsey et al. publish the first full\neruption account; spring/well remapping\nand chemistry sampling continue", "This project"
+  )
+
+  era_colors <- c(
+    "Historical"    = "#0072B2",
+    "Development"   = "#999999",
+    "Reawakening"   = "#D55E00",
+    "This project"  = "#009E73",
+    "Hypothesis"    = "#E69F00"
+  )
+  era_shapes <- c(
+    "Historical"    = 16,
+    "Development"   = 16,
+    "Reawakening"   = 16,
+    "This project"  = 16,
+    "Hypothesis"    = 17
+  )
+
+  p_hist <- ggplot(events_hist, aes(x = year, y = 0)) +
+    annotate("rect", xmin = 1987, xmax = 2007.9, ymin = -1.9, ymax = 1.9,
+             fill = "grey50", alpha = 0.08) +
     geom_hline(yintercept = 0, color = "grey70") +
-    geom_point(aes(color = era), size = 3) +
+    geom_point(aes(color = era, shape = era), size = 3) +
     ggrepel::geom_text_repel(
       aes(label = paste0(year, ": ", label), color = era),
-      size = 2.5, direction = "y", nudge_y = rep(c(0.6, -0.6), length.out = nrow(events)),
-      segment.size = 0.3, max.overlaps = 20, seed = 917
+      size = 2.5, direction = "y", force = 2, box.padding = 0.4,
+      segment.size = 0.3, max.overlaps = Inf, seed = 917, lineheight = 0.9,
+      ylim = c(-1.9, 1.9)
     ) +
-    scale_color_manual(values = c(
-      "Historical"    = "#0072B2",
-      "Development"   = "#999999",
-      "Reawakening"   = "#D55E00",
-      "This project"  = "#009E73"
-    )) +
-    scale_y_continuous(limits = c(-1.2, 1.2)) +
-    labs(x = "Year", y = NULL, color = "Period",
-         title = "Steamboat Hills: from characterization to reawakening") +
-    theme_steamboat() +
+    scale_color_manual(values = era_colors, guide = "none") +
+    scale_shape_manual(values = era_shapes, guide = "none") +
+    scale_x_continuous(breaks = c(1950, 1964, 1968, 1986, 1990, 1992, 2000, 2007), limits = c(1947, 2012)) +
+    scale_y_continuous(limits = c(-2.1, 2.1)) +
+    labs(x = NULL, y = NULL, title = "A. Characterization and development, 1950-2007",
+         caption = "Shaded band: natural terrace spring flow absent, 1987-2022 (Sorey & Colvard 1992; Sorey 2000).") +
+    theme_steamboat(base_size = 11) +
     theme(axis.text.y = element_blank(), panel.grid.major.y = element_blank())
 
+  p_recent <- ggplot(events_recent, aes(x = year, y = 0)) +
+    geom_hline(yintercept = 0, color = "grey70") +
+    geom_point(aes(color = era, shape = era), size = 3) +
+    ggrepel::geom_text_repel(
+      aes(label = label, color = era),
+      size = 2.3, direction = "y", force = 3, box.padding = 0.4,
+      segment.size = 0.3, max.overlaps = Inf, seed = 2419, lineheight = 0.9,
+      ylim = c(-2.6, 2.6)
+    ) +
+    scale_color_manual(values = era_colors, name = "Period / status") +
+    scale_shape_manual(values = era_shapes, name = "Period / status") +
+    scale_x_continuous(breaks = c(2022, 2023, 2024, 2025, 2026), limits = c(2021.6, 2026.4)) +
+    scale_y_continuous(limits = c(-2.8, 2.8)) +
+    labs(x = NULL, y = NULL, title = "B. Reactivation detail, 2022-2026",
+         caption = "Triangle: a candidate contributing-factor event (the injection-limit increase), not a directly observed surface change -- see text.") +
+    theme_steamboat(base_size = 11) +
+    theme(axis.text.y = element_blank(), panel.grid.major.y = element_blank(),
+          legend.position = "bottom")
+
+  p <- patchwork::wrap_plots(p_hist, p_recent, ncol = 1, heights = c(1, 1.5)) +
+    patchwork::plot_annotation(
+      title = "Steamboat Hills: from characterization to reawakening",
+      theme = theme(plot.title = element_text(face = "bold", size = 13))
+    )
+
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 10, height = 5.5, dpi = 300)
+  ggsave(out_png, p, width = 11, height = 10.5, dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }
@@ -216,7 +284,9 @@ prepare_field_photo_figures <- function() {
   map <- list(
     c("IMG_5924.jpeg", "field_photo_new_hot_spring_20260927.jpg"),
     c("IMG_5932.jpeg", "field_photo_sulfur_deposit_20260927.jpg"),
-    c("IMG_5916.jpeg", "field_photo_alluvium_sinter_seep_20260927.jpg")
+    c("IMG_5916.jpeg", "field_photo_alluvium_sinter_seep_20260927.jpg"),
+    c("IMG_5275.jpeg", "field_photo_seep_earlier_visit.jpg"),
+    c("IMG_5305.jpeg", "field_photo_sbgg_install.jpg")
   )
   src_dir <- "data/raw/images/image_drop"
   out_dir <- "output/figures/manuscript"
@@ -235,9 +305,60 @@ prepare_field_photo_figures <- function() {
   invisible(TRUE)
 }
 
+#' Build a single side-by-side composite image showing the same real
+#' seep location at the Lower Sinter Terrace on two different visits:
+#' an earlier visit (IMG_5275; this file's own EXIF has no GPS or
+#' capture-date tag -- confirmed via exiftool, not assumed -- so the
+#' exact date is unknown beyond "before Sept 27, 2026") and the
+#' already-embedded Sept 27, 2026 visit (IMG_5916, real EXIF GPS/
+#' timestamp). Built as one pre-rendered image (via `magick`), not a
+#' Quarto column layout, so it renders identically across the
+#' html/pdf/docx manuscript formats.
+build_seep_comparison_figure <- function(
+    out_png = "output/figures/manuscript/seep_same_location_through_time.jpg") {
+  if (!requireNamespace("magick", quietly = TRUE)) {
+    stop("build_seep_comparison_figure() requires the magick package")
+  }
+  img_dir <- "output/figures/manuscript"
+  path_earlier <- file.path(img_dir, "field_photo_seep_earlier_visit.jpg")
+  path_later   <- file.path(img_dir, "field_photo_alluvium_sinter_seep_20260927.jpg")
+  if (!file.exists(path_earlier) || !file.exists(path_later)) {
+    warning("Seep comparison source photo(s) missing -- run prepare_field_photo_figures() first")
+    return(invisible(NULL))
+  }
+
+  img_earlier <- magick::image_read(path_earlier)
+  img_later   <- magick::image_read(path_later)
+
+  # Match heights so image_append() lines the two panels up cleanly
+  target_h <- min(magick::image_info(img_earlier)$height, magick::image_info(img_later)$height)
+  img_earlier <- magick::image_resize(img_earlier, paste0("x", target_h))
+  img_later   <- magick::image_resize(img_later, paste0("x", target_h))
+
+  label_earlier <- "Same seep location, earlier visit\n(date not preserved in this file)"
+  label_later   <- "Same seep location, Sept 27, 2026\n(39.3829, -119.7402)"
+
+  annotate_panel <- function(img, label) {
+    w <- magick::image_info(img)$width
+    magick::image_annotate(
+      img, label, gravity = "southwest", location = "+15+15",
+      size = max(18, round(w * 0.03)), color = "white", boxcolor = "#00000099"
+    )
+  }
+  img_earlier <- annotate_panel(img_earlier, label_earlier)
+  img_later   <- annotate_panel(img_later, label_later)
+
+  combined <- magick::image_append(c(img_earlier, img_later))
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  magick::image_write(combined, path = out_png, format = "jpeg", quality = 90)
+  message("  -> Wrote ", out_png)
+  invisible(combined)
+}
+
 #' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
   prepare_field_photo_figures()
+  build_seep_comparison_figure()
   build_discharge_through_time_figure(con)
   build_steamboat_timeline_figure()
   build_u230_timeseries_figure(con)

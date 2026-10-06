@@ -397,3 +397,133 @@ pressure/rate table (like Tables B/C in this one) becomes available:
    filters to the single most recent document) should be extended to a
    line-over-time view per well instead — a small, concrete follow-up
    once there's a second real data point to compare against.
+
+## 9. New temperature logger data ingested (2026-10-04) -- three real issues flagged
+
+New observation files were added to `data/raw/loggers/observations/`
+(dated 2026-09-27) and ingested: 72,128 new rows across 7 loggers
+(A001-A005, A009, A010), extending their records through
+2026-09-27. Verified on a scratch copy first, then applied to the real
+`geochem_operational.sqlite` (backed up first to
+`database/archive/geochem_operational_pre_temp_logger_ingest_<timestamp>.sqlite`),
+idempotent re-run confirmed (0 new rows). `docs/data/temp_sample.csv`
+and the website homepage's "Temperature readings" stat card now both
+show the real total (276,750 rows), and `results.html`'s interactive
+chart includes the new late-September 2026 data. Three things found
+along the way, not fixed, since none should be guessed at:
+
+- **A008 (EMO259100052, meant for station `SBF_0002`) still cannot be
+  ingested at all.** `SBF_0002` does not exist in `Locations` --
+  confirmed directly (location_ids run ...76, 78..., with a gap where
+  77 would be). This blocks not just today's new file but *every*
+  observation file ever collected for this logger (May/August/
+  September 2026 files all sit unprocessed). If `SBF_0002` is a real
+  field site, it needs a `Locations` row (coordinates, `site_type`)
+  before any of A008's data can be ingested.
+- **A013 (EMO259100043) is marked `destroyed` as of 7/14/2026 in
+  `temperature_logger_deployments.csv`, with no `external_station_code`
+  at all -- but a real observation file for this exact serial, dated
+  2026-09-27, now exists.** That's not possible for a logger
+  genuinely destroyed two and a half months earlier. Either (a) this
+  is a different, redeployed physical unit reusing the same serial, in
+  which case it needs a new deployment row (status, start date,
+  location) rather than updating the destroyed one, or (b) the
+  `destroyed`/`7/14/2026` entry was premature or wrong and this logger
+  is actually still active somewhere. Not resolved here -- the file
+  sits ingested-nowhere until the real status is confirmed.
+- **A010 (CMN232100066, station `SBS_0006`)'s real data starts
+  2025-10-01 -- about seven months before its own documented
+  `deployment_start` of 5/1/2026.** Confirmed directly: the earliest
+  272 readings are real, regularly-spaced (4-minute interval) data,
+  not a parsing artifact. Two real possibilities, neither assumed: this
+  specific physical logger unit was deployed somewhere else first
+  (its onboard memory not cleared before being moved to `SBS_0006`,
+  so the pre-5/1/2026 readings may describe a *different* location
+  entirely), or `deployment_start` in the CSV is simply wrong. Worth
+  checking against field notes/photos for this unit before trusting
+  any pre-May-2026 reading as representing `SBS_0006` specifically.
+
+No manuscript/report text needed a numeric correction this round (the
+"Eleven continuous temperature loggers" count in
+`manuscript/00_thesis_proposal.qmd`/`03_methods.qmd` was already
+correct and carries no stale date range) -- only the website's
+data-driven exports and chart needed refreshing, which is done.
+
+## 10. A010/A013 clarified, SBF_0001 install photo logged (2026-10-04)
+
+Per direct confirmation from Tyler:
+
+- **A010 (CMN232100066) is explained, not a data error.** The real
+  readings starting 2025-10-01 (about 7 months before this logger's
+  documented 5/1/2026 `deployment_start`) are from this same physical
+  unit's earlier use in Cary Lindsey's own pre-project monitoring
+  effort -- the onboard memory was recovered, and the data is real.
+  Noted directly in `Temperature_Loggers.notes` for this logger (the
+  deployment CSV itself couldn't be edited this session -- see the
+  blocker below). Those pre-5/1/2026 readings should still be read as
+  describing Lindsey's own earlier deployment, not necessarily
+  `SBS_0006`, until/unless that's also confirmed.
+- **A013 (EMO259100043) is confirmed redeployed** after the original
+  A013 unit was destroyed -- a real new observation file
+  (`EMO259100043_20260927122459.xls.xlsx`, dated 2026-09-27) belongs
+  to this redeployment, not the destroyed unit. **Still needed: the
+  real deployment location (external_station_code) and start date for
+  the redeployment** -- without it, this row and file continue to be
+  skipped by `ingest_temperature_loggers()` rather than guessed at.
+  Once you confirm the station, I can register the redeployment
+  properly (as a fresh deployment, not an edit to the destroyed row)
+  and ingest the September file.
+- **A real blocker hit this session**:
+  `data/raw/loggers/temperature_logger_deployments.csv` is currently
+  locked for writing at the Windows level (confirmed via R, bash, and
+  PowerShell all independently failing with the same
+  sharing-violation/"device or resource busy" error on this one file
+  specifically, while every other file in the same folder writes
+  fine) -- most likely something has it open (e.g. Excel). The A010
+  and A013 notes above were applied directly to the database instead
+  (`Temperature_Loggers.notes`, bypassing the CSV), but **the CSV
+  itself still needs the same two notes added once it's closed/
+  unlocked**, since `ingest_temperature_loggers()`'s upsert logic
+  treats the CSV as the source of truth and will overwrite
+  `Temperature_Loggers.notes` from the (currently blank) CSV column
+  the next time it runs. Close whatever has the file open, then let me
+  know and I'll apply the same edit there.
+- **SBF_0001 install photo logged.** A real field photo documenting
+  the first logger (A005, serial EMO259100060) at `SBF_0001` was saved
+  to `data/raw/images/image_drop/SBF_0001_logger_install.jpg` and a
+  new `Field_Observations` row (location_id 68) records it. No EXIF
+  GPS or capture-date survived in this file (confirmed via exiftool --
+  same metadata-stripping pattern already seen for other chat-shared
+  photos), so no new coordinate was added; this is documentation only.
+  A second install photo (for a different logger) is still pending --
+  send it when ready and I'll run the same exiftool check.
+
+## 11. A008 / SBF_0002 resolved -- the pending "second logger" photo (2026-10-05)
+
+The second install photo flagged as pending in item 10 has arrived
+(`IMG_5509.jpeg`) and, unlike the earlier chat-shared field photos,
+retained its full camera EXIF -- including real GPS. This closes the
+single biggest standing temperature-logger gap:
+
+- **`SBF_0002` is now a real, registered `Locations` row**
+  (location_id 253; 39.382253, -119.740486; `site_type = 'fumarole'`;
+  `coordinate_source = 'photo_exif'`, `coordinate_uncertainty_m = 8.7`,
+  matching the photo's own real `GPSHPositioningError`). Sanity-checked
+  against `SBF_0001` (39.38241, -119.7399): ~53 m apart, a plausible
+  distinct-but-nearby fumarole in the same cluster, not a duplicate or
+  an obviously wrong point. Raw photo stored at
+  `data/raw/images/image_drop/IMG_5509_SBF_0002.jpeg`; capture date
+  2026-08-22 16:12:14 -07:00 per EXIF.
+- **A008 (EMO259100052)'s entire backlog is now ingested** -- all
+  three of its previously-unprocessable files (May, August, and
+  September 2026) went in at once: 27,909 new observations
+  (6,366 + 11,242 + 10,301). `Temperature_Observations` now totals
+  304,659 rows. QC re-run clean (same 2 pre-existing PHREEQC failures,
+  0 logger outliers). Website re-exported/rebuilt; the homepage stat
+  card and `results.html` now reflect the real new total.
+- **A013 remains the only open item from §10** -- still needs its
+  real redeployment location/start date before it can be registered,
+  and `temperature_logger_deployments.csv` was still locked for
+  writing as of the last check (the A010/A013 provenance notes are
+  only in the database, not yet in the CSV -- see §10 for the
+  details). Close whatever has that file open and let me know.

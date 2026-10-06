@@ -189,8 +189,8 @@ and this project's own response.
 #| results: asis
 show_fig(
   "output/figures/manuscript/steamboat_timeline.png",
-  "Steamboat Hills events, 1950-2026, spanning the historical USGS characterization era, the development/production era (including the 1987-89 spring-flow decline and its documented non-recovery by 2000), and the current reawakening. Already produced from real, dated sources cited throughout this proposal.",
-  alt = "Horizontal timeline of Steamboat Hills events from 1950 to 2026, from early USGS characterization through the 2025 eruption and current reawakening.",
+  "Steamboat Hills events, 1950-2026, in two panels: (A) the historical/development record, with the documented 1987-2022 absence of natural terrace spring flow shown as a shaded band rather than a single date; (B) the 2022-2026 reactivation in Lindsey et al. (2026)'s own stage-by-stage detail, with Ormat's May 2025 injection-limit increase flagged (triangle) as a candidate contributing factor, not a confirmed cause. Already produced from real, dated sources cited throughout this proposal.",
+  alt = "Two-panel horizontal timeline of Steamboat Hills events: a long historical/development record from 1950 to 2007 with a shaded quiescent-spring-flow band, and a detailed 2022-2026 reactivation panel with a distinct marker for a candidate contributing-factor event.",
   id = "fig-timeline"
 )
 ```
@@ -205,11 +205,80 @@ show_fig(
 | 1992 | Sorey and Colvard attribute most of the spring-flow decline to regional groundwater drawdown, not geothermal production [@sorey1992]. |
 | 2000 | Groundwater levels recover, but natural spring flow does not resume at the main terrace [@sorey2000]. |
 | 2007 | The groundwater/geothermal monitor-well network is documented in detail [@klein2007]. |
-| 2022 | Renewed steaming ground is first noted at the Lower Sinter Terrace [@lindsey2026]. |
-| 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. Continuous temperature and conductivity monitoring begins. |
+| 2022 | Steaming ground expands and water reappears along natural fractures at the Lower Sinter Terrace, the first sign of renewed activity [@lindsey2026]. |
+| 2023 | Diffuse steaming measurably expands across the lower sinter terrace; no focused vents or flowing water yet [@lindsey2026]. |
+| 2024 | Activity shifts from diffuse degassing to localized seeps and vents; first evidence of shallow boiling [@lindsey2026]. |
+| 2025 (early) | Existing vents intensify and discharge points begin migrating along nearby fractures [@lindsey2026]. |
+| 2025-05-30 | Ormat's field-wide authorized injection limit is raised from 49,500 to 55,000 gpm (NDEP UIC Temporary Permit UNEV2007204T2025-1 [@nevadadep2025uic]) -- about two weeks before the eruption; a candidate contributing factor, not yet confirmed (see below). |
+| 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. NBMG begins an integrated monitoring program, and this project's own temperature and conductivity logger network is deployed. |
 | 2026 | The eruption is formally documented [@lindsey2026]; spring and well remapping and renewed chemistry sampling continue under this thesis. By late September 2026, a new seep-fed hot spring and a growing, fresh sulfur deposit are documented at the terrace, independently corroborated by a nearby resident. |
 
 : A brief chronology of Steamboat Hills, from first characterization to the current reawakening. {#tbl-chronology}
+
+## Candidate explanations for the reactivation
+
+What actually drove the 2022-2025 reactivation is an open question this
+proposal does not claim to resolve, but several candidate explanations
+already have real, if uneven, supporting evidence on file, and are
+worth stating together rather than leaving the single injection-permit
+event on @fig-timeline unexplained.
+
+**Increased injection pressure/rate (Ormat).** The one real, dated
+regulatory document on file -- NDEP UIC Temporary Permit
+UNEV2007204T2025-1 [@nevadadep2025uic] -- raised the field's combined
+authorized injection-rate limit from 49,500 to 55,000 gpm on May 30,
+2025, about two weeks before the eruption. The timing is suggestive,
+and this is flagged explicitly on @fig-timeline as a candidate
+contributing factor. It is not yet confirmed: the permit records newly
+*authorized* limits, not necessarily the rate actually injected in
+practice, and the same document's own reported current pressures sit
+below the prior allowable ceiling at most wells, so whether real
+injection pressure or rate increased *before* the eruption, rather than
+only becoming newly permitted to do so, is not resolvable from this one
+document alone. A real test would need a dated, well-by-well injection
+pressure/rate history spanning the 2022-2025 window, which does not yet
+exist in this project (see `docs/action_items_for_user.md`'s design
+sketch for a monthly, multi-indicator timeline built for exactly this
+purpose).
+
+**Conduit reactivation within the existing hydrothermal system, not a
+new fluid source.** This project's own 2026 poster [@irvinlindsey2026]
+found that the reactivated fissure's major-ion chemistry and stable
+isotopes match the hydrothermal fluid already expressed in nearby
+springs and wells, and that paired temperature loggers at the terrace
+show a real inverse correlation (r = -0.68) consistent with discharge
+redistributing between vents within one connected flow system. The
+Cl/B ratio's near-constancy across seven decades (preliminary results,
+below) is further, independent support for the same conclusion. Of the
+explanations considered here, this one currently has the most direct
+observational support.
+
+**Regional groundwater-level recovery remobilizing existing pathways.**
+Sorey [-@sorey2000] found that groundwater levels had recovered by 2000
+without natural spring flow resuming, which argues that recovery alone
+has historically been insufficient to reactivate this system. Whether
+a slower, multi-decade continuation of that same recovery eventually
+crossed some threshold by 2022 is untested with the data on hand.
+
+**Local seismic triggering.** A real earthquake-catalog cross-check
+against this project's own water-level record found no detectable,
+co-located step-change at the three nearest real events (M1.5-1.6,
+2025), and no catalogued earthquake at all overlapping the actual
+temperature-logger deployment window. Current support for this
+explanation is weak.
+
+**Precipitation/recharge-driven.** A real, large December 2025 storm
+produced a modest water-level response at one regional monitoring
+well, but not at a second, nearby well with a different completion
+depth, and no precipitation record exists on file for most of the
+2022-2025 reactivation window. Support is mixed and incomplete, not
+absent.
+
+None of these explanations are mutually exclusive, and this proposal's
+own calibration and remapping work (Methods, below) is designed to
+generate the kind of real, time-paired chemistry and discharge data
+that could eventually discriminate between them -- it is not designed,
+on its own, to settle the question now.
 
 ## Chloride discharge as a tracer of geothermal outflow
 
@@ -575,6 +644,21 @@ Road (the upstream/control site) and one further downstream near
 Geiger Grade, matching the same two site roles Sorey and Spielman used
 for their own chloride-flux calculations [@sorey2008; @sorey2017].
 
+@fig-sbgg-install shows the downstream (SBGG) logger shortly after
+installation in mid-2025: the specific-conductance/temperature
+sensor housed inside the white PVC pipe, with a yellow transect line
+marking the cross-section used for repeat discharge measurements.
+
+```{r fig-sbgg-install}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/field_photo_sbgg_install.jpg",
+  "The SBGG (Geiger Grade) continuous specific-conductance logger, housed in the white PVC pipe at center, shortly after installation in Steamboat Creek (yellow line marks the discharge-measurement transect; capture date not preserved in this file).",
+  alt = "Photograph of a white PVC logger housing standing in a shallow creek, with a yellow transect line and streamside willows.",
+  id = "fig-sbgg-install"
+)
+```
+
 ## PHREEQC workflow: sample eligibility, databases, and interpretation
 
 Aqueous speciation and saturation-index modeling is run through the
@@ -729,6 +813,58 @@ whole system or whether site-specific calibrations are required.
 Reported uncertainty will include both the regression's own
 confidence interval and, where repeat sampling allows, an estimate of
 how much the relationship drifts across seasons.
+
+**Candidate model forms.** Three functional forms are fit and
+compared: a plain linear regression of chloride against specific
+conductance (and, where it improves fit, temperature); a log-linear
+fit (chloride log-transformed before fitting), since chloride is
+strictly positive and spans more than an order of magnitude across
+site types, from dilute background wells to the thermal end-member;
+and a generalized additive model (GAM, via `mgcv`) that allows a
+nonlinear relationship without assuming a specific curve shape in
+advance. A random-forest model (via `ranger`) is also fit as a
+nonparametric benchmark -- not because it is expected to be the
+reported calibration (a random forest does not return a usable
+equation), but because it establishes an upper bound on how much
+predictive skill a flexible model can extract from the same
+predictors, against which the simpler, reportable forms above are
+judged. This comparison is not being designed from scratch: it is
+already built and running, as `03_chloride_models.R` (the original
+hand-rolled linear/GAM/random-forest comparison) and
+`03b_chloride_models_tidymodels.R` (a `tidymodels` reimplementation of
+the same comparison), both exercised so far only on synthetic data
+standing in for the real paired samples this proposal's calibration
+window is designed to collect.
+
+**Validation.** Chloride and conductance are both autocorrelated time
+series, so ordinary random k-fold cross-validation would leak
+information between adjacent, nearly identical observations and
+overstate model skill. Every candidate model is instead evaluated with
+rolling-origin (blocked, time-aware) cross-validation -- each fold
+trains only on data up to a given point in time and tests on data
+immediately after it, mirroring how the calibration would actually be
+applied going forward -- implemented both as a hand-rolled function in
+`03_chloride_models.R` and via `rsample::rolling_origin()` in
+`03b_chloride_models_tidymodels.R`. Reported skill is the
+cross-validated root-mean-square error (RMSE) and mean absolute error
+averaged across folds, not a single in-sample fit statistic.
+
+**Choosing between a global and a site-specific model.** Because the
+candidate forms above span different model families (linear, GAM,
+random forest), and because a global model and a site-specific model
+are not always nested within each other, the primary comparison is
+cross-validated RMSE under the same rolling-origin scheme described
+above -- the one criterion that is valid across every model family and
+every candidate grouping. Where two models are genuinely nested (for
+example, a linear or GAM model with and without a site-type
+interaction term), Akaike Information Criterion (AIC) and a
+likelihood-ratio test are reported as a secondary check, since both
+are only meaningful for nested models fit by maximum likelihood and
+would be misleading if applied across model families. A site-specific
+model is adopted over the global model only if it improves
+cross-validated RMSE by a margin larger than the fold-to-fold
+variability in that RMSE, not from a marginal or single-fold
+improvement alone.
 
 ## Minimum sampling-frequency design via Monte Carlo subsampling
 
@@ -1007,6 +1143,23 @@ show_fig(
 )
 ```
 
+This same seep location was also photographed on an earlier visit,
+shown side-by-side with the September 27, 2026 photo above in
+@fig-seep-compare. The two visits document the same bare,
+white-crusted alluvium-on-sinter feature over time rather than two
+separate points, giving a real, if informal, before-and-after view of
+how this specific discharge point looks across repeat visits.
+
+```{r fig-seep-compare}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/seep_same_location_through_time.jpg",
+  "The same seep location at the Lower Sinter Terrace, photographed on two different visits: an earlier visit (left; this photo's own capture date and GPS were not preserved in the file) and September 27, 2026 (right, 39.3829, -119.7402), the same visit and location already described above.",
+  alt = "Side-by-side photograph comparison of the same bare alluvial-sinter seep location at the Lower Sinter Terrace, taken on two different visits.",
+  id = "fig-seep-compare"
+)
+```
+
 ## Planned figures, not yet produced
 
 Three figures central to the finished thesis cannot be produced yet,
@@ -1037,7 +1190,14 @@ their own camera EXIF data, confirmed directly rather than assumed,
 but have not yet been run through this project's formal photo-location
 ingestion pipeline to become real, dated `Locations` entries in the
 underlying database -- that promotion step, not the figures
-themselves, is the remaining task.
+themselves, is the remaining task. The earlier-visit photo of this
+same seep used in @fig-seep-compare and the SBGG installation photo in
+@fig-sbgg-install are real field images from this project's own work
+but, unlike the three September 27 photos, their EXIF metadata no
+longer carries a capture date or GPS fix (confirmed directly via
+exiftool, not assumed) -- both await the same ingestion-pipeline
+promotion once a real coordinate and date are recovered or
+re-recorded.
 
 # Preliminary schedule
 

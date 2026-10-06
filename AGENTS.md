@@ -6915,3 +6915,135 @@ same day, resolving the gap flagged immediately above.
 - Verified: all three formats (html/pdf/docx) render cleanly with 0
   citeproc warnings; figure numbering (Figure 1-6) unaffected by this
   session's prose-only changes.
+
+## Session 48 (2026-10-04/05): Figure 1 timeline rebuild + reactivation
+hypotheses, SBGG/seep photo corrections, temperature-logger ingest,
+SBF_0002 resolved via photo EXIF
+
+Large multi-thread session spanning the thesis proposal's Figure 1,
+two field-photo corrections, and a real temperature-logger data
+ingest that resolved a long-standing missing-location gap.
+
+- **Figure 1 (`steamboat_timeline.png`) rebuilt as a two-panel,
+  "professional" timeline** in `build_steamboat_timeline_figure()`
+  (`scripts/analysis/manuscript_figures.R`): Panel A (1950-2007,
+  historical/development) shows the 1987-2022 absence of natural
+  terrace spring flow as a shaded band rather than a single date;
+  Panel B (2022-2026) uses Lindsey et al. (2026)'s own stage-by-stage
+  account (2022 onset, 2023 diffuse expansion, 2024 shift to discrete
+  seeps/vents, early-2025 intensification) instead of one 2022 dot,
+  and flags Ormat's May 30, 2025 NDEP UIC permit (raising the
+  field-wide authorized injection limit 49,500 -> 55,000 gpm, ~2 weeks
+  before the eruption) with a distinct triangle/amber "Hypothesis"
+  marker -- explicitly a candidate, unconfirmed contributing factor,
+  not a demonstrated cause. Two real iteration rounds were needed:
+  v1's quiescence-band caption text overflowed the panel's clip region
+  and the 11-event Panel B cluster badly overlapped with ggrepel's
+  default 2-row nudge; fixed by moving the band description to a
+  figure caption instead of in-plot text, and switching Panel B to
+  free (non-forced) `direction = "y"` repel with a much taller `ylim`.
+- **New "Candidate explanations for the reactivation" subsection**
+  added to both `00_thesis_proposal.qmd` and `01_introduction.qmd`
+  (kept in sync per this project's standing convention): the
+  injection-increase hypothesis (honestly caveated -- the permit
+  records *authorized* limits, not necessarily actual practice, and
+  reported current pressures sit below the prior ceiling at most
+  wells), conduit reactivation (this project's own poster, currently
+  the strongest-supported explanation), regional groundwater recovery
+  (Sorey 2000), local seismicity (a real negative result -- no
+  detectable step-change, no earthquake overlapping the logger window),
+  and precipitation/recharge (mixed, incomplete). New
+  `references.bib` entry `nevadadep2025uic` for the permit document.
+  **Real citation bug fixed**: "Sorey [@sorey2000]" after already
+  writing "Sorey" in prose rendered as the redundant "Sorey (Sorey,
+  2000)" -- fixed to `[-@sorey2000]` in both files (a pre-existing,
+  wider pattern of this bug elsewhere in the document, e.g. "Skalbeck
+  (Skalbeck, ...)", was left alone as out of scope).
+- **Seep-comparison figure corrected per direct user feedback**: the
+  prior turn's `build_seep_comparison_figure()` had framed IMG_5275
+  and the existing `fig-seep` photo as two separate, parallel seeps --
+  the user clarified these are the **same physical seep location**,
+  photographed on two different visits (an undated earlier visit, and
+  the already-documented Sept 27, 2026 visit). Rewrote the function
+  (renamed output to `seep_same_location_through_time.jpg`, panel
+  labels now "earlier visit" vs. "Sept 27, 2026", left-to-right
+  chronological order per the user's confirmed sequence) and the
+  surrounding manuscript prose/caption in `00_thesis_proposal.qmd`
+  accordingly.
+- **New SBGG install photo** (`field_photo_sbgg_install.jpg`, from
+  `IMG_5305.jpeg`) added as `@fig-sbgg-install` right after the
+  conductivity-logger-network paragraph in `00_thesis_proposal.qmd`,
+  per explicit user request ("yes add the sbgg but just one photo on
+  setup" -- i.e. the install-day photo only, not a before/after pair
+  with the later `IMG_5485.jpeg`, which was left in
+  `data/raw/images/image_drop/` unused for now, same for `IMG_5318`/
+  SBRR). Figure numbering now runs 1-11 in document order, confirmed
+  via a direct PDF cross-reference check after each change.
+  `prepare_field_photo_figures()` extended with both new source-file
+  mappings.
+- **Real temperature-logger data ingested** (`data/raw/loggers/
+  observations/`, 9 new files dated 2026-09-27): 72,128 new
+  observations across 7 loggers (A001-A005, A009, A010), extending
+  their records through 2026-09-27. Verified on a scratch DB copy
+  first, then applied to the real `geochem_operational.sqlite`
+  (backed up first to `database/archive/
+  geochem_operational_pre_temp_logger_ingest_<timestamp>.sqlite`),
+  idempotent re-run confirmed. Views/QC rebuilt, website re-exported
+  and rebuilt (homepage "Temperature readings" stat card and
+  `results.html`'s chart both confirmed showing the real new total).
+- **Two real data-provenance findings surfaced and confirmed with the
+  user, not guessed**: (1) **A010 (CMN232100066)**'s real data starts
+  2025-10-01, ~7 months before its documented 5/1/2026
+  `deployment_start` -- confirmed by Tyler: this is the same physical
+  logger previously used in Cary Lindsey's own pre-project monitoring
+  effort, with onboard memory recovered; real data, not an artifact,
+  though the pre-5/1/2026 readings describe that earlier deployment,
+  not necessarily `SBS_0006` specifically. (2) **A013
+  (EMO259100043)** is marked `destroyed` (7/14/2026) in the deployment
+  CSV with no station code, yet a real file for that exact serial
+  dated 2026-09-27 exists -- confirmed by Tyler: a real redeployment
+  after the original unit was destroyed. Still unresolved: the
+  redeployment's actual station/start date, without which the row and
+  file continue to be correctly skipped rather than guessed at.
+- **Real, previously-undetected Windows-level file lock hit while
+  trying to apply the A010/A013 notes to their source-of-truth CSV**:
+  `data/raw/loggers/temperature_logger_deployments.csv` failed to
+  write via R (`write_csv`), bash (`mv`/`rm`/heredoc), and PowerShell
+  (`Set-Content`) alike, all with a sharing-violation/"device or
+  resource busy" error specific to this one file (every other file in
+  the same directory wrote fine) -- most likely something (e.g. Excel)
+  has it open. Worked around by applying both notes directly to
+  `Temperature_Loggers.notes` in the database instead; flagged clearly
+  in `docs/action_items_for_user.md` that the CSV itself still needs
+  the same edit once unlocked, since `ingest_temperature_loggers()`'s
+  upsert treats the CSV as the source of truth and will blank these
+  notes out on its next run otherwise.
+- **SBF_0002 resolved via real photo EXIF, closing the single biggest
+  standing temperature-logger gap.** A second install photo
+  (`IMG_5509.jpeg`, placed directly in `output/figures/manuscript/`
+  rather than sent through chat) retained its full camera EXIF --
+  unlike every other recent chat-shared field photo this project has
+  received, which all lost their EXIF in transit. Real GPS (39.382253,
+  -119.740486, iPhone-reported horizontal accuracy 8.7 m, captured
+  2026-08-22 16:12:14 -07:00) registered as a new `Locations` row
+  (location_id 253, `site_type='fumarole'`,
+  `coordinate_source='photo_exif'`) -- sanity-checked at ~53 m from
+  the already-known `SBF_0001` (39.38241, -119.7399), a plausible
+  distinct-but-nearby fumarole, not a duplicate or an implausible
+  point. Raw photo moved to `data/raw/images/image_drop/
+  IMG_5509_SBF_0002.jpeg` per this project's established raw-media
+  convention. **Immediately unblocked A008 (EMO259100052)'s entire
+  backlog** -- all three of its previously-unprocessable files (May,
+  August, September 2026) ingested in one pass (27,909 new rows:
+  6,366 + 11,242 + 10,301). `Temperature_Observations` now totals
+  304,659 rows database-wide. Views/QC rebuilt again, website
+  re-exported/rebuilt a second time to reflect the new total.
+- **Not done this session**: A013's real station/start date remains
+  unresolved (needs the user); the locked deployment CSV still needs
+  the A010/A013 notes applied once unlocked; `IMG_5318`/`IMG_5485`
+  (SBRR, SBGG-one-month-later) remain unused raw photos in
+  `image_drop/`, not added to any figure; GeoPackage was not
+  re-exported this session (gitignored output, not required for the
+  website/manuscript updates requested). This session's file changes
+  are committed and pushed to `origin/main` immediately following this
+  entry (see commit history for the exact hash).
