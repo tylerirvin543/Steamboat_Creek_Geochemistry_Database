@@ -26,7 +26,15 @@ format_phreeqc_gas_phase_input <- function(row, gas_components = c("CO2(g)", "H2
                                             gas_phase_type = c("fixed_pressure", "fixed_volume"),
                                             total_pressure_atm = 1.0, volume_liters = 1.0,
                                             output_file = "phreeqc_gas.tsv",
-                                            si_minerals = DEFAULT_SI_MINERALS) {
+                                            si_minerals = DEFAULT_SI_MINERALS,
+                                            initial_moles = NULL) {
+  # initial_moles: optional named numeric vector (names matching
+  # gas_components exactly, e.g. c("CO2(g)" = 0.9, "H2S(g)" = 0.03)) --
+  # seeds the GAS_PHASE with a real, non-zero starting composition
+  # instead of the default all-zero start. Added 2026-10 to let a real
+  # measured free-gas analysis (not just the water sample's own
+  # internal degassing) be imposed on the equilibration -- see
+  # run_phreeqc_gas_phase_fischer_pairing() below.
   gas_phase_type <- match.arg(gas_phase_type)
 
   lines <- c(
@@ -66,7 +74,10 @@ format_phreeqc_gas_phase_input <- function(row, gas_components = c("CO2(g)", "H2
       "    -fixed_volume",
       sprintf("    -volume     %.3f", volume_liters))
   }
-  for (g in gas_components) gas_lines <- c(gas_lines, sprintf("    %-10s 0", g))
+  for (g in gas_components) {
+    start_moles <- if (!is.null(initial_moles) && g %in% names(initial_moles)) initial_moles[[g]] else 0
+    gas_lines <- c(gas_lines, sprintf("    %-10s %.6g", g, start_moles))
+  }
   lines <- c(lines, gas_lines, "END", "")
 
   lines
@@ -132,7 +143,7 @@ parse_phreeqc_gas_output <- function(selected_output_file, sample_id, gas_compon
 run_phreeqc_gas_phase <- function(con, sample_ids, gas_components = c("CO2(g)", "H2S(g)"),
                                    gas_phase_type = c("fixed_pressure", "fixed_volume"),
                                    total_pressure_atm = 1.0, volume_liters = 1.0,
-                                   phreeqc_db = "auto") {
+                                   phreeqc_db = "auto", initial_moles = NULL, notes = NA_character_) {
   check_phreeqc()
   gas_phase_type <- match.arg(gas_phase_type)
 
@@ -154,7 +165,7 @@ run_phreeqc_gas_phase <- function(con, sample_ids, gas_components = c("CO2(g)", 
     total_pressure_atm = if (gas_phase_type == "fixed_pressure") total_pressure_atm else NA_real_,
     volume_liters = if (gas_phase_type == "fixed_volume") volume_liters else NA_real_,
     db_file = db_name,
-    notes = NA_character_,
+    notes = notes,
     stringsAsFactors = FALSE
   ))
   gas_run_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
@@ -172,7 +183,8 @@ run_phreeqc_gas_phase <- function(con, sample_ids, gas_components = c("CO2(g)", 
 
     lines <- format_phreeqc_gas_phase_input(row, gas_components, gas_phase_type,
                                              total_pressure_atm, volume_liters,
-                                             output_file = sel_out, si_minerals = get_si_minerals(db_key))
+                                             output_file = sel_out, si_minerals = get_si_minerals(db_key),
+                                             initial_moles = initial_moles)
     writeLines(lines, in_file)
     exit_code <- run_phreeqc(in_file, out_file, db_file = db_path)
 
@@ -248,4 +260,142 @@ demo_gas_phase <- function() {
   }
 
   invisible(list(input_lines = lines, syntax_ok = ok_syntax))
+}
+# =============================================================================
+# REAL GAS-PHASE EQUILIBRATION: SBF_0001 WATER AGAINST NV26-1's REAL
+# MEASURED GAS COMPOSITION
+# =============================================================================
+#
+# Every GAS_PHASE run before this one (the self-test above, and any
+# config-driven run from data/raw/phreeqc/gas_phase_config.csv) either
+# used a synthetic solution or let the water degas against an assumed
+# atmospheric CO2 partial pressure -- a real measured gas composition at
+# the same point was never available to impose instead. NV26-1 (the
+# April 2026 fissure gas sample co-located with the real water sample
+# SBF_0001) is the first case where this project can equilibrate a real
+# water analysis against a real, independently-measured gas phase
+# instead of an assumption.
+#
+# Honest simplifications, stated once here rather than buried:
+#  - Only CO2(g) and H2S(g) are modeled (the two species already in
+#    this pipeline's DEFAULT gas-phase list and the only ones with a
+#    meaningful aqueous/mineral tie-in via SI_Calcite etc.) -- N2, Ar,
+#    He, CH4 are real components of NV26-1 but are not reactive with
+#    this water's major-ion chemistry in a way PHREEQC's standard
+#    databases model, so leaving them out does not materially change
+#    the carbonate/sulfide equilibrium question being asked here.
+#  - The relative CO2:H2S proportion is taken from NV26-1's
+#    AIR-CORRECTED composition (correct_gas_for_air()), since the raw
+#    composition is >50% diluted by atmospheric entrainment at this
+#    shallow vent -- using the raw ratio would understate the real
+#    reservoir gas's CO2 dominance.
+#  - A large total gas-phase size (10 mol) is used so the imposed real
+#    composition acts as an effectively infinite external buffer (an
+#    open system continuously supplied by the fissure), rather than a
+#    small, easily-exhausted finite gas pocket -- this is a modeling
+#    choice representing "the fissure keeps supplying this gas," not a
+#    measured gas-phase volume (none was measured in the field).
+
+#' Equilibrate a real water sample against a real GAS_PHASE seeded with
+#' another real sample's (air-corrected) CO2/H2S proportions.
+#'
+#' @param con DBI connection.
+#' @param water_sample_id Integer sample_id of the water sample (must
+#'   already have a PHREEQC_Solutions row -- see build_phreeqc_solutions()).
+#' @param gas_sample_label Gas_Analyses.sample_label to source the
+#'   CO2/H2S proportions from (default "NV26-1").
+#' @param total_gas_moles Total size of the imposed gas phase (mol);
+#'   large relative to the water's own dissolved-gas content so it acts
+#'   as an external buffer. Default 10.
+run_phreeqc_gas_phase_fischer_pairing <- function(
+    con, water_sample_id = 816, gas_sample_label = "NV26-1",
+    total_pressure_atm = 1.0, total_gas_moles = 10, phreeqc_db = "auto") {
+
+  gas_row <- DBI::dbGetQuery(con, "
+    SELECT sample_label, co2_mol_pct AS CO2, he_mol_pct AS He, h2_mol_pct AS H2, ar_mol_pct AS Ar,
+           o2_mol_pct AS O2, n2_mol_pct AS N2, ch4_mol_pct AS CH4, co_mol_pct AS CO,
+           h2s_mol_pct AS H2S
+    FROM Gas_Analyses WHERE sample_label = ?
+  ", params = list(gas_sample_label))
+  if (nrow(gas_row) == 0) {
+    message("[gas_phase_fischer] No Gas_Analyses row for ", gas_sample_label, ".")
+    return(invisible(NULL))
+  }
+
+  corrected <- correct_gas_for_air(gas_row)
+  co2_frac <- corrected$CO2_corrected[1] / (corrected$CO2_corrected[1] + corrected$H2S_corrected[1])
+  h2s_frac <- 1 - co2_frac
+
+  initial_moles <- c(
+    `CO2(g)` = total_gas_moles * co2_frac,
+    `H2S(g)` = total_gas_moles * h2s_frac
+  )
+
+  note_text <- sprintf(
+    "Real pairing: water sample_id %d equilibrated against a GAS_PHASE seeded with %s's air-corrected CO2:H2S proportions (%.1f%%:%.1f%%), total %.1f mol as an open-system buffer.",
+    water_sample_id, gas_sample_label, co2_frac * 100, h2s_frac * 100, total_gas_moles
+  )
+  message("[gas_phase_fischer] ", note_text)
+
+  gas_run_id <- run_phreeqc_gas_phase(con, sample_ids = water_sample_id,
+                         gas_components = c("CO2(g)", "H2S(g)"),
+                         gas_phase_type = "fixed_pressure",
+                         total_pressure_atm = total_pressure_atm,
+                         phreeqc_db = phreeqc_db,
+                         initial_moles = initial_moles,
+                         notes = note_text)
+
+  summarize_gas_phase_fischer_pairing(gas_run_id, water_sample_id, gas_sample_label)
+}
+
+#' Read the raw before/after SELECTED_OUTPUT from a
+#' run_phreeqc_gas_phase_fischer_pairing() run and return a tidy
+#' long-format comparison (pH + mineral saturation indices, before vs.
+#' after equilibration with the real imposed gas phase), writing a CSV
+#' for direct use in documents/figures.
+summarize_gas_phase_fischer_pairing <- function(
+    gas_run_id, water_sample_id, gas_sample_label,
+    out_csv = "data/derived/gas_analysis/gas_phase_fischer_pairing_before_after.csv") {
+
+  if (is.null(gas_run_id)) return(invisible(NULL))
+  tsv_path <- file.path("phreeqc", "runs", "gas_phase", paste0("run_", gas_run_id),
+                         paste0("s", water_sample_id, "_selected.tsv"))
+  if (!file.exists(tsv_path)) {
+    message("[gas_phase_fischer] Selected-output file not found: ", tsv_path)
+    return(invisible(NULL))
+  }
+
+  raw <- read.delim(tsv_path, sep = "\t", stringsAsFactors = FALSE, check.names = FALSE)
+  names(raw) <- trimws(names(raw))
+  raw <- raw[, !grepl("^\\.\\.\\.", names(raw)) & !grepl("^$", names(raw))]
+
+  keep_cols <- c("pH", grep("^si_", names(raw), value = TRUE))
+  before <- raw[1, keep_cols]
+  after  <- raw[nrow(raw), keep_cols]
+
+  comparison <- data.frame(
+    parameter = keep_cols,
+    before_no_gas_phase = as.numeric(before),
+    after_real_gas_phase = as.numeric(after)
+  )
+  comparison$delta <- comparison$after_real_gas_phase - comparison$before_no_gas_phase
+  # -999.999 is PHREEQC's own "undefined" sentinel (mineral absent from
+  # the database's SI list for this solution) -- flag, don't compute a
+  # delta against it.
+  comparison$delta[comparison$before_no_gas_phase <= -999 | comparison$after_real_gas_phase <= -999] <- NA_real_
+  comparison$water_sample_id <- water_sample_id
+  comparison$gas_sample_label <- gas_sample_label
+
+  dir.create(dirname(out_csv), showWarnings = FALSE, recursive = TRUE)
+  readr::write_csv(comparison, out_csv)
+  message("[gas_phase_fischer] Wrote before/after comparison to ", out_csv)
+
+  for (i in seq_len(nrow(comparison))) {
+    r <- comparison[i, ]
+    if (!is.na(r$delta)) {
+      message(sprintf("  %-14s %8.3f -> %8.3f (delta %+.3f)", r$parameter, r$before_no_gas_phase, r$after_real_gas_phase, r$delta))
+    }
+  }
+
+  invisible(comparison)
 }

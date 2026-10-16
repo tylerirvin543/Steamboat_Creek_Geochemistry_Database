@@ -1,0 +1,6 @@
+method,basis,measured_temp_C,estimated_temp_C
+Gas: D'Amore-Panichi,gas (NV26-1),99.5,228.3608214934598
+Water: Chalcedony,water (SBF_0001),152.6,91.7134225291325
+Water: Na/K (Fournier),water (SBF_0001),152.6,153.792641641817
+Water: Na/K (Giggenbach),water (SBF_0001),152.6,172.720088211708
+Water: Quartz,water (SBF_0001),152.6,118.226987447699

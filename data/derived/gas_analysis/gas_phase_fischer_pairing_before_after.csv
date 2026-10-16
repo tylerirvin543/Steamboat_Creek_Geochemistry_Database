@@ -1,0 +1,12 @@
+parameter,before_no_gas_phase,after_real_gas_phase,delta,water_sample_id,gas_sample_label
+pH,8.3,6.31387,-1.986130000000001,816,NV26-1
+si_Calcite,0.8571,-0.7806,-1.6377,816,NV26-1
+si_Aragonite,0.7083,-0.9294,-1.6377000000000002,816,NV26-1
+si_Dolomite,2.2032,-1.2396,-3.4428,816,NV26-1
+si_Quartz,-999.999,-999.999,NA,816,NV26-1
+si_Chalcedony,-999.999,-999.999,NA,816,NV26-1
+si_Gypsum,-999.999,-5.0111,NA,816,NV26-1
+si_Anhydrite,-999.999,-4.155,NA,816,NV26-1
+si_Fluorite,-2.757,-2.5632,0.19379999999999997,816,NV26-1
+si_Barite,-999.999,-999.999,NA,816,NV26-1
+si_Halite,-4.8415,-4.8414,9.999999999976694e-5,816,NV26-1

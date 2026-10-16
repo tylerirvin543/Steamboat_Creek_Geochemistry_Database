@@ -1,0 +1,306 @@
+---
+title: "Fissure Gas Samples, April 2026 -- Notes for Phillip"
+subtitle: "Steamboat Hills Geothermal Outflow Monitoring -- UNR Thesis Project"
+date: today
+format:
+  pdf:
+    toc: false
+    number-sections: false
+---
+
+```{r setup}
+#| echo: false
+#| message: false
+#| warning: false
+if (basename(getwd()) == "outreach") {
+  root <- normalizePath(file.path(getwd(), "..", ".."))
+} else {
+  root <- normalizePath(getwd())
+}
+knitr::opts_knit$set(root.dir = root)
+setwd(root)
+library(DBI)
+library(RSQLite)
+con <- dbConnect(SQLite(), file.path(root, "database", "geochem_operational.sqlite"))
+source(file.path(root, "scripts", "analysis", "gas_historical_comparison.R"))
+```
+
+## Background
+
+Steamboat Hills has a fairly long geochemistry record for a Great
+Basin system -- White and coworkers characterized it geologically and
+hydrologically starting in the 1950s-60s, and there's a run of gas and
+water chemistry papers from the 1970s-90s: Nehring (1979, 1980) on
+reservoir temperature and gas composition, Mariner and Janik (1995)
+with water and gas analyses for several CPI production wells
+(including well 23-5, which ends up being our main point of comparison
+below), and Arehart, Coolbaugh, and Poulson (2003) arguing for a
+magmatic heat source using trace elements and gas geochemistry. I've
+been building a database that pulls all of this together along with
+NDEP, NDWR, and our own field data, mostly for the chloride-discharge
+side of the thesis -- but it also means we have a real, if sparse,
+historical gas-chemistry baseline to check new samples against.
+
+## The 2025 eruption and the fissure
+
+In June 2025 the Lower Sinter Terrace had a geyser-like eruption that
+opened a new fissure (Lindsey et al. 2026 give the fuller account of
+how the activity built up over 2022-2025 before that). The well was
+capped not long after, but discharge didn't stop -- it moved laterally
+along the fracture system instead, and the fissure has kept
+degassing/discharging since. Cary and I put together a poster on this
+for GRC (Irvin and Lindsey, 2026) arguing, mostly from paired
+temperature loggers and a Cl mass-balance estimate, that this looks
+more like redistribution within an existing shallow conduit system
+than a brand-new source turning on.
+
+## Sampling
+
+You, Tobias, and Karim collected three gas samples at and around the
+fissure on April 29-30, 2026 -- two points right at the fissure and a
+third across the road at a separate degassing spot.
+
+| Sample | Date | Approx. location | Field temp (C) | Notes |
+|---|---|---|---|---|
+| NV26-1 | Apr 29 | at the fissure | 99.5 | co-located with a water sample we collected May 1 (see below) |
+| NV26-2 | Apr 30 | fissure, second point | 96 | flagged -- possible bottle leak noted in the field, and this is also where sampling went through fresh asphalt that the gas was escaping through |
+| NV26-3 | Apr 30 | across the road | 96 | second degassing area |
+
+NV26-2 is the one I want your read on. We're not throwing it out, but
+we're also not treating it the same as the other two until we hear
+back on whether the leak and/or the asphalt breakthrough would
+meaningfully change the result.
+
+## What we're seeing so far
+
+This is exploratory -- these are three samples, one of them flagged,
+so I'm treating all of it as a first look rather than a result to lean
+on hard.
+
+**Air correction and geothermometry.** Surface gas is never air-free,
+so before doing anything else we corrected for atmospheric
+contamination (standard approach: all measured O2 treated as air,
+air-derived N2 subtracted using the dry-air N2/O2 ratio, everything
+renormalized). All three samples turn out to have a real amount of air
+mixed in -- not surprising for shallow vent sampling instead of a
+wellhead -- but NV26-2 is essentially explainable by air alone.
+
+| Sample | Air fraction (O2-based) | D'Amore-Panichi T (C) |
+|---|---|---|
+| NV26-1 | 53% | 228 |
+| NV26-2 | 100% | 209 (not trusted -- see above) |
+| NV26-3 | 64% | 181 |
+
+For reference, Mariner and Janik's well 23-5 T-DP values from the
+1990s run 173-200 C, so NV26-1 and NV26-3 bracket that range -- and
+both are well above the measured field temperatures (96-99.5 C), which
+is the same pattern we're already seeing in the water geothermometers
+(quartz below measured temperature, Na/K above it). It's a reasonable
+result, but three samples isn't much to build on yet.
+
+```{r fig-ratios}
+#| echo: false
+#| results: asis
+img <- gsub("\\\\", "/", file.path(normalizePath(getwd()), "output", "figures", "gas_analysis", "gas_ratio_historical_comparison.png"))
+knitr::asis_output(sprintf("![](%s)", img))
+```
+
+**How the two "good" samples compare to Nehring and to Mariner & Janik.**
+CO2/N2, H2S/CO2, N2/Ar, and CH4/CO2 for NV26-1 and NV26-3 land closer
+to Nehring's (1980) spring samples than to well 23-5 -- which makes
+sense, since Nehring sampled surface springs too, not a wellhead, so a
+similar degree of air mixing isn't surprising. NV26-2 sits off on its
+own in every panel, again consistent with it being mostly air. Nehring
+and Mariner & Janik only overlap with us on major-gas composition --
+neither reports a helium isotope ratio, so that comparison stops at
+CO2/H2S/N2/Ar/CH4.
+
+**A ternary view of the same thing.** The classic way to look at this
+kind of air-mixing question is an N2-He-Ar diagram (the same style
+Mariner & Janik use in their own Figure 9). I plotted our three points
+against well 23-5, the two usable Nehring rows, and real dry air for
+reference.
+
+```{r fig-ternary}
+#| echo: false
+#| results: asis
+#| message: false
+#| warning: false
+tern_path <- file.path(root, "output", "figures", "gas_analysis", "gas_ternary_n2_he_ar.png")
+build_gas_ternary_diagram(con, out_png = tern_path)
+img2 <- gsub("\\\\", "/", normalizePath(tern_path))
+knitr::asis_output(sprintf("![](%s)", img2))
+```
+
+All three of our points, and Nehring's two spring samples, cluster
+right next to the air point -- well 23-5 sits noticeably further away,
+toward more N2 relative to Ar and He. That lines up with the air
+correction above: surface vent/spring gas looks a lot more air-like
+than gas collected at a wellhead, which isn't a new idea but it's nice
+to see it fall out of the data this cleanly. I used the common
+He-times-100/Ar-times-10 scaling to make the plot readable, but I
+haven't gone back to a primary Giggenbach reference to confirm that's
+the right scaling or where the "real" air/crustal/mantle field
+boundaries are supposed to sit on a plot like this -- flagged as a
+question below rather than something I'm presenting as settled.
+
+**Helium isotopes -- it turns out there's a real 1982 baseline, and it's
+a surprisingly tight match.** I'd first written this saying nobody had
+ever published a He-3/He-4 ratio for Steamboat -- wrong, and I'm glad
+you (or whoever flagged it) caught it, because the real source turned
+out to be even better than what I'd patched it with the first time.
+Torgersen and Jenkins (1982, GCA) measured He isotopes in both water
+and gas at four Steamboat springs. Their two gas samples they
+themselves call the more reliable ones (Springs 6 and 10) both come out
+at Rc/Ra = 6.0 -- our three new samples come out at 5.6-6.0. That's
+about as close a match as you could ask for across 44 years, and it's a
+gas-to-gas comparison specifically, which matters since their own
+water-phase numbers run lower (3.9-4.5) and two of their gas values are
+flagged in their own text as suspect (air mixing or the vent
+contaminating itself). See the figure below. Kennedy & van Soest (2007,
+Science), which is what I'd originally found this through (via Dhakal
+et al.'s citation of it, not read directly at first), also names
+Steamboat as a high-R/Ra Basin and Range site, but that's a regional
+paper, not Steamboat-specific -- Torgersen and Jenkins is the real,
+direct comparison. Arehart et al. (2003) make basically the same
+magmatic-source argument from trace elements and gas geochemistry, but
+cite a different, earlier Kennedy paper (2002, not the 2007 one) and
+don't give a gas composition table or a He number of their own, so
+they're interpretive context here rather than a number to compare
+against.
+
+```{r fig-heisotope-rup}
+#| echo: false
+#| message: false
+#| warning: false
+#| results: asis
+he_path <- file.path(root, "output", "figures", "gas_analysis", "he_isotope_historical_comparison.png")
+build_he_isotope_historical_comparison(con, out_png = he_path)
+img5 <- gsub("\\\\", "/", normalizePath(he_path))
+knitr::asis_output(sprintf("![](%s)", img5))
+```
+
+Panel A is the He-isotope comparison above. Panel B is the closest thing
+I can show for 2026, since we don't have a dissolved-gas/He measurement
+on the water side this time -- it's the gas vs. water temperature
+geothermometer comparison at this same NV26-1/SBF_0001 point instead.
+The pattern rhymes: in 1982 every spring's gas phase reads a higher
+Rc/Ra than its own water phase, and in 2026 the gas geothermometer
+reads hotter than every water method except Na/K. Different measurement
+(isotope ratio vs. temperature), same qualitative story -- the gas phase
+is consistently telling you something different from, and arguably
+deeper/hotter than, the water at the same point, in both eras.
+
+**One more thing worth a mention.** NV26-1 sits right on top of
+SBF_0001, a water sample we collected two days later (May 1) with full
+major-ion and isotope chemistry -- a mature Na-Cl thermal water
+(Cl 815 mg/L). It's the first spot in the project with both phases
+from essentially the same location, which matters more for the mixing
+modeling described below than for anything in this section.
+
+**Water vs. gas geothermometry, and a first real PHREEQC run.** Putting
+the gas geothermometer estimate next to our existing water
+geothermometers (Na/K, quartz, chalcedony -- 148 estimates across 67
+real thermal samples) for the one point where we have both, NV26-1's
+gas estimate (228 C) lands closest to the Na/K water estimates
+(153-173 C), not the quartz/chalcedony ones (92-118 C) -- both the gas
+and the Na/K signature seem to be reading a similar, deeper part of the
+system than silica does.
+
+```{r fig-geotherm-wg}
+#| echo: false
+#| message: false
+#| warning: false
+#| results: asis
+source(file.path(root, "scripts", "analysis", "geothermometer_water_gas_comparison.R"))
+geo_path <- file.path(root, "output", "figures", "gas_analysis", "geothermometer_water_gas_comparison.png")
+build_geothermometer_water_gas_figure(con, out_png = geo_path)
+img3 <- gsub("\\\\", "/", normalizePath(geo_path))
+knitr::asis_output(sprintf("![](%s)", img3))
+```
+
+I also went ahead and ran a real PHREEQC `GAS_PHASE` equilibration --
+took SBF_0001's water chemistry and re-equilibrated it against a gas
+phase seeded with NV26-1's real, air-corrected CO2:H2S ratio (96.5:3.5),
+at 1 atmosphere, treated as an open system (i.e. assuming the fissure
+keeps resupplying gas rather than it being a small fixed pocket).
+
+```{r fig-gasphase-rup}
+#| echo: false
+#| message: false
+#| warning: false
+#| results: asis
+gp_path <- file.path(root, "output", "figures", "gas_analysis", "gas_phase_fischer_pairing_before_after.png")
+img4 <- gsub("\\\\", "/", normalizePath(gp_path))
+knitr::asis_output(sprintf("![](%s)", img4))
+```
+
+The result: pH drops from the water's measured 8.3 down to a modeled
+6.3, and calcite/aragonite/dolomite all flip from supersaturated to
+undersaturated. My read is that this means the water as sampled isn't
+actually sitting in equilibrium with the gas as sampled -- which could
+mean they're not really the same fluid parcel, that gas and liquid
+separate out before either one reaches the surface, or that the real
+reservoir pressure (not the 1 atm I used, which was a simplification)
+changes things. I don't have the background to know which of those is
+most likely, which is part of why I'm asking below.
+
+## How this fits into the rest of the thesis
+
+The short version is that this is the first real gas dataset the
+project has, and it slots into a few places we'd already scoped out
+but had no real data for:
+
+- The D'Amore-Panichi geothermometer work above reuses code that had
+  only ever been run against your group's own historical numbers
+  (Mariner & Janik) as a check -- this is the first time it's been run
+  on a Steamboat sample we actually collected.
+- We'd had a PHREEQC gas-phase/mixing setup built for a while, waiting on
+  a real dissolved-gas sample to test it against -- NV26-1 is the first
+  one, and the real run above is already a result, not just a
+  capability anymore.
+- The NV26-1/SBF_0001 pairing is a natural input to the mixing-model
+  chapter -- a real gas end-member next to a real water end-member from
+  (almost) the same spot and the same week.
+- More broadly, it's a second, independent way to ask whether the
+  system has cooled/diluted the way the water geochemistry suggests,
+  which matters for the "redistribution vs. new source" question the
+  poster raised.
+
+## Questions for you
+
+Mostly I want to make sure we're using and describing your group's
+work correctly before any of this goes further:
+
+- How should we cite the gas analyses in the thesis, and separately if
+  this turns into a conference abstract or paper -- Fischer's lab and
+  Barry's lab specifically, or is there a preferred citation you'd
+  want us to use?
+- Is the air correction above a reasonable way to handle Giggenbach
+  bottle samples collected this way, or does your group normally do
+  something different that we should match?
+- On the PHREEQC gas-phase run -- is 1 atm/open-system a reasonable
+  starting assumption for this, or is there a better estimate of the
+  real pressure/volume this gas phase should represent at depth? And is
+  the disequilibrium result (pH/carbonate SI shifting a lot) actually
+  surprising, or is that just what you'd expect for a water and gas
+  sampled two days and some distance apart rather than from the exact
+  same parcel?
+- On the ternary plot -- is the He-times-100/Ar-times-10 scaling I used
+  the right convention, and is there a reference version of that
+  diagram (with real air/crustal/mantle field boundaries) I should be
+  plotting these points against instead of just showing them relative
+  to a single air point?
+- On NV26-2 -- is the leak serious enough that the sample shouldn't be
+  used at all, or is it still usable with the caveat we've got on it?
+- Should we hold off on presenting any interpretation of the noble gas
+  / carbon isotope numbers until you, Tobias, or Karim have had a
+  chance to look at them, or is what's here reasonable to go forward
+  with as a preliminary read?
+- Would you, Tobias, and/or Karim want to be coauthors if this turns
+  into a conference abstract or paper down the line?
+
+## Contact
+
+Tyler Irvin, UNR -- happy to send the underlying data/derived CSVs if
+useful on your end.

@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -239,7 +239,8 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     barometric_pressure = "Hourly Reno Airport barometric pressure (IEM ASOS)",
     earthquakes = "USGS regional earthquake catalog",
     fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)",
-    injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)"
+    injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)",
+    fischer_gas = "Fischer/Ruprecht UCSB fissure gas samples (NV26-1/2/3, April 2026)"
   )
   analysis_desc <- c(
     phreeqc = "PHREEQC speciation/saturation-index batch run (slow, opt-in)",
@@ -312,7 +313,8 @@ source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
-source("database/schema/20_injection_operations_schema.R")
+source("database/schema/21_well_production_history_schema.R")
+source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
@@ -402,7 +404,8 @@ source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
-source("database/schema/20_injection_operations_schema.R")
+source("database/schema/21_well_production_history_schema.R")
+source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 }
 
@@ -790,6 +793,29 @@ run_step(RUN_INGEST$mariner_janik_1995, "MARINER & JANIK 1995 HISTORICAL CHEMIST
   # notebooks/07_historical_context_sorey1992.qmd.
   source("scripts/ingest/ingest_mariner_janik_1995.R")
   ingest_mariner_janik_1995(con)
+})
+
+run_step(RUN_INGEST$fischer_gas, "FISCHER/RUPRECHT UCSB FISSURE GAS SAMPLES (APRIL 2026)", {
+  # Ingests the 3 real free-gas analyses (NV26-1/2/3) collected
+  # 2026-04-29/04-30 at the Lower Sinter Terrace fissure by T. Fischer
+  # and K. Mtili with P. Ruprecht (UCSB), from the hand-transcribed
+  # data/raw/gas(new)/fischer_gas_2026_clean.csv (see that file and
+  # ingest_fischer_gas_data.R's own header for full provenance/caveats,
+  # including NV26-2's flagged air-contamination/possible-leak and the
+  # NV26-1-to-SBF_0001 location alias). Also runs the air correction +
+  # D'Amore-Panichi geothermometry (scripts/analysis/
+  # gas_air_correction.R) and the historical comparison against
+  # Mariner & Janik (1995) well 23-5 (scripts/analysis/
+  # gas_historical_comparison.R) as part of the same step, writing
+  # derived CSVs + figures under data/derived/gas_analysis/ and
+  # output/figures/gas_analysis/.
+  source("scripts/ingest/ingest_fischer_gas_data.R")
+  ingest_fischer_gas_data(con)
+  source("scripts/analysis/gas_air_correction.R")
+  analyze_fischer_gas_samples(con)
+  source("scripts/analysis/gas_historical_comparison.R")
+  build_gas_historical_comparison(con)
+  build_gas_water_fissure_comparison(con)
 })
 
 run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", {

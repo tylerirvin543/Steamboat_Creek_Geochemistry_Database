@@ -1,0 +1,5 @@
+site,date,T_C,CO2,H2S,H2,CH4,N2,O2,Ar,He,T_DP_C,T_CO2_C,source
+23-5,1991-11-05,167,97.7,1.04,0.021,0.0051,1.21,NA,0.018,0.0022,174,243,"Mariner & Janik (1995), Table 2, GRC Transactions v.19"
+23-5,1993-01-27,167,97.7,1.02,0.024,0.0081,1.22,NA,0.018,0.0025,173,242,"Mariner & Janik (1995), Table 2, GRC Transactions v.19"
+23-5,1993-08-02,167,97.8,1.00,0.023,0.0052,1.15,NA,0.017,0.0040,175,241,"Mariner & Janik (1995), Table 2, GRC Transactions v.19"
+23-5,1994-07-25,167,97.7,1.01,0.024,0.0064,1.23,NA,0.017,0.0020,175,242,"Mariner & Janik (1995), Table 2, GRC Transactions v.19"

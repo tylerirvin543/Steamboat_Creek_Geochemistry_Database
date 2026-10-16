@@ -355,6 +355,59 @@ build_seep_comparison_figure <- function(
   invisible(combined)
 }
 
+#' Air-corrected gas-ratio comparison (NV26-1/2/3 vs. Mariner & Janik
+#' 1995 well 23-5) for the manuscript, reusing
+#' scripts/analysis/gas_historical_comparison.R's computation so the
+#' manuscript and any standalone analysis show identical numbers.
+build_gas_composition_comparison_figure <- function(con,
+    out_png = "output/figures/manuscript/gas_composition_comparison.png") {
+  source("scripts/analysis/gas_historical_comparison.R")
+  res <- build_gas_historical_comparison(con,
+    out_png = "output/figures/gas_analysis/gas_ratio_historical_comparison.png")
+  if (is.null(res)) return(invisible(NULL))
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, res$plot, width = 9, height = 6, dpi = 300)
+  message("  -> Wrote ", out_png)
+  invisible(res$plot)
+}
+
+#' D'Amore-Panichi gas-geothermometer estimate (air-corrected) vs.
+#' measured field temperature at each of the 3 real fissure gas points,
+#' with the Mariner & Janik (1995) well-23-5 T-DP range (173-200C)
+#' shown as reference -- the new fissure/fumarole points are shallow
+#' vents, not deep well discharge, so agreement is not expected; this
+#' figure is a comparison, not a validation.
+build_gas_geothermometry_figure <- function(con,
+    out_png = "output/figures/manuscript/gas_geothermometry_comparison.png") {
+  source("scripts/analysis/gas_air_correction.R")
+  res <- analyze_fischer_gas_samples(con,
+    out_csv = "data/derived/gas_analysis/fischer_gas_air_corrected_geothermometry.csv")
+  if (is.null(res)) return(invisible(NULL))
+
+  plot_df <- res |>
+    tidyr::pivot_longer(cols = c(field_temp_c, dap_temperature_C),
+                         names_to = "temperature_type", values_to = "temperature_C") |>
+    dplyr::mutate(temperature_type = ifelse(temperature_type == "field_temp_c",
+                                             "Measured field temperature", "D'Amore-Panichi gas geothermometer"))
+
+  p <- ggplot(plot_df, aes(x = sample_label, y = temperature_C, color = temperature_type, shape = data_quality_flag)) +
+    geom_hline(yintercept = c(173, 200), linetype = "dashed", color = "grey60") +
+    geom_point(size = 3.5, position = position_dodge(width = 0.3)) +
+    scale_color_manual(values = c("Measured field temperature" = "#009E73",
+                                   "D'Amore-Panichi gas geothermometer" = "#D55E00"),
+                        name = NULL) +
+    scale_shape_manual(values = c("ok" = 16, "air_contaminated_suspect" = 4), name = "Sample quality") +
+    labs(x = NULL, y = "Temperature (C)",
+         title = "Fissure gas geothermometry vs. measured temperature",
+         subtitle = "Dashed lines: Mariner & Janik (1995) well 23-5 T-DP range (173-200C).\nNV26-2 (x symbol) is flagged air-contaminated/possible-leak.") +
+    theme_steamboat(base_size = 11)
+
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 7.5, height = 5.5, dpi = 300)
+  message("  -> Wrote ", out_png)
+  invisible(p)
+}
+
 #' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
   prepare_field_photo_figures()
@@ -362,5 +415,7 @@ build_manuscript_figures <- function(con) {
   build_discharge_through_time_figure(con)
   build_steamboat_timeline_figure()
   build_u230_timeseries_figure(con)
+  build_gas_composition_comparison_figure(con)
+  build_gas_geothermometry_figure(con)
   invisible(TRUE)
 }

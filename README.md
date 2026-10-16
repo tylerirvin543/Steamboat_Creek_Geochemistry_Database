@@ -1088,6 +1088,7 @@ source types (each with its own idempotent ingest script, wired into
 | Literature PDFs for citation (never re-hosted, never committed) | `docs/literature/*` (gitignored) | none -- read manually for citation details, see `website/references.Rmd` |
 | NDOM (Nevada Division of Minerals) well-permit records (permit #, API #, BLM lease #, well type, status, spud/completion dates, total depth, elevation, UTM coordinates) | `data/raw/ndom/Ormat Steamboat Wells.xlsx` | `ingest_ndom_wells.R` (cross-validates existing coordinates -- see "NDOM Well-Permit Cross-Validation" below) |
 | NDWR spring/stream flow (daily discharge, cfs) | any directory with a `SiteData`/`SpringAndStreamFlow`-shaped two-sheet xlsx pair, e.g. `data/raw/ndwr/TM_Spring_Stream_Flowdata_*_files/` | `ingest_ndwr_stream_flow.R` |
+| Fissure/fumarole free-gas chemistry (dry-gas composition, carbon isotopes, noble-gas ratios) | `data/raw/gas(new)/fischer_gas_2026_clean.csv` (hand-transcribed from the real multi-block source spreadsheet) | `ingest_fischer_gas_data.R` (also runs the air correction, D'Amore-Panichi geothermometry, and historical comparison -- see `scripts/analysis/gas_air_correction.R`/`gas_historical_comparison.R`) |
 
 **Note on `data/raw/ndwr/` layout:** the NDWR SiteData/WaterLevelData xlsx
 files live *inside* their corresponding `*_WellLogQuery_..._files/`

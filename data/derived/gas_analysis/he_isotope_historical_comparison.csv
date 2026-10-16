@@ -1,0 +1,11 @@
+sample,rc_ra,group,flag
+NV26-1,5.989,"This project (Fischer/Ruprecht, Apr 2026)",ok
+NV26-2,5.873,"This project (Fischer/Ruprecht, Apr 2026)",skeptical
+NV26-3,5.6,"This project (Fischer/Ruprecht, Apr 2026)",ok
+Spring 4 (water),4.5,Torgersen & Jenkins (1982),ok
+Spring 4 (gas),NA,Torgersen & Jenkins (1982),skeptical
+Spring 6 (water),3.9,Torgersen & Jenkins (1982),ok
+Spring 6 (gas),6,Torgersen & Jenkins (1982),ok
+Spring 10 (gas),6,Torgersen & Jenkins (1982),ok
+Spring 24 (water),4.4,Torgersen & Jenkins (1982),ok
+Spring 24 (gas),1.1,Torgersen & Jenkins (1982),skeptical

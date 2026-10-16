@@ -90,6 +90,71 @@ a single cooling, diluting flow path from a genuinely hot (roughly
 150-250 degree Celsius) reservoir, rather than two disconnected water
 types with independent thermal histories.
 
+## Does fissure gas chemistry independently support the same cooling-flow-path pattern?
+
+```{r gas-ratio-fig}
+#| echo: false
+#| fig-cap: "Air-corrected fissure gas ratios (NV26-1/2/3, April 2026, T. Fischer/K. Mtili/P. Ruprecht, UCSB) vs. Mariner & Janik's (1995) well 23-5 (see `scripts/analysis/gas_historical_comparison.R`)."
+knitr::include_graphics("../output/figures/manuscript/gas_composition_comparison.png")
+```
+
+```{r gas-therm-fig}
+#| echo: false
+#| fig-cap: "D'Amore-Panichi [@damore1980] gas-geothermometer estimates vs. measured field temperature for the three real fissure gas samples (see `scripts/analysis/gas_air_correction.R`)."
+knitr::include_graphics("../output/figures/manuscript/gas_geothermometry_comparison.png")
+```
+
+Three real free-gas samples collected April 2026 at the Lower Sinter
+Terrace fissure and an adjacent degassing point give a second,
+independent line of evidence. After correcting for atmospheric
+entrainment (standard O2-based air correction -- geothermal gas vented
+at the surface is never air-free), the D'Amore-Panichi gas
+geothermometer estimates 228C and 181C for the two unflagged samples
+(NV26-1, NV26-3), bracketing Mariner & Janik's [-@mariner1995] own
+well-23-5 T-DP range (173-200C) from three decades earlier -- both well
+above the samples' own measured vent temperatures (96-99.5C), the same
+pattern already seen in the water geothermometers above. The third
+sample (NV26-2) carries a flagged contamination risk (a possible
+Giggenbach-bottle leak, at a point where sampling broke through fresh
+asphalt) and its gas ratios fall well outside the historical range,
+consistent with that flag rather than a real signal. NV26-1 is
+co-located with SBF_0001, a real water sample with its own complete
+chemistry and stable-isotope data from the same date range -- the
+first point in this project with paired gas and water chemistry.
+
+## How does the gas geothermometer compare to the water geothermometers, and can PHREEQC use the gas data directly?
+
+```{r geotherm-water-gas-fig}
+#| echo: false
+#| fig-cap: "Water and gas geothermometer estimates vs. measured temperature, all real thermal samples (see `scripts/analysis/geothermometer_water_gas_comparison.R`)."
+knitr::include_graphics("../output/figures/gas_analysis/geothermometer_water_gas_comparison.png")
+```
+
+Putting the gas geothermometer estimate next to this project's existing
+water geothermometers (Na/K-Giggenbach, Na/K-Fournier, quartz,
+chalcedony; 148 real method/sample estimates across 67 thermal
+samples), the one real co-located point (NV26-1 gas / SBF_0001 water)
+lands closest to the Na/K-based water estimates rather than the
+quartz/chalcedony pair -- both respond to a similarly deep, hot part of
+the system, while silica re-equilibrates faster on the way up.
+
+```{r gas-phase-fig}
+#| echo: false
+#| fig-cap: "SBF_0001 water chemistry before and after real PHREEQC equilibration against a GAS_PHASE seeded from NV26-1's measured composition (see `scripts/phreeqc/12_run_phreeqc_gas_phase.R`)."
+knitr::include_graphics("../output/figures/gas_analysis/gas_phase_fischer_pairing_before_after.png")
+```
+
+For the first time, a real (not synthetic) PHREEQC gas-phase run was
+possible: SBF_0001's water chemistry was re-equilibrated against a
+`GAS_PHASE` seeded with NV26-1's real, air-corrected CO2:H2S
+proportions at 1 atmosphere. The result is a real, substantive shift --
+pH drops from the measured 8.3 to a modeled 6.3, and calcite,
+aragonite, and dolomite move from supersaturated to undersaturated.
+Taken at face value, this says the water as sampled is not simply in
+equilibrium with the vent gas as sampled, which is itself a useful
+constraint (not a null result) on how these two phases should
+eventually be modeled together.
+
 ## Hydrochemical facies: does unsupervised clustering recover known geochemistry?
 
 ```{r facies-pca-fig}

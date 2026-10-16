@@ -7047,3 +7047,282 @@ ingest that resolved a long-standing missing-location gap.
   website/manuscript updates requested). This session's file changes
   are committed and pushed to `origin/main` immediately following this
   entry (see commit history for the exact hash).
+
+## Session 49 (2026-10-16): first real fissure gas data ingested (Fischer/Ruprecht, UCSB), air correction + geothermometry, Ruprecht outreach doc
+
+Executed via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-10-16-1818-plan.md`), following three
+uploaded "copilot" consultant documents proposing a broader structural/
+reactive-transport thesis framing. Per explicit user decision, the
+thesis proposal got **targeted additions only** (a compact fissure-gas
+thread), not the larger 6-chapter restructuring those documents
+sketched (most of that data -- fault traces, pressure transducers --
+doesn't exist yet).
+
+- **First real gas-chemistry table**: new `database/schema/
+  22_gas_analyses_schema.R` (`Gas_Analyses`, wide/one-row-per-sample,
+  distinct from the pre-existing PHREEQC-*modeled* gas-phase tables) +
+  `scripts/ingest/ingest_fischer_gas_data.R`, ingesting the 3 real free-
+  gas samples (NV26-1/2/3, collected 2026-04-29/04-30 by T. Fischer and
+  K. Mtili with P. Ruprecht, UCSB) from `data/raw/gas(new)/
+  Steamboat_NV gases 2026_Fisher...xlsx` -- hand-transcribed into a
+  clean `data/raw/gas(new)/fischer_gas_2026_clean.csv` first, since the
+  source spreadsheet is a multi-block, non-tabular sheet. Wired into
+  `run_pipeline.R` as `RUN_INGEST$fischer_gas` (`TRUE` in profiles 1/2,
+  matching the other small literature/one-off ingests).
+- **Location handling (per explicit user decision)**: NV26-1's own GPS
+  fix is ~64 m from the already-ingested `SBF_0001` Location (which has
+  a real water/isotope sample, sample_id 816, 2026-05-01, Cl=815 mg/L,
+  d18O=-12.26, dD=-113.7) -- linked via a new `Location_Aliases` row
+  (`alias='NV26-1'`, `alias_type='other'`) rather than merged, with the
+  ~64 m gap recorded in the alias's own notes. NV26-2 (flagged: a
+  possible Giggenbach-bottle leak, and per the user also the point
+  sampled through fresh asphalt the gas was breaking through) and
+  NV26-3 (a second real degassing point across the road) registered as
+  new, distinct Locations (`site_type='fumarole'`).
+- **New air-correction capability**: `scripts/analysis/
+  gas_air_correction.R` (`correct_gas_for_air()`) -- the project's
+  first purpose-built atmospheric-contamination correction (closest
+  prior thing, `14_gas_mixing.R`, is a generic mixing-fraction solver,
+  not an air correction). Standard Giggenbach-style method: measured O2
+  assumed entirely atmospheric, air-derived N2 (dry-air N2/O2=3.773)
+  subtracted, remaining species renormalized; an `air_fraction_o2`
+  diagnostic is reported per sample. Real result: all three samples
+  show substantial atmospheric entrainment (53%/100%/64%
+  O2-explicable), expected for shallow surface-vent sampling (unlike
+  deep wellhead Giggenbach sampling) -- NV26-2 is the most extreme
+  (100%), consistent with its flagged leak/asphalt-breakthrough
+  concern, but not uniquely contaminated in kind, only in degree.
+- **Real D'Amore-Panichi geothermometry on real data for the first
+  time** (`analyze_fischer_gas_samples()`, calling the existing,
+  previously-synthetic-only `scripts/phreeqc/13_gas_geothermometry.R`):
+  air-corrected estimates of 228C (NV26-1) and 181C (NV26-3) bracket
+  Mariner & Janik (1995)'s own well-23-5 T-DP range (173-200C) from
+  three decades earlier -- both well above the samples' own measured
+  vent temperatures (96-99.5C), reproducing the same cooling/diluting-
+  flow-path pattern already documented for the water geothermometers.
+- **Historical comparison**: new `data/raw/historical/
+  mariner_janik_1995_gas_table2.csv` (real, transcribed Table 2 values,
+  well 23-5, 4 dates 1991-1994) + `scripts/analysis/
+  gas_historical_comparison.R` (`build_gas_historical_comparison()`,
+  `build_gas_water_fissure_comparison()`) -- a log-scale ratio
+  comparison figure (CO2/N2, H2S/CO2, N2/Ar, CH4/CO2) and a direct
+  NV26-1-vs-SBF_0001 gas/water side-by-side table. **The new He-isotope
+  ratios (R/Ra ~5.6-6.0) appear to be the first quantitative helium-
+  isotope measurements ever reported for Steamboat** -- no historical
+  R/Ra baseline exists anywhere in this project's literature to compare
+  against, stated as a novel finding rather than a "stable through
+  time" claim that can't be supported.
+- **Two real bugs found and fixed while building/testing this**: (1) a
+  classic R NA-indexing trap (`water$value[water$analyte == "Cl"][1]`
+  silently picked an unrelated `NA` row instead of the real Cl value,
+  since a LEFT JOIN's `NA` comparison returns `NA`, not `FALSE`) --
+  fixed with `which(...)` indexing; (2) `readr::read_csv()` auto-parsed
+  the historical CSV's `date` column to a `Date` object while the live
+  `Gas_Analyses` query returned a character column, breaking
+  `dplyr::bind_rows()` -- fixed with an explicit `col_types` override,
+  the same class of dual-type-column bug flagged repeatedly elsewhere
+  in this project.
+- **New manuscript figures**: `build_gas_composition_comparison_figure()`
+  and `build_gas_geothermometry_figure()` added to `scripts/analysis/
+  manuscript_figures.R` and `build_manuscript_figures()`.
+- **Thesis proposal: targeted additions only**, per user decision --
+  new `## Fissure gas geochemistry` methods subsection, a new
+  "A first, independent gas-chemistry check" results item (two new
+  figures, `@fig-gascomp`/`@fig-gastherm`, correctly numbered Figure 5/6
+  in sequence), and a short discussion paragraph (the NV26-2
+  leak/asphalt lesson for future sampling, and the PHREEQC gas-phase/
+  mixing tie-in) added to `manuscript/00_thesis_proposal.qmd`, with
+  lighter mirrored versions added to the standalone `03_methods.qmd`,
+  `04_results.qmd`, and `05_discussion_and_future_work.qmd` chapter
+  files. All four re-rendered (html/pdf for the main document, html for
+  the three chapters) with 0 citation errors; PDF figure numbering
+  confirmed sequential (Figure 1-13) via `pdftotext`. Docx re-render
+  failed only on the final file-move step (destination file open in a
+  viewer on the user's machine, a known, previously-documented
+  environment quirk) -- the docx itself rendered successfully in
+  `manuscript/`, just wasn't moved to `output/reports/manuscript/`.
+- **New outreach document**: `docs/outreach/ruprecht_gas_data_usage.qmd`
+  (+ rendered PDF) -- follows the existing data-request house style but
+  as a thank-you/data-usage-plan doc (Ruprecht is a data provider/
+  co-sampler, not someone being asked for data): sampling-geometry
+  context (including the NV26-2 leak/asphalt flag, explicitly asked to
+  be confirmed or corrected), and a 4-row table of planned uses (air
+  correction/geothermometry, historical-ratio comparison, PHREEQC gas-
+  phase/mixing modeling, the direct NV26-1/SBF_0001 gas-vs-water
+  pairing).
+- **Applied to the real `geochem_operational.sqlite`** (backed up first
+  to `database/archive/geochem_operational_pre_fischer_gas_<timestamp>.sqlite`;
+  verified on a scratch copy first): 3 `Gas_Analyses` rows, 2 new
+  Locations, 1 new `Location_Aliases` row. Idempotent re-run confirmed
+  on the scratch copy before applying to the real database.
+- **Not done this session**: no attempt to digitize fault traces or
+  build a pressure-transducer hydraulic-connectivity chapter (per the
+  user's "targeted additions only" scope decision, these remain
+  out of scope); DEMO database not rebuilt with this session's new
+  schema/ingest stage; `data/raw/gas(new)/` and
+  `data/raw/historical/mariner_janik_1995_gas_table2.csv` are
+  untracked/gitignored like other `data/raw/` sources and will need the
+  usual `git add -f` treatment; this session's file changes are not yet
+  committed/pushed to git.
+
+### Addendum (same day): Ruprecht outreach doc reworked, Nehring (1980)
+### added as a real quantitative comparison, a real He-isotope citation
+### error caught and fixed
+
+Follow-up requests on the Ruprecht outreach document.
+
+- **Reworked `docs/outreach/ruprecht_gas_data_usage.qmd`** per direct
+  feedback: replaced the gas-vs-water composition bar chart (judged not
+  informative) with an N2-He-Ar ternary diagram (Giggenbach-style, the
+  same framework Mariner & Janik use in their own Figure 9) built with
+  `.ternary_xy()`/`build_gas_ternary_diagram()` (new, in
+  `scripts/analysis/gas_historical_comparison.R`) -- real dry air
+  plotted for reference alongside NV26-1/2/3, Mariner & Janik's well
+  23-5, and two newly-transcribed Nehring (1980) rows. Real result: all
+  three NV26 points and both Nehring springs cluster tightly next to
+  the air reference point, while well 23-5 sits well away toward more
+  N2 -- a visually clean illustration of surface-vent/spring sampling
+  being more air-dominated than wellhead sampling, consistent with the
+  O2-based air-fraction diagnostic already in the document. Also
+  restructured the document into background -> 2025 eruption/fissure
+  context -> sampling -> exploratory results -> "how this fits into the
+  rest of the thesis" (moved to the end, replacing a mid-document
+  bullet table) -> "questions for you" (replacing a "what we can offer"
+  section, now explicitly asking how to cite/interpret/use the
+  Fischer/Mtili-analyzed data) -> contact, written in a deliberately
+  more informal, first-person voice per explicit instruction.
+- **Nehring (1980) Table 6 added as a second real historical
+  comparison source** (`data/raw/historical/nehring1980_gas_table6.csv`)
+  -- only 2 of ~15 rows (Spring 26, Spring 6), since the rest of that
+  scanned table has shifted/missing columns and was deliberately not
+  guessed at (documented in the CSV's own notes). Folded into
+  `build_gas_historical_comparison()`'s existing ratio-comparison
+  figure/CSV alongside Mariner & Janik.
+- **Real citation error caught by the user and fixed**: this project
+  had been claiming (in `manuscript/00_thesis_proposal.qmd`,
+  `scripts/analysis/gas_historical_comparison.R`'s header, and the first
+  draft of the Ruprecht doc) that the new NV26 helium-isotope
+  measurements (R/Ra ~5.6-6.0) were the first ever reported for
+  Steamboat. The user pushed back ("there are reported he values
+  somewhere in those documents"), and a project-wide literature grep
+  (careful this time to avoid "He"/"the" false-positive matches)
+  confirmed a real one exists: **Dhakal et al. (2025) cite Kennedy and
+  Van Soest (2007) for a Steamboat He-isotope ratio exceeding 6 times
+  atmospheric**, attributed to mantle fluid flow through the ductile
+  lower crust -- found via `docs/literature/Dhakal.pdf`'s own reference
+  list (`Kennedy, B. M., & Van Soest, M. C. (2007). Flow of mantle
+  fluids through the ductile lower crust: helium isotope trends.
+  Science, 318(5855), 1433-1436`), not independently read in the
+  primary source. All three locations were corrected to say the new
+  values (5.6-6.0) sit just under that reported threshold -- consistent
+  with, not a novel instance of, the mantle-influenced helium
+  signature -- rather than claiming a "first ever" measurement.
+  Confirmed Arehart et al. (2003) still has no numeric gas-composition
+  or He-isotope table of its own (only a qualitative mantle-He
+  statement citing a different, earlier "Kennedy et al., 2002" source)
+  -- it remains interpretive context, not a quantitative comparison
+  point, correctly distinguished from the real Dhakal/Kennedy & Van
+  Soest (2007) number.
+- **Real bug caught while re-rendering**: the first version of the new
+  `fig-ternary` chunk lacked `message: false`/`warning: false` chunk
+  options, so `build_gas_ternary_diagram()`'s own console `message()`
+  call (a plain file-path confirmation) leaked as literal text into the
+  rendered PDF page -- caught by visually inspecting the rendered PDF
+  page-by-page (via `pdftools::pdf_convert()`), not just checking that
+  rendering succeeded without error. Fixed; confirmed gone via
+  `pdftotext` on the re-rendered PDF.
+- All changes re-rendered and re-verified against the real
+  `geochem_operational.sqlite` (both the outreach PDF and
+  `manuscript/00_thesis_proposal.qmd`'s html/pdf, 0 citation errors).
+  This session's file changes are not yet committed/pushed to git.
+
+### Addendum: Kennedy & van Soest (2007) read directly, citation upgraded from secondhand
+
+User supplied the actual Kennedy & van Soest (2007, *Science* 318:1433-
+1436, "Flow of Mantle Fluids Through the Ductile Lower Crust: Helium
+Isotope Trends") PDF after the prior addendum had only cited it
+secondhand via Dhakal et al. (2025)'s reference list.
+
+- **Read directly, not guessed**: the paper explicitly names Steamboat
+  (and a second nearby site, Bridgeport) as one of a handful of Basin
+  and Range sites with 3He/4He ratios exceeding 3 times atmospheric,
+  attributed to amagmatic mantle-fluid flow through the ductile lower
+  crust (not active volcanism, for most B&R sites east of the Walker
+  Lane) -- and plots a real Steamboat data point on the paper's own
+  Figure 2 regional-trend plot, visually sitting in roughly the 5-6
+  Rc/Ra range. The paper's precise underlying number lives in its
+  Table S1 (Supporting Online Material), which was not supplied and is
+  not claimed to have been read.
+- **New real bib entry**: `kennedyvansoest2007` added to
+  `manuscript/references.bib` (previously this paper had no entry of
+  its own in this project, only an indirect mention via Dhakal's
+  reference list).
+- **Three locations corrected** from "cited via Dhakal, not
+  independently read" to a direct citation with the real ~5-6 Rc/Ra
+  figure: `manuscript/00_thesis_proposal.qmd`'s fissure-gas results
+  paragraph (now cites `[-@kennedyvansoest2007]` directly, with Dhakal
+  kept as a secondary note on where the citation was first found),
+  `scripts/analysis/gas_historical_comparison.R`'s header comment, and
+  `docs/outreach/ruprecht_gas_data_usage.qmd`'s helium-isotope
+  paragraph. All three re-rendered (html for the thesis proposal and
+  the outreach doc, since the outreach PDF was locked by an open
+  viewer on the user's machine at the time -- the html confirms the
+  same corrected text) with 0 citation errors.
+- Also noted, not chased further: Arehart et al. (2003) cites a
+  different, earlier "Kennedy et al., 2002" source for its own
+  qualitative mantle-He statement -- not this 2007 paper, and not
+  independently verified.
+- Not yet committed to git, per the same batching instruction as the
+  rest of this session's gas-data addenda.
+
+### Addendum: water-vs-gas geothermometer comparison, and the first real PHREEQC gas-phase run
+
+- **New `scripts/analysis/geothermometer_water_gas_comparison.R`**:
+  joins this project's existing per-sample water geothermometers
+  (`docs/data/geothermometer_by_site.csv` -- Na/K-Giggenbach,
+  Na/K-Fournier, quartz, chalcedony) with the gas D'Amore-Panichi
+  estimate for the first time. `build_geothermometer_fissure_point_table()`
+  (the headline comparison, just the one real co-located point,
+  NV26-1 gas / SBF_0001 water) and `build_geothermometer_water_gas_figure()`
+  (all 148 real water method/sample estimates across 67 thermal
+  samples, plus the 3 gas points, measured-vs-estimated-temperature
+  scatter with a 1:1 line). **Real result**: NV26-1's gas estimate
+  (228C) lands closest to the water's Na/K estimates (153-173C), not
+  quartz/chalcedony (92-118C) -- a real, if single-point, cross-phase
+  consistency check.
+- **First real (non-synthetic) PHREEQC `GAS_PHASE` run**:
+  `scripts/phreeqc/12_run_phreeqc_gas_phase.R` extended with
+  `initial_moles` support (previously every gas component always
+  started at 0 moles) and a new
+  `run_phreeqc_gas_phase_fischer_pairing()` wrapper + `summarize_gas_phase_fischer_pairing()`
+  parser. Equilibrates SBF_0001's real water chemistry against a
+  `GAS_PHASE` seeded with NV26-1's real, air-corrected CO2:H2S
+  proportions (96.5:3.5%) at 1 atm, modeled as an open system (10 mol
+  total, an effectively-infinite external buffer representing
+  continuous fissure resupply -- an explicit modeling choice, not a
+  measured gas-phase volume). **Real, substantive result**: pH drops
+  from the water's measured 8.3 to a modeled 6.31, and calcite/
+  aragonite/dolomite all flip from supersaturated (SI +0.71 to +2.20)
+  to undersaturated (SI -0.78 to -1.24) -- read as evidence the water
+  and gas, as sampled two days apart, are not simply in equilibrium
+  with each other, not as a null/failed result. New
+  `build_gas_phase_pairing_figure()` (in `gas_historical_comparison.R`)
+  plots the real before/after comparison.
+- **Applied to the real `geochem_operational.sqlite`** (backed up
+  first to `database/archive/geochem_operational_pre_gas_phase_pairing_<timestamp>.sqlite`):
+  1 new `PHREEQC_Gas_Phase_Runs` row, 2 new `PHREEQC_Gas_Phase_Results`
+  rows (CO2(g)/H2S(g)). Raw PHREEQC input/output kept at
+  `phreeqc/runs/gas_phase/run_1/`.
+- **Both new figures + the fissure-point table added to the thesis
+  proposal and its mirrored chapters** (`00_thesis_proposal.qmd`,
+  `04_results.qmd`, `05_discussion_and_future_work.qmd` -- the
+  discussion chapter's previous "waiting on a real dissolved-gas
+  sample... not attempted here" sentence was corrected, since a real
+  run now exists). Figure numbering reflows correctly (new figures
+  land as Figure 7/8 of 15 total). Also added to the Ruprecht outreach
+  doc, with a new question asking whether the 1 atm/open-system
+  assumption is reasonable and whether the disequilibrium result is
+  actually surprising given the 2-day gap between the water and gas
+  sample dates.
+- Not yet committed to git.

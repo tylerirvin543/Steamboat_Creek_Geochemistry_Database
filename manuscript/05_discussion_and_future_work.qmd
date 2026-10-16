@@ -82,6 +82,28 @@ finding; both are concrete, data-grounded discussion points for
 choosing a defensible next modeling step, which is why they are raised
 here rather than treated as settled in Chapter 4.
 
+## What the new fissure gas data implies, and a lesson for future sampling
+
+The April 2026 fissure gas samples (Chapter 4) are a real, independent
+line of evidence, not a redundant one: the gas-geothermometer pattern
+reproduces the same above/below-measured-temperature split already
+seen in the water geothermometers, strengthening the case for a single
+cooling, diluting flow path rather than two unrelated water types. The
+flagged sample, NV26-2, is a concrete and low-cost lesson for the
+calibration field season proposed above -- future Giggenbach-bottle
+sampling at this terrace should avoid breaking through fresh pavement
+and should re-check bottle seals before leaving the site, rather than
+discovering a contamination risk after the fact. A first real PHREEQC
+gas-phase run (Chapter 4) -- equilibrating SBF_0001's water against a
+gas phase seeded with NV26-1's real composition -- found a real
+disequilibrium, not agreement: the modeled pH and carbonate saturation
+states both shift substantially away from what the water alone
+predicts. That is a genuinely useful constraint, not a dead end -- it
+argues against treating this system's gas and water as a single,
+always-equilibrated fluid, and motivates collecting a real time-paired
+gas/water sample (rather than two days apart, as here) as a concrete
+next step for this thread.
+
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here

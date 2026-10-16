@@ -1,0 +1,206 @@
+---
+title: "Steamboat Hills: Advisor Briefing"
+subtitle: "Where the database stands, what NDEP data shows, and the chloride sampling-frequency plan explained plainly"
+date: today
+format:
+  pdf:
+    toc: false
+    number-sections: false
+---
+
+```{r setup}
+#| echo: false
+#| message: false
+#| warning: false
+if (basename(getwd()) == "outreach") {
+  root <- normalizePath(file.path(getwd(), "..", ".."))
+} else {
+  root <- normalizePath(getwd())
+}
+knitr::opts_knit$set(root.dir = root)
+
+show_fig <- function(relpath, cap) {
+  img_path <- file.path(normalizePath(getwd()), relpath)
+  knitr::asis_output(sprintf("![%s](%s)", cap, img_path))
+}
+```
+
+## Why this meeting
+
+The database now has enough real, repeated field data to say something
+concrete about how the system behaves, not just where things are
+located. This document lays out three things worth 15-20 minutes of
+your time: (1) what the database currently shows about the system,
+(2) what the new NDEP records add, and (3) the statistical plan for
+figuring out how often chloride needs to be sampled to track the
+system in real time -- explained without assuming a stats background.
+
+## 1. Current state of the Steamboat database
+
+A few numbers to anchor the conversation: **1,600 water-chemistry
+samples**, **269 wells**, and **304,659 temperature-logger readings**
+are now in one relational database, spanning real field sampling
+(2026), NDEP compliance records (2024-2026), and historical literature
+data reaching back to 1950 (Sorey & Colvard 1992, Mariner & Janik
+1995, Skalbeck 2001). The timeline below places the current
+reactivation event against that full history.
+
+```{r fig-timeline}
+#| echo: false
+#| results: asis
+#| warning: false
+show_fig("output/figures/manuscript/steamboat_timeline.png",
+  "Seventy-year context: natural terrace-spring flow ceased around 1987, stayed absent through at least 2000 (Sorey 2000), and the 2022-2025 reactivation culminated in the June 2025 eruption. Ormat's permitted field-wide injection-limit increase (May 2025) is flagged as a candidate, unconfirmed contributing factor two weeks before the eruption -- not a demonstrated cause.")
+```
+
+**Three real findings worth discussing directly:**
+
+- **A stable ~1.5-2 pH-unit gap between injected fluid and the
+  shallow groundwater network**, holding across three real monthly
+  sampling rounds (Sept-Dec 2025, 14 sites). This looks like
+  water-rock buffering along a flow path, which argues for thinking
+  about this system as reactive transport, not pure conservative
+  mixing, at least for pH.
+- **The Na/K geothermometer estimates a hotter reservoir (154-256 C)
+  than the quartz/silica geothermometer (52-127 C)** for the same real
+  thermal samples -- consistent with a deep, equilibrated reservoir
+  fluid that re-equilibrates silica faster than Na/K as it cools and
+  dilutes en route to discharge.
+- **Current chloride discharge to Steamboat Creek is roughly
+  27-59 L/s** (poster average ~27 L/s; one real dated measurement,
+  2026-05-01, gives 58.7 L/s), against a historical range of
+  ~60-90 L/s for 2008-2016 and over 1,000 L/s reported in the
+  1950s-60s. The system is discharging far less than historically,
+  even accounting for real seasonal variability.
+
+```{r fig-geotherm}
+#| echo: false
+#| results: asis
+#| warning: false
+show_fig("output/figures/manuscript/geothermometer_comparison.png",
+  "Na/K vs. quartz/chalcedony geothermometer divergence, averaged per well across 67 real geothermometer estimates.")
+```
+
+## 2. What the NDEP records add
+
+Scanned NDEP field-sampling forms (U230 forms + the 2024/2025/2026
+TFT compliance reports) have been transcribed into the database over
+the last several weeks, turning one-off grab samples into a real,
+roughly monthly time series across **14 sites**: six named
+injection-side ports (Galena 1/2/3, SB2, SB3, SBHR) and eight shallow
+monitoring/domestic wells (Soccer Field, Herz Domestic, Herz Deep,
+Eich, NDOT, Boyd, Jeppson, Rogers).
+
+```{r fig-u230}
+#| echo: false
+#| results: asis
+#| warning: false
+show_fig("output/figures/manuscript/u230_timeseries.png",
+  "Left: pH, injection ports vs. shallow wells, pooled across three real rounds. Right: Herz Deep's conductance rising vs. NDOT's temperature falling over the same three months.")
+```
+
+Two wells move in **opposite, uncorrelated directions** over the same
+three months: Herz Deep's conductance rises about 60% while its
+temperature stays flat; NDOT's temperature falls from ~76 C to ~61 C
+while its conductance stays flat. Neither temperature nor conductance
+alone is a safe universal stand-in for "thermal influence" at this
+site -- worth a direct question to you about which parameter (or
+combination) is defensible to use that way.
+
+NDEP's own UIC permit records also gave a real injection
+pressure/rate snapshot (one document, 2025-05-30) for all 12 named
+injection wells, including one well (`23-33`) whose reported current
+pressure already exceeds its own newly-authorized limit -- flagged in
+the database, not resolved.
+
+```{r fig-injection}
+#| echo: false
+#| results: asis
+#| warning: false
+show_fig("output/figures/injection_operations/injection_pressure_by_well.png",
+  "Historic-peak vs. current vs. newly-authorized wellhead pressure by injection well, per NDEP's May 2025 UIC permit.")
+```
+
+## 3. The chloride sampling-frequency plan, explained plainly
+
+**The question:** chloride concentration in Steamboat Creek is the
+best tracer of geothermal outflow, but lab chloride analysis is slow
+and expensive, so it can only be measured occasionally (a few times a
+month at most). Electrical conductivity, by contrast, can be measured
+continuously and cheaply with an in-stream sensor. **If conductivity
+tracks chloride closely enough, a continuous conductivity record can
+stand in for chloride between lab samples.** The open question is: how
+often does chloride actually need to be measured in the lab to keep
+that stand-in trustworthy?
+
+**The approach, in five plain steps (no statistics background
+needed):**
+
+1. **Start with a real, continuous conductivity record.** Two loggers
+   have been running since July 2026 (one upstream/"control" at Rhodes
+   Road, one downstream at Geiger Grade), recording every 15 minutes
+   -- a genuinely dense, real dataset.
+2. **Build a model that predicts chloride from conductivity.** Once
+   enough real chloride lab samples exist that overlap the logger
+   record, a simple statistical model (basically: "as conductivity
+   goes up, chloride tends to go up too, by about this much") is fit
+   to the paired data. This turns the continuous conductivity record
+   into a continuous *estimated* chloride record.
+3. **Pretend you only sampled chloride occasionally.** This is the
+   core trick: take that estimated continuous chloride record and
+   throw most of it away, keeping only points spaced a candidate
+   interval apart -- say, one chloride sample every day, or every 3
+   days, every week, every 2 weeks, every month.
+4. **Reconstruct and compare.** Connect the dots between the kept
+   points (linear interpolation) and compare that reconstructed curve
+   back against the real, full continuous record. The gap between the
+   two tells you how much error that sampling interval introduces.
+5. **Repeat many times, randomizing the starting point (Monte
+   Carlo).** A single test at "sample every 7 days" could get lucky or
+   unlucky depending on *which* day of the week you happened to
+   sample. So the test is repeated 200 times, each time starting on a
+   different random day, and the errors are averaged. This produces a
+   realistic, honest answer instead of one that depends on a lucky or
+   unlucky draw.
+
+The output is a simple curve: sampling interval on the x-axis, average
+reconstruction error on the y-axis. Wherever that curve crosses an
+acceptable error threshold (e.g. 5%) is the recommended maximum
+sampling interval -- the coarsest schedule that still keeps the
+chloride estimate trustworthy.
+
+```{r fig-mc}
+#| echo: false
+#| results: asis
+#| warning: false
+show_fig("output/figures/manuscript/sampling_frequency_error_curve.png",
+  "Monte Carlo reconstruction-error curve: average error (with spread across 200 randomized trials per interval) vs. candidate chemistry sampling interval, with a 5% reference line.")
+```
+
+**Honest caveat, stated plainly:** this whole pipeline is built,
+tested, and working end-to-end -- but it has only ever been run on
+synthetic (made-up, but realistic) chloride data so far, because the
+real chloride lab samples collected to date (2026-05-01) predate the
+conductivity logger deployment (2026-07-15) by about 2.5 months, so
+there's no real overlap yet. The method is proven; it just needs real,
+time-overlapping chloride samples to produce a real recommendation
+instead of a demonstration. That is the direct motivation for the
+calibration sampling campaign proposed in the thesis (monthly
+chloride sampling for a full year, starting as soon as possible).
+
+## Questions for you
+
+- Does the pH gap (injection vs. shallow network) support framing this
+  as reactive transport rather than conservative mixing, at least for
+  near-surface processes?
+- How would you interpret two wells (Herz Deep, NDOT) trending in
+  opposite, uncorrelated directions on temperature vs. conductivity
+  over the same window?
+- Does the Monte Carlo sampling-frequency design above seem like the
+  right level of rigor for a thesis-scale calibration campaign, or
+  would you want it extended/simplified before the real field season
+  starts?
+- Given real water-level coverage *inside* the Steamboat field itself
+  is currently only 2-3 wells, what's the right first modeling step --
+  a simple mixing/box model, or is it worth waiting for better spatial
+  coverage?

@@ -760,6 +760,32 @@ seventy-year record. A modeling result that doesn't actually bear on
 one of those three questions isn't reported here just because it's
 available.
 
+## Fissure gas geochemistry: a new, independent dataset
+
+In April 2026, T. Fischer and K. Mtili (UCSB) collected three real
+free-gas samples at the Lower Sinter Terrace fissure and an adjacent
+degassing area across the road, with P. Ruprecht -- dry-gas
+composition and carbon isotopes analyzed at Fischer's Volatiles Lab
+(UCSB), noble-gas ratios at P. Barry's lab (WHOI). This is the first
+gas-chemistry dataset this project has access to, and the only
+Steamboat-specific gas chemistry on file anywhere besides Mariner and
+Janik's [-@mariner1995] 1991-1994 well-23-5 analyses. One sample
+(NV26-2) carries a flagged contamination risk -- the field team noted a
+possible Giggenbach-bottle leak, and it was also collected where
+sampling broke through fresh asphalt that the gas was visibly escaping
+through -- and is treated accordingly below, not silently averaged in
+with the other two.
+
+Because near-surface vent gas is never air-free, every sample is first
+corrected for atmospheric entrainment using the standard assumption
+that measured O2 is entirely atmospheric: air-derived N2 is estimated
+from the dry-air N2/O2 ratio (3.773) and subtracted before the
+remaining species are renormalized. This correction, not a new method
+invented for this project, is applied before the D'Amore and Panichi
+[-@damore1980] multicomponent gas geothermometer (the same
+implementation already used and literature-validated in the Background
+section) is run on each corrected composition.
+
 ## Hydrochemical endmember characterization
 
 Following Objectives 1 and 3 above, every real water sample with
@@ -1020,6 +1046,139 @@ show_fig(
   "Geothermometer estimates versus measured discharge temperature, per-well mean across all real thermal samples with complete chemistry. Already produced.",
   alt = "Paired-point plot comparing sodium/potassium and quartz/chalcedony geothermometer temperature estimates to measured discharge temperature, per well.",
   id = "fig-geo"
+)
+```
+
+**A first, independent gas-chemistry check.** The three real April 2026
+fissure gas samples described in the Methods section give a second,
+independent line of evidence on reservoir temperature and fluid
+stability. Air-corrected gas ratios (CO2/N2, H2S/CO2, N2/Ar, CH4/CO2)
+for the two unflagged samples (NV26-1, NV26-3) fall within, or close
+to, the range Mariner and Janik [-@mariner1995] report for well 23-5
+three decades earlier, shown in @fig-gascomp; NV26-2's ratios sit well
+outside that range, consistent with its flagged contamination.
+D'Amore-Panichi gas-geothermometer estimates for NV26-1 and NV26-3
+(228 and 181 degrees Celsius) bracket Mariner and Janik's own well-23-5
+T-DP range (173-200 degrees Celsius), shown in @fig-gastherm, while the
+gas-estimated temperatures for all three real samples sit well above
+their own measured vent temperatures (96-99.5 degrees Celsius) -- the
+same cooling-diluting-flow-path pattern already seen in the water
+geothermometers above, now independently reproduced by gas chemistry.
+NV26-1 is co-located with SBF_0001, a real water sample collected May 1,
+2026 with its own complete major-ion and stable-isotope chemistry
+(chloride 815 mg/L, delta-18-O -12.3 per mil, delta-D -114 per mil) --
+the first point in this project with both real gas and real water
+chemistry from the same location, a pairing Chapter 4's mixing-model
+work is specifically positioned to use going forward. The noble-gas
+ratios collected alongside these samples (helium-3/helium-4, roughly
+5.6 to 6.0 times the atmospheric ratio) can be checked against a real,
+Steamboat-specific historical baseline: Torgersen and Jenkins
+[-@torgersenjenkins1982] report helium isotope ratios for four
+Steamboat springs, in both water and gas phases, collected in 1982.
+Their two gas-phase measurements they themselves treat as reliable
+(Springs 6 and 10) both come out at 6.0 times atmospheric -- essentially
+identical to the new 2026 gas values -- while their water-phase
+measurements run lower (3.9 to 4.5) and two further gas values are
+explicitly flagged in their own text as suspect (air mixing or
+self-contamination at the vent), shown in @fig-heisotope. Read
+together, this is a real, specific result: the gas-phase helium
+signature at Steamboat has stayed essentially unchanged for at least
+44 years, not just "broadly consistent with a regional expectation."
+Kennedy and van Soest [-@kennedyvansoest2007] independently name
+Steamboat as one of a handful of Basin and Range sites with ratios
+exceeding 3 times atmospheric, attributing this to mantle-fluid flow
+through the ductile lower crust -- a regional, not Steamboat-specific,
+corroboration of the same conclusion.
+
+```{r fig-heisotope}
+#| results: asis
+show_fig(
+  "output/figures/gas_analysis/he_isotope_historical_comparison.png",
+  "Left: Steamboat helium-isotope ratios (Rc/Ra), 1982 (Torgersen and Jenkins) versus 2026 (this project); gas reads higher than water at every 1982 spring. Right: the 2026 analog using temperature instead of He isotopes (no 2026 water He measurement exists), at the one real co-located point -- the gas geothermometer again reads higher than most water methods. Already produced.",
+  alt = "Two-panel figure: left, point plot comparing helium isotope ratios between the new fissure gas samples and four Steamboat springs sampled in 1982; right, bar chart comparing gas and water geothermometer temperature estimates at the same real 2026 point.",
+  id = "fig-heisotope"
+)
+```
+
+```{r fig-gascomp}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/gas_composition_comparison.png",
+  "Air-corrected fissure gas ratios (NV26-1/2/3, April 2026) versus Mariner and Janik's (1995) well 23-5. Already produced.",
+  alt = "Faceted scatter plot comparing four gas composition ratios between the new fissure gas samples and historical well 23-5 values.",
+  id = "fig-gascomp"
+)
+```
+
+```{r fig-gastherm}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/gas_geothermometry_comparison.png",
+  "D'Amore-Panichi gas-geothermometer estimates versus measured field temperature for the three real fissure gas samples. Already produced.",
+  alt = "Point plot comparing gas-geothermometer temperature estimates to measured field temperature for three fissure gas samples, with the historical well 23-5 range shown as reference lines.",
+  id = "fig-gastherm"
+)
+```
+
+NV26-2's flagged contamination is a concrete, low-cost lesson for the
+sampling plan above, not just a data-quality footnote: future
+Giggenbach-bottle gas sampling at this terrace should avoid breaking
+through fresh pavement and should re-check bottle seals in the field
+before leaving the site.
+
+**Water and gas geothermometers side by side.** Putting the gas
+geothermometer estimates next to this project's existing water
+geothermometers (Na/K-Giggenbach, Na/K-Fournier, quartz, chalcedony;
+148 real method/sample estimates across 67 thermal samples with complete
+chemistry) against measured temperature, shown in @fig-geothermwatergas,
+makes the pattern explicit rather than described only in prose: every
+method except quartz and chalcedony over-predicts measured
+temperature, and the one real co-located point (NV26-1 gas / SBF_0001
+water) sits consistently with that pattern rather than as an outlier --
+the gas estimate (228 degrees Celsius) lands closest to the Na/K
+estimates (153-173 degrees Celsius) among the water methods, not the
+quartz/chalcedony pair (92-118 degrees Celsius), suggesting both the
+gas and the Na/K-based water signatures are responding to a similar,
+deeper and hotter part of the system than the silica-based estimates.
+
+```{r fig-geothermwatergas}
+#| results: asis
+show_fig(
+  "output/figures/gas_analysis/geothermometer_water_gas_comparison.png",
+  "Water and gas geothermometer estimates vs. measured temperature, all real thermal samples. Already produced.",
+  alt = "Scatter plot of geothermometer-estimated temperature versus measured temperature, colored by method, with the one real co-located gas/water point labeled.",
+  id = "fig-geothermwatergas"
+)
+```
+
+**A first real PHREEQC test using the gas data.** The gas isotope and
+conservative-ratio data collected here are also a natural input to the
+PHREEQC gas-phase modeling already described in the Background
+section -- and, for the first time, a real test was possible rather
+than only a synthetic self-test: SBF_0001's real water chemistry was
+re-equilibrated against a `GAS_PHASE` seeded with NV26-1's real,
+air-corrected CO2-to-H2S proportions (96.5 to 3.5 percent) at 1
+atmosphere, modeled as an open system continuously resupplied by the
+fissure. Shown in @fig-gasphase, the result is a real, substantive
+shift: pH drops from the water's measured 8.3 to a modeled 6.3, and
+calcite, aragonite, and dolomite all move from supersaturated (as this
+project's PHREEQC pipeline already finds for the water alone) to
+undersaturated. Read plainly, this says the water as sampled is not
+simply sitting in equilibrium with the vent gas as sampled -- either
+the two were not collected from truly the same fluid parcel, gas and
+liquid separate before either is caught at the surface, or the real
+reservoir pressure (not the 1 atmosphere used here as a simplification)
+changes the picture. Any of those is a real, useful constraint on how
+this system's gas and water should eventually be modeled together, not
+a result to over-interpret from one sample pair.
+
+```{r fig-gasphase}
+#| results: asis
+show_fig(
+  "output/figures/gas_analysis/gas_phase_fischer_pairing_before_after.png",
+  "SBF_0001 water chemistry before and after PHREEQC equilibration with a real GAS_PHASE seeded from NV26-1's measured composition. Already produced.",
+  alt = "Bar chart comparing pH and three carbonate mineral saturation indices before and after equilibrating a real water sample with a real measured gas composition.",
+  id = "fig-gasphase"
 )
 ```
 

@@ -287,6 +287,24 @@ seventy-year record. A modeling result that doesn't actually bear on
 one of those three questions isn't reported here just because it's
 available.
 
+## Fissure gas geochemistry
+
+Three real free-gas samples collected April 2026 at the Lower Sinter
+Terrace fissure by T. Fischer and K. Mtili (UCSB), with P. Ruprecht,
+give this project its first gas-chemistry dataset. One sample (NV26-2)
+carries a flagged contamination risk -- a possible Giggenbach-bottle
+leak, at a point where sampling broke through fresh asphalt -- and is
+treated accordingly, not silently averaged with the other two. Every
+sample is first corrected for atmospheric entrainment (measured O2
+assumed entirely atmospheric; air-derived N2 estimated from the dry-air
+N2/O2 ratio of 3.773 and subtracted) before the D'Amore-Panichi
+[@damore1980] multicomponent gas geothermometer already described
+above is run on the corrected composition, and compared against the
+only other Steamboat-specific gas chemistry on file, Mariner & Janik's
+[-@mariner1995] 1991-1994 well-23-5 analyses (see
+`scripts/analysis/gas_air_correction.R` and
+`scripts/analysis/gas_historical_comparison.R`).
+
 ## Hydrologic and geologic modeling directions
 
 The database described above is designed to support three further
