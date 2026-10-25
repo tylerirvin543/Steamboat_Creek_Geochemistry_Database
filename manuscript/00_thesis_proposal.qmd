@@ -768,22 +768,28 @@ sample's observed chemistry -- a genuine test of the mixing hypothesis,
 not just an arithmetic ratio. `INVERSE_MODELING` goes further, solving
 for mixing fractions and mineral mass transfer simultaneously, within
 stated elemental uncertainty bounds. One real mixing run and two real
-inverse-modeling runs exist as of this writing. The first mixing and
-inverse run uses a representative (not time-paired) thermal/meteoric
-end-member pair, because no two chloride samples have yet been
-collected close enough together in time to serve as a genuinely
-paired end-member set -- exactly the gap the calibration sampling
-plan above is meant to close. A second, gas-informed inverse run,
-described in the Results section below, instead uses a reconstructed
-deep parent-fluid composition as the thermal end-member and finds
-zero feasible solutions, traced to a known PHREEQC numerical
-limitation rather than a chemical rejection of that end-member (also
-described below). The automated parser for PHREEQC's own inverse-modeling text
-output also has a known, real gap: it correctly identifies that a
-feasible solution was found, but hasn't yet correctly pulled that
-solution's mineral-mass-transfer numbers out of PHREEQC's raw text
-report. This gap is stated directly rather than replaced with an
-unverified number.
+inverse-modeling runs exist as of this writing, and both inverse runs
+now report zero feasible models -- a correction from earlier text in
+this project: a parser bug (fixed 2026-10-25) had been reading
+PHREEQC's own echoed-back input-solution composition as if it were a
+found solution, reporting a false "1 candidate solution" for the
+first real inverse run (target: Soccer Field Monitoring Well,
+end-members: sample 816/829) when PHREEQC's own raw output in fact
+says "Number of models found: 0." That first run uses a
+representative (not time-paired) thermal/meteoric end-member pair,
+because no two chloride samples have yet been collected close enough
+together in time to serve as a genuinely paired end-member set --
+exactly the gap the calibration sampling plan above is meant to
+close. A second, gas-informed inverse run, described in the Results
+section below, uses a reconstructed deep parent-fluid composition as
+the thermal end-member and also finds zero feasible solutions, traced
+to real post-mortem residuals (on Alkalinity, C(4), Ca, and K)
+exceeding the stated uncertainty bound -- a genuine infeasibility, not
+a numerical-plumbing artifact this time. The automated parser's own
+remaining real gap -- it has never correctly extracted a solution's
+mineral-mass-transfer numbers from PHREEQC's raw text output -- is now
+moot for both of this project's real runs, since neither found a
+feasible solution for it to extract from.
 
 **Interpretation framework.** Every PHREEQC run in this project is
 ultimately answering one of three questions, not run just because the

@@ -7527,6 +7527,96 @@ clean.csv`, the source `.xlsx`, and `data/raw/historical/
 nbmg_timeline_2022_2025.csv`, per this project's standing convention
 for hand-maintained files under the blanket-ignored `data/raw/`.
 
+## Session 54 (2026-10-25, continued): manuscript/notebook correction
+pass for the Session 30 false "inverse model succeeded" claim; bounded
+phase/uncertainty exploration for the SBW_0001 inverse model
+
+Two follow-ups per explicit user request, now that Session 53 confirmed
+the original Session 30 "real inverse model found a feasible solution"
+claim was a false positive caused by a real parser bug.
+
+- **Corrected every real instance of the false claim found by a
+  project-wide grep**: `manuscript/00_thesis_proposal.qmd` (the
+  "Mixing and inverse modeling" Methods paragraph -- now states both
+  real inverse runs report zero feasible models and explains the
+  parser-bug correction), `manuscript/03_methods.qmd` (two parallel
+  spots, same correction), `manuscript/02_geochemical_background.qmd`
+  (the "methodological note" on the inverse-modeling parser gap --
+  corrected from "found a feasible solution [just unparsed]" to "found
+  0 feasible models [confirmed by rechecking PHREEQC's own summary
+  line]"), `notebooks/06_phreeqc_geochemical_modeling.qmd` (the
+  "real, documented gap" paragraph describing the Session 30 Soccer
+  Field run -- rewritten as an explicit correction, with a forward
+  note that the newer SBW_0001/SBS_0001 attempts aren't yet
+  incorporated into this notebook's own text), and `ROADMAP.md` (the
+  roadblocks table row and the "near-term directions" bullet, both
+  updated from "needs a parser fix" to "needs a real feasible solution
+  to exist before there's anything to parse").
+  **Deliberately left alone**: `notebooks/07`'s "PHREEQC: next steps"
+  table (a forward-looking item written before Session 30's run was
+  ever attempted, doesn't itself make the false claim) and
+  `notebooks/08`'s "genuinely blocked on more data" framing (already
+  accurate, doesn't claim success); the website (`website/results.Rmd`)
+  is pre-existing stale text describing the mixing/inverse workflow as
+  entirely synthetic-only, which is a separate, larger staleness issue
+  than this specific correction and was not touched.
+- **Verified end-to-end**: `02_geochemical_background.qmd`,
+  `03_methods.qmd`, and the full `00_thesis_proposal.qmd` all re-render
+  cleanly to HTML after the corrections (0 citeproc warnings); a
+  `grep -c $'\r\r'` check on all five edited files confirmed no CRLF
+  corruption was introduced via the usual readLines/writeLines
+  round-trip used on these CRLF files.
+- **Bounded phase/uncertainty exploration for the SBW_0001 inverse
+  model** (per explicit request, to see if a 4th/5th candidate phase
+  resolves the remaining Ca residual at 10% uncertainty): tested
+  Calcite+Dolomite+Quartz (silica, since SBW_0001's real Si=70 mg/L is
+  notably lower than the fissure's 106.5 mg/L, a plausible real silica
+  sink) with Ca added to the explicit `-balances` list, and with Mg
+  dropped from it (reasoning: Dolomite's own stoichiometry should
+  already tie Mg to the mass balance, so explicitly re-balancing it
+  might be redundant/over-constraining). **Result: identical residual
+  every time** (Ca eps+ = 1.664735e-04, to the exact same precision,
+  regardless of which phases or balance elements were varied) -- this
+  confirms the blocking constraint is a genuine Ca-specific
+  infeasibility at this uncertainty level, not a missing-phase or
+  missing-balance-element gap. A true PHREEQC ion-exchange term is not
+  applicable here: `INVERSE_MODELING`'s mass-balance framework works
+  through mineral/gas phases, not `EXCHANGE` blocks (that's a forward-
+  model-only PHREEQC concept), so this candidate from the original
+  request was ruled out as not implementable within this framework,
+  not simply untried.
+- **A real, concrete near-feasibility point found via a fine-grained
+  uncertainty scan** (11%, 12%, 13%, in addition to the already-tried
+  5/10/15%): at **11%**, the residual shrinks further to a single,
+  very small Mg eps+ of 5.05e-05 (smaller than the 10% run's Ca
+  residual) -- genuinely on the edge of feasibility. At 12% and above,
+  the solver becomes numerically unstable again (residuals jump back
+  up across Cl, Mg, Alkalinity, C(4), Ca, K, Na, and pH simultaneously,
+  plus a new "Dissolution/precipitation constraint not satisfied"
+  error) -- the same non-monotonic fragility already documented at 15%
+  in Session 53, now confirmed to set in specifically between 11% and
+  12%, not gradually. **Explicitly not chased further**: continuing to
+  search for a single "just right" uncertainty value that happens to
+  clear a residual already at the 1e-5 noise floor would be tuning
+  toward a predetermined answer, not a defensible modeling choice --
+  reported as a real, bounded finding (SBW_0001 sits right at the edge
+  of two-end-member-plus-carbonate feasibility, closest around 10-11%
+  uncertainty) rather than declared solved.
+- Exploratory runs were done directly against a scratch database copy
+  via `format_phreeqc_inverse_input()`/`run_phreeqc()` called manually
+  (bypassing `run_phreeqc_inverse()`'s database-writing wrapper, since
+  no run found a real feasible solution to store) -- raw `.pqi`/`.pqo`
+  files left in `phreeqc/runs/inverse/explore/` (gitignored, consistent
+  with how every other PHREEQC run's I/O is handled in this project).
+  **No changes made to the real database this session** -- purely a
+  documentation correction plus a read-only modeling exploration.
+- **Not done**: `run_phreeqc_inverse()`'s production wrapper still
+  doesn't expose `balance_elements`/custom per-element uncertainty as
+  parameters (only `format_phreeqc_inverse_input()` does) -- adding
+  that would make this kind of exploration easier to do through the
+  normal config-file path next time, flagged as a small future
+  convenience improvement, not attempted here.
+
 ## Session 53 (2026-10-25, continued): SBRR as the real dilution
 reference, a real PHREEQC inverse-model false-positive bug found and
 fixed, and an honest null inverse-modeling result

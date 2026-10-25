@@ -722,8 +722,22 @@ root-cause investigation found. See
   found a feasible solution" (target: Soccer Field Monitoring Well,
   end-members: SBF_0001 + Boyd Domestic Well) is likely also a false
   positive -- re-running it with the fixed parser gives 0 feasible
-  models too. Worth a pass through the manuscript/notebook text to
-  correct this claim wherever it was cited as a positive result.
+  models too. **Done (Session 54)**: corrected every real instance of
+  this claim across `manuscript/00_thesis_proposal.qmd`,
+  `manuscript/02_geochemical_background.qmd`,
+  `manuscript/03_methods.qmd`, `notebooks/06_phreeqc_geochemical_modeling.qmd`,
+  and `ROADMAP.md`. Also tried a bounded phase/uncertainty exploration
+  for the SBW_0001 inverse model (adding Quartz, varying balance
+  elements, scanning 10-13% uncertainty) -- the residual is a genuine,
+  Ca-specific infeasibility unaffected by phase/balance choices;
+  11% uncertainty is the closest to feasible found (a single Mg
+  residual at the 1e-5 noise floor) before the solver destabilizes at
+  12%+. Not chased further (see AGENTS.md Session 54 for the full
+  writeup) -- a real, still-open null result, not declared solved.
+  **Still open**: `website/results.Rmd`'s own description of the
+  mixing/inverse workflow as "synthetic-only" is separately stale
+  (pre-dates Sessions 30/52/53/54 entirely) and was not touched this
+  round -- worth a full website refresh pass at some point.
 
 ## 18. A real southwest/west groundwater sample is needed for the LST meteoric end-member (2026-10-25)
 

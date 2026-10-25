@@ -190,11 +190,13 @@ PHREEQC 3 executable [@phreeqc] against every sample with complete
 enough chemistry to support it (233 real samples as of this writing),
 with a database auto-selected per sample by temperature and total
 dissolved solids and a documented fallback when the first choice fails
-to converge. A real two-end-member conservative-mixing model and one
-real PHREEQC inverse-modeling run (mixing plus mineral mass transfer)
-have also been completed, using chemically distinct, not merely
-spatially close, end-members, following the modeling principle laid
-out at the end of Chapter 2. The rest of this section describes the
+to converge. A real two-end-member conservative-mixing model has also been
+completed, using chemically distinct, not merely spatially close,
+end-members, following the modeling principle laid out at the end of
+Chapter 2. Two real PHREEQC inverse-modeling runs have also been
+attempted; both report zero feasible models (one of them only after a
+real parser bug -- fixed 2026-10-25 -- was found to have reported a
+false positive for the first attempt). The rest of this section describes the
 actual workflow -- which samples get modeled, how their chemistry is
 assembled and cleaned up before PHREEQC ever sees it, and what the
 output is actually used to decide -- rather than re-deriving the
@@ -264,18 +266,24 @@ sample's observed chemistry -- a genuine test of the mixing hypothesis,
 not just an arithmetic ratio. `INVERSE_MODELING` goes further, solving
 for mixing fractions and mineral mass transfer simultaneously, within
 stated elemental uncertainty bounds. In the interest of being upfront
-about where this actually stands: only one real mixing run and one
-real inverse-modeling run exist as of this writing, both using a
-representative rather than a time-paired thermal/meteoric end-member
-pair, because no two chloride samples have yet been collected close
-enough together in time to serve as a genuinely paired end-member set
--- exactly the gap the calibration sampling plan above is meant to
-close. The automated parser for PHREEQC's own inverse-modeling text
-output also has a known, real gap: it correctly identifies that a
-feasible solution was found, but hasn't yet correctly pulled that
-solution's mineral-mass-transfer numbers out of PHREEQC's raw text
-report. That's named here rather than papered over with a number that
-hasn't actually been verified.
+about where this actually stands: one real mixing run and two real
+inverse-modeling runs exist as of this writing, and both inverse runs
+report zero feasible models. The first used a representative rather
+than a time-paired thermal/meteoric end-member pair (sample 816/829),
+because no two chloride samples have yet been collected close enough
+together in time to serve as a genuinely paired end-member set --
+exactly the gap the calibration sampling plan above is meant to
+close; it was originally reported as having found one feasible
+solution, but a parser bug (fixed 2026-10-25) turned out to have
+misread PHREEQC's own echoed-back input composition as a found
+solution, when PHREEQC's own raw output actually says "Number of
+models found: 0." The second, gas-informed run (Chapter 4) also finds
+zero feasible models, this time from real post-mortem residuals
+exceeding the stated uncertainty bound, not a parser artifact. The
+automated parser's own remaining real gap -- it has never correctly
+extracted a solution's mineral-mass-transfer numbers from PHREEQC's
+raw text output -- is moot for both real runs on file, since neither
+found a feasible solution to extract numbers from.
 
 **Interpretation framework.** Every PHREEQC run in this project is
 ultimately answering one of three questions, not run just because the

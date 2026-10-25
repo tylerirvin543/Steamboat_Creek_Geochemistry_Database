@@ -78,7 +78,7 @@ not aspirational claims:
 | Skalbeck (2001) Table A-2 has 112 of 353 rows with real column-position ambiguity that arithmetic cross-checking can't safely resolve (a physically-implausible Alt-thickness > Kgd-depth result on one hypothesis) | The full 353-point depth grid (currently 241/353 ingested) | Needs review against the actual scanned page images (Appendix A, pp.191-199), not OCR text alone -- logged to `data/derived/skalbeck2001_table_a2_ambiguous_rows.csv` |
 | Logger measurement-uncertainty now has real manufacturer specs (`Logger_Specifications`) and real field calibration checks (`Logger_Calibration_Checks`, 10 real temperature checks auto-detected from Field_Measurements) but conductivity has only 1 real candidate check, and it falls outside the 4-hour matching tolerance | A real conductivity calibration-check example (temperature already has 10) | Needs a future field visit's lab/handheld conductivity reading taken closer in time to a logger reading, or a documented decision to widen the matching tolerance |
 | Pine Tree Ranch #2 and SBG-TH1/2/3's real water-level-only time series (a separate, structurally simpler section at the end of Table B-2 -- no chemistry, just monthly depth-to-water) has not been transcribed | Extending real water-level history for these wells | Structurally much simpler than the chemistry blocks (3 clean depth-only columns, no Cl/B/Temp disambiguation needed) -- a good, fast next win once picked up |
-| `PHREEQC_Inverse_Results`' mineral mass-transfer numbers were never correctly parsed (confirmed 2026-09-26 while building the real-mixing figure -- see notebook 06) | Any inverse-model mass-transfer figure/interpretation | A parser fix reading the run's raw `.pqo` output directly for the real "Phase mole transfers" section header |
+| ~~`PHREEQC_Inverse_Results`' mineral mass-transfer numbers were never correctly parsed~~ **Root cause found 2026-10-25: there was no real solution to parse numbers from at all.** The parser bug (confirmed 2026-09-26) was compounded by a deeper one in `run_phreeqc_inverse()` itself: it never checked PHREEQC's own "Number of models found" summary line, so it reported a false "1 candidate solution" for a run PHREEQC's own output says found 0 feasible models. Fixed 2026-10-25 (`scripts/phreeqc/11_run_phreeqc_inverse.R`) -- every real inverse run on file (the original Soccer Field run, plus new SBW_0001/SBS_0001 attempts) now honestly reports 0 feasible models | Any inverse-model mass-transfer figure/interpretation | Still needs a real, geochemically feasible inverse-model solution before there is anything to extract mass-transfer numbers from -- e.g. more/different candidate phases, a real time-paired end-member set, or a loosened (but still defensible) uncertainty bound |
 | No MODFLOW grid, boundary conditions, recharge estimate, or K-field zonation exists | Any groundwater flow model | Needs the fault/lithology roadblocks above resolved first, plus a real recharge estimate (the one real Dec-2025-storm water-level response at STMGID MW10 is a start, not a calibration) |
 
 ## 3. Future directions, sequenced
@@ -89,8 +89,9 @@ not aspirational claims:
   water-level data, only real Cl samples already on file. The single most
   valuable ArcGIS figure achievable this year independent of the
   potentiometric-surface blocker.
-- Fix `PHREEQC_Inverse_Results`' parser gap (Section 2) and build the real
-  mineral-mass-transfer figure once the numbers are trustworthy.
+- Find a real, geochemically feasible inverse-model solution (Section 2 --
+  every real attempt so far genuinely finds 0 feasible models, not just an
+  unparsed one) before a real mineral-mass-transfer figure is possible.
 - A true transect-based 2D well cross-section (distinct from the existing
   name-ordered "type-log gallery" in `well_completion_profile.R`) using
   already-available collar/completion-interval data.

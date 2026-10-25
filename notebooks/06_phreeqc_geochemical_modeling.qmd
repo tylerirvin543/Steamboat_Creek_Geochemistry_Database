@@ -559,23 +559,31 @@ saturation pattern" check the mixing framework is designed for -- and it's
 now visualized directly from real data rather than only described in
 prose.
 
-**A real, documented gap found while building this**: the paired
-real-inverse-model result (Session 30, target = Soccer Field Monitoring
-Well, end-members 816+829, candidate phases Calcite+Quartz) does **not**
-have usable mineral mass-transfer figures to show here. Inspecting
-`PHREEQC_Inverse_Results` directly shows every stored `component` is a
-solution-composition echo (temp, pH, Ca, Mg, Na, K, Cl, ...) or a redox-
-species label (`As(3)`, `Cl(-1)`, ...) -- **not** an actual mineral name
-(`Calcite`, `Quartz`) with a real moles-transferred amount. This confirms,
-with a concrete example, the caveat already on record in this notebook's
-"Known limitations" section below:
-`parse_phreeqc_inverse_output()` is a best-effort regex parser of PHREEQC's
-free-text inverse-modeling output, and it evidently never captured the real
-"Phase mole transfers" block for this run. Fixing this needs someone to
-open the run's raw `.pqo` file directly and extend the parser to the real
-section header PHREEQC actually uses there -- flagged in `ROADMAP.md` as a
-concrete near-term item, not attempted as a quick fix here (a wrong chart
-built from a mis-parsed table would be worse than no chart).
+**Correction (2026-10-25): the paired real-inverse-model result (Session
+30, target = Soccer Field Monitoring Well, end-members 816+829, candidate
+phases Calcite+Quartz) never actually found a feasible solution at all.**
+Session 30's original claim that this run "found a feasible solution"
+(just one lacking extractable mass-transfer numbers) was itself wrong.
+Inspecting `PHREEQC_Inverse_Results` directly shows every stored
+`component` is a solution-composition echo (temp, pH, Ca, Mg, Na, K, Cl,
+...) or a redox-species label (`As(3)`, `Cl(-1)`, ...) -- not an actual
+mineral name (`Calcite`, `Quartz`) with a real moles-transferred amount --
+and re-reading the run's own raw `.pqo` file directly confirms PHREEQC's
+own summary says "Number of models found: 0." `run_phreeqc_inverse()`
+never checked that summary line, so a bare "did the parser extract any
+rows at all" check silently treated the echoed-back input as if it were a
+found solution. Fixed in `scripts/phreeqc/11_run_phreeqc_inverse.R`
+(2026-10-25): the function now reads PHREEQC's own "Number of models
+found" line and only stores/reports a result when it is greater than
+zero. Re-running this exact config row with the fix confirms 0 feasible
+models. (A newer, separate round of real inverse-model attempts for
+the Lower Sinter Terrace flowpath, target samples SBW_0001 and
+SBS_0001, also returned honest null results for the same underlying
+reason -- see `AGENTS.md` Session 53 for the full writeup; not yet
+incorporated into this notebook's own text.) The mineral
+mass-transfer-number parsing gap described in this notebook's "Known
+limitations" section is therefore moot for every real inverse run on
+file so far -- none of them has a real solution to extract numbers from.
 
 ### The mixing fraction itself: a univariate distribution (2026-09-26)
 

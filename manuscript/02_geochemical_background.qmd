@@ -153,12 +153,15 @@ for mixing fractions *and* mineral mass transfer (e.g. how much calcite
 would need to dissolve or precipitate along a flow path) within stated
 elemental uncertainty bounds. **A methodological note, in the interest of
 transparency**: this project's automated parser for PHREEQC's inverse-
-modeling text output has a known, real gap (discovered while preparing
-this manuscript) -- it correctly finds that a real run produced a feasible
-solution, but has not yet correctly extracted that solution's actual
-mineral-mass-transfer numbers from the raw output text. This is flagged
-explicitly in `ROADMAP.md` as a concrete near-term fix, and no invented or
-placeholder numbers are presented here in its place.
+modeling text output had a real bug (found and fixed 2026-10-25) that
+misread PHREEQC's own echoed-back input-solution composition as a found
+solution -- it had reported "1 candidate solution" for this project's
+first real inverse-modeling run when PHREEQC's own raw output actually
+says "Number of models found: 0." Every real inverse-modeling run on
+file as of this writing reports zero feasible models once checked
+against PHREEQC's own summary line rather than the parser's row count,
+so no mineral-mass-transfer numbers -- invented, placeholder, or
+otherwise -- are presented here at all.
 
 ## An important modeling principle: chemistry first, spatial connectivity second
 
