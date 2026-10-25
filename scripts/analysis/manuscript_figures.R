@@ -534,6 +534,8 @@ build_manuscript_figures <- function(con) {
   build_gas_composition_comparison_figure(con)
   build_gas_geothermometry_figure(con)
   build_parent_fluid_comparison_figure(con)
-  invisible(TRUE)
   build_conductivity_timeseries_figure(con)
+  source("scripts/analysis/lst_phreeqc_illustration_figures.R")
+  build_lst_phreeqc_illustration_figures(con)
+  invisible(TRUE)
 }
