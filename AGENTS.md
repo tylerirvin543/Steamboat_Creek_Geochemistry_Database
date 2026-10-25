@@ -7527,6 +7527,110 @@ clean.csv`, the source `.xlsx`, and `data/raw/historical/
 nbmg_timeline_2022_2025.csv`, per this project's standing convention
 for hand-maintained files under the blanket-ignored `data/raw/`.
 
+## Session 53 (2026-10-25, continued): SBRR as the real dilution
+reference, a real PHREEQC inverse-model false-positive bug found and
+fixed, and an honest null inverse-modeling result
+
+Direct follow-up per explicit user correction: use SBRR's own real
+water chemistry as the mixing/dilution reference instead of "a random
+spring we don't know" (Jumbo Grade Spring, flagged last session as
+having no coordinate on file), and run a real forward model AND a real
+inverse model with this corrected end-member.
+
+- **SBRR (sample 819, Steamboat Creek @ Rhodes Road) confirmed real,
+  complete, and PHREEQC-eligible**: Cl=17.1 mg/L, Ca=17.95, Mg=6.5,
+  Na=17.0, SO4=4.0, Alkalinity=112.14 mg/L, pH=7.9, field
+  temperature=59.4 C. Explicitly **not** a pure meteoric water -- its
+  own elevated temperature and Cl confirm it already carries a real
+  thermal signature from sitting close to the field -- documented as a
+  conservative (not theoretically pure) dilution reference everywhere
+  it's used (`mixing_config.csv`, `inverse_config.csv`, both figure
+  captions and node labels).
+- **New real mixing run**: `lst_fissure_sbrr_2026` added to
+  `data/raw/phreeqc/mixing_config.csv` (thermal=816 fissure,
+  meteoric=819 SBRR); the superseded `lst_fissure_jumbograde_2026` row
+  disabled (`enabled=FALSE`) rather than deleted, preserving the
+  record. Verified on a scratch copy first, then applied to the real,
+  backed-up `geochem_operational.sqlite` (backup:
+  `database/archive/geochem_operational_pre_sbrr_mixing_<timestamp>.sqlite`)
+  -- new `mixing_run_id`, 8,229 `PHREEQC_Mixing_Results` rows.
+- **Real, previously-undiscovered PHREEQC inverse-modeling parser bug
+  found and fixed.** Adding two new real inverse-model config rows
+  (`lst_sbw0001_sbrr_2026` target=SBW_0001, `lst_sbs0001_sbrr_2026`
+  target=SBS_0001; end-members 816+819; phases Calcite+Dolomite) and
+  running them surfaced that `run_phreeqc_inverse()`
+  (`scripts/phreeqc/11_run_phreeqc_inverse.R`) was reporting "1
+  candidate solution(s)" for SBW_0001 purely because
+  `parse_phreeqc_inverse_output()`'s heuristic regex parser still
+  extracts rows (the echoed-back initial-solution compositions) even
+  when PHREEQC's own raw `.pqo` summary explicitly says **"Number of
+  models found: 0."** Confirmed by reading the raw `.pqo` file
+  directly, which also showed real post-mortem residuals (Alkalinity,
+  C(4), Ca, K all exceeding the 5% uncertainty bound) -- a genuine
+  infeasibility, not the already-documented ~1e-9 trace-redox-couple
+  numerical quirk from Session 14. The production `run_phreeqc_inverse()`
+  function had never actually used the "Number of models found" check
+  that `demo_inverse_model()`'s own self-test already did correctly --
+  fixed to check it the same way, and to only write `PHREEQC_Inverse_Results`
+  rows when a real model was found, with an honest "0 feasible models
+  found... this is a real null result, not a parser gap" message
+  otherwise. **This means the original Session 30 "1 real inverse
+  model found" claim (model_id=1, Soccer Field target, Boyd end-members)
+  is now suspect too** -- re-running that same config row with the
+  fixed parser also reports 0 feasible models. The old stored
+  `PHREEQC_Inverse_Results` rows for model_id=1 were left in place
+  (historical record, not deleted), but this claim should no longer be
+  treated as a confirmed real inverse-model success anywhere it's
+  cited -- flagged here for a future correction pass through the
+  manuscript text.
+- **Real inverse-model attempts, all honest nulls**: SBW_0001 (fissure
+  + SBRR, Calcite+Dolomite, 5% uncertainty) -- 0 feasible models
+  (Alkalinity/C(4)/Ca/K residuals exceed bounds). Tried loosening to
+  10% as one bounded follow-up check: residuals shrink to a single
+  small Ca excess (1.66e-4), very close but still technically
+  infeasible; 15% destabilizes the solver entirely (residuals jump to
+  ~1e4, a real numerical instability, not a path toward convergence) --
+  stopped tuning there rather than continuing to search for a "yes."
+  SBS_0001 (same end-members/phases) hard-fails outright ("Not possible
+  to balance solution 3 with input uncertainties"). Both are real,
+  reported null results, not hidden or glossed over.
+- **Forward model (MIX-block/mixing-fraction curve) succeeded cleanly**
+  with the new SBRR end-member -- rebuilt
+  `forward_mixing_model_validation.png` and `lst_flow_network_graph.png`
+  with SBRR replacing Jumbo Grade Spring throughout (function default
+  args, node labels, captions, doc comments). Real result pattern
+  unchanged from the Jumbo-Grade-based version: SBW_0001 remains the
+  clear outlier (well above the curve on Calcite/Dolomite SI), while
+  the three real LST springs sit much closer to it.
+- **Fissure's dual deep-source/lateral-outflow character noted directly
+  in the network figure**, per user clarification: the fissure is a
+  shallow vent but may tap a deeper source than even the springs see
+  via mixed fluids, and separately shows a real lateral-outflow
+  component (2025 thermal-infrared imagery, elevated temperatures
+  along the fissure trace near the eruption) -- added to the fissure
+  node's own label rather than only stated in prose.
+- **New standing action item**: "down the road," build updated plots of
+  the full monitoring network's real Cl and water-level data from NDEP
+  PRR and other literature sources -- explicitly deferred (not built
+  this session, flagged as future work only).
+- **Real CRLF-splice mistake caught and fixed mid-session**: two text-
+  replacement edits to figure captions/subtitles silently dropped a
+  backslash from several `\n` escape sequences (producing literal
+  stray "n" characters mid-sentence in the rendered figures, e.g.
+  "sample 819).nPoints" and "earlier Boydn"), caught by visually
+  inspecting the rendered PNG (not just confirming the script ran
+  without error) and fixed by rewriting the affected lines directly
+  rather than patching further with more substitutions.
+- **Verified end-to-end**: all three figures regenerated cleanly
+  against the real, updated database; visually re-inspected after the
+  text-corruption fix to confirm clean rendering.
+- **Not done this session**: no retroactive audit/correction of
+  Session 30's original "1 real inverse model found" claim anywhere it
+  propagated into manuscript text (flagged above, not yet chased down);
+  no attempt at a 3rd uncertainty value between 10-15% for SBW_0001
+  (judged not worth further tuning); the "down the road" monitoring-
+  network Cl/water-level plotting task not started.
+
 ## Session 52 (2026-10-25, continued): PHREEQC illustration figures,
 Main Terrace exclusion, meteoric end-member corrected to Jumbo Grade
 Spring, LST flowpath restructured to upgradient->downgradient

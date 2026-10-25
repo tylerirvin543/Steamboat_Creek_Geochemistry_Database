@@ -708,6 +708,23 @@ and leaves the resort tank's own higher measured field pH (9.0 vs.
 root-cause investigation found. See
 `data/derived/phreeqc/parent_fluid_gas_load_scaling_test.csv`.
 
+## 19. Monitoring-network Cl/water-level plots, and a Session-30 inverse-model claim to revisit (2026-10-25, continued)
+
+- **Deferred, "down the road" task**: build updated plots of the full
+  monitoring network's real chloride and water-level data, pulling in
+  NDEP PRR and other literature sources as they accumulate. Not started
+  this session -- flagged here so it isn't lost.
+- **A real parser bug was found and fixed in `scripts/phreeqc/
+  11_run_phreeqc_inverse.R`** (see AGENTS.md Session 53): the production
+  inverse-modeling runner was reporting "1 candidate solution" for a
+  run that PHREEQC's own output says found 0 feasible models. This
+  means the original Session 30 claim of "the first real inverse model
+  found a feasible solution" (target: Soccer Field Monitoring Well,
+  end-members: SBF_0001 + Boyd Domestic Well) is likely also a false
+  positive -- re-running it with the fixed parser gives 0 feasible
+  models too. Worth a pass through the manuscript/notebook text to
+  correct this claim wherever it was cited as a positive result.
+
 ## 18. A real southwest/west groundwater sample is needed for the LST meteoric end-member (2026-10-25)
 
 The Lower Sinter Terrace mixing/forward-model work (fissure + resort

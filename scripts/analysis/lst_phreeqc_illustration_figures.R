@@ -67,17 +67,19 @@ source("scripts/analysis/plot_theme.R")
 #' his own text that GS-3/GS-4/GS-5 are "drill holes on the Main
 #' Terrace" -- neither is a Low Terrace feature.
 #'
-#' Meteoric end-member: Jumbo Grade Spring (sample 920, Mariner & Janik
-#' 1995, real measured pH/temperature), chosen over Boyd Domestic Well
-#' on real Ca/Mg/alkalinity residual fit (see AGENTS.md 2026-10-25).
-#' Caveat, stated here and in mixing_config.csv: this project has NO
-#' geolocated southwest/west-of-Steamboat groundwater sample on file at
-#' all -- Jumbo Grade Spring's own coordinates are not in this
-#' database either, so while its chemistry fits far better than
-#' Boyd's, its assumed upgradient (southwest/west, mountain-front)
-#' position is a plausible, UNCONFIRMED assumption, not a verified one.
+#' Meteoric/dilution reference: SBRR (sample 819, Steamboat Creek @
+#' Rhodes Road), chosen per direct user correction over both Boyd
+#' Domestic Well (implausible Ca/Mg, wrong-direction location) and
+#' Jumbo Grade Spring (better chemistry fit, but no coordinate on file
+#' at all -- "a random spring we don't know"). SBRR is real, precisely
+#' located, and already extensively used elsewhere in this project, but
+#' it is NOT a pure meteoric water: it carries a modest real thermal
+#' signature of its own (Cl = 17.1 mg/L, field temperature 59.4 C),
+#' consistent with sitting close to the thermal field itself. Using it
+#' as the dilution end-member is therefore a conservative choice, not a
+#' theoretically pure one -- stated plainly here and in every caption.
 build_forward_mixing_validation_figure <- function(con,
-    thermal_sample_id = 816, meteoric_sample_id = 920,
+    thermal_sample_id = 816, meteoric_sample_id = 819,
     target_sample_ids = c(821, 825, 820, 822),
     out_png = "output/figures/manuscript/forward_mixing_model_validation.png") {
 
@@ -150,14 +152,14 @@ build_forward_mixing_validation_figure <- function(con,
       title = "Forward model: do the real downgradient LST targets fall on the pure-mixing curve?",
       subtitle = paste0(
         "Grey line: PHREEQC MIX-block prediction for pure conservative mixing (no reaction) between the\n",
-        "fissure (SBF_0001, sample 816) and Jumbo Grade Spring (regional meteoric reference, sample 920).\n",
+        "fissure (SBF_0001, sample 816) and SBRR (Steamboat Creek @ Rhodes Road, sample 819).\n",
         "Points: each real target's own full-chemistry PHREEQC speciation at its own real mixing fraction."
       ),
       caption = paste0(
         "Targets are the real downgradient LST discharge points (SBW_0001 + the three real LST springs), NOT hot\n",
-        "spring 6/GS-5 (both confirmed Main Terrace, not Low Terrace -- excluded). Jumbo Grade Spring was chosen for\n",
-        "its real Ca/Mg/alkalinity fit; its assumed southwest/west, upgradient position is UNCONFIRMED -- this\n",
-        "project has no geolocated southwest/west regional groundwater sample on file. Quartz SI omitted (never\n",
+        "spring 6/GS-5 (both confirmed Main Terrace, not Low Terrace -- excluded). SBRR replaces earlier Boyd\n",
+        "Domestic Well/Jumbo Grade Spring choices -- a real, precisely located site, though itself not a pure\n",
+        "meteoric water (Cl=17.1 mg/L, T=59.4C). Quartz SI omitted (never\n",
         "defined along this mixing run). Source: PHREEQC_Mixing_Results/Fractions + PHREEQC_Results, geochem_operational.sqlite."
       )
     ) +
@@ -199,10 +201,10 @@ build_lst_flow_network_figure <- function(
     ~name,            ~label_full,                                                                 ~group,
     "parent_fissure", "Parent fluid\n(from fissure + NV26-1 gas)\nCl = 781 mg/L",                    "Reconstructed parent",
     "parent_resort",  "Parent fluid\n(from resort tank + NV26-1 gas)\nCl = 797 mg/L",                 "Reconstructed parent",
-    "fissure",        "Fissure discharge\nSBF_0001 (upper LST, west side)\nCl = 815 mg/L, elev. 1408 m", "Measured thermal discharge",
+    "fissure",        "Fissure discharge\nSBF_0001 (upper LST, west side)\nCl = 815 mg/L, elev. 1408 m\nshallow vent + real lateral outflow\n(2025 thermal-IR, along-fissure heating)", "Measured thermal discharge",
     "resort",         "Resort-tank discharge\nSBW_0002 (upper LST, west side)\nCl = 849 mg/L, elev. 1409 m", "Measured thermal discharge",
     "mixing_zone",    "Shallow LST mixing/\ndegassing zone",                                          "Mixing zone",
-    "meteoric",       "Meteoric end-member\nJumbo Grade Spring (regional)\nCl = 7 mg/L -- SW/W position UNCONFIRMED,\nno geolocated SW/W sample on file", "Meteoric end-member",
+    "meteoric",       "Dilution reference\n(SBRR water chemistry, sample 819)\nCl = 17 mg/L, T = 59C -- real but not\npurely meteoric; same real site as the\nSBRR node further right", "Meteoric end-member",
     "sbw1",           "SBW_0001\n(across creek, ag. field, elev. 1397 m)\nf_thermal = 0.58",          "Downgradient target",
     "sbs2",           "SBS_0002 (seep)\nelev. 1400 m, f_thermal = 0.78",                              "Downgradient target",
     "sbs1",           "SBS_0001 (spring)\nelev. 1397 m, f_thermal = 0.89",                            "Downgradient target",
@@ -278,8 +280,9 @@ build_lst_flow_network_figure <- function(
         "PHREEQC/mass-balance quantities where available."
       ),
       caption = paste0(
-        "Meteoric end-member: Jumbo Grade Spring (real Ca/Mg/alkalinity fit), not Boyd Domestic Well -- its own\n",
-        "assumed southwest/west position is unconfirmed (no geolocated SW/W groundwater sample on file).\n",
+        "Dilution reference: SBRR's own real water chemistry (sample 819), not Boyd Domestic Well or Jumbo Grade\n",
+        "Spring -- a real, precisely located site, though SBRR itself carries a modest real thermal signature\n",
+        "(Cl=17.1 mg/L, T=59.4C) and is therefore a conservative, not a theoretically pure, dilution reference.\n",
         "Source: scripts/phreeqc/15_gas_informed_parent_fluid.R, fluid_evolution_flowpath.R, geochem_operational.sqlite."
       )
     ) +

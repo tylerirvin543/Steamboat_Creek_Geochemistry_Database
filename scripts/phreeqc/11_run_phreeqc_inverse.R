@@ -133,12 +133,33 @@ run_phreeqc_inverse <- function(con, target_sample_id, end_member_sample_ids,
   }
 
   parsed <- parse_phreeqc_inverse_output(out_file)
-  if (nrow(parsed) > 0) {
+
+  # Real bug found 2026-10-25: PHREEQC's own "Number of models found" count
+  # in the raw .pqo summary is the authoritative signal for whether a real
+  # feasible solution exists -- parse_phreeqc_inverse_output()'s heuristic
+  # regex parser still extracts rows (the echoed-back initial-solution
+  # compositions) even when PHREEQC found ZERO feasible models, so a bare
+  # `nrow(parsed) > 0` check previously reported a false "1 candidate
+  # solution" for a run that PHREEQC itself reports as "Number of models
+  # found: 0". Checked here explicitly, mirroring demo_inverse_model()'s
+  # own self-test logic, which already did this correctly.
+  out_txt <- readLines(out_file, warn = FALSE)
+  n_found_line <- grep("Number of models found", out_txt, value = TRUE)
+  n_found <- if (length(n_found_line) > 0) suppressWarnings(as.integer(gsub(".*Number of models found:\\s*", "", n_found_line[1]))) else NA_integer_
+
+  if (!is.na(n_found) && n_found > 0 && nrow(parsed) > 0) {
     parsed <- parsed |> mutate(inverse_model_id = inverse_model_id)
     dbExecute(con, "DELETE FROM PHREEQC_Inverse_Results WHERE inverse_model_id = ?", params = list(inverse_model_id))
     dbAppendTable(con, "PHREEQC_Inverse_Results", parsed)
     message("Stored ", nrow(parsed), " inverse-model result rows for inverse_model_id ", inverse_model_id,
-            " (", length(unique(parsed$solution_number)), " candidate solution(s)).")
+            " (PHREEQC reports ", n_found, " real feasible model(s) found).")
+  } else if (!is.na(n_found) && n_found == 0) {
+    message("Inverse model ", inverse_model_id, " ran to completion but PHREEQC found 0 feasible models",
+            " (see ", out_file, " for the post-mortem residual diagnostics). No result rows stored --",
+            " this is a real null result, not a parser gap.")
+  } else if (nrow(parsed) > 0) {
+    message("Inverse model ", inverse_model_id, " parsed ", nrow(parsed), " row(s) but could not confirm PHREEQC's own",
+            " 'Number of models found' count from ", out_file, " -- inspect the raw file directly before trusting this result.")
   } else {
     message("Inverse model ran but no mixing-fraction/mole-transfer solutions were parsed from ", out_file,
             " -- inspect the raw .pqo file directly (PHREEQC's inverse-modeling text output format varies by version).")
