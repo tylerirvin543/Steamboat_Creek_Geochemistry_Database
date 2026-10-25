@@ -8500,3 +8500,195 @@ releases. That hand-built approach, not ggtern, is what was ported.
   meaningfully fix without distorting point positions); no DEMO
   database rebuild; no GeoPackage re-export. This session's file
   changes are not yet committed/pushed to git.
+
+## Session 56 (2026-10-25, continued): REAL, SUBSTANTIAL field-temperature
+unit bug found and partially fixed -- SESSION INTERRUPTED MID-FIX,
+read this entire entry before doing anything else
+
+Started from a user question ("does SBS_0001's temperature logger show
+anything weird?") that led to a real, project-wide discovery: this
+project's Fluke field thermometer reports in **Fahrenheit**, correctly
+labeled "F"/"deg F" in `Field_Measurements.units` -- but nothing
+downstream (`build_phreeqc_solutions()` in
+`scripts/phreeqc/08_build_phreeqc_tables.R`, and every other direct
+reader of `Field_Measurements.value`) ever checked the units column
+before treating the raw number as Celsius. Confirmed, not guessed: SBRR's
+own real continuous creek-temperature logger reads 10.8-27.5 C
+seasonally; its "F"-labeled field reading of 59.36 converts to 15.2 C
+(matches exactly), not 59.36 C (a physically implausible open-creek
+temperature, which is what every PHREEQC run and every piece of prose in
+this project has been using for SBRR's temperature for months). Five of
+the other six real LST flowpath samples cross-check the same way against
+their own co-located temperature loggers.
+
+**This affects 86 real `Field_Measurements` temperature rows project-wide**,
+confirmed via `SELECT units, COUNT(*) FROM Field_Measurements WHERE
+parameter='temperature' GROUP BY units` (68 rows with units='F', 18 rows
+with units='deg F' from the later U230-compiled-OCR batch). Includes, at
+minimum: the 7 real LST flowpath samples (SBF_0001, SBRR, SBW_0001,
+SBW_0002, SBS_0001/2/3) that the last ~6 sessions of PHREEQC reaction-path/
+mixing/Piper-diagram work are built on; **SBBV** (the OTHER real
+chloride-mass-balance creek station from Session 39's `chloride_mass_balance.R`
+Q_TW=58.7 L/s calculation -- check whether this calc or its write-up
+references SBBV's field temperature anywhere); SBS_0005, SBS_0006 (a
+second fumarole-area location); and ~50 `SBO_000xx` steaming-ground
+photo-survey points (Session 13) -- these last ones are probably not
+PHREEQC-eligible (no major-ion chemistry), but their recorded
+temperatures in any figure/table are still wrong as Celsius.
+
+### What IS fixed and verified (safe, already applied to the real database)
+
+1. **Root-cause fix at the point of entry**: `scripts/ingest/ingest_field.R`'s
+   `meas_db` pipeline now converts any `temperature` row with
+   units in `("f","deg f","degf","\u00b0f")` (case-insensitive) to Celsius
+   before insert, setting `units = "deg C"`. This prevents the bug from
+   recurring for any FUTURE field data ingested through this script.
+2. **New idempotent retroactive migration**:
+   `database/schema/24_fix_field_temperature_units_schema.R` -- converts
+   any already-inserted Fahrenheit-labeled temperature row in place
+   (`value = (value-32)*5/9`, `units = 'deg C'`). Naturally idempotent
+   (a second run finds 0 matching rows). **Verified on a scratch copy
+   first**, then applied to the real `geochem_operational.sqlite`
+   (backed up first to
+   `database/archive/geochem_operational_pre_temp_unit_fix_20261025_112747.sqlite`).
+   Confirmed: all 592 `Field_Measurements` temperature rows now read
+   `units='deg C'`, 0 rows remain mislabeled.
+3. **Wired into `run_pipeline.R`**: `source("database/schema/24_fix_field_temperature_units_schema.R")`
+   added right after the `23_reaction_path_schema.R` source line, in BOTH
+   the initial-connection block and the DEMO-reset block (lines ~322 and
+   ~423). Verified: file parses cleanly, no CRLF corruption introduced
+   (`grep -c $'\r\r'` returns 0 for all three touched files).
+4. **`PHREEQC_Solutions` rebuilt** (`build_phreeqc_solutions(con)`) against
+   the real, now-corrected `geochem_operational.sqlite` -- confirmed the
+   7 flowpath samples now show real temperatures: SBF_0001=67.0,
+   SBRR=15.2, SBW_0001=70.9, SBW_0002=65.0, SBS_0001=47.78, SBS_0002=72.3,
+   SBS_0003=39.6 (all deg C). This rebuild touches ALL 1593 samples
+   project-wide (314 complete), not just these 7 -- so any other
+   eligible sample whose temperature came from an "F"/"deg F" row is
+   also now corrected in `PHREEQC_Solutions` itself (the *speciation
+   results*, i.e. `PHREEQC_Results`/SI values, for those OTHER samples
+   have NOT been re-run yet -- see below).
+5. **Real PHREEQC speciation re-run for the 7 flowpath samples only**:
+   `run_phreeqc_pipeline(con, sample_ids = c(816,819,821,815,825,820,822))`
+   completed successfully (182 result rows stored, LLNL database,
+   auto-recommended). This updates their real `PHREEQC_Results` (SI_Calcite,
+   SI_Dolomite, etc.) to reflect the corrected temperatures.
+6. **Real Cl-based mixing fraction re-computed and the MIX-block comparison
+   re-run**: `run_mixing_fraction_analysis(con, 816, 819, tracer="Cl")` +
+   `run_phreeqc_mixing(con, mixing_run_id)` completed as **mixing_run_id=6**
+   (1452 fractions, 8229 `PHREEQC_Mixing_Results` rows, confirmed in the
+   database). **Important, already-confirmed finding**: the five real
+   target mixing fractions are numerically IDENTICAL to before the fix
+   (SBW_0001=0.5714, SBS_0001=0.8860, SBS_0002=0.7744, SBS_0003=0.8521,
+   SBW_0002=1.0426) -- expected and correct, since mixing fraction is
+   computed purely from chloride, which the temperature bug never
+   touched. Only the MIX-block's own predicted SI/pH trajectory (which
+   DOES depend on temperature) actually changed.
+
+### What is NOT yet done -- START HERE, in this order
+
+1. **Re-run every reaction-path titration config row** via
+   `run_phreeqc_reaction_path_from_config(con)` (sources:
+   `scripts/phreeqc/16_reaction_path_titration.R`,
+   `scripts/phreeqc/run_phreeqc_analysis.R`). This will create NEW
+   run_ids (28+) using the now-correct `PHREEQC_Solutions` temperatures,
+   superseding the stale run_ids 16-27 (all of which still reflect the
+   WRONG pre-fix temperatures -- confirmed by checking
+   `PHREEQC_Reaction_Path_Runs` directly: their `mixing_fraction_thermal`
+   values match the unaffected-by-the-bug Cl-based fractions, but their
+   underlying SOLUTION-block temperatures were wrong, so their SI/best-fit
+   RMSE numbers need to be treated as stale until re-run). After
+   confirming the new runs converge cleanly, **delete the stale
+   run_ids 16-27** from `PHREEQC_Reaction_Path_Runs`/`_Steps` (mirrors
+   this exact project's own established cleanup pattern from earlier in
+   this same session, when a different stale-environment bug was found
+   and the affected runs were deleted and cleanly re-run) -- do this
+   `DELETE` step AFTER confirming the new runs look right, not before.
+2. **Re-run the gas-informed parent-fluid reconstruction**
+   (`scripts/phreeqc/15_gas_informed_parent_fluid.R`,
+   `reconstruct_parent_fluid()` / `compare_fissure_and_resort_parents()`).
+   This explicitly uses `T_discharge` sourced from
+   `docs/data/geothermometer_by_site.csv` (itself built from the now-
+   corrected `Field_Measurements`/`PHREEQC_Solutions` temperatures) for
+   its steam-loss-fraction calculation -- the entire 2026-10-24
+   "parent-fluid Cl agrees within ~2%" finding and the subsequent
+   6-database pH-sensitivity investigation were built on the WRONG
+   discharge temperature and need to be redone. Regenerate
+   `docs/data/geothermometer_by_site.csv` first (check
+   `scripts/analysis/manuscript_figures.R` or wherever this CSV is
+   built/exported) so the parent-fluid script reads the corrected value.
+3. **Check whether SBBV, SBS_0005, or SBS_0006 are PHREEQC-eligible**
+   (`get_phreeqc_eligible(con)`) and, if so, whether their speciation
+   results need re-running too -- not checked yet this session. Also
+   grep the manuscript/notebooks for any place that cites SBBV's field
+   temperature directly (the Session 39 chloride-mass-balance Q_TW
+   calculation itself is Cl-based and should be unaffected, but any
+   accompanying prose describing SBBV's temperature would not be).
+4. **Regenerate the affected figures** once the re-runs above are done:
+   `build_reaction_path_titration_figure()` (all 5 real targets),
+   `build_reaction_path_fit_comparison_figure()`,
+   `bu
+ild_sbs0001_sensitivity_figure()` (all via
+   `scripts/analysis/lst_phreeqc_illustration_figures.R`), and
+   `build_lst_proximity_map_figure()` (its point *coordinates* don't
+   change, but its color scale is driven by
+   `reaction_path_fit_comparison.csv`'s RMSE values, which will). The
+   **Piper diagram does NOT need to be rebuilt** -- it's built directly
+   from mg/L ion concentrations, not temperature, and is unaffected by
+   this bug.
+5. **A large, cross-cutting prose-correction pass is now needed**: the
+   claim "SBRR carries a modest real thermal signature of its own
+   (Cl=17.1 mg/L, field temperature 59.4 C), consistent with sitting
+   close to the thermal field itself" (or close paraphrases of it)
+   appears in MANY places across this project's history -- at minimum
+   `manuscript/00_thesis_proposal.qmd`, `manuscript/03_methods.qmd`,
+   figure captions in `scripts/analysis/lst_phreeqc_illustration_figures.R`
+   and `scripts/analysis/lst_map_and_piper_figures.R`, `ROADMAP.md`, and
+   many `AGENTS.md` session entries. **SBRR's real field temperature is
+   15.2 C, not 59.4 C** -- a normal creek temperature with no special
+   elevated-temperature signature. The broader conclusion ("SBRR is a
+   conservative, not theoretically pure, meteoric end-member") likely
+   still holds on Cl alone (17.1 mg/L is still above a true cold
+   background), but the specific "T=59.4C" justification is wrong
+   everywhere it appears and needs correcting, not just restating with a
+   caveat. Do this as its own dedicated pass (grep for "59.4" and "59.36"
+   project-wide) after the re-runs above produce final real numbers to
+   cite instead.
+6. **Update `ROADMAP.md` and add a proper closing `AGENTS.md` session
+   entry** once all of the above is done, with the real, final
+   (corrected) numbers -- this entry is a mid-task handoff, not a
+   finished session summary.
+7. **Commit and push.** Nothing from this session is committed yet.
+   Currently uncommitted: `scripts/ingest/ingest_field.R` (modified,
+   the real fix), `scripts/run_pipeline.R` (modified, wires in the new
+   schema file), `database/schema/24_fix_field_temperature_units_schema.R`
+   (new file). Also clean up a stray `phreeqc.log` at the repo root
+   before committing (same harmless artifact class flagged in several
+   past sessions).
+
+### A SEPARATE, unresolved question that needs the USER's direct input
+(not a code fix -- do not silently resolve this)
+
+The user stated in chat that all seven real LST flowpath chemistry
+samples were collected "the same day... back in May," and that the
+database's record of SBS_0001 (sample_id 825) being collected
+**2026-04-29** (two days before the other six, which were all collected
+**2026-05-01**) "must be a mistake in the database."
+
+**Checked directly against the raw source spreadsheets, not just the
+database**: this is NOT a database/ingestion bug. Both
+`data/raw/field/field_measurements.xlsx` and `data/raw/field/samples.xlsx`
+independently record SBS_0001's chemistry (Cl_field=433 ppm, pH=5.5,
+temperature=118 F) under a row explicitly labeled
+`SBS_0001-2026-04-29`, tied to a `RECON-2026-...` campaign, not the
+`SAMPLE-2026-05-01` campaign the other six samples belong to.
+`samples.xlsx` additionally has a SECOND, otherwise-unused SBS_0001 row
+dated 2026-04-14 (also under a RECON campaign). The database is
+faithfully reflecting what's actually written in the raw Excel files --
+if May 1 is the correct date, the correction needs to happen by editing
+`data/raw/field/samples.xlsx` (and possibly `field_measurements.xlsx`)
+directly and re-ingesting via `ingest_field.R`, not by patching the
+database. **Flagged for the user to resolve directly (confirm the real
+date and correct the raw spreadsheet, or confirm April 29 is in fact
+correct and the "same day" recollection is itself the mistake) --
+not guessed or silently changed either way.**
