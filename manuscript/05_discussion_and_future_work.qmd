@@ -319,14 +319,22 @@ happen:
    a targeted fix (excluding the specific unused redox couple) is a
    small, bounded task that could turn the current null
    inverse-modeling result into a real one.
-6. **Extend the forward reaction-path titration beyond SBW_0001.** The
-   same method (mix two real end-members at their known fraction, then
-   titrate candidate phases forward) is a natural next check for the
-   three real Low Sinter Terrace springs, which sit much closer to the
-   pure-mixing curve than SBW_0001 does -- confirming whether they
-   need little or no reaction correction, as the mixing figure alone
-   suggests, or whether a smaller but still real signal is hiding
-   there too.
+6. ~~Extend the forward reaction-path titration beyond SBW_0001~~ **Done
+   2026-10-25.** The result did not simply confirm the earlier
+   saturation-index-only read that the three springs sit uniformly close
+   to the mixing curve: SBS_0002 needs almost no correction and SBS_0003
+   fits well with a small one, but SBS_0001 shows the worst combined
+   Ca/Mg/Alkalinity fit of all four real targets even after titration,
+   because its real calcium and alkalinity pull the model in opposite
+   directions that a two-phase calcite/dolomite titration cannot
+   reconcile within the physically available reaction-progress range.
+7. **Work out what is actually different about SBS_0001.** Its specific
+   failure mode -- an internally inconsistent calcium/alkalinity demand,
+   not simply "needs more or less reaction" -- was not previously
+   visible from saturation index alone and is a concrete, well-defined
+   target for a third candidate phase (a silicate or clay rather than
+   another carbonate), a different meteoric end-member, or real
+   additional chemistry at or near this spring.
 
 
 ## Closing

@@ -233,6 +233,24 @@ part of the answer.
 knitr::include_graphics("../output/figures/manuscript/reaction_path_titration.png")
 ```
 
+Running the identical titration against the three real Low Sinter
+Terrace springs, using full Ca/Mg/Alkalinity mass balance rather than
+saturation index alone, complicates the earlier picture (figure below).
+SBS_0002 needs almost no correction, consistent with sitting close to
+the mixing curve. SBS_0003 needs a small correction and fits well (19.7
+percent error, the best of the four). SBS_0001, despite needing only a
+modest correction, shows the *worst* fit of all four even after
+titration (44.5 percent) -- its real calcium and alkalinity pull in
+opposite directions that this simple two-phase model cannot reconcile
+over a physically available range. Chloride stays exactly conservative
+at every step for every target.
+
+```{r reactionpath-comparison-fig}
+#| echo: false
+#| fig-cap: "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all four real downgradient targets."
+knitr::include_graphics("../output/figures/manuscript/reaction_path_fit_comparison.png")
+```
+
 ```{r conceptual-fig}
 #| echo: false
 #| fig-cap: "Conceptual flowpath from the reconstructed parent fluid through degassing, three real measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, annotated with real chloride values."

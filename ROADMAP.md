@@ -116,6 +116,21 @@ not aspirational claims:
   `PHREEQC_Reaction_Path_Steps` tables, `scripts/phreeqc/
   16_reaction_path_titration.R`, `data/raw/phreeqc/reaction_path_config.csv`,
   `RUN_ANALYSIS$phreeqc_reaction_path`.
+- **Running the same forward titration against the three real Low Sinter
+  Terrace springs does not simply confirm the earlier saturation-index-
+  only picture.** SBS_0002 needs almost no reaction correction (fit
+  quality barely changes from pure mixing), SBS_0003 needs a small
+  correction and fits well (19.7% combined error, the best of the four
+  real targets), but SBS_0001 shows the *worst* fit of all four even
+  after titration (44.5%) -- its real calcium sits above anything the
+  physically available reaction-progress range can reach, while its real
+  alkalinity sits below the titrated curve at every explored point,
+  including the most negative step the real Ca/Mg/C pool can support.
+  These two demands pull in opposite directions that a simple two-phase
+  calcite/dolomite model cannot reconcile. SBW_0001 still needs by far
+  the largest correction and shows the largest absolute improvement, but
+  it is no longer the only target this model struggles with -- SBS_0001
+  does too, for a different, specific reason worth its own follow-up.
 
 ## 2. Major roadblocks (and what unblocks each)
 
@@ -157,10 +172,16 @@ not aspirational claims:
 - ~~Given inverse modeling's real, repeated inability to find a feasible
   solution for SBW_0001, try a real forward reaction-path model~~ **Done
   2026-10-25** -- see Section 1's new forward-titration finding above.
-  Next: run the same method against the three real LST springs (they sit
-  much closer to the pure-mixing curve than SBW_0001, so this checks
-  whether they need little/no reaction correction or a smaller real
-  signal of their own).
+  ~~Next: run the same method against the three real LST springs~~ **Also
+  done 2026-10-25** -- did NOT simply confirm the earlier saturation-
+  index-only read: SBS_0002 needs almost no correction, SBS_0003 fits
+  well with a small one, but SBS_0001 shows the WORST combined Ca/Mg/
+  Alkalinity fit of all four real targets, because its real calcium and
+  alkalinity pull the model in opposite directions a two-phase titration
+  cannot reconcile over the physically available range. New follow-on:
+  work out what is specifically different about SBS_0001 (candidate
+  phase beyond carbonate, a different meteoric end-member, or real
+  additional chemistry there).
 
 **Medium-term (your own field/GIS work, this thesis year):**
 - The SBRR/SBGG calibration sampling campaign (Section 5) -- directly

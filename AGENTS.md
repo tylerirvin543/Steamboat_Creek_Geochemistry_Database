@@ -8193,3 +8193,100 @@ solutions. Executed via an approved Plan-mode plan
   concrete next step in both the manuscript and ROADMAP.md, not
   attempted here). This session's file changes are not yet
   committed/pushed to git.
+
+## Session 55 continued (2026-10-25): forward titration run for real
+against the three LST springs -- SBS_0001 shows a genuine, specific
+tension no saturation-index-only view had surfaced
+
+Direct follow-on, per explicit user instruction, to the SBW_0001 forward
+reaction-path titration built earlier this session.
+
+- **Three new real config rows** added to
+  `data/raw/phreeqc/reaction_path_config.csv` (same fissure=816/
+  SBRR=819 end-members, Calcite;Dolomite phases, auto-estimated
+  bounds), targeting the three real Lower Sinter Terrace springs:
+  SBS_0001 (825, stored mixing fraction 0.8860), SBS_0002 (820, 0.7744),
+  SBS_0003 (822, 0.8521) -- all three fractions already existed from the
+  earlier `lst_fissure_sbrr_2026` mixing run, not recomputed. Ran via
+  `run_phreeqc_reaction_path_from_config(con)` against the real,
+  already-backed-up `geochem_operational.sqlite` (no new backup needed
+  -- purely additive new run_ids 3/4/5 in the same tables created
+  earlier this session).
+- **Real, genuinely mixed result -- does not simply confirm the earlier
+  saturation-index-only read** (`forward_mixing_model_validation.png`,
+  which only plots SI_Calcite/SI_Dolomite/pH and showed all three
+  springs sitting much closer to the mixing curve than SBW_0001): using
+  the full Ca/Mg/Alkalinity mass balance instead, SBS_0002 needs almost
+  no reaction correction (pure-mixing RMSE 40.3% -> best-fit 39.4%,
+  essentially flat, reaction progress only 1.02e-5 mol); SBS_0003 needs
+  a small correction and fits well (27.7% -> 19.7%, the best of all
+  four real targets, reaction progress 1.60e-5 mol); but **SBS_0001
+  shows the WORST fit of all four even after titration** (60.3% ->
+  44.5%, reaction progress 5.37e-5 mol) -- worse than SBW_0001's
+  post-titration 22.9%, despite SBW_0001 needing more than double the
+  reaction progress. Inspecting SBS_0001's own trajectory figure
+  directly explains why: its real observed Ca sits well above the
+  entire explored titration curve (never reached even at the range's
+  positive/dissolution edge), while its real observed Alkalinity sits
+  BELOW the curve at every explored point, including the most negative
+  (net-precipitation) step the real Ca/Mg/C pool can physically support
+  -- two demands pulling in opposite directions that a simple two-phase
+  calcite/dolomite titration genuinely cannot reconcile, not an artifact
+  of too narrow an explored range (confirmed no edge-of-range warning
+  fired for any of the four runs; all four best-fits are real interior
+  minima). Chloride stayed exactly conservative (0.0000% variation) for
+  every one of the four targets, confirming this isn't a conservative-
+  tracer-assumption artifact either.
+- **Code changes**: `build_reaction_path_titration_figure()` (`scripts/
+  analysis/lst_phreeqc_illustration_figures.R`) generalized from a
+  SBW_0001-only hardcoded label to a real lookup covering all four
+  targets (821/825/820/822), so it can be reused directly for any of
+  them via an explicit `out_png` per call. New
+  `build_reaction_path_fit_comparison_figure()` -- a dumbbell plot
+  (pure-mixing RMSE vs. best-fit RMSE per target, all four real targets
+  on one real, data-driven ranking) that is this follow-on's headline
+  figure, plus a `reaction_path_fit_comparison.csv` summary table.
+  `build_lst_phreeqc_illustration_figures(con)` now builds all four
+  per-target trajectory figures (SBW_0001's original plus three new
+  `reaction_path_titration_sbs000{1,2,3}.png` files) and the new
+  comparison figure in one call.
+- **Incidental, non-blocking note**: confirmed (via `cat -A`) that the
+  multi-line `paste0()` calls inserted into
+  `build_reaction_path_titration_figure()`'s `subtitle`/`caption`
+  earlier this session ended up with literal embedded newline
+  characters in the source file rather than `\n` escape sequences --
+  the same CRLF-splice class of issue flagged repeatedly elsewhere in
+  this project, this time self-inflicted via a `readLines(textConnection(...))`
+  round-trip. Confirmed functionally harmless (a literal newline inside
+  an R string literal is equivalent to `\n` at runtime; the file parses
+  cleanly and the already-reviewed figure output wraps its caption text
+  correctly) -- left as-is rather than respliced, since fixing it purely
+  cosmetically carried real risk of reintroducing a genuine break for no
+  functional benefit.
+- **Manuscript updated**: a new subsection + `@fig-reactionpath-comparison`
+  figure added to `manuscript/00_thesis_proposal.qmd` right after the
+  existing SBW_0001 reaction-path subsection, a lighter mirrored
+  paragraph + figure in `04_results.qmd` (this chapter's established
+  "figure below" convention, no crossref), and
+  `05_discussion_and_future_work.qmd`'s list item 6 (the item that
+  originally proposed this exact follow-on) marked `~~done~~` with the
+  real result, plus a new list item 7 proposing the concrete next step
+  (work out what is specifically different about SBS_0001 -- a candidate
+  phase beyond carbonate, a different meteoric end-member, or real
+  additional chemistry there). All three re-rendered (html for the two
+  chapters; html/pdf/docx for the master document) -- 0 citeproc
+  warnings, 0 undefined citations/markers, new figure confirmed as
+  Figure 11 of 22 in final PDF document order via `pdftotext`, with
+  every subsequent figure number shifted by exactly one and no gaps.
+- **`ROADMAP.md` updated**: new confirmed-finding bullet in Section 1
+  (the SBS_0001 tension, written up in full), and the Section 3
+  near-term-directions bullet (which had proposed exactly this follow-
+  on) extended with its own `~~done~~` marker and the real result plus
+  a pointer to the new SBS_0001-specific follow-up.
+- **Not done this session**: no attempt yet to resolve SBS_0001's
+  specific calcium/alkalinity tension (flagged as a concrete next step
+  in both the manuscript and ROADMAP.md, not attempted here -- would
+  need a third candidate phase, a different meteoric end-member, or new
+  field chemistry at/near this spring); no DEMO database rebuild; no
+  GeoPackage re-export (not spatial). This session's file changes are
+  not yet committed/pushed to git.

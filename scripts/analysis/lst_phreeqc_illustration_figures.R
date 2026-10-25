@@ -470,7 +470,8 @@ build_reaction_path_titration_figure <- function(con, run_id = NULL, target_samp
                    error = function(e) { message("  -> summarize_reaction_path_fit() failed: ", conditionMessage(e)); NULL })
   best_x <- if (!is.null(fit) && !is.null(fit$best_fit) && nrow(fit$best_fit) > 0) fit$best_fit$reaction_progress_mol[1] else NA_real_
 
-  target_labels <- c(`821` = "SBW_0001 (well, across creek)")
+  target_labels <- c(`821` = "SBW_0001 (well, across creek)", `825` = "SBS_0001 (spring)",
+                      `820` = "SBS_0002 (seep)", `822` = "SBS_0003 (spring)")
   target_name <- if (as.character(target_sample_id) %in% names(target_labels)) target_labels[[as.character(target_sample_id)]] else paste0("sample_id ", target_sample_id)
 
   p <- ggplot(steps, aes(x = reaction_progress_mol, y = value)) +
@@ -513,11 +514,139 @@ build_reaction_path_titration_figure <- function(con, run_id = NULL, target_samp
 }
 
 
-#' Convenience wrapper: build all four.
+
+#' Figure 5: forward REACTION-path titration summary -- does the earlier,
+#' SI/pH-based read ("the three real LST springs sit much closer to the
+#' pure-mixing curve than SBW_0001") hold up once the SAME forward
+#' titration method is run against each one directly, using real
+#' Ca/Mg/Alkalinity mass balance rather than just SI/pH?
+#'
+#' Built 2026-10-25 as the direct follow-on once the SBW_0001 titration
+#' was complete (flagged in ROADMAP.md/manuscript/
+#' 05_discussion_and_future_work.qmd as the concrete next step). Reads
+#' every stored PHREEQC_Reaction_Path_Runs/Steps combination for the
+#' given targets, computes the combined Ca/Mg/Alkalinity RMSE at (a) the
+#' step closest to zero reaction progress (pure conservative mixing, no
+#' reaction) and (b) the real best-fit reaction progress, and plots both
+#' as a dumbbell per target -- directly showing how much, if at all,
+#' titrating calcite/dolomite improves the fit for each real downgradient
+#' point.
+build_reaction_path_fit_comparison_figure <- function(con,
+    target_sample_ids = c(821, 825, 820, 822),
+    out_png = "output/figures/manuscript/reaction_path_fit_comparison.png") {
+
+  target_labels <- c(`821` = "SBW_0001 (well, across creek)", `825` = "SBS_0001 (spring)",
+                      `820` = "SBS_0002 (seep)", `822` = "SBS_0003 (spring)")
+
+  rows <- lapply(target_sample_ids, function(sid) {
+    run_row <- dbGetQuery(con, "
+      SELECT run_id FROM PHREEQC_Reaction_Path_Runs
+      WHERE target_sample_id = ? ORDER BY run_id DESC LIMIT 1
+    ", params = list(sid))
+    if (nrow(run_row) == 0) {
+      message("  -> No PHREEQC_Reaction_Path_Runs row for target_sample_id ", sid, " -- skipping from comparison.")
+      return(NULL)
+    }
+    run_id <- run_row$run_id[1]
+    steps <- dbGetQuery(con, "
+      SELECT step_index, reaction_progress_mol, parameter, value
+      FROM PHREEQC_Reaction_Path_Steps
+      WHERE run_id = ? AND parameter IN ('Ca','Mg','Alkalinity')
+    ", params = list(run_id))
+    if (nrow(steps) == 0) return(NULL)
+
+    target_row <- dbGetQuery(con, "SELECT * FROM PHREEQC_Solutions WHERE sample_id = ?", params = list(sid))
+    mw <- c(Ca = 40.078, Mg = 24.305, Alkalinity = 61.017)
+    obs_mol <- sapply(names(mw), function(p) {
+      v <- target_row[[p]][1]
+      if (is.null(v) || is.na(v)) NA_real_ else v / 1000 / mw[[p]]
+    })
+
+    wide <- steps |>
+      tidyr::pivot_wider(id_cols = c(step_index, reaction_progress_mol), names_from = parameter, values_from = value)
+    pct_mat <- sapply(names(mw), function(p) {
+      if (is.na(obs_mol[[p]]) || !(p %in% names(wide))) return(rep(NA_real_, nrow(wide)))
+      100 * (wide[[p]] - obs_mol[[p]]) / obs_mol[[p]]
+    })
+    rmse <- sqrt(rowMeans(pct_mat^2, na.rm = TRUE))
+    wide$combined_rmse_pct <- rmse
+
+    zero_row <- wide[which.min(abs(wide$reaction_progress_mol)), ]
+    best_row <- wide[which.min(wide$combined_rmse_pct), ]
+
+    tibble::tibble(
+      sample_id = sid,
+      target_label = target_labels[[as.character(sid)]],
+      pure_mixing_rmse_pct = zero_row$combined_rmse_pct[1],
+      best_fit_rmse_pct = best_row$combined_rmse_pct[1],
+      best_fit_reaction_progress_mol = best_row$reaction_progress_mol[1]
+    )
+  })
+  rows <- rows[!sapply(rows, is.null)]
+  if (length(rows) == 0) { message("  -> No real reaction-path runs found for any target. Skipping comparison figure."); return(invisible(NULL)) }
+  summary_tbl <- dplyr::bind_rows(rows) |> dplyr::arrange(best_fit_rmse_pct)
+
+  plot_df <- summary_tbl |>
+    tidyr::pivot_longer(cols = c(pure_mixing_rmse_pct, best_fit_rmse_pct), names_to = "stage", values_to = "rmse_pct") |>
+    dplyr::mutate(
+      stage_label = ifelse(stage == "pure_mixing_rmse_pct", "Pure conservative mixing (no reaction)", "Best-fit reaction progress"),
+      target_label = factor(target_label, levels = summary_tbl$target_label)
+    )
+
+  p <- ggplot(plot_df, aes(x = rmse_pct, y = target_label)) +
+    geom_line(aes(group = target_label), color = "grey60", linewidth = 1) +
+    geom_point(aes(color = stage_label), size = 4) +
+    scale_color_manual(values = c("Pure conservative mixing (no reaction)" = "#999999", "Best-fit reaction progress" = "#D55E00"),
+                        name = NULL) +
+    labs(
+      x = "Combined Ca/Mg/Alkalinity RMSE (%, lower is a better fit)",
+      y = NULL,
+      title = "Does titrating calcite/dolomite actually help, for each real downgradient target?",
+      subtitle = paste0(
+        "Grey: fit quality at pure conservative mixing (fissure+SBRR, no reaction). Orange: fit quality at each
+",
+        "target's own real best-fit reaction progress (forward REACTION-path titration)."
+      ),
+      caption = paste0(
+        "SBW_0001 needs by far the largest reaction-progress correction and shows the largest improvement, but SBS_0001
+",
+        "(a real Low Sinter Terrace spring) shows the WORST fit of all four even after titration -- the earlier SI/pH-only
+",
+        "read (forward_mixing_model_validation.png) that the three springs uniformly sit close to the mixing curve does not
+",
+        "fully hold up once real Ca/Mg/Alkalinity mass balance is checked directly. SBS_0002 needs almost no correction;
+",
+        "SBS_0003 needs a small one. Source: PHREEQC_Reaction_Path_Runs/Steps, geochem_operational.sqlite."
+      )
+    ) +
+    theme_steamboat(base_size = 11) +
+    theme(legend.position = "top", plot.caption = element_text(hjust = 0, size = 8))
+
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 10, height = 5.5, dpi = 300)
+  message("  -> Wrote ", out_png)
+
+  out_csv <- "data/derived/phreeqc/reaction_path_fit_comparison.csv"
+  dir.create(dirname(out_csv), showWarnings = FALSE, recursive = TRUE)
+  write.csv(summary_tbl, out_csv, row.names = FALSE)
+  message("  -> Wrote ", out_csv)
+
+  invisible(list(plot = p, table = summary_tbl))
+}
+
+
+#' Convenience wrapper: build the full LST illustration figure set.
 build_lst_phreeqc_illustration_figures <- function(con) {
   build_forward_mixing_validation_figure(con)
   build_lst_flow_network_figure()
   build_lst_aquifer_depth_profile_figure()
-  build_reaction_path_titration_figure(con)
+  build_reaction_path_titration_figure(con, target_sample_id = 821)
+  build_reaction_path_titration_figure(con, target_sample_id = 825,
+      out_png = "output/figures/manuscript/reaction_path_titration_sbs0001.png")
+  build_reaction_path_titration_figure(con, target_sample_id = 820,
+      out_png = "output/figures/manuscript/reaction_path_titration_sbs0002.png")
+  build_reaction_path_titration_figure(con, target_sample_id = 822,
+      out_png = "output/figures/manuscript/reaction_path_titration_sbs0003.png")
+  build_reaction_path_fit_comparison_figure(con)
   invisible(TRUE)
 }

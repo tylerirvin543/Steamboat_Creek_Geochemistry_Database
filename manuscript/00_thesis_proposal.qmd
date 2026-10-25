@@ -1463,6 +1463,44 @@ show_fig(
 )
 ```
 
+**Running the same titration against the three real Low Sinter Terrace
+springs tells a more complicated story than the saturation-index-only
+view suggested.** The earlier forward-mixing figure, based only on
+calcite and dolomite saturation index and pH, showed the three springs
+(SBS_0001, SBS_0002, SBS_0003) sitting much closer to the pure-mixing
+curve than SBW_0001. Running the identical forward titration against
+each spring directly, using the full Ca/Mg/Alkalinity mass balance
+rather than saturation index alone, does not fully confirm that
+picture, shown in @fig-reactionpath-comparison. SBS_0002 needs almost
+no reaction correction at all, consistent with the earlier read.
+SBS_0003 needs a small correction and reaches a good fit (19.7 percent
+combined error, the best of the four real targets). SBS_0001, however,
+shows the **worst** fit of all four targets even after titration (44.5
+percent), despite needing a comparatively modest reaction-progress
+correction -- its real calcium sits well above anything the explored
+titration range can reach, while its real alkalinity sits below the
+titration curve's own value at every explored point, including the
+most negative (net-precipitation) step the real Ca/Mg/alkalinity pool
+can physically support. These two demands pull in opposite directions
+and cannot both be satisfied by this simple two-phase model over a
+physically available range, not because the search was cut short.
+Chloride stays exactly conservative at every step for every target, so
+this is not an artifact of the conservative-tracer assumption itself.
+SBW_0001 remains the target needing by far the largest correction and
+showing the largest absolute improvement, but it is no longer the only
+target this simple model struggles to explain -- SBS_0001 does too, for
+a different, specific reason.
+
+```{r fig-reactionpath-comparison}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/reaction_path_fit_comparison.png",
+  "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all four real downgradient targets.",
+  alt = "Dumbbell plot comparing fit error (percent) at pure mixing versus best-fit reaction progress for four samples: SBW_0001, SBS_0001, SBS_0002, and SBS_0003.",
+  id = "fig-reactionpath-comparison"
+)
+```
+
 **Tracing the flowpath from parent fluid to the downstream creek.**
 Putting the two reconstructed parent fluids, the as-measured fissure
 and resort-tank chemistry, a nearby Lower Sinter Terrace well

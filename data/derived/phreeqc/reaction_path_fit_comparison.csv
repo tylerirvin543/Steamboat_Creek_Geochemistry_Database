@@ -1,0 +1,5 @@
+"sample_id","target_label","pure_mixing_rmse_pct","best_fit_rmse_pct","best_fit_reaction_progress_mol"
+822,"SBS_0003 (spring)",27.6764326809292,19.6881100583493,1.6035e-05
+821,"SBW_0001 (well, across creek)",46.5182976294949,22.8518758636947,0.00011717
+820,"SBS_0002 (seep)",40.282353766141,39.3869050769957,1.0204e-05
+825,"SBS_0001 (spring)",60.2912429487084,44.5194216362383,5.3723e-05
