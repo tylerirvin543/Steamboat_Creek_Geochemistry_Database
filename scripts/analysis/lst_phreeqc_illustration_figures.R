@@ -74,7 +74,12 @@ source("scripts/analysis/plot_theme.R")
 #' at all -- "a random spring we don't know"). SBRR is real, precisely
 #' located, and already extensively used elsewhere in this project, but
 #' it is NOT a pure meteoric water: it carries a modest real thermal
-#' signature of its own (Cl = 17.1 mg/L, field temperature 59.4 C),
+#' signature of its own (Cl = 17.1 mg/L); its field temperature was
+#' originally recorded as 59.4 C but corrected to 15.2 C after a
+#' project-wide Fahrenheit/Celsius field-thermometer bug fix (see
+#' AGENTS.md) -- a normal creek temperature, not an elevated one. The
+#' Cl-based argument for a conservative (not pure) meteoric end-member
+#' still holds; the temperature-based part of it does not.
 #' consistent with sitting close to the thermal field itself. Using it
 #' as the dilution end-member is therefore a conservative choice, not a
 #' theoretically pure one -- stated plainly here and in every caption.
@@ -159,7 +164,7 @@ build_forward_mixing_validation_figure <- function(con,
         "Targets are the real downgradient LST discharge points (SBW_0001 + the three real LST springs), NOT hot\n",
         "spring 6/GS-5 (both confirmed Main Terrace, not Low Terrace -- excluded). SBRR replaces earlier Boyd\n",
         "Domestic Well/Jumbo Grade Spring choices -- a real, precisely located site, though itself not a pure\n",
-        "meteoric water (Cl=17.1 mg/L, T=59.4C). Quartz SI omitted (never\n",
+        "meteoric water (Cl=17.1 mg/L, T=15.2C, not 59.4C as first reported). Quartz SI omitted (never\n",
         "defined along this mixing run). Source: PHREEQC_Mixing_Results/Fractions + PHREEQC_Results, geochem_operational.sqlite."
       )
     ) +
@@ -282,7 +287,7 @@ build_lst_flow_network_figure <- function(
       caption = paste0(
         "Dilution reference: SBRR's own real water chemistry (sample 819), not Boyd Domestic Well or Jumbo Grade\n",
         "Spring -- a real, precisely located site, though SBRR itself carries a modest real thermal signature\n",
-        "(Cl=17.1 mg/L, T=59.4C) and is therefore a conservative, not a theoretically pure, dilution reference.\n",
+        "(Cl=17.1 mg/L, T=15.2C, not 59.4C as first reported) and is therefore a conservative, not a theoretically pure, dilution reference.\n",
         "Source: scripts/phreeqc/15_gas_informed_parent_fluid.R, fluid_evolution_flowpath.R, geochem_operational.sqlite."
       )
     ) +

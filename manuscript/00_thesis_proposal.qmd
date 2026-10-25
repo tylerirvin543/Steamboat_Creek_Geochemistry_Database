@@ -558,9 +558,12 @@ long-documented pattern, not an unprecedented event. White's own
 pre-boiling chloride content for Steamboat's upflowing water, 800-820
 ppm at about 175 C, measured using chloride as a conservative tracer
 for total system heat flow decades before Sorey's own chloride
-mass-balance method [@white1968c], is strikingly close to this
-proposal's own gas-informed parent-fluid chloride reconstruction
-(781-797 mg/L; see Chapter 4) six decades later. Silberman and others
+mass-balance method [@white1968c], is of the same order of magnitude as
+this proposal's own gas-informed parent-fluid chloride reconstruction
+(657-672 mg/L, roughly 18-20 percent lower; see Chapter 4) six decades
+later -- a real gap, not smoothed over, that could reflect genuine
+change in the system, a difference in reconstruction method, or both.
+Silberman and others
 [@silberman1979] constrained the duration of
 hydrothermal activity from spatially associated volcanic rocks. Sorey
 and Colvard's 1992 administrative report [@sorey1992] is the single
@@ -1345,12 +1348,12 @@ creek. Each step is reported with its own real result below.
 :::
 
 **A gas-informed parent-fluid reconstruction.** Applying the method
-above to sample 816 (the fissure) gives a steam-loss fraction of 4.2
-percent (reservoir 172.7 degrees Celsius, measured discharge 152.6
-degrees Celsius), a reconstructed parent chloride of 781 mg/L (below
+above to sample 816 (the fissure) gives a steam-loss fraction of 19.4
+percent (reservoir 173.4 degrees Celsius, measured discharge 67.0
+degrees Celsius), a reconstructed parent chloride of 657 mg/L (below
 the measured 815 mg/L, as boiling concentrates the residual liquid),
 and -- once the reconstructed fluid is re-equilibrated with NV26-1's
-real gas composition at reservoir pressure (8.5 atmospheres) -- a
+real gas composition at reservoir pressure (8.7 atmospheres) -- a
 substantially more acidic parent pH (5.5, versus 8.3 measured) and
 calcite/dolomite saturation indices that flip from mildly supersaturated
 to clearly undersaturated. This is the expected direction for a deep,
@@ -1358,8 +1361,8 @@ gas-charged fluid that has not yet degassed: carbonate scaling is a
 surface/shallow phenomenon as carbon dioxide escapes and pH rises, not
 a deep-reservoir one, shown in @fig-parentfluid. Applying the identical
 method to the resort-tank sample (815) gives a similar steam-loss
-fraction (6.1 percent) and a parent chloride within 2.1 percent of the
-fissure's own reconstructed parent (781 vs. 797 mg/L) -- closer than
+fraction (20.8 percent) and a parent chloride within 2.3 percent of the
+fissure's own reconstructed parent (657 vs. 672 mg/L) -- closer than
 the two samples' raw measured values (815 vs. 849 mg/L) -- consistent
 with, though not proof of, a single shared deep source feeding both
 discharge points. Potassium, sulfate, lithium, and strontium converge
@@ -1372,6 +1375,19 @@ measured pH of 9.0 combined with the imposed acid-gas load, logged to
 `parent_fluid_diagnostics.csv` rather than hidden), so its reconstructed
 parent pH and saturation indices are not reported -- only its
 conservative-species concentrations, which do not depend on that step.
+
+::: {.callout-note}
+A field-temperature unit bug (the project's Fluke field thermometer
+reports Fahrenheit, mislabeled as Celsius downstream of ingestion) was
+found and fixed after these reconstructions were first run, and every
+number above reflects the corrected temperatures. The steam-loss
+fractions and reconstructed parent chloride changed materially (the
+fissure's steam-loss fraction moved from an originally-miscalculated
+4.2 percent to the corrected 19.4 percent, for example), but the
+qualitative conclusion -- the two independently reconstructed parent
+fluids converge more tightly than the raw measured values do -- holds
+under both the original and corrected temperatures.
+:::
 
 ```{r fig-parentfluid}
 #| results: asis
@@ -1388,12 +1404,15 @@ show_fig(
 given the resort-tank fluid's convergence failure?** Database choice
 turned out to be a symptom, not the real cause. Re-running the
 resort-tank parent fluid's gas-equilibration step against all six
-PHREEQC databases registered in this project finds that `phreeqc.dat`
-and `wateq4f.dat` both converge where LLNL does not, shown in
-@fig-dbsensitivity, but the two newly converging databases land on a
-dramatically more acidic parent pH (approximately 2.0-2.1) than either
-the fissure's own result or anything physically expected for this
-fluid. Tracking this down directly (controlled PHREEQC experiments,
+PHREEQC databases registered in this project, with the corrected field
+temperature, finds that the resort tank now fails to converge on
+**every one** of the six databases at its own real, measured field pH
+(9.0), shown in @fig-dbsensitivity -- a larger, more consistent failure
+than first found (before the temperature correction, two of the six
+databases had converged, landing on a dramatically more acidic parent
+pH of approximately 2.0-2.1; the corrected, larger steam-loss fraction
+increases the imposed gas load enough that even those two now fail
+outright). Tracking this down directly (controlled PHREEQC experiments,
 not guessed) rules out two plausible-looking explanations before
 finding the real one: swapping boron in or out of the fissure's own
 solution changes its final pH by less than 0.01 units (boron is
@@ -1405,34 +1424,34 @@ are too similar to explain a gap this large. The real cause is the
 two samples' different **measured field pH**: 9.0 for the resort tank
 versus 8.3 for the fissure. Re-running the resort tank's exact real
 chemistry with only its starting pH changed to 8.3 converges cleanly
-on all three databases (LLNL included) and lands within 0.1 pH units
-of the fissure's own result (5.53-5.64 across all three) -- confirming
-that a 0.7-unit difference in starting pH, not the choice of
-thermodynamic database, drives both the convergence failure and the
-pH-2 divergence. Mechanistically, a solution starting at pH 9 has
-already converted most of its alkalinity to carbonate rather than
-bicarbonate, leaving much less carbonate buffering capacity before the
-same absolute imposed gas load (this reconstruction applies the same
-total gas moles regardless of each sample's own buffering capacity, a
-real modeling-assumption limitation worth revisiting) drives the
-system into a strongly acidic, weakly buffered regime. This is now
-reported as a resolved, mechanistically understood sensitivity, not an
-open question: the conservative-species correction (chloride, sodium,
-and so on) was never in doubt and is unaffected by any of this; the
-resort tank's own re-equilibrated pH and saturation indices, as
-reported above, should be read as sensitive to its unusually high
-measured field pH specifically, not to a database artifact.
+on all three general-purpose databases tested (`phreeqc.dat`, LLNL, and
+`wateq4f.dat`) and lands within 0.1 pH units of the fissure's own
+result (5.44-5.55 versus the fissure's 5.48-5.60 across the same three
+databases) -- confirming that a 0.7-unit difference in starting pH, not
+the choice of thermodynamic database, drives both the convergence
+failure and the acidic divergence, now demonstrated even more starkly
+than before the temperature correction (the resort tank fails on every
+database at its own real pH, not just three of six). Mechanistically, a
+solution starting at pH 9 has already converted most of its alkalinity
+to carbonate rather than bicarbonate, leaving much less carbonate
+buffering capacity before the same imposed gas load drives the system
+into a strongly acidic, weakly buffered regime. This is reported as a
+resolved, mechanistically understood sensitivity, not an open question:
+the conservative-species correction (chloride, sodium, and so on) was
+never in doubt and is unaffected by any of this; the resort tank's own
+re-equilibrated pH and saturation indices, as reported above, should be
+read as sensitive to its unusually high measured field pH specifically,
+not to a database artifact.
 
 As a direct check on one remaining candidate explanation, the amount
-of gas imposed on each parent fluid (previously a fixed 10 moles for
-every sample, regardless of how much carbonate buffering that
-sample's own water actually has) was changed to scale with each
-sample's own alkalinity instead. Because the resort tank's and
-fissure's alkalinities differ by only about 6 percent, this changes
-the imposed gas load by a similar small amount and leaves the result
-essentially unchanged: LLNL still fails to converge for the resort
-tank, and `phreeqc.dat`/`wateq4f.dat` still converge to the same
-strongly acidic parent pH (2.0-2.1). This is a real, if negative,
+of gas imposed on each parent fluid is scaled to each sample's own
+alkalinity rather than applied as a fixed total regardless of buffering
+capacity. Because the resort tank's and fissure's alkalinities differ
+by only about 6 percent, this changes the imposed gas load by a similar
+small amount and leaves the result essentially unchanged: the resort
+tank still fails to converge on every database tested, now including
+the two (`phreeqc.dat`, `wateq4f.dat`) that had converged before the
+temperature correction was applied. This is a real, if negative,
 confirmation rather than a wasted step -- it rules out gas-load sizing
 as a contributing factor and leaves the resort tank's unusually high
 measured field pH as the sole identified driver.
@@ -1464,35 +1483,60 @@ inverse-modeling tool for this specific end-member pairing, not
 silently retried until something "worked." A separate, independent
 inverse-modeling attempt against SBW_0001 directly (end-members: the
 fissure and SBRR rather than the reconstructed parent fluid; candidate
-phases: calcite, dolomite) also finds zero feasible solutions, this
-time for a genuine, Ca-specific reason rather than a numerical-plumbing
-one -- a bounded follow-up search (adding quartz as a candidate phase,
-varying which elements are explicitly mass-balanced, and scanning
-uncertainty from 5 to 15 percent) finds the same single, small residual
-at every setting, with the closest approach to feasible sitting at 11
-percent uncertainty before the solver destabilizes above 12 percent.
+phases: calcite, dolomite), re-run after the field-temperature
+correction, now finds a genuine feasible solution once the analytical
+uncertainty is loosened to 12 percent or more -- a materially different
+and more informative result than the pre-fix search, which found none
+at any uncertainty up to 15 percent. At the standard 5 percent
+uncertainty the model is infeasible for several elements at once
+(alkalinity, carbon, calcium, and potassium); at 10 and 11 percent a
+single, cleanly shrinking calcium residual remains (2.5e-4 mol at 10
+percent, 1.1e-4 mol at 11 percent); at 12 percent this residual clears
+and PHREEQC reports one real feasible model: a 70.6/29.4 percent
+fissure/SBRR mixture plus a net *dissolution* of 4.0e-4 mol calcite and
+1.3e-4 mol dolomite. At 15 percent uncertainty a second feasible
+solution is found with a somewhat different mixture (65.8/34.2 percent)
+and similar net dissolution. This is a real, quantitative point of
+agreement with the forward titration result below: both methods
+independently converge on net calcite-plus-dolomite *dissolution* on
+the order of a few times 1e-4 mol along this flowpath, not
+precipitation. Read together, a feasible two-end-member-plus-carbonate
+model for SBW_0001 exists, but only once the uncertainty allowed on the
+underlying chemical analyses is relaxed beyond this project's usual 5
+percent default -- consistent with real analytical uncertainty on these
+samples' major-ion measurements being larger than typically assumed, a
+genuine and testable hypothesis for a tighter future sampling round
+rather than a modeling dead end.
 
 **A forward alternative: titrating calcite and dolomite instead of
-asking the solver to search for them.** Given that every inverse
-attempt against SBW_0001 comes back empty, a better-posed question is
-to run the reaction forward: mix the fissure and SBRR at their real,
-already-computed conservative mixing fraction, then explicitly step
-calcite and dolomite mass transfer -- both net precipitation and net
-dissolution -- and see what the resulting chemistry trajectory looks
-like, shown in @fig-reactionpath. The result is a genuine interior
-optimum, not an edge artifact of the explored range: a modest net
-*dissolution* of calcite and dolomite (on the order of one-tenth of a
-millimole) brings the combined calcium, magnesium, and alkalinity
-error down from roughly 45 to 48 percent at pure conservative mixing to
-about 23 percent at the best fit. That is a real, substantial
-improvement over mixing alone, but it does not fully reconcile the
-target -- alkalinity in particular never reaches its observed value
-anywhere in the titrated range. Chloride stays exactly conservative
-across every step, confirming the titration moves only the carbonate
-system, as intended. Read together, the inverse and forward results
-agree: simple two-end-member-plus-carbonate mixing cannot fully explain
-SBW_0001's chemistry, but a real net carbonate-dissolution signal along
-this flowpath is a genuine part of the answer, not a dead end.
+asking the solver to search for them.** Because the inverse search
+above is only feasible at a loosened uncertainty tolerance, a
+complementary, better-posed question is to run the reaction forward at
+the standard, un-loosened analytical uncertainty: mix the fissure and
+SBRR at their real, already-computed conservative mixing fraction, then
+explicitly step calcite and dolomite mass transfer -- both net
+precipitation and net dissolution -- and see what the resulting
+chemistry trajectory looks like, shown in @fig-reactionpath. The result
+is a genuine interior optimum, not an edge artifact of the explored
+range: a modest net *dissolution* of calcite and dolomite (on the order
+of one-tenth of a millimole, 1.17e-4 mol combined) brings the combined
+calcium, magnesium, and alkalinity error down from roughly 45 to 48
+percent at pure conservative mixing to about 23 percent at the best
+fit. That is a real, substantial improvement over mixing alone, but it
+does not fully reconcile the target -- alkalinity in particular never
+reaches its observed value anywhere in the titrated range. Chloride
+stays exactly conservative across every step, confirming the titration
+moves only the carbonate system, as intended. Read together, the
+inverse and forward results now reinforce each other on both the sign
+and the rough magnitude of the needed correction: net calcite-plus-
+dolomite dissolution, not precipitation, order 1e-4 mol. The inverse
+search needs a looser uncertainty tolerance to call this feasible in a
+strict least-squares sense; the forward titration shows the same
+direction and size of correction brings the fit most of the way there
+even without loosening anything, with alkalinity as the one component
+that resists full reconciliation either way -- a genuine part of the
+answer, not a dead end, and a concrete target for tighter future
+alkalinity measurements at this specific well.
 
 ```{r fig-reactionpath}
 #| results: asis
@@ -1703,7 +1747,7 @@ show_fig(
 
 The three real, independently sampled thermal points (fissure, resort
 tank, nearby well) give sodium/potassium reservoir-temperature
-estimates of 172.7, 178.4, and 179.8 degrees Celsius -- a 7.1-degree
+estimates of 173.4, 179.2, and 180.2 degrees Celsius -- a 6.8-degree
 range and a 2.1 percent coefficient of variation. Three points is too
 few for a formally powered statistical test, stated plainly rather than
 dressed up with an inappropriate p-value, but a spread this tight
@@ -1759,7 +1803,7 @@ before leaving the site.
 **Water and gas geothermometers side by side.** Putting the gas
 geothermometer estimates next to this project's existing water
 geothermometers (Na/K-Giggenbach, Na/K-Fournier, quartz, chalcedony;
-148 real method/sample estimates across 67 thermal samples with complete
+132 real method/sample estimates across 63 thermal samples with complete
 chemistry) against measured temperature, shown in @fig-geothermwatergas,
 makes the pattern explicit rather than described only in prose: every
 method except quartz and chalcedony over-predicts measured
@@ -1790,7 +1834,7 @@ re-equilibrated against a `GAS_PHASE` seeded with NV26-1's real,
 air-corrected CO2-to-H2S proportions (96.5 to 3.5 percent) at 1
 atmosphere, modeled as an open system continuously resupplied by the
 fissure. Shown in @fig-gasphase, the result is a real, substantive
-shift: pH drops from the water's measured 8.3 to a modeled 6.3, and
+shift: pH drops from the water's measured 8.3 to a modeled 5.7, and
 calcite, aragonite, and dolomite all move from supersaturated (as this
 project's PHREEQC pipeline already finds for the water alone) to
 undersaturated. Read plainly, this says the water as sampled is not

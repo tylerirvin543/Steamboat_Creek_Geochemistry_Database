@@ -156,6 +156,64 @@ not aspirational claims:
   Fixed by removing the stale object and re-sourcing; a reminder that a
   long-lived interactive session can silently diverge from the real,
   already-correct files on disk.
+- **Correction (2026-10-25): a real, project-wide field-temperature unit
+  bug was found and fixed, materially changing several of the numbers
+  above.** The project's Fluke field thermometer reports Fahrenheit,
+  correctly labeled in `Field_Measurements.units`, but nothing
+  downstream checked the units column before treating the raw number as
+  Celsius -- confirmed against real co-located temperature-logger data
+  (e.g. SBRR's real field temperature is 15.2°C, not the 59.4°C used
+  everywhere above). Fixed at the point of ingest (`ingest_field.R`) and
+  retroactively (`database/schema/24_fix_field_temperature_units_schema.R`,
+  idempotent migration, applied to the real database). All affected
+  real work was re-run with the corrected temperatures, not left stale:
+  - The gas-informed parent-fluid reconstruction's steam-loss fractions
+    and parent chloride changed materially (fissure: 4.2% -> 19.4%
+    steam loss, parent Cl 781 -> 657 mg/L; resort: 6.1% -> 20.8%, parent
+    Cl 797 -> 672 mg/L) -- the two still agree with each other to within
+    ~2.3%, so the "one shared deep source" conclusion is unchanged, but
+    the specific numbers are not interchangeable with anything computed
+    before this fix.
+  - The 6-database sensitivity sweep is now a *stronger* result, not a
+    weaker one: with the corrected (larger) steam-loss fraction, the
+    resort tank now fails to converge on **all six** registered
+    databases at its own real pH (9.0), not just the three that failed
+    before -- the pH-9-is-the-real-driver conclusion holds and is more
+    sharply demonstrated, not undermined.
+  - **The real SBW_0001 + SBRR inverse-modeling attempt now finds a
+    genuine feasible solution once uncertainty is loosened to 12% or
+    more** (a 70.6/29.4% fissure/SBRR mixture plus net dissolution of
+    4.0e-4 mol calcite and 1.3e-4 mol dolomite at 12%; a second feasible
+    solution at 15% with a 65.8/34.2% mixture) -- this supersedes the
+    "closest approach to feasible sitting at 11% before the solver
+    destabilizes above 12%" finding above, which was computed on the
+    wrong temperatures. At the standard 5% uncertainty it remains
+    infeasible (multiple residuals: Alkalinity, C(4), Ca, K); at 10-11%
+    a single, cleanly shrinking Ca residual remains. The forward
+    REACTION-path titration result (net dissolution, order 1e-4 mol) is
+    now directly corroborated by a real feasible inverse solution of the
+    same sign and similar magnitude, not just "not contradicted by" one.
+  - The forward REACTION-path titration best-fit RMSE values moved only
+    slightly for most targets (SBW_0001 22.9%->22.8%, SBS_0001/variants
+    unchanged at 44.5%/40.3%/etc., SBW_0002 unchanged at 4.6%) with one
+    more notable shift: SBS_0003 improved from 27.7% to 19.7%. All
+    reaction-path runs were deleted and cleanly re-run (new run_ids
+    28-38, superseding the old 1-27); see
+    `data/derived/phreeqc/reaction_path_temp_fix_before_after.csv` for
+    the full per-target before/after comparison.
+  - The 1-atmosphere real PHREEQC gas-phase pairing (SBF_0001 + NV26-1)
+    now shows a larger pH drop (8.3 -> 5.7, not 8.3 -> 6.3) and larger
+    carbonate SI swings, same qualitative disequilibrium finding.
+  - The Na/K-Giggenbach reservoir-temperature agreement across the three
+    real thermal points (fissure/resort/SBW_0001) is essentially
+    unchanged (173.4/179.2/180.2°C, 6.8°C range, 2.1% CV -- barely
+    different from the pre-fix 172.7/178.4/179.8°C, 7.1°C range), since
+    this geothermometer is activity-ratio-based and only weakly
+    sensitive to the small resulting change in solution temperature.
+  - All affected derived CSVs, figures, and manuscript prose
+    (`manuscript/00_thesis_proposal.qmd`, `02_geochemical_background.qmd`,
+    `04_results.qmd`, `05_discussion_and_future_work.qmd`) were
+    corrected in the same pass, not left stale.
 
 ## 2. Major roadblocks (and what unblocks each)
 

@@ -319,6 +319,7 @@ source("database/schema/19_location_aliases_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/23_reaction_path_schema.R")
+source("database/schema/24_fix_field_temperature_units_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
@@ -419,6 +420,7 @@ source("database/schema/19_location_aliases_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/23_reaction_path_schema.R")
+source("database/schema/24_fix_field_temperature_units_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 }
 

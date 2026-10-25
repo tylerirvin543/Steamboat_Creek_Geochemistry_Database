@@ -1,0 +1,12 @@
+"run_id","label","new_rmse_pct","new_progress_mol","old_rmse_pct","rmse_change_pct_points"
+28,"SBW_0001 (Calcite,Dolomite)",22.8,0.0001172,22.9,-0.1
+29,"SBS_0001 (Calcite,Dolomite)",44.5,5.372e-05,44.5,0
+30,"SBS_0002 (Calcite,Dolomite)",39.4,1.02e-05,40.3,-0.9
+31,"SBS_0003 (Calcite,Dolomite)",19.7,1.604e-05,27.7,-8
+32,"SBS_0001 +Anhydrite",40.3,5.613e-05,40.3,0
+33,"SBS_0001 +Gypsum",40.3,5.613e-05,40.3,0
+34,"SBS_0001 +Anhydrite+Fluorite",36.6,5.616e-05,36.6,0
+35,"SBS_0001 alt-meteoric Tick Spring",33.4,-2.022e-05,33.4,0
+36,"SBS_0001 alt-meteoric Jumbo Grade",39,-4.368e-06,39,0
+37,"SBW_0002 (Calcite,Dolomite)",4.6,-1.155e-06,4.6,0
+38,"SBS_0001 combined (Anhydrite+Fluorite+TickSpring)",35.7,-9.67e-06,30.6,5.1

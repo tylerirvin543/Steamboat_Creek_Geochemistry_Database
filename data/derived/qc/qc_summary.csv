@@ -1,7 +1,7 @@
 "issue_type","severity","n"
 "extreme_gradient","WARN",10
 "invalid_detection_limit","ERROR",838
-"invalid_solution","WARN",1273
+"invalid_solution","WARN",1344
 "missing_coordinates","ERROR",44
 "missing_field_parameters","WARN",1526
 "missing_major_ions","WARN",1267

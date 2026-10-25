@@ -135,19 +135,21 @@ project) and test it directly against where the spring-remapping
 fieldwork finds active discharge versus dry ground.
 
 **What the pH-9 database-sensitivity finding implies more broadly.**
-Tracking the resort tank's acidic (pH ~2) divergence on simpler
-PHREEQC databases down to its own measured starting pH (9.0, versus
-the fissure's 8.3) rather than to a database artifact is a useful,
-generalizable result beyond this one sample. It means this project's
-high-pH samples specifically -- anything starting near or above pH 9
--- carry noticeably less carbonate buffering capacity against an
-imposed gas load than a near-neutral sample does, so any PHREEQC pH
-or saturation-index output for such a sample should be cross-checked
-across more than one thermodynamic database before being trusted at
-face value, not reported from a single default run the way a
-near-neutral sample reasonably can be. This is a standing caveat for
-this project's PHREEQC workflow going forward, not a one-off fix for
-the resort tank alone.
+Tracking the resort tank's gas-equilibration convergence failure --
+which, with the project's corrected field temperature, now occurs on
+all six registered PHREEQC databases, not just three -- down to its
+own measured starting pH (9.0, versus the fissure's 8.3) rather than to
+a database artifact is a useful, generalizable result beyond this one
+sample. It means this project's high-pH samples specifically --
+anything starting near or above pH 9 -- carry noticeably less
+carbonate buffering capacity against an imposed gas load than a
+near-neutral sample does, so any PHREEQC pH or saturation-index output
+for such a sample should be cross-checked across more than one
+thermodynamic database before being trusted at face value, not
+reported from a single default run the way a near-neutral sample
+reasonably can be. This is a standing caveat for this project's
+PHREEQC workflow going forward, not a one-off fix for the resort tank
+alone.
 
 **What the null inverse-modeling result does and does not mean.**
 Finding zero feasible mixing-plus-mineral-transfer solutions when the
@@ -165,29 +167,39 @@ about the Lower Sinter Terrace system; until that fix is tried, this
 result should be read as "not yet tested successfully," not as
 "tested and rejected."
 
-**A second, genuinely different null result, and what came from asking
-the question forward instead.** A separate inverse-modeling attempt --
-the fissure and SBRR as end-members, SBW_0001 as the target, calcite
-and dolomite as candidate phases -- also finds zero feasible solutions,
-but for a real, Ca-specific reason this time, not the numerical quirk
-above: a bounded search across candidate phases, mass-balanced
-elements, and uncertainty levels from 5 to 15 percent keeps finding the
-same residual, closest to feasible at 11 percent before the solver
-destabilizes. Rather than keep tuning the inverse solver toward an
-answer, the same two end-members were run forward instead: mix them at
-their real conservative fraction, then explicitly titrate calcite and
-dolomite mass transfer across a wide range, in both directions, and
-compare the resulting trajectory to SBW_0001's real chemistry directly.
-This produced a genuine interior optimum, not an artifact of where the
-search happened to stop -- a modest net dissolution of both minerals
-roughly halves the combined calcium, magnesium, and alkalinity error
-relative to pure mixing, without fully closing the gap. The inverse and
-forward results are not in tension; they agree that two-end-member
-mixing alone is insufficient and that real carbonate reaction is part
-of the explanation, while leaving open exactly what else is. This is
-the kind of well-posed, forward question this system's data can
-actually answer today, and it is the template to reach for the next
-time an inverse search comes back empty: ask what a specific,
+**A second, more informative result once the field-temperature bug
+was corrected, and what came from asking the question forward too.**
+A separate inverse-modeling attempt -- the fissure and SBRR as
+end-members, SBW_0001 as the target, calcite and dolomite as candidate
+phases -- was infeasible at every uncertainty level up to 15 percent
+before the temperature correction. Re-run with the corrected
+temperature, it now finds a real feasible solution once the analytical
+uncertainty is loosened to 12 percent or more: a roughly 70/30
+fissure/SBRR mixture plus net dissolution of calcite and dolomite. At
+the standard 5 percent uncertainty it remains infeasible, and at 10-11
+percent a single calcium residual shrinks cleanly toward zero without
+quite clearing it. Rather than treat the loosened-uncertainty result as
+the final word, the same two end-members were also run forward at the
+standard, un-loosened uncertainty: mix them at their real conservative
+fraction, then explicitly titrate calcite and dolomite mass transfer
+across a wide range, in both directions, and compare the resulting
+trajectory to SBW_0001's real chemistry directly. This produced a
+genuine interior optimum, not an artifact of where the search happened
+to stop -- a modest net dissolution of both minerals roughly halves the
+combined calcium, magnesium, and alkalinity error relative to pure
+mixing, without fully closing the gap. The inverse and forward results
+now reinforce each other on both the sign and the rough magnitude of
+the correction needed: net carbonate dissolution, on the order of a few
+times 1e-4 mol, not precipitation. They agree that two-end-member
+mixing alone is insufficient at standard analytical uncertainty and
+that real carbonate reaction is part of the explanation, while leaving
+open exactly what else is -- alkalinity in particular resists full
+reconciliation in both the inverse and the forward result. This is the
+kind of well-posed, forward question this system's data can actually
+answer today, and it is the template to reach for the next time an
+inverse search comes back empty: ask what a specific, hypothesis-driven
+reaction would predict, rather than widening the solver's own
+uncertainty further as the only lever.
 hypothesis-driven reaction would predict, rather than widening the
 solver's own uncertainty further.
 

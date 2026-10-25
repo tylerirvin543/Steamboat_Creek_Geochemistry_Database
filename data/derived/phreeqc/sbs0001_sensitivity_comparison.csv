@@ -1,8 +1,8 @@
 "variant_label","run_id","best_rmse_pct","best_reaction_progress_mol"
-"Baseline (Calcite+Dolomite, SBRR)",17,44.5316154209806,5.3723e-05
-"+ Anhydrite (SBRR)",20,40.2668739484374,5.6133e-05
-"+ Gypsum (SBRR)",21,40.2667365106032,5.6133e-05
-"Alt. meteoric: Jumbo Gr. S. (Calcite+Dolomite)",24,39.0002722901453,-4.3675e-06
-"+ Anhydrite + Fluorite (SBRR)",26,36.606975964274,5.6163e-05
-"Combined: Anhydrite+Fluorite + Tick Spr.",27,35.720049843208,-9.6697e-06
-"Alt. meteoric: Tick Spr. (Calcite+Dolomite)",23,33.391622675337,-2.0221e-05
+"Baseline (Calcite+Dolomite, SBRR)",29,44.5316154209806,5.3723e-05
+"+ Anhydrite (SBRR)",32,40.2668739484374,5.6133e-05
+"+ Gypsum (SBRR)",33,40.2667365106032,5.6133e-05
+"Alt. meteoric: Jumbo Gr. S. (Calcite+Dolomite)",36,39.0004248288019,-4.3675e-06
+"+ Anhydrite + Fluorite (SBRR)",34,36.606975964274,5.6163e-05
+"Combined: Anhydrite+Fluorite + Tick Spr.",38,35.7203198235686,-9.6697e-06
+"Alt. meteoric: Tick Spr. (Calcite+Dolomite)",35,33.3918991087805,-2.0221e-05

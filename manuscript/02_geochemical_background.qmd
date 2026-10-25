@@ -243,11 +243,16 @@ water -- a total heat flow of about 1.2 x 10^7 cal/s, "equivalent to
 the conducted heat flow from about 780 km2 of 'normal' area"
 [@white1968c]. This is methodologically the direct ancestor of the
 chloride mass-balance approach Sorey and Colvard [@sorey1992] and this
-proposal both use, predating it by more than two decades, and White's
-800-820 ppm pre-boiling chloride figure is a striking match to this
-project's own gas-informed parent-fluid reconstruction described in
-Chapter 4 (781-797 mg/L, reconstructed independently from two 2026
-discharge points six decades later).
+proposal both use, predating it by more than two decades. White's
+800-820 ppm pre-boiling chloride figure is of the same order of
+magnitude as this project's own gas-informed parent-fluid
+reconstruction described in Chapter 4 (657-672 mg/L, reconstructed
+independently from two 2026 discharge points six decades later),
+though roughly 18-20 percent lower -- a real gap worth keeping in
+view rather than smoothing over, since it could reflect six decades
+of real change in the system, a difference in method (White's
+single-step reservoir chemistry versus this project's
+steam-loss-and-gas-add-back reconstruction), or both.
 
 **Heat source.** White interpreted the Steamboat system as a very
 long-lived convective system with no new magma directly involved: "no

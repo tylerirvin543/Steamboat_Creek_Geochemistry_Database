@@ -132,7 +132,7 @@ knitr::include_graphics("../output/figures/gas_analysis/geothermometer_water_gas
 
 Putting the gas geothermometer estimate next to this project's existing
 water geothermometers (Na/K-Giggenbach, Na/K-Fournier, quartz,
-chalcedony; 148 real method/sample estimates across 67 thermal
+chalcedony; 132 real method/sample estimates across 63 thermal
 samples), the one real co-located point (NV26-1 gas / SBF_0001 water)
 lands closest to the Na/K-based water estimates rather than the
 quartz/chalcedony pair -- both respond to a similarly deep, hot part of
@@ -148,7 +148,7 @@ For the first time, a real (not synthetic) PHREEQC gas-phase run was
 possible: SBF_0001's water chemistry was re-equilibrated against a
 `GAS_PHASE` seeded with NV26-1's real, air-corrected CO2:H2S
 proportions at 1 atmosphere. The result is a real, substantive shift --
-pH drops from the measured 8.3 to a modeled 6.3, and calcite,
+pH drops from the measured 8.3 to a modeled 5.7, and calcite,
 aragonite, and dolomite move from supersaturated to undersaturated.
 Taken at face value, this says the water as sampled is not simply in
 equilibrium with the vent gas as sampled, which is itself a useful
@@ -165,23 +165,23 @@ knitr::include_graphics("../output/figures/manuscript/parent_fluid_comparison.pn
 ```
 
 Working backward from the fissure sample toward a pre-boiling parent
-fluid (4.2 percent steam loss, reservoir 172.7 degrees Celsius) gives a
-reconstructed parent chloride of 781 mg/L, below the measured
+fluid (19.4 percent steam loss, reservoir 173.4 degrees Celsius) gives a
+reconstructed parent chloride of 657 mg/L, below the measured
 815 mg/L -- boiling concentrates the residual liquid, so the parent is
 more dilute, not less. Re-equilibrating that parent with NV26-1's real
-gas composition at reservoir pressure (8.5 atmospheres, not 1) drops
+gas composition at reservoir pressure (8.7 atmospheres, not 1) drops
 the modeled pH from 8.3 to 5.5 and flips calcite/dolomite from
 supersaturated to undersaturated -- consistent with carbonate scaling
 being a shallow/surface phenomenon, not a deep-reservoir one. Applying
 the identical method to the resort-tank sample gives a parent chloride
-within 2.1 percent of the fissure's own (797 vs. 781 mg/L), tighter
+within 2.3 percent of the fissure's own (672 vs. 657 mg/L), tighter
 agreement than the two samples' raw measured values -- though the
-resort-tank sample's own gas-equilibration step did not converge (a
-real PHREEQC limitation at its measured pH of 9.0, logged to
+resort-tank sample's own gas-equilibration step did not converge on
+any of the six registered PHREEQC databases at its measured pH of 9.0
+(a real PHREEQC limitation, logged to
 `data/derived/phreeqc/parent_fluid_diagnostics.csv` rather than
 silently dropped), so only its conservative-species reconstruction, not
 its re-equilibrated pH/saturation state, is reported.
-
 ```{r evolution-fig}
 #| echo: false
 #| fig-cap: "Real chemistry, saturation indices, geothermometry, and stable isotopes across the sampled flowpath: reconstructed parent fluids, measured fissure/resort-tank discharge, a nearby well (SBW_0001), and Steamboat Creek at SBRR then downstream SBBV. See `scripts/analysis/fluid_evolution_flowpath.R`."
@@ -200,8 +200,8 @@ implausible values (195-255 degrees Celsius) at the two creek stations
 -- a known artifact of applying it to dilute, non-thermal water, shown
 for transparency rather than treated as a real estimate there. The
 three real thermal points' independently derived sodium/potassium
-reservoir temperatures (172.7, 178.4, 179.8 degrees Celsius) span only
-7.1 degrees Celsius (2.1 percent coefficient of variation) -- too few
+reservoir temperatures (173.4, 179.2, 180.2 degrees Celsius) span only
+6.8 degrees Celsius (2.1 percent coefficient of variation) -- too few
 points for a formally powered test, but a tight spread relative to this
 project's own documented 50-100 degree Celsius geothermometer
 divergence project-wide, consistent with (not proof of) one shared deep
@@ -212,20 +212,22 @@ fraction of total streamflow to shift the creek's bulk isotopic
 signature even while it measurably shifts chloride.
 
 Real inverse modeling against SBW_0001 -- the across-creek well sitting
-clearly above the fissure+SBRR conservative-mixing curve -- finds zero
-feasible mixing-plus-mineral-transfer solutions, for a genuine,
-calcium-specific reason rather than a numerical artifact (Chapter 3).
-Running the same two end-members forward instead, by explicitly
-titrating calcite and dolomite mass transfer rather than asking the
-solver to search for it, finds a real interior optimum: a modest net
-*dissolution* of both minerals roughly halves the combined calcium,
-magnesium, and alkalinity error relative to pure conservative mixing
-(figure below), though it does not fully reconcile the
-target. Chloride stays exactly conservative across the titration,
-confirming only the carbonate system moves. The inverse and forward
-results agree: simple two-end-member mixing cannot fully explain
-SBW_0001, but real net carbonate dissolution along this flowpath is
-part of the answer.
+clearly above the fissure+SBRR conservative-mixing curve -- finds no
+feasible mixing-plus-mineral-transfer solution at the standard 5 percent
+analytical uncertainty, but does find one once that uncertainty is
+loosened to 12 percent or more (Chapter 3): a roughly 70/30
+fissure/SBRR mixture plus net *dissolution* of calcite and dolomite.
+Running the same two end-members forward instead at the standard,
+un-loosened uncertainty, by explicitly titrating calcite and dolomite
+mass transfer rather than asking the solver to search for it, finds a
+real interior optimum: a modest net *dissolution* of both minerals
+roughly halves the combined calcium, magnesium, and alkalinity error
+relative to pure conservative mixing (figure below), though it does not
+fully reconcile the target. Chloride stays exactly conservative across
+the titration, confirming only the carbonate system moves. The inverse
+and forward results reinforce each other on both the sign and rough
+magnitude of the correction needed -- net carbonate dissolution, order
+1e-4 mol -- though alkalinity resists full reconciliation either way.
 
 ```{r reactionpath-fig}
 #| echo: false

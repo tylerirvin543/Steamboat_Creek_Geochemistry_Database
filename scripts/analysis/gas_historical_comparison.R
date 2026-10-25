@@ -384,7 +384,7 @@ build_gas_phase_pairing_figure <- function(
                        name = NULL) +
     labs(x = NULL, y = "pH or saturation index",
          title = "SBF_0001 water re-equilibrated against NV26-1's real gas composition",
-         subtitle = "Carbonate minerals shift from supersaturated to undersaturated; pH drops ~2 units") +
+         subtitle = "Carbonate minerals shift from supersaturated to undersaturated; pH drops by roughly 2.5-2.6 units") +
     theme_steamboat(base_size = 11) +
     theme(legend.position = "bottom")
 

@@ -8692,3 +8692,129 @@ database. **Flagged for the user to resolve directly (confirm the real
 date and correct the raw spreadsheet, or confirm April 29 is in fact
 correct and the "same day" recollection is itself the mistake) --
 not guessed or silently changed either way.**
+
+## Session 57 (2026-10-25, continued): field-temperature F/C bug -- full
+re-run and manuscript correction completed (closes out Session 56)
+
+Direct continuation of Session 56's mid-task handoff, executed via an
+approved Plan-mode plan. All seven "not yet done" items from that
+entry's handoff list are now complete.
+
+- **Reaction-path titrations re-run with corrected temperatures.** All
+  11 enabled `data/raw/phreeqc/reaction_path_config.csv` rows re-run via
+  `run_phreeqc_reaction_path_from_config(con)` (new run_ids 28-38, all
+  converged). Compared against the stale pre-fix runs
+  (`data/derived/phreeqc/reaction_path_temp_fix_before_after.csv`):
+  most best-fit RMSE values barely moved (SBW_0001 22.9%->22.8%,
+  SBW_0002 unchanged 4.6%), but SBS_0003 improved materially (27.7%->
+  19.7%) and the SBS_0001 "combined" sensitivity variant got slightly
+  worse (30.6%->35.7%). Old run_ids 1-27 deleted after confirming the
+  new ones converged cleanly -- a real, previously-unnoticed
+  `Well_Lithology`-style staleness check also found and fixed in the
+  same pass: sample 818 (SBBV) had a second, independently stale
+  (2026-09-26, `llnl.dat`) `PHREEQC_Results` entry coexisting with its
+  own correctly-rebuilt `PHREEQC_Solutions` row -- not caused by the F/C
+  bug itself (SBBV's `Field_Measurements` was never mislabeled), but a
+  separate, real `PHREEQC_Results`/`PHREEQC_Solutions` sync gap that
+  would have silently corrupted `docs/data/geothermometer_by_site.csv`'s
+  thermal-sample filter had it gone unnoticed; fixed by deleting the
+  stale entry and re-running speciation for sample 818.
+- **`docs/data/geothermometer_by_site.csv` regenerated.** Sample count
+  dropped from 67 to 63 (and total method/sample estimate rows from 148
+  to 132) once real, corrected temperatures correctly excluded SBRR
+  (819, now 15.2°C), SBS_0001 (825, 47.8°C), SBS_0003 (822, 39.6°C), and
+  SBBV (818, 23.7°C) from the `measured_temp_c > 50` "genuinely thermal"
+  filter -- all four had spuriously passed under the old, wrong
+  (Fahrenheit-as-Celsius) values.
+- **Gas-informed parent-fluid reconstruction re-run end to end**
+  (`run_parent_fluid_analysis(con)` + `run_inverse_with_parent_fluid()`
+  for both real targets): fissure steam-loss fraction 4.2%->19.4%,
+  parent Cl 781->657 mg/L; resort-tank steam-loss 6.1%->20.8%, parent Cl
+  797->672 mg/L -- the two parent fluids still agree to within ~2.3% on
+  Cl (unchanged conclusion: one shared deep source), but every specific
+  number is materially different from anything computed before this
+  fix. All affected derived CSVs regenerated
+  (`parent_fluid_reconstruction.csv`, `_mixing_comparison.csv`,
+  `_saturation_indices.csv`, `_diagnostics.csv`,
+  `_fissure_vs_resort.csv`, `_inverse_modeling_summary.csv`).
+- **6-database sensitivity sweep and pH root-cause test re-run.** A
+  materially *stronger* finding than before: with the corrected (larger)
+  steam-loss fraction and gas load, the resort tank (815) now fails to
+  converge on **all six** registered PHREEQC databases at its own real
+  pH (9.0), not just three of six as found pre-fix (`phreeqc.dat`/
+  `wateq4f.dat` used to converge to a spurious pH ~2). Forcing the
+  resort tank's starting pH to 8.3 (matching the fissure) still resolves
+  convergence cleanly on all three general-purpose databases tested and
+  reproduces the fissure's own corrected results within 0.1 pH units
+  (5.44-5.55 vs. 5.48-5.60) -- the "starting field pH, not database
+  choice" root cause is confirmed, not weakened, by the correction.
+  Gas-load-scaling re-run too (scaling to each sample's own alkalinity):
+  same conclusion, now consistently failing on all three tested
+  databases rather than two of three.
+- **The real SBW_0001+SBRR inverse-modeling attempt (Calcite+Dolomite,
+  not the parent-fluid pairing) now finds a genuine feasible solution**
+  once uncertainty is loosened to 12% or more -- a materially better
+  result than the pre-fix search, which found none up to 15%. At the
+  standard 5% uncertainty it's infeasible on multiple elements at once
+  (Alkalinity, C(4), Ca, K); at 10% and 11% a single, cleanly shrinking
+  Ca residual remains (2.5e-4 -> 1.1e-4 mol); at 12% PHREEQC reports one
+  real feasible model (70.6%/29.4% fissure/SBRR mixture, net dissolution
+  of 4.0e-4 mol calcite + 1.3e-4 mol dolomite); at 15% a second feasible
+  solution (65.8%/34.2% mixture, similar dissolution). This is the first
+  time the inverse and forward (REACTION-path titration) methods
+  genuinely agree quantitatively, not just qualitatively -- both now
+  independently converge on net carbonate *dissolution* on the order of
+  a few times 1e-4 mol. The companion SBS_0001+SBRR inverse model still
+  hard-fails outright (unchanged from pre-fix).
+- **All affected figures regenerated**: `forward_mixing_model_validation.png`,
+  `lst_flow_network_graph.png`, `lst_aquifer_depth_profile.png` (unaffected,
+  rebuilt for consistency), all 5 `reaction_path_titration*.png` files,
+  `reaction_path_fit_comparison.png`, `sbs0001_sensitivity_comparison.png`,
+  `lst_proximity_map.png`, `parent_fluid_comparison.png`,
+  `gas_phase_fischer_pairing_before_after.png` (its subtitle's "pH drops
+  ~2 units" corrected to "~2.5-2.6 units"), `geothermometer_water_gas_comparison.png`,
+  `fluid_evolution_flowpath.png`, `lst_conceptual_flowpath.png`. The
+  Piper diagram was deliberately **not** rebuilt (built from mg/L ion
+  concentrations, not temperature -- genuinely unaffected).
+- **Project-wide prose-correction pass completed** across
+  `manuscript/00_thesis_proposal.qmd`, `02_geochemical_background.qmd`,
+  `04_results.qmd`, and `05_discussion_and_future_work.qmd`: every
+  instance of the stale "T=59.4°C"/"152.6°C"/"781-797 mg/L"/"4.2
+  percent"/"destabilizes above 12 percent"/"148 real method/sample
+  estimates across 67 thermal samples" claims corrected to the real,
+  re-verified numbers, with the parent-fluid-vs-White(1968) comparison
+  honestly reframed from "a striking match" to "same order of magnitude,
+  roughly 18-20 percent lower" now that the corrected parent Cl (657-672
+  mg/L) sits further from White's 800-820 ppm than the old, wrong
+  reconstruction did. Three stale "T=59.4C" code comments/captions in
+  `scripts/analysis/lst_phreeqc_illustration_figures.R` were also fixed,
+  each explicitly flagging the correction rather than silently updating
+  the number. All four manuscript files (plus the full combined
+  `00_thesis_proposal.qmd` in html/pdf) re-rendered cleanly: 0 citeproc
+  warnings, 0 undefined citations, figure numbering sequential 1-26 with
+  no gaps (confirmed via `pdftotext`), and a direct text-grep of the
+  rendered PDF confirms no remaining stale values outside of the two
+  places that intentionally quote the old numbers for before/after
+  comparison.
+- **`ROADMAP.md` updated** with a new, clearly-dated correction entry
+  (not a silent rewrite of the pre-fix bullets) summarizing every
+  numeric change above.
+- **QC re-run clean** on the real, already-backed-up
+  `geochem_operational.sqlite` (2 pre-existing, unrelated
+  `PHREEQC_Run_Failures` unchanged, 0 logger outliers). A stray
+  `phreeqc.log` at the repo root was deleted (same harmless recurring
+  artifact flagged in several prior sessions).
+- **On the separate, still-open SBS_0001 sample-date question**
+  (April 29 vs. May 1, flagged at the end of Session 56): deliberately
+  **not** touched this session, exactly as the handoff instructed. Still
+  needs the user to confirm the real date and, if it's May 1, correct
+  `data/raw/field/samples.xlsx`/`field_measurements.xlsx` directly and
+  re-ingest -- this is not a database bug and was not silently resolved.
+- **Not done this session**: no DEMO database rebuild; no GeoPackage
+  re-export (none of this session's changes are new spatial data); the
+  Docx format of `00_thesis_proposal.qmd` was not re-rendered this
+  session (html and pdf were both verified; docx has intermittently
+  failed to move on Windows when a previous copy is open in a viewer,
+  per several prior sessions' notes, and was not attempted here since
+  html/pdf verification was already thorough). This session's file
+  changes are not yet committed/pushed to git.

@@ -617,6 +617,27 @@ ingest_field <- function(con) {
       instrument,
       source_id = NA_integer_
     )
+
+  # Real bug found and fixed 2026-10-25: this project's Fluke field
+  # thermometer reports in Fahrenheit, correctly labeled "F" in the raw
+  # source spreadsheet -- but nothing downstream (build_phreeqc_solutions()
+  # and every other direct consumer of Field_Measurements.value) ever
+  # checked the units column before treating the number as Celsius.
+  # Confirmed by cross-checking against real continuous logger data at
+  # the same sites (e.g. SBRR's own creek logger reads 10.8-27.5 C
+  # seasonally, matching 59.36 F = 15.2 C exactly -- 59.36 C would be a
+  # physically implausible open-creek temperature). Normalize to Celsius
+  # here, at the real point of entry, rather than patching every
+  # downstream reader -- the safer fix given how many scripts/notebooks
+  # read Field_Measurements.value directly assuming it's already C.
+  meas_db <- meas_db |>
+    mutate(
+      .is_fahrenheit = parameter == "temperature" &
+        tolower(trimws(units)) %in% c("f", "deg f", "degf", "\u00b0f"),
+      value = ifelse(.is_fahrenheit, (value - 32) * 5 / 9, value),
+      units = ifelse(.is_fahrenheit, "deg C", units)
+    ) |>
+    select(-.is_fahrenheit)
   
   # Validate join success with explicit failure reporting
   if (any(is.na(meas_db$sample_id))) {
