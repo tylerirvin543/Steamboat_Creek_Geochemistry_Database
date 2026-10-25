@@ -67,7 +67,7 @@ format_phreeqc_reaction_path_input <- function(thermal_row, meteoric_row, fracti
     "    -reaction     true",
     "    -solution     true",
     "    -pH           true",
-    "    -totals       Ca Mg Na Cl S(6) Si",
+    "    -totals       Ca Mg Na Cl S(6) Si F",
     "    -alkalinity   true",
     sprintf("    -saturation_indices  %s", paste(si_list, collapse = "  ")),
     ""
@@ -91,17 +91,48 @@ format_phreeqc_reaction_path_input <- function(thermal_row, meteoric_row, fracti
   lines
 }
 
+
+#' Real molar masses (g/mol) for the elements/species this file's
+#' molar-mass-dependent functions need, shared between
+#' .estimate_reaction_bounds_mol(), summarize_reaction_path_fit(), and
+#' build_reaction_path_titration_figure() so there is exactly one place
+#' to update if a new element is ever added. SO4 uses PHREEQC's own
+#' stored parameter key (S_6_, from "S(6)" after this file's standard
+#' dot-to-underscore cleanup) -- 1 mol S(6) = 1 mol SO4 exactly, so
+#' SO4's own molar mass (not elemental sulfur's) is the correct
+#' conversion back to a real mg/L-equivalent comparison.
+.REACTION_PATH_MW <- c(Ca = 40.078, Mg = 24.305, Alkalinity = 61.017, SO4 = 96.06, F = 18.998)
+
+#' Maps a PHREEQC_Solutions column name (used throughout this project,
+#' e.g. in fit_parameters) to the actual parameter key PHREEQC writes to
+#' SELECTED_OUTPUT and this file stores in PHREEQC_Reaction_Path_Steps.
+#' Only SO4 differs (stored as "S_6_", from PHREEQC's "S(6)" total).
+.REACTION_PATH_STEP_PARAM_KEY <- c(Ca = "Ca", Mg = "Mg", Alkalinity = "Alkalinity", SO4 = "S_6_", F = "F")
+
+#' Real per-mol-of-reaction-progress consumption of each tracked element,
+#' for every phase this project has tested as a reaction-path candidate.
+#' Each phase is titrated by the SAME reaction-progress amount (see file
+#' header), so a phase list's total consumption of an element is just the
+#' sum of each listed phase's own row here.
+.REACTION_PATH_PHASE_STOICHIOMETRY <- list(
+  Calcite   = c(Ca = 1, Alkalinity = 1),               # CaCO3: 1 Ca, 1 C (~1 mol Alkalinity-as-HCO3)
+  Dolomite  = c(Ca = 1, Mg = 1, Alkalinity = 2),        # CaMg(CO3)2: 1 Ca, 1 Mg, 2 C
+  Anhydrite = c(Ca = 1, SO4 = 1),                      # CaSO4: 1 Ca, 1 SO4
+  Gypsum    = c(Ca = 1, SO4 = 1),                      # CaSO4.2H2O: same Ca/SO4 stoichiometry for bounding purposes
+  Fluorite  = c(Ca = 1, F = 2)                          # CaF2: 1 Ca, 2 F
+)
+
 #' Estimate a safe, physically-grounded [min, max] reaction-progress
-#' range (mol) from the mixed fluid's own Ca/Mg/Alkalinity content, so a
-#' default run doesn't immediately overshoot and hard-stop PHREEQC.
+#' range (mol) from the mixed fluid's own Ca/Mg/Alkalinity/SO4/F content,
+#' so a default run doesn't immediately overshoot and hard-stop PHREEQC.
 #'
-#' Exact for the Calcite+Dolomite phase pair this script is built around
-#' (the stoichiometry below -- Calcite 1 mol consumes 1 Ca + 1 C;
-#' Dolomite 1 mol consumes 1 Ca + 1 Mg + 2 C, per mol of REACTION
-#' progress applied to each phase independently, see the file header) --
-#' an approximation (same total-pool-divided-by-phase-count logic,
-#' without per-phase stoichiometry) for any other phase list, since this
-#' project's real use case is specifically Calcite+Dolomite.
+#' Exact (real per-phase stoichiometry, see
+#' .REACTION_PATH_PHASE_STOICHIOMETRY) for Calcite, Dolomite, Anhydrite,
+#' Gypsum, and Fluorite -- the five phases this project has tested as
+#' reaction-path candidates. Any other phase falls back to a generic,
+#' conservative approximation (the combined Ca+Mg+Alkalinity pool divided
+#' evenly across the number of phases) -- supply step_range_mol
+#' explicitly for a genuinely untested phase.
 #'
 #' @param safety Fraction of the theoretically available pool to allow
 #'   (default 0.4 -- leaves real headroom so PHREEQC's own equilibrium
@@ -116,31 +147,40 @@ format_phreeqc_reaction_path_input <- function(thermal_row, meteoric_row, fracti
     mv <- if (is.null(mv) || is.na(mv)) 0 else as.numeric(mv)
     f * tv + (1 - f) * mv
   }
-  ca_mol <- mix_val("Ca") / 1000 / 40.078
-  mg_mol <- mix_val("Mg") / 1000 / 24.305
-  c_mol  <- mix_val("Alkalinity") / 1000 / 61.017  # mol C, treating Alkalinity as ~all HCO3
+  # Real element pools (mol), from the mixed fluid's own mg/L values.
+  # "SO4"/"F" are the real PHREEQC_Solutions column names (mg/L); S_6_ is
+  # only the *output* parameter key, reused here as the pool's name so it
+  # lines up directly with .REACTION_PATH_PHASE_STOICHIOMETRY's rownames.
+  pools <- c(
+    Ca = mix_val("Ca") / 1000 / .REACTION_PATH_MW[["Ca"]],
+    Mg = mix_val("Mg") / 1000 / .REACTION_PATH_MW[["Mg"]],
+    Alkalinity = mix_val("Alkalinity") / 1000 / .REACTION_PATH_MW[["Alkalinity"]],
+    SO4 = mix_val("SO4") / 1000 / .REACTION_PATH_MW[["SO4"]],
+    F = mix_val("F") / 1000 / .REACTION_PATH_MW[["F"]]
+  )
 
-  has_calcite  <- "Calcite"  %in% phases
-  has_dolomite <- "Dolomite" %in% phases
-
-  if (has_calcite || has_dolomite) {
-    ca_per_x <- as.numeric(has_calcite) + as.numeric(has_dolomite)
-    mg_per_x <- as.numeric(has_dolomite)
-    c_per_x  <- as.numeric(has_calcite) + 2 * as.numeric(has_dolomite)
-    limits <- c(
-      if (ca_per_x > 0) ca_mol / ca_per_x else Inf,
-      if (mg_per_x > 0) mg_mol / mg_per_x else Inf,
-      if (c_per_x  > 0) c_mol  / c_per_x  else Inf
-    )
+  known_phases <- phases[phases %in% names(.REACTION_PATH_PHASE_STOICHIOMETRY)]
+  if (length(known_phases) > 0) {
+    # Total per-mol-of-reaction-progress consumption of each element,
+    # summed across every known phase in the list (each titrated by the
+    # same amount -- see file header).
+    total_consumption <- c(Ca = 0, Mg = 0, Alkalinity = 0, SO4 = 0, F = 0)
+    for (p in known_phases) {
+      row <- .REACTION_PATH_PHASE_STOICHIOMETRY[[p]]
+      total_consumption[names(row)] <- total_consumption[names(row)] + row
+    }
+    limits <- sapply(names(total_consumption), function(el) {
+      if (total_consumption[[el]] > 0) pools[[el]] / total_consumption[[el]] else Inf
+    })
   } else {
-    # Generic fallback for any other phase list: divide the combined
-    # Ca+Mg+C pool evenly across the number of phases -- a conservative
-    # approximation, not phase-stoichiometry-exact. Supply
-    # step_range_mol explicitly for anything other than Calcite/Dolomite.
-    limits <- (ca_mol + mg_mol + c_mol) / max(length(phases), 1)
+    # Generic fallback for any untested phase: divide the combined
+    # Ca+Mg+Alkalinity pool evenly across the number of phases -- a
+    # conservative approximation, not phase-stoichiometry-exact.
+    limits <- (pools[["Ca"]] + pools[["Mg"]] + pools[["Alkalinity"]]) / max(length(phases), 1)
   }
 
   x_max <- safety * min(limits)
+
   if (!is.finite(x_max) || x_max <= 0) x_max <- 0.001  # last-resort fallback
 
   # Intentionally ASYMMETRIC: the negative (precipitation/removal) bound
@@ -262,6 +302,29 @@ run_reaction_path_titration <- function(con, target_sample_id = NULL,
   }
   if (is.null(mixing_fraction) || is.na(mixing_fraction)) stop("Could not determine a mixing fraction -- supply mixing_fraction explicitly.")
 
+  # A mixing fraction outside [0,1] means the target is not a convex
+  # combination of the two named end-members (e.g. MORE concentrated
+  # than the "thermal" reference itself, a real, already-documented
+  # case for SBW_0002) -- PHREEQC's MIX block cannot represent a
+  # negative fraction (it hard-stops with a negative-concentration
+  # error before the titration even starts, confirmed 2026-10-25).
+  # Clamped to the nearest valid endpoint (0 or 1) with an explicit
+  # warning, rather than silently failing or guessing a different
+  # value -- this is now a "what reaction progress explains the gap
+  # from the pure end-member alone" question, a real, stated change
+  # in what is being tested for any sample this happens to.
+  if (mixing_fraction < 0 || mixing_fraction > 1) {
+    clamped <- max(0, min(1, mixing_fraction))
+    warning(sprintf(
+      "Mixing fraction %.4f is outside [0,1] -- target_sample_id %s is not a convex mix of the named end-members. ",
+      mixing_fraction, if (is.null(target_sample_id)) "NA" else target_sample_id),
+      sprintf("Clamped to %.1f for the MIX block (pure %s end-member, no dilution); the reaction titration now tests what mass transfer explains the gap from that pure end-member alone, not from a real mixed fluid.",
+              clamped, if (clamped == 1) "thermal" else "meteoric"), call. = FALSE)
+    mixing_fraction_source <- paste0(mixing_fraction_source, sprintf(" [clamped from %.4f to %.1f -- outside [0,1]]", mixing_fraction, clamped))
+    mixing_fraction <- clamped
+  }
+
+
   if (is.null(step_range_mol)) {
     step_range_mol <- .estimate_reaction_bounds_mol(thermal_row, meteoric_row, mixing_fraction, phases)
     message(sprintf("Auto-estimated reaction-progress bounds: [%.6g, %.6g] mol (safety-scaled from the mixed fluid's own Ca/Mg/Alkalinity).",
@@ -375,7 +438,7 @@ summarize_reaction_path_fit <- function(con, run_id, target_sample_id = NULL,
 
   # PHREEQC_Solutions stores these in mg/L; PHREEQC_Reaction_Path_Steps
   # stores PHREEQC's own -totals/-alkalinity output, which is mol/kgw.
-  mw <- c(Ca = 40.078, Mg = 24.305, Alkalinity = 61.017)
+  mw <- .REACTION_PATH_MW
   fit_parameters <- intersect(fit_parameters, names(mw))
 
   obs_mol <- sapply(fit_parameters, function(p) {
@@ -388,10 +451,16 @@ summarize_reaction_path_fit <- function(con, run_id, target_sample_id = NULL,
     return(invisible(tibble::tibble()))
   }
 
+  step_keys <- .REACTION_PATH_STEP_PARAM_KEY[fit_parameters]
   wide <- steps |>
-    filter(parameter %in% fit_parameters) |>
+    filter(parameter %in% step_keys) |>
     tidyr::pivot_wider(id_cols = c(step_index, reaction_progress_mol), names_from = parameter, values_from = value) |>
     arrange(reaction_progress_mol)
+  # Rename step-table parameter keys back to their PHREEQC_Solutions column
+  # name (only SO4/"S_6_" actually differs) so every line below can
+  # reference wide[[p]] uniformly for p in fit_parameters.
+  rename_map <- step_keys[step_keys %in% names(wide)]
+  if (length(rename_map) > 0) names(wide)[match(rename_map, names(wide))] <- names(rename_map)
 
   resid <- wide
   pct_cols <- character()

@@ -328,13 +328,24 @@ happen:
    because its real calcium and alkalinity pull the model in opposite
    directions that a two-phase calcite/dolomite titration cannot
    reconcile within the physically available reaction-progress range.
-7. **Work out what is actually different about SBS_0001.** Its specific
-   failure mode -- an internally inconsistent calcium/alkalinity demand,
-   not simply "needs more or less reaction" -- was not previously
-   visible from saturation index alone and is a concrete, well-defined
-   target for a third candidate phase (a silicate or clay rather than
-   another carbonate), a different meteoric end-member, or real
-   additional chemistry at or near this spring.
+7. ~~Work out what is actually different about SBS_0001~~ **Partially
+   done, same day.** A third candidate phase (anhydrite, gypsum,
+   anhydrite plus fluorite) and two alternate meteoric end-members (Tick
+   Spring, Jumbo Grade Spring) were both tested directly. Every variant
+   improves on the baseline somewhat, and the single best result (the
+   combined anhydrite-plus-fluorite-plus-Tick-Spring variant, scored
+   honestly on its own full chemistry) reaches 30.6 percent -- but none
+   fully resolves the tension, and a real Piper diagram built
+   independently of any PHREEQC modeling does not show SBS_0001
+   visually separating toward the sulfate corner the way the hypothesis
+   predicted. The real additional chemistry at or near this spring that
+   would let this be resolved further has not been collected.
+8. **Follow up on the map/Piper-diagram pair's own implication.** The
+   real finding that SBS_0001 and SBW_0001 sit only 109 meters apart yet
+   behave this differently is itself now a concrete argument for
+   prioritizing a real synoptic sample at both points together, over
+   adding yet another PHREEQC sensitivity variant to either one in
+   isolation.
 
 
 ## Closing

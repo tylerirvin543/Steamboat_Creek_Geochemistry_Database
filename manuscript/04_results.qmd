@@ -247,8 +247,62 @@ at every step for every target.
 
 ```{r reactionpath-comparison-fig}
 #| echo: false
-#| fig-cap: "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all four real downgradient targets."
+#| fig-cap: "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target own best-fit reaction progress, across all five real downgradient targets."
 knitr::include_graphics("../output/figures/manuscript/reaction_path_fit_comparison.png")
+```
+
+SBW_0002's own stored mixing fraction (1.043) slightly exceeds the
+valid 0-1 range -- a real, already-documented finding that it is more
+concentrated than the fissure reference itself, not a new problem.
+Clamped to 1.0 (pure fissure end-member) for the titration, it fits
+extremely well: 4.6 percent combined error, by far the best of any
+real target tested.
+
+A real, specific lead -- SBS_0001 has the highest sulfate and lowest
+alkalinity of its peer group, the classic gypsum/anhydrite signature a
+carbonate-only titration cannot reproduce -- was tested two ways:
+adding sulfate/fluoride phases, and substituting a different,
+higher-sulfate meteoric end-member (figure below). Every variant
+improves on the 44.5 percent baseline somewhat (best: 33.4 percent,
+Tick Spring end-member, scored on a fixed Ca/Mg/Alkalinity basis), but
+none fully resolves it. Honestly including fluorite's own real fluoride
+prediction (a real bug, since fixed, had left it out) flips part of the
+ranking: the anhydrite+fluorite variant gets worse (50.8 percent) once
+scored on its own chemistry, while the combined variant becomes the
+single best result of any tested (30.6 percent).
+
+```{r sbs0001-sensitivity-fig}
+#| echo: false
+#| fig-cap: "SBS_0001 sensitivity test: best-fit combined Ca/Mg/Alkalinity error across the baseline, three additional-phase variants, two alternate-meteoric variants, and one combined variant."
+knitr::include_graphics("../output/figures/manuscript/sbs0001_sensitivity_comparison.png")
+```
+
+SBS_0001 and SBW_0001 sit only 109 meters apart by their own real
+coordinates (figure below) yet behave about as differently as any two
+real targets on this flowpath can -- a concrete, mappable instance of
+this project's own modeling principle that proximity does not imply
+shared chemistry.
+
+```{r proximity-map-fig}
+#| echo: false
+#| fig-cap: "Real lat/lon positions of the seven flowpath samples, with the five real downgradient targets colored and sized by their own best-fit reaction-path RMSE."
+knitr::include_graphics("../output/figures/manuscript/lst_proximity_map.png")
+```
+
+A real, model-free Piper diagram built from the same seven samples'
+mg/L chemistry (figure below) gives an honest negative result for the
+sulfate hypothesis: SBS_0001 does not visibly separate toward the
+anion triangle's sulfate corner, since chloride dominates the anion
+budget too heavily for its real but modest sulfate excess to show up
+in charge-equivalent percentage terms. The diagram still correctly
+separates SBRR from the thermal cluster and groups the thermal samples
+together, consistent with the facies clustering already established
+statistically above.
+
+```{r piper-fig}
+#| echo: false
+#| fig-cap: "Trilinear Piper diagram, built directly from real mg/L chemistry, for the fissure, SBRR, SBW_0001, SBW_0002, and the three real Low Sinter Terrace springs."
+knitr::include_graphics("../output/figures/manuscript/lst_piper_diagram.png")
 ```
 
 ```{r conceptual-fig}

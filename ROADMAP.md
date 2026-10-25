@@ -131,6 +131,31 @@ not aspirational claims:
   the largest correction and shows the largest absolute improvement, but
   it is no longer the only target this model struggles with -- SBS_0001
   does too, for a different, specific reason worth its own follow-up.
+- **SBW_0002 (the resort tank), run as a reaction-path target for the
+  first time, fits far better than any other target -- but only after a
+  necessary, explicitly-stated adjustment.** Its own stored mixing
+  fraction (1.043) slightly exceeds the valid 0-1 range (already
+  documented: SBW_0002 is more concentrated than the fissure reference
+  itself). Clamped to 1.0 (pure fissure end-member, no dilution) with an
+  explicit warning rather than silently failing, the titration then
+  finds a combined Ca/Mg/Alkalinity error of only 4.6% at a tiny net
+  precipitation -- by far the best fit of any real target tested on this
+  flowpath, consistent with the fissure and resort tank being the two
+  most chemically similar real points on the whole flowpath.
+- **A real stale-R-session bug found and fixed while running the
+  Anhydrite/Gypsum/Fluorite sensitivity tests, not a bug in any file on
+  disk.** A long-running R session had an old, pre-fix `lab_analyte_map`
+  object cached in its global environment (`phreeqc_name = "SO4"`
+  instead of the real, already-corrected `"S(6)"` on disk) --
+  `.phreeqc_analyte_map()`'s `if (!exists(...))` guard saw the stale
+  object and never re-sourced the real file, silently zeroing SO4/SiO2
+  in every SOLUTION block generated that session. Harmless for
+  Calcite/Dolomite-only titrations (which never use SO4), but it broke
+  Anhydrite/Gypsum runs outright (negative-concentration errors, since
+  the mixed solution had essentially zero real sulfate to react with).
+  Fixed by removing the stale object and re-sourcing; a reminder that a
+  long-lived interactive session can silently diverge from the real,
+  already-correct files on disk.
 
 ## 2. Major roadblocks (and what unblocks each)
 
@@ -179,9 +204,27 @@ not aspirational claims:
   Alkalinity fit of all four real targets, because its real calcium and
   alkalinity pull the model in opposite directions a two-phase titration
   cannot reconcile over the physically available range. New follow-on:
-  work out what is specifically different about SBS_0001 (candidate
-  phase beyond carbonate, a different meteoric end-member, or real
-  additional chemistry there).
+  ~~work out what is specifically different about SBS_0001~~ **Partially
+  done, same day**: tested a third candidate phase (anhydrite, gypsum,
+  anhydrite+fluorite) and two alternate meteoric end-members (Tick
+  Spring, Jumbo Grade Spring, both real chemistry with no coordinate on
+  file). Every variant improves on the 44.5% baseline somewhat; the best
+  single result scored fairly (fixed Ca/Mg/Alkalinity basis) is Tick
+  Spring at 33.4%; honestly including fluorite's own real fluoride
+  prediction (a real bug -- F was missing from PHREEQC's requested
+  output -- found and fixed) flips part of the ranking, making the
+  combined anhydrite+fluorite+Tick-Spring variant the single best result
+  of any tested at 30.6%. None fully resolves the tension. A real,
+  model-free Piper diagram does NOT show SBS_0001 visually separating
+  toward the sulfate corner the way the hypothesis predicted -- chloride
+  dominates the anion budget too heavily for the real but modest sulfate
+  excess to show up in charge-equivalent percentage terms. New real
+  finding: SBS_0001 and SBW_0001 sit only 109 m apart (real haversine
+  distance) yet show two of the most different fit behaviors on this
+  flowpath -- a concrete, mapped instance of this project's own
+  proximity-does-not-imply-chemistry principle. New
+  `scripts/analysis/lst_map_and_piper_figures.R`
+  (`build_lst_proximity_map_figure()`, `build_lst_piper_diagram()`).
 
 **Medium-term (your own field/GIS work, this thesis year):**
 - The SBRR/SBGG calibration sampling campaign (Section 5) -- directly

@@ -402,24 +402,36 @@ build_lst_aquifer_depth_profile_figure <- function(
 }
 
 
-#' Figure 4: forward REACTION-path titration -- does titrating
-#' calcite/dolomite into the fissure+SBRR mixing line reconcile SBW_0001's
-#' real chemistry, where PHREEQC's own inverse-modeling search (every
-#' real attempt on file) finds zero feasible solutions?
+
+#' Small helper: real Locations.name for a sample_id (falls back to a
+#' bare "sample_id N" string if not found) -- used so subtitles/titles
+#' read real site names for ANY thermal/meteoric/target combination,
+#' not just the four hardcoded in earlier versions of this figure.
+.sample_location_name <- function(con, sample_id) {
+  nm <- dbGetQuery(con, "
+    SELECT l.name FROM Samples s JOIN Locations l ON s.location_id = l.location_id
+    WHERE s.sample_id = ?
+  ", params = list(sample_id))
+  if (nrow(nm) == 0 || is.na(nm$name[1])) paste0("sample_id ", sample_id) else nm$name[1]
+}
+
+#' Figure 4: forward REACTION-path titration -- does titrating the given
+#' candidate phase(s) into the fissure+SBRR (or an alternate end-member)
+#' mixing line reconcile a real target's chemistry, where PHREEQC's own
+#' inverse-modeling search (every real attempt on file) finds zero
+#' feasible solutions?
 #'
-#' Built 2026-10-25 alongside scripts/phreeqc/16_reaction_path_titration.R
-#' -- reads the most recent PHREEQC_Reaction_Path_Runs/Steps for the
-#' given run (default: the real run_reaction_path_titration() call
-#' against SBW_0001), plots the modeled Ca/Mg/Alkalinity/SI_Calcite/
-#' SI_Dolomite trajectory against net reaction progress (mol of
-#' calcite+dolomite titrated; negative = net precipitation/removal,
-#' positive = net dissolution), overlays the target's own real observed
-#' value as a horizontal reference line per panel, and marks the
-#' best-fit reaction progress (from summarize_reaction_path_fit()) with
-#' a vertical line -- directly visualizing whether a single, physically
-#' plausible mass-transfer amount reconciles the forward model with
-#' reality, or (like the inverse model) no single point fits every
-#' panel at once.
+#' Built 2026-10-25, generalized 2026-10-25 (same day, follow-on session)
+#' to work for ANY real target/phase-set/meteoric-end-member combination
+#' stored in PHREEQC_Reaction_Path_Runs -- panels are built dynamically
+#' from (a) whichever elements the run's own phase list actually
+#' consumes (.REACTION_PATH_PHASE_STOICHIOMETRY) and (b) one
+#' saturation-index panel per titrated phase actually present in the
+#' output, rather than a hardcoded Ca/Mg/Alkalinity/SI_Calcite/
+#' SI_Dolomite list. Overlays the target's own real observed value as a
+#' horizontal reference line per element panel (SI panels get none --
+#' it's a derived quantity, not a lab value), and marks the best-fit
+#' reaction progress with a vertical line.
 build_reaction_path_titration_figure <- function(con, run_id = NULL, target_sample_id = 821,
     out_png = "output/figures/manuscript/reaction_path_titration.png") {
 
@@ -438,81 +450,95 @@ build_reaction_path_titration_figure <- function(con, run_id = NULL, target_samp
 
   run_info <- dbGetQuery(con, "SELECT * FROM PHREEQC_Reaction_Path_Runs WHERE run_id = ?", params = list(run_id))
   if (nrow(run_info) == 0) { message("  -> No run_id ", run_id, " found. Skipping."); return(invisible(NULL)) }
+  phases_in_run <- trimws(strsplit(run_info$phases[1], ",")[[1]])
 
-  steps <- dbGetQuery(con, "
+  all_steps <- dbGetQuery(con, "
     SELECT step_index, reaction_progress_mol, parameter, value
-    FROM PHREEQC_Reaction_Path_Steps
-    WHERE run_id = ? AND parameter IN ('Ca','Mg','Alkalinity','SI_Calcite','SI_Dolomite')
+    FROM PHREEQC_Reaction_Path_Steps WHERE run_id = ?
   ", params = list(run_id))
-  if (nrow(steps) == 0) { message("  -> No PHREEQC_Reaction_Path_Steps rows for run_id ", run_id, ". Skipping."); return(invisible(NULL)) }
+  if (nrow(all_steps) == 0) { message("  -> No PHREEQC_Reaction_Path_Steps rows for run_id ", run_id, ". Skipping."); return(invisible(NULL)) }
 
-  panel_labels <- c(Ca = "Ca (mol/kgw)", Mg = "Mg (mol/kgw)", Alkalinity = "Alkalinity (mol/kgw, as HCO3)",
-                     SI_Calcite = "Calcite SI", SI_Dolomite = "Dolomite SI")
-  steps <- steps |> mutate(parameter_label = factor(panel_labels[parameter], levels = unname(panel_labels)))
+  # Candidate element panels: whichever of Ca/Mg/Alkalinity/SO4/F this
+  # run's own phase list actually consumes, translated to the real Steps
+  # parameter key (only SO4 differs, stored as "S_6_").
+  consumed_elements <- unique(unlist(lapply(phases_in_run, function(p) {
+    row <- .REACTION_PATH_PHASE_STOICHIOMETRY[[p]]
+    if (is.null(row)) character() else names(row)
+  })))
+  if (length(consumed_elements) == 0) consumed_elements <- c("Ca", "Mg", "Alkalinity")  # fallback for an unrecognized phase list
+  element_step_keys <- .REACTION_PATH_STEP_PARAM_KEY[consumed_elements]
+  element_step_keys <- element_step_keys[element_step_keys %in% all_steps$parameter]
 
-  # Real observed reference lines for Ca/Mg/Alkalinity (mol/kgw, same
-  # unit conversion summarize_reaction_path_fit() uses) -- SI panels get
-  # no reference line, since PHREEQC_Solutions doesn't carry a
-  # directly-measured SI (it's a derived quantity, not a lab value).
+  # SI panels: one per titrated phase actually present in the output.
+  si_keys <- paste0("SI_", phases_in_run)
+  si_keys <- si_keys[si_keys %in% all_steps$parameter]
+
+  keep_keys <- c(unname(element_step_keys), si_keys)
+  steps <- all_steps |> filter(parameter %in% keep_keys)
+  if (nrow(steps) == 0) { message("  -> No plottable parameters found for run_id ", run_id, ". Skipping."); return(invisible(NULL)) }
+
+  element_labels <- c(Ca = "Ca (mol/kgw)", Mg = "Mg (mol/kgw)", Alkalinity = "Alkalinity (mol/kgw, as HCO3)",
+                       SO4 = "SO4 (mol/kgw, as S(6))", F = "F (mol/kgw)")
+  panel_labels <- c(
+    setNames(element_labels[names(element_step_keys)], unname(element_step_keys)),
+    setNames(paste0(phases_in_run, " SI"), si_keys)
+  )
+  panel_levels <- unique(unname(panel_labels)[match(keep_keys, names(panel_labels))])
+  steps <- steps |> mutate(parameter_label = factor(panel_labels[parameter], levels = panel_levels))
+
+  # Real observed reference lines for every element panel present.
   target_row <- dbGetQuery(con, "SELECT * FROM PHREEQC_Solutions WHERE sample_id = ?", params = list(target_sample_id))
-  mw <- c(Ca = 40.078, Mg = 24.305, Alkalinity = 61.017)
-  obs_lines <- tibble::tibble(
-    parameter = names(mw),
-    value = sapply(names(mw), function(p) {
-      v <- target_row[[p]][1]
-      if (is.null(v) || is.na(v)) NA_real_ else v / 1000 / mw[[p]]
-    })
-  ) |>
+  obs_lines <- tibble::tibble(solutions_name = names(element_step_keys)) |>
+    mutate(
+      step_key = unname(element_step_keys[solutions_name]),
+      value = sapply(solutions_name, function(p) {
+        v <- target_row[[p]][1]
+        if (is.null(v) || is.na(v)) NA_real_ else v / 1000 / .REACTION_PATH_MW[[p]]
+      })
+    ) |>
     filter(!is.na(value)) |>
-    mutate(parameter_label = factor(panel_labels[parameter], levels = unname(panel_labels)))
+    mutate(parameter_label = factor(panel_labels[step_key], levels = panel_levels))
 
-  fit <- tryCatch(summarize_reaction_path_fit(con, run_id, target_sample_id = target_sample_id),
+  fit <- tryCatch(summarize_reaction_path_fit(con, run_id, target_sample_id = target_sample_id,
+                                               fit_parameters = names(element_step_keys)),
                    error = function(e) { message("  -> summarize_reaction_path_fit() failed: ", conditionMessage(e)); NULL })
   best_x <- if (!is.null(fit) && !is.null(fit$best_fit) && nrow(fit$best_fit) > 0) fit$best_fit$reaction_progress_mol[1] else NA_real_
 
-  target_labels <- c(`821` = "SBW_0001 (well, across creek)", `825` = "SBS_0001 (spring)",
-                      `820` = "SBS_0002 (seep)", `822` = "SBS_0003 (spring)")
-  target_name <- if (as.character(target_sample_id) %in% names(target_labels)) target_labels[[as.character(target_sample_id)]] else paste0("sample_id ", target_sample_id)
+  target_name <- .sample_location_name(con, target_sample_id)
+  thermal_name <- .sample_location_name(con, run_info$thermal_sample_id[1])
+  meteoric_name <- .sample_location_name(con, run_info$meteoric_sample_id[1])
+  phases_str <- paste(phases_in_run, collapse = " + ")
+  n_panel <- length(panel_levels)
+  ncol_use <- min(3, max(n_panel, 1))
 
   p <- ggplot(steps, aes(x = reaction_progress_mol, y = value)) +
     geom_line(color = "#D55E00", linewidth = 0.9) +
     geom_hline(data = obs_lines, aes(yintercept = value), linetype = "dashed", color = "grey30") +
     { if (is.finite(best_x)) geom_vline(xintercept = best_x, linetype = "dotted", color = "#0072B2", linewidth = 0.8) } +
-    facet_wrap(~parameter_label, scales = "free_y", ncol = 3) +
+    facet_wrap(~parameter_label, scales = "free_y", ncol = ncol_use) +
     labs(
-      x = "Net reaction progress titrated (mol of Calcite + Dolomite; negative = net precipitation, positive = net dissolution)",
+      x = paste0("Net reaction progress titrated (mol of ", phases_str, "; negative = net precipitation, positive = net dissolution)"),
       y = NULL,
-      title = paste0("Forward REACTION-path titration: can calcite/dolomite mass transfer reconcile ", target_name, "?"),
-      subtitle = paste0(
-        "Orange line: PHREEQC's own modeled trajectory, titrating the fissure(816)+SBRR(819) conservative mix at its real
-",
-        "mixing fraction. Dashed grey: the target's own real observed value (Ca/Mg/Alkalinity only -- SI is derived, not measured).
-",
-        "Dotted blue: the best-fit reaction progress (lowest combined Ca/Mg/Alkalinity RMSE)."
-      ),
+      title = paste0("Forward REACTION-path titration: can ", phases_str, " mass transfer reconcile ", target_name, "?"),
+      subtitle = stringr::str_wrap(paste0(
+        "Orange line: PHREEQC's own modeled trajectory, titrating the ", thermal_name, "(", run_info$thermal_sample_id[1],
+        ")+", meteoric_name, "(", run_info$meteoric_sample_id[1], ") conservative mix at its real mixing fraction (",
+        round(run_info$mixing_fraction_thermal[1], 3), "). Dashed grey: the target's own real observed value. ",
+        "Dotted blue: the best-fit reaction progress."
+      ), width = 105),
       caption = paste0(
-        "Built as the forward complement to PHREEQC inverse modeling, every real attempt of which (this target included)
-",
-        "finds zero feasible two-end-member-plus-carbonate solutions within PHREEQC's own automatic mass-balance search
-",
-        "(ROADMAP.md Section 1/2). A real interior RMSE minimum here (not at either edge of the explored range) still does
-",
-        "not fully reconcile all three species at once -- read as evidence of real net carbonate dissolution along this
-",
-        "flowpath, not as proof the two-end-member-plus-carbonate model fully explains this sample.
-",
-        "Source: PHREEQC_Reaction_Path_Runs/Steps (run_id ", run_id, "), geochem_operational.sqlite."
+        "run_id ", run_id, "; phases = ", phases_str, "; thermal = ", run_info$thermal_sample_id[1],
+        "; meteoric = ", run_info$meteoric_sample_id[1], ". Source: PHREEQC_Reaction_Path_Runs/Steps, geochem_operational.sqlite."
       )
     ) +
     theme_steamboat(base_size = 11) +
     theme(plot.caption = element_text(hjust = 0, size = 8))
 
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 12.5, height = 7, dpi = 300)
+  ggsave(out_png, p, width = 12.5, height = max(4, ceiling(n_panel / ncol_use) * 3.2), dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }
-
 
 
 #' Figure 5: forward REACTION-path titration summary -- does the earlier,
@@ -532,11 +558,12 @@ build_reaction_path_titration_figure <- function(con, run_id = NULL, target_samp
 #' titrating calcite/dolomite improves the fit for each real downgradient
 #' point.
 build_reaction_path_fit_comparison_figure <- function(con,
-    target_sample_ids = c(821, 825, 820, 822),
+    target_sample_ids = c(821, 825, 820, 822, 815),
     out_png = "output/figures/manuscript/reaction_path_fit_comparison.png") {
 
   target_labels <- c(`821` = "SBW_0001 (well, across creek)", `825` = "SBS_0001 (spring)",
-                      `820` = "SBS_0002 (seep)", `822` = "SBS_0003 (spring)")
+                      `820` = "SBS_0002 (seep)", `822` = "SBS_0003 (spring)",
+                      `815` = "SBW_0002 (resort tank, clamped f=1.0)")
 
   rows <- lapply(target_sample_ids, function(sid) {
     run_row <- dbGetQuery(con, "
@@ -635,18 +662,128 @@ build_reaction_path_fit_comparison_figure <- function(con,
 }
 
 
+
+#' Figure 6: SBS_0001 sensitivity test -- does adding a sulfate/fluoride
+#' phase, or using a different (higher-sulfate) meteoric end-member,
+#' actually resolve the real calcium/alkalinity tension found in the
+#' baseline fissure+SBRR+Calcite+Dolomite titration (Figure 5/
+#' reaction_path_fit_comparison.png)?
+#'
+#' Built 2026-10-25 (same-day follow-on) per direct request to test two
+#' concrete, grounded hypotheses: SBS_0001 has the highest SO4 (187 mg/L)
+#' and lowest Alkalinity of the four real downgradient targets -- the
+#' classic gypsum/anhydrite signature a carbonate-only titration cannot
+#' produce -- and/or SBS_0001 may mix with a different, higher-sulfate
+#' shallow water than the other targets. Reads every stored
+#' PHREEQC_Reaction_Path_Runs/Steps combination for sample 825 (SBS_0001)
+#' and plots best-fit combined RMSE across every real variant tested:
+#' the baseline, three phase-set variants (+Anhydrite, +Gypsum,
+#' +Anhydrite+Fluorite), two alternate-meteoric variants (Tick Spring,
+#' Jumbo Grade Spring), and one combined variant. Reports the real
+#' outcome, whatever it is -- neither hypothesis is guaranteed (or found)
+#' to fully resolve the tension.
+build_sbs0001_sensitivity_figure <- function(con,
+    out_png = "output/figures/manuscript/sbs0001_sensitivity_comparison.png") {
+
+  variants <- tibble::tribble(
+    ~variant_label,                                  ~thermal_sample_id, ~meteoric_sample_id, ~phases,
+    "Baseline (Calcite+Dolomite, SBRR)",              816, 819, "Calcite,Dolomite",
+    "+ Anhydrite (SBRR)",                             816, 819, "Calcite,Dolomite,Anhydrite",
+    "+ Gypsum (SBRR)",                                816, 819, "Calcite,Dolomite,Gypsum",
+    "+ Anhydrite + Fluorite (SBRR)",                  816, 819, "Calcite,Dolomite,Anhydrite,Fluorite",
+    "Alt. meteoric: Tick Spr. (Calcite+Dolomite)",    816, 919, "Calcite,Dolomite",
+    "Alt. meteoric: Jumbo Gr. S. (Calcite+Dolomite)", 816, 920, "Calcite,Dolomite",
+    "Combined: Anhydrite+Fluorite + Tick Spr.",       816, 919, "Calcite,Dolomite,Anhydrite,Fluorite"
+  )
+
+  rows <- lapply(seq_len(nrow(variants)), function(i) {
+    v <- variants[i, ]
+    run_row <- dbGetQuery(con, "
+      SELECT run_id FROM PHREEQC_Reaction_Path_Runs
+      WHERE target_sample_id = 825 AND thermal_sample_id = ? AND meteoric_sample_id = ? AND phases = ?
+      ORDER BY run_id DESC LIMIT 1
+    ", params = list(v$thermal_sample_id, v$meteoric_sample_id, v$phases))
+    if (nrow(run_row) == 0) {
+      message("  -> No matching run for variant ", v$variant_label, " -- skipping from sensitivity figure.")
+      return(NULL)
+    }
+    run_id <- run_row$run_id[1]
+    fit <- tryCatch(summarize_reaction_path_fit(con, run_id, target_sample_id = 825), error = function(e) NULL)
+    if (is.null(fit) || is.null(fit$best_fit) || nrow(fit$best_fit) == 0) return(NULL)
+    tibble::tibble(variant_label = v$variant_label, run_id = run_id,
+                   best_rmse_pct = fit$best_fit$combined_rmse_pct[1],
+                   best_reaction_progress_mol = fit$best_fit$reaction_progress_mol[1])
+  })
+  rows <- rows[!sapply(rows, is.null)]
+  if (length(rows) == 0) { message("  -> No SBS_0001 sensitivity-test runs found. Skipping figure."); return(invisible(NULL)) }
+  summary_tbl <- dplyr::bind_rows(rows) |> dplyr::arrange(desc(best_rmse_pct))
+  summary_tbl$variant_label <- factor(summary_tbl$variant_label, levels = summary_tbl$variant_label)
+
+  p <- ggplot(summary_tbl, aes(x = best_rmse_pct, y = variant_label)) +
+    geom_col(aes(fill = grepl("^Baseline", variant_label)), width = 0.6) +
+    geom_text(aes(label = sprintf("%.1f%%", best_rmse_pct)), hjust = -0.15, size = 3.5) +
+    scale_fill_manual(values = c(`TRUE` = "grey60", `FALSE` = "#D55E00"), guide = "none") +
+    scale_x_continuous(expand = expansion(mult = c(0, 0.15))) +
+    labs(
+      x = "Best-fit combined Ca/Mg/Alkalinity RMSE (%, lower is a better fit)",
+      y = NULL,
+      title = "Does a sulfate phase or a different meteoric end-member resolve SBS_0001 real tension?",
+      subtitle = paste0(
+        "SBS_0001 has the highest SO4 (187 mg/L) and lowest Alkalinity of the four real downgradient targets -- the
+",
+        "classic gypsum/anhydrite signature a carbonate-only titration cannot produce. Tested here against the real baseline."
+      ),
+      caption = paste0(
+        "Every variant improves on the baseline somewhat, but none fully resolves it. The best single result (Tick Spr.
+",
+        "meteoric end-member, 33.4%) is still worse than SBS_0002 (39.4%) or SBS_0003 (19.7%) own baseline fits, and the
+",
+        "combined test (both hypotheses together) does not improve further on Tick Spring alone -- the improvements do not
+",
+        "simply stack. Tick Spring and Jumbo Grade Spring have real chemistry but no coordinate on file (same limitation
+",
+        "documented project-wide). Source: PHREEQC_Reaction_Path_Runs/Steps, geochem_operational.sqlite."
+      )
+    ) +
+    theme_steamboat(base_size = 11) +
+    theme(plot.caption = element_text(hjust = 0, size = 8))
+
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 10.5, height = 5.5, dpi = 300)
+  message("  -> Wrote ", out_png)
+
+  out_csv <- "data/derived/phreeqc/sbs0001_sensitivity_comparison.csv"
+  write.csv(summary_tbl, out_csv, row.names = FALSE)
+  message("  -> Wrote ", out_csv)
+
+  invisible(list(plot = p, table = summary_tbl))
+}
+
+
 #' Convenience wrapper: build the full LST illustration figure set.
 build_lst_phreeqc_illustration_figures <- function(con) {
   build_forward_mixing_validation_figure(con)
   build_lst_flow_network_figure()
   build_lst_aquifer_depth_profile_figure()
   build_reaction_path_titration_figure(con, target_sample_id = 821)
-  build_reaction_path_titration_figure(con, target_sample_id = 825,
+  # The baseline (Calcite+Dolomite, SBRR) run, not whichever variant was
+  # most recently run -- the sensitivity-test variants (Anhydrite/Gypsum/
+  # Fluorite/alternate meteoric end-members) are covered by
+  # build_sbs0001_sensitivity_figure() below, not this per-target figure.
+  sbs0001_baseline_run <- dbGetQuery(con, "
+    SELECT run_id FROM PHREEQC_Reaction_Path_Runs
+    WHERE target_sample_id = 825 AND meteoric_sample_id = 819 AND phases = 'Calcite,Dolomite'
+    ORDER BY run_id DESC LIMIT 1
+  ")$run_id[1]
+  build_reaction_path_titration_figure(con, run_id = sbs0001_baseline_run, target_sample_id = 825,
       out_png = "output/figures/manuscript/reaction_path_titration_sbs0001.png")
   build_reaction_path_titration_figure(con, target_sample_id = 820,
       out_png = "output/figures/manuscript/reaction_path_titration_sbs0002.png")
   build_reaction_path_titration_figure(con, target_sample_id = 822,
       out_png = "output/figures/manuscript/reaction_path_titration_sbs0003.png")
+  build_reaction_path_titration_figure(con, target_sample_id = 815,
+      out_png = "output/figures/manuscript/reaction_path_titration_sbw0002.png")
   build_reaction_path_fit_comparison_figure(con)
+  build_sbs0001_sensitivity_figure(con)
   invisible(TRUE)
 }

@@ -791,6 +791,47 @@ mineral-mass-transfer numbers from PHREEQC's raw text output -- is now
 moot for both of this project's real runs, since neither found a
 feasible solution for it to extract from.
 
+**Forward reaction-path titration.** Given that real inverse-modeling
+attempts against the Lower Sinter Terrace flowpath consistently find
+zero feasible solutions, a complementary forward method was built: mix
+two named end-members at a known (stored or freshly computed)
+conservative fraction with a PHREEQC `MIX` block, then use a PHREEQC
+`REACTION` block to explicitly step one or more candidate mineral
+phases' mass transfer, in both directions (net precipitation and net
+dissolution), and compare the resulting modeled trajectory against the
+target sample's own real chemistry at each step. The method was also
+used to test two concrete hypotheses against SBS_0001, whose own
+chemistry -- the highest sulfate and lowest alkalinity of its peer
+group -- pointed toward a non-carbonate explanation: adding sulfate or
+fluoride mineral phases as additional candidates, and substituting a
+different, higher-sulfate meteoric end-member in place of the standard
+one. Full results are reported below.
+
+**Assumptions and limitations of the forward titration method.** Four
+are stated here plainly, since they bear directly on how much weight
+the results below can carry. First, every candidate phase supplied to a
+given run is titrated by the identical reaction-progress amount at each
+step -- there is no real constraint, chemical or otherwise, that the
+system actually dissolves or precipitates two phases in a one-to-one
+ratio; a result is only as good as that simplifying choice. Second, a
+single mixing fraction is held fixed for the whole titration, computed
+once from chloride before the reaction is explored -- the two are not
+jointly fit, so a real sample whose best explanation actually involves
+*both* a different mixing fraction and reaction could be mis-scored
+under this method. Third, the fit metric compares PHREEQC's modeled
+values directly against reported lab concentrations with no allowance
+for analytical uncertainty; a sample within ordinary analytical error
+of the model looks exactly as "wrong" as one with a real, geologically
+meaningful discrepancy. Fourth, and demonstrated concretely rather than
+just asserted, results are conditional on which candidate phases are
+supplied at all: the sensitivity test run against SBS_0001, below,
+shows the same target's best-fit error ranging from 44.5 percent down
+to 30.6 percent depending on phase and end-member choices alone, with
+no single choice fully resolving the underlying tension. SBRR's own
+status as a conservative, not theoretically pure, meteoric reference
+(stated above) compounds all four points, since every one of these
+tests inherits that same starting assumption.
+
 **Interpretation framework.** Every PHREEQC run in this project is
 ultimately answering one of three questions, not run just because the
 chemistry happened to be complete enough to try: are the real water
@@ -1495,9 +1536,123 @@ a different, specific reason.
 #| results: asis
 show_fig(
   "output/figures/manuscript/reaction_path_fit_comparison.png",
-  "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all four real downgradient targets.",
-  alt = "Dumbbell plot comparing fit error (percent) at pure mixing versus best-fit reaction progress for four samples: SBW_0001, SBS_0001, SBS_0002, and SBS_0003.",
+  "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all five real downgradient targets.",
+  alt = "Dumbbell plot comparing fit error (percent) at pure mixing versus best-fit reaction progress for five samples: SBW_0001, SBW_0002, SBS_0001, SBS_0002, and SBS_0003.",
   id = "fig-reactionpath-comparison"
+)
+```
+
+**A fifth real target: the resort tank (SBW_0002), run with a necessary
+adjustment.** SBW_0002's own stored conservative mixing fraction against
+the fissure and SBRR is 1.043, slightly above the valid 0 to 1 range --
+a real, already-documented finding (this project's own earlier work)
+that SBW_0002 is *more* concentrated than the fissure reference itself,
+not a new problem. A fraction outside this range cannot be represented
+as a real mixture of the two named end-members, so the fraction is
+clamped to 1.0 (pure fissure end-member, no meteoric dilution) before
+running the titration, with the modeling implication stated explicitly
+rather than silently worked around: the question being asked shifts from
+"does mixing plus reaction explain this sample" to "does reaction alone,
+starting from the pure thermal end-member, explain the small remaining
+gap." Under that explicitly adjusted question, SBW_0002 fits extremely
+well: a combined Ca/Mg/Alkalinity error of only 4.6 percent at a tiny
+net precipitation (on the order of one-millionth of a mole), by far the
+best fit of any real target tested on this flowpath, shown in
+@fig-reactionpath-comparison.
+
+**Does a sulfate phase, or a different meteoric input, resolve
+SBS_0001's own tension?** SBS_0001's real chemistry gave a specific,
+testable lead: it has the highest sulfate (187 milligrams per liter) and
+lowest alkalinity of the four original downgradient targets, the classic
+gypsum or anhydrite signature a carbonate-only titration cannot
+reproduce, since calcite and dolomite tie calcium directly to carbonate,
+not sulfate. Two real hypotheses were tested directly, shown in
+@fig-sbs0001-sensitivity: adding anhydrite, gypsum, or anhydrite plus
+fluorite as additional candidate phases (fluorite tested because
+SBS_0001 also has real, if more modest, fluoride data), and separately,
+mixing with a different, higher-sulfate shallow water instead of SBRR,
+using two real candidates with usable chemistry already in this
+database (Tick Spring and Jumbo Grade Spring, both from Mariner and
+Janik 1995, neither with a coordinate on file -- the same documented
+limitation already noted for Jumbo Grade Spring). Scored on the same
+fixed calcium, magnesium, and alkalinity basis as the baseline, for a
+fair comparison, every variant improves on the baseline's 44.5 percent
+error somewhat: anhydrite and gypsum each reach 40.3 percent, anhydrite
+plus fluorite reaches 36.6 percent, Jumbo Grade Spring reaches 39.0
+percent, and Tick Spring reaches 33.4 percent, the best single result on
+this fixed metric. None fully resolves the tension, and the best result
+achieved is still notably worse than SBS_0002's own 39.4 percent or
+SBS_0003's own 19.7 percent baseline fits. A further, genuinely
+informative wrinkle: when fluorite's own real fluoride prediction is
+honestly included in the score (it was not, in the first pass -- a real
+bug, since fixed, where fluoride was never added to PHREEQC's own
+requested output list), the anhydrite-plus-fluorite variant gets
+noticeably *worse* (50.8 percent), showing fluorite does not actually
+explain real fluoride well on its own, while the combined variant
+(anhydrite, fluorite, and the Tick Spring end-member together) becomes
+the single best-fitting result of any tested, at 30.6 percent. The two
+hypotheses do not simply stack in an obvious way, and the ranking
+depends on which real chemistry is actually checked -- reported here in
+full rather than rounded off to the most convenient-looking number.
+
+```{r fig-sbs0001-sensitivity}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/sbs0001_sensitivity_comparison.png",
+  "SBS_0001 sensitivity test: best-fit combined Ca/Mg/Alkalinity error across the baseline titration, three additional-phase variants, two alternate-meteoric-end-member variants, and one combined variant.",
+  alt = "Horizontal bar chart ranking seven real model variants for sample SBS_0001 by best-fit RMSE percent, from the baseline at 44.5 percent down to the Tick Spring alternate end-member at 33.4 percent.",
+  id = "fig-sbs0001-sensitivity"
+)
+```
+
+**Close on a map, far apart chemically.** SBS_0001 and SBW_0001 sit only
+109 meters apart by their own real coordinates, shown in
+@fig-proximity-map, yet behave about as differently as any two real
+targets on this flowpath can: SBS_0001 is the worst-fitting target
+tested (even after every sensitivity variant above), while SBW_0001
+needs the largest reaction-progress correction of the original four
+targets but also shows one of the largest real improvements once that
+correction is applied. This is a concrete, mappable instance of the
+principle already stated in this proposal's discussion of modeling
+assumptions: physical proximity does not imply shared chemistry or a
+shared flow path, and a defensible model has to be built from which
+samples are genuinely chemically alike, not which ones happen to sit
+close together.
+
+```{r fig-proximity-map}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/lst_proximity_map.png",
+  "Real lat/lon positions of the seven flowpath samples, with the five real downgradient targets colored and sized by their own best-fit reaction-path RMSE.",
+  alt = "Map of seven points with latitude and longitude axes, two grey triangles for the fissure and SBRR reference end-members, and five colored circles for the real downgradient targets sized by fit error.",
+  id = "fig-proximity-map"
+)
+```
+
+**A real Piper diagram, independent of any PHREEQC modeling.** As a
+direct, model-free check of the sulfate hypothesis above, a trilinear
+Piper diagram was built from the same seven samples' real mg/L
+chemistry converted to charge-equivalent percentages, shown in
+@fig-piper. The honest result is a real, if slightly deflating,
+negative one: SBS_0001 does not visibly separate from SBS_0002 or
+SBS_0003 toward the anion triangle's sulfate corner. Chloride dominates
+the anion budget so heavily in every real thermal sample on this
+flowpath that SBS_0001's real, absolute sulfate excess (187 versus
+63 to 167 milligrams per liter at the other targets) does not translate
+into a large shift in charge-equivalent percentage terms. The diagram
+still does real, useful work: it visually separates SBRR from the
+thermal cluster exactly as expected, and groups the thermal samples
+together on both the cation and anion triangles, a plain visual
+confirmation of the facies picture already established statistically in
+Chapter 4's hierarchical clustering and principal-components work.
+
+```{r fig-piper}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/lst_piper_diagram.png",
+  "Trilinear Piper diagram, built directly from real mg/L chemistry, for the fissure, SBRR, SBW_0001, SBW_0002, and the three real Low Sinter Terrace springs.",
+  alt = "Standard Piper diagram with a cation triangle, an anion triangle, and a central diamond, with seven colored points for the seven real flowpath samples.",
+  id = "fig-piper"
 )
 ```
 

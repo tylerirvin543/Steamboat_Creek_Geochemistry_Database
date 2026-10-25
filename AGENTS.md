@@ -8290,3 +8290,140 @@ reaction-path titration built earlier this session.
   field chemistry at/near this spring); no DEMO database rebuild; no
   GeoPackage re-export (not spatial). This session's file changes are
   not yet committed/pushed to git.
+
+## Session 55 continued (2026-10-25, part 3): SBS_0001 sensitivity tests
+(Anhydrite/Gypsum/Fluorite phases, alternate meteoric end-members),
+SBW_0002 as a titration target, proximity map, Piper diagram,
+assumptions/limitations added to the proposal
+
+Direct follow-up per explicit user request, executing all five items
+from the prior turn's advisory answer plus the requested assumptions/
+limitations writeup.
+
+- **Generalized the reaction-path code for arbitrary phases/elements**
+  (`scripts/phreeqc/16_reaction_path_titration.R`): new
+  `.REACTION_PATH_MW`/`.REACTION_PATH_STEP_PARAM_KEY`/
+  `.REACTION_PATH_PHASE_STOICHIOMETRY` shared constants (real
+  stoichiometry for Calcite/Dolomite/Anhydrite/Gypsum/Fluorite, not just
+  the original Calcite/Dolomite special case); `.estimate_reaction_bounds_mol()`,
+  `summarize_reaction_path_fit()`, and `build_reaction_path_titration_figure()`
+  (in `scripts/analysis/lst_phreeqc_illustration_figures.R`) all
+  generalized to use them -- the trajectory figure now builds its panel
+  set dynamically from whichever elements/phases a given run actually
+  used, instead of a hardcoded Ca/Mg/Alkalinity/SI_Calcite/SI_Dolomite
+  list. Added a clamp (with an explicit warning) for mixing fractions
+  outside [0,1] -- PHREEQC's MIX block cannot represent a negative
+  fraction and hard-stops outright; needed for SBW_0002 (fraction 1.043).
+- **Real, previously-undetected bug found while running the first
+  Anhydrite/Gypsum tests, not a bug in any file on disk**: a stale,
+  pre-fix `lab_analyte_map` object (`phreeqc_name = "SO4"`) was cached
+  in the long-running R session's global environment from earlier work;
+  `.phreeqc_analyte_map()`'s `if (!exists(...))` guard saw it and never
+  re-sourced the real, already-corrected file (`phreeqc_name = "S(6)"`
+  on disk since Session 19). Silently zeroed SO4/SiO2 in every SOLUTION
+  block that session -- harmless for Calcite/Dolomite-only runs (which
+  never touch SO4), but broke the new Anhydrite/Gypsum runs outright
+  (negative-concentration errors, since the mixed solution had
+  essentially zero real sulfate to react against). Fixed by removing the
+  stale object and re-sourcing; all affected runs (6-11) deleted and
+  cleanly re-run as 16-19 once fixed.
+- **Real, second bug found and fixed via the Anhydrite+Fluorite trajectory
+  figure**: `format_phreeqc_reaction_path_input()`'s `SELECTED_OUTPUT`
+  `-totals` list never included F, so Fluorite's own effect on real
+  fluoride was silently never checked by the fit -- found because the
+  auto-detected panel set (from the generalization above) surfaced it
+  immediately. Fixed by adding F to `-totals`; the two Fluorite-involving
+  runs (Anhydrite+Fluorite, the combined test) were re-run afterward,
+  which materially changed their real standing in the sensitivity
+  ranking (see below) -- a genuine example of this project's own
+  stated principle that results are conditional on what is actually
+  checked, not just what phases are supplied.
+- **Real SBS_0001 sensitivity-test results** (fixed Ca/Mg/Alkalinity
+  basis, apples-to-apples across all seven variants): baseline 44.5%,
+  +Anhydrite 40.3%, +Gypsum 40.3%, +Anhydrite+Fluorite 36.6%, alt-
+  meteoric Jumbo Grade Spring 39.0%, alt-meteoric Tick Spring (919, a new
+  real candidate identified this session -- SO4=143/Ca=100 mg/L, higher
+  than Jumbo Grade Spring, same Mariner & Janik 1995 provenance, no
+  coordinate on file) 33.4% (best on this fixed metric), combined
+  (Anhydrite+Fluorite+Tick Spring) 35.7% pre-F-fix. After the F-bug fix
+  above, honestly scoring the two Fluorite-containing variants on their
+  own full chemistry (Ca/Mg/Alkalinity/SO4/F) flips part of the picture:
+  Anhydrite+Fluorite/SBRR gets markedly WORSE (50.8%, fluorite does not
+  actually explain real fluoride well), while the combined variant
+  becomes the single best result of ANY tested (30.6%). None fully
+  resolves the tension. New `build_sbs0001_sensitivity_figure()` (bar
+  chart, all seven variants) and 7 new config rows in
+  `data/raw/phreeqc/reaction_path_config.csv`.
+- **SBW_0002 run as a reaction-path target for the first time**:
+  clamped mixing fraction (1.043 -> 1.0, pure fissure end-member) gives a
+  real combined Ca/Mg/Alkalinity error of only 4.6% at a tiny net
+  precipitation -- by far the best fit of any real target tested on this
+  flowpath, consistent with the fissure and resort tank already being
+  documented as the two most chemically similar real points here
+  (Session 2026-10-24's parent-fluid reconstruction, Cl agreeing within
+  ~2%). `reaction_path_fit_comparison.csv`/figure extended to 5 targets.
+- **New `scripts/analysis/lst_map_and_piper_figures.R`**: a real lat/lon
+  proximity map (`build_lst_proximity_map_figure()`) confirming SBS_0001
+  and SBW_0001 sit only 109 m apart (real haversine distance) yet show
+  two of the most different fit behaviors on this flowpath -- a
+  concrete, mapped instance of this project's own stated proximity-does-
+  not-imply-chemistry principle. Required a real layout fix: the
+  genuine lat/lon bounding box here is narrow and tall (lon span ~421 m,
+  lat span ~1456 m), so a naive `coord_fixed()` inside a square panel
+  left most of the canvas blank and clipped the title -- fixed by sizing
+  the saved panel to the data's own real aspect ratio instead. A hand-
+  rolled (no new package -- `ggtern` is unmaintained/often broken
+  against current ggplot2) Piper trilinear diagram
+  (`build_lst_piper_diagram()`), built directly from `PHREEQC_Solutions`'
+  real mg/L values and each ion's real valence/molar mass, gives a real,
+  honest NEGATIVE result for the sulfate hypothesis: SBS_0001 does not
+  visibly separate toward the anion triangle's SO4 corner, since
+  chloride dominates the anion budget too heavily for its real but
+  modest sulfate excess (187 vs. 63-167 mg/L at the other targets) to
+  show up in charge-equivalent percentage terms. The diagram still does
+  real, useful work: SBRR correctly separates from the thermal cluster,
+  and the thermal samples group together on both triangles, consistent
+  with the facies clustering already established statistically.
+- **Self-caught mistake, fixed before it reached a figure**: an early
+  `grep()` returning two matches for the same search pattern, then
+  assigning a single replacement string to `txt[idx]` with `idx` of
+  length 2, silently overwrote `build_forward_mixing_validation_figure()`'s
+  own `target_sample_ids` default (a different function) along with the
+  intended `build_reaction_path_fit_comparison_figure()` edit. Caught
+  immediately via a `Query requires 5 params; 6 supplied` error on the
+  very next run (not a silent wrong-but-plausible result) and fixed by
+  restoring the original 4-element default -- a reminder to index into a
+  multi-match `grep()` result explicitly, not assume a pattern is unique.
+- **Manuscript updated**: new "Forward reaction-path titration" and
+  "Assumptions and limitations of the forward titration method"
+  subsections added to both `manuscript/00_thesis_proposal.qmd` and
+  `manuscript/03_methods.qmd` (four stated limitations: identical
+  reaction-progress-per-phase titration, a fixed not jointly-fit mixing
+  fraction, no lab-analytical-uncertainty propagation, and results being
+  conditional on which candidate phases are supplied -- demonstrated
+  concretely by the sensitivity test's own 44.5% to 30.6% range, not
+  just asserted). New Results content (SBW_0002, the sensitivity test,
+  the map, the Piper diagram, 4 new figures total) added to
+  `00_thesis_proposal.qmd` and mirrored lighter in `04_results.qmd`;
+  `05_discussion_and_future_work.qmd`'s list item 7 marked partially
+  done with the real outcome, new item 8 added (the map/Piper pair's own
+  implication: prioritize a real synoptic SBS_0001/SBW_0001 sample pair).
+  All three formats (html/pdf/docx) re-rendered for the master document,
+  html for both chapter files -- 0 citeproc warnings, 0 undefined
+  citations/markers, new figures confirmed as Figures 11-14 of 25 in
+  final PDF document order via `pdftotext`, all subsequent figures
+  correctly renumbered with no gaps.
+- **`ROADMAP.md` updated**: two new confirmed-finding bullets (SBW_0002,
+  the stale-session bug), the SBS_0001 near-term bullet extended with
+  the full real sensitivity-test outcome and marked partially done.
+- **Applied to the real `geochem_operational.sqlite`** (no backup needed
+  -- purely additive new `PHREEQC_Reaction_Path_Runs`/`Steps` rows, no
+  existing data touched): 12 new runs total this continuation (run_ids
+  16-27, after deleting and cleanly re-running the 6 runs affected by
+  the stale-session bug).
+- **Not done this session**: no attempt to collect real additional
+  chemistry at or near SBS_0001 (would need a real field visit, not a
+  database fix); no DEMO database rebuild; no GeoPackage re-export (none
+  of this session's new tables/figures are spatial in the GIS-export
+  sense). This session's file changes are not yet committed/pushed to
+  git.

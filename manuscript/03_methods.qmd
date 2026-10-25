@@ -295,6 +295,51 @@ seventy-year record. A modeling result that doesn't actually bear on
 one of those three questions isn't reported here just because it's
 available.
 
+
+**Forward reaction-path titration.** Given that real inverse-modeling
+attempts against the Lower Sinter Terrace flowpath consistently find
+zero feasible solutions, a complementary forward method was built: mix
+two named end-members at a known (stored or freshly computed)
+conservative fraction with a PHREEQC `MIX` block, then use a PHREEQC
+`REACTION` block to explicitly step one or more candidate mineral
+phases' mass transfer, in both directions (net precipitation and net
+dissolution), and compare the resulting modeled trajectory against the
+target sample's own real chemistry at each step. This turns an open-
+ended search into a direct, visualizable question: does some specific,
+physically named amount of mineral dissolution or precipitation
+reconcile the model with reality, and if so, how much. The method was
+also used to test two concrete hypotheses against a sample (SBS_0001)
+whose own chemistry -- the highest sulfate and lowest alkalinity of its
+peer group -- pointed toward a non-carbonate explanation: adding
+sulfate or fluoride mineral phases as additional candidates, and
+substituting a different, higher-sulfate meteoric end-member in place
+of the standard one.
+
+**Assumptions and limitations of the forward titration method.** Four
+are stated here plainly, since they bear directly on how much weight
+the results above can carry. First, every candidate phase supplied to a
+given run is titrated by the identical reaction-progress amount at each
+step -- there is no real constraint, chemical or otherwise, that the
+system actually dissolves or precipitates two phases in a one-to-one
+ratio; a result is only as good as that simplifying choice. Second, a
+single mixing fraction is held fixed for the whole titration, computed
+once from chloride before the reaction is explored -- the two are not
+jointly fit, so a real sample whose best explanation actually involves
+*both* a different mixing fraction and reaction could be mis-scored
+under this method. Third, the fit metric compares PHREEQC's modeled
+values directly against reported lab concentrations with no allowance
+for analytical uncertainty; a sample within ordinary analytical error
+of the model looks exactly as "wrong" as one with a real, geologically
+meaningful discrepancy. Fourth, and demonstrated concretely rather than
+just asserted, results are conditional on which candidate phases are
+supplied at all: the sensitivity test run against SBS_0001 (Chapter 4)
+shows the same target's best-fit error ranging from 44.5 percent down
+to 30.6 percent depending on phase and end-member choices alone, with
+no single choice fully resolving the underlying tension. SBRR's own
+status as a conservative, not theoretically pure, meteoric reference
+(stated above) compounds all four points, since every one of these
+tests inherits that same starting assumption.
+
 ## Fissure gas geochemistry
 
 Three real free-gas samples collected April 2026 at the Lower Sinter
