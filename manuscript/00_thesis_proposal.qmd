@@ -1420,7 +1420,46 @@ play no real role in this chemistry) already documented as a known
 PHREEQC execution-plumbing limitation in this project's own synthetic
 self-tests. Reported plainly as a real, current limitation of the
 inverse-modeling tool for this specific end-member pairing, not
-silently retried until something "worked."
+silently retried until something "worked." A separate, independent
+inverse-modeling attempt against SBW_0001 directly (end-members: the
+fissure and SBRR rather than the reconstructed parent fluid; candidate
+phases: calcite, dolomite) also finds zero feasible solutions, this
+time for a genuine, Ca-specific reason rather than a numerical-plumbing
+one -- a bounded follow-up search (adding quartz as a candidate phase,
+varying which elements are explicitly mass-balanced, and scanning
+uncertainty from 5 to 15 percent) finds the same single, small residual
+at every setting, with the closest approach to feasible sitting at 11
+percent uncertainty before the solver destabilizes above 12 percent.
+
+**A forward alternative: titrating calcite and dolomite instead of
+asking the solver to search for them.** Given that every inverse
+attempt against SBW_0001 comes back empty, a better-posed question is
+to run the reaction forward: mix the fissure and SBRR at their real,
+already-computed conservative mixing fraction, then explicitly step
+calcite and dolomite mass transfer -- both net precipitation and net
+dissolution -- and see what the resulting chemistry trajectory looks
+like, shown in @fig-reactionpath. The result is a genuine interior
+optimum, not an edge artifact of the explored range: a modest net
+*dissolution* of calcite and dolomite (on the order of one-tenth of a
+millimole) brings the combined calcium, magnesium, and alkalinity
+error down from roughly 45 to 48 percent at pure conservative mixing to
+about 23 percent at the best fit. That is a real, substantial
+improvement over mixing alone, but it does not fully reconcile the
+target -- alkalinity in particular never reaches its observed value
+anywhere in the titrated range. Chloride stays exactly conservative
+across every step, confirming the titration moves only the carbonate
+system, as intended. Read together, the inverse and forward results
+agree: simple two-end-member-plus-carbonate mixing cannot fully explain
+SBW_0001's chemistry, but a real net carbonate-dissolution signal along
+this flowpath is a genuine part of the answer, not a dead end.
+
+```{r fig-reactionpath}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/reaction_path_titration.png",
+  "Forward PHREEQC REACTION-path titration of calcite and dolomite into the fissure+SBRR conservative mix, compared against SBW_0001's real observed Ca/Mg/Alkalinity (dashed lines) and the best-fit reaction progress (dotted line).",
+  alt = "Five-panel figure: calcium, magnesium, alkalinity, calcite saturation index, and dolomite saturation index, each plotted against net reaction progress, with a dashed horizontal reference line for the real observed value and a dotted vertical line marking the best-fit reaction progress.",
+  id = "fig-reactionpath"
 )
 ```
 

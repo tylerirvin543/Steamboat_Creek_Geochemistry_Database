@@ -211,6 +211,28 @@ water, consistent with the real thermal inflow being too small a
 fraction of total streamflow to shift the creek's bulk isotopic
 signature even while it measurably shifts chloride.
 
+Real inverse modeling against SBW_0001 -- the across-creek well sitting
+clearly above the fissure+SBRR conservative-mixing curve -- finds zero
+feasible mixing-plus-mineral-transfer solutions, for a genuine,
+calcium-specific reason rather than a numerical artifact (Chapter 3).
+Running the same two end-members forward instead, by explicitly
+titrating calcite and dolomite mass transfer rather than asking the
+solver to search for it, finds a real interior optimum: a modest net
+*dissolution* of both minerals roughly halves the combined calcium,
+magnesium, and alkalinity error relative to pure conservative mixing
+(figure below), though it does not fully reconcile the
+target. Chloride stays exactly conservative across the titration,
+confirming only the carbonate system moves. The inverse and forward
+results agree: simple two-end-member mixing cannot fully explain
+SBW_0001, but real net carbonate dissolution along this flowpath is
+part of the answer.
+
+```{r reactionpath-fig}
+#| echo: false
+#| fig-cap: "Forward PHREEQC REACTION-path titration of calcite and dolomite into the fissure+SBRR conservative mix, compared against SBW_0001's real observed chemistry."
+knitr::include_graphics("../output/figures/manuscript/reaction_path_titration.png")
+```
+
 ```{r conceptual-fig}
 #| echo: false
 #| fig-cap: "Conceptual flowpath from the reconstructed parent fluid through degassing, three real measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, annotated with real chloride values."

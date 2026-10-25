@@ -97,6 +97,25 @@ not aspirational claims:
   at 12%+. This is a real, current limit of what two-end-member-plus-
   carbonate inverse modeling can resolve for this system, not a software
   bug waiting to be fixed.
+- **A real forward PHREEQC REACTION-path titration, built as the direct
+  complement to the SBW_0001 inverse-modeling null result above, finds a
+  genuine interior optimum, not a full reconciliation.** Mixing the
+  fissure and SBRR at their real, stored conservative mixing fraction,
+  then explicitly titrating calcite and dolomite mass transfer (both
+  net precipitation and net dissolution) and comparing against SBW_0001's
+  real chemistry, shows the combined Ca/Mg/Alkalinity error drop from
+  ~45-48% at pure conservative mixing to ~23% at a modest net
+  *dissolution* of both minerals (~1.2e-4 mol combined) -- a real,
+  substantial improvement over mixing alone, but alkalinity never fully
+  closes even across a wide explored range. Chloride stays exactly
+  conservative across every step (confirming the titration only moves
+  carbonate species, as intended). The inverse and forward results agree:
+  simple two-end-member-plus-carbonate mixing cannot fully explain
+  SBW_0001, but real net carbonate dissolution along this flowpath is a
+  genuine part of the answer. New `PHREEQC_Reaction_Path_Runs`/
+  `PHREEQC_Reaction_Path_Steps` tables, `scripts/phreeqc/
+  16_reaction_path_titration.R`, `data/raw/phreeqc/reaction_path_config.csv`,
+  `RUN_ANALYSIS$phreeqc_reaction_path`.
 
 ## 2. Major roadblocks (and what unblocks each)
 
@@ -110,7 +129,7 @@ not aspirational claims:
 | Skalbeck (2001) Table A-2 has 112 of 353 rows with real column-position ambiguity that arithmetic cross-checking can't safely resolve (a physically-implausible Alt-thickness > Kgd-depth result on one hypothesis) | The full 353-point depth grid (currently 241/353 ingested) | Needs review against the actual scanned page images (Appendix A, pp.191-199), not OCR text alone -- logged to `data/derived/skalbeck2001_table_a2_ambiguous_rows.csv` |
 | Logger measurement-uncertainty now has real manufacturer specs (`Logger_Specifications`) and real field calibration checks (`Logger_Calibration_Checks`, 10 real temperature checks auto-detected from Field_Measurements) but conductivity has only 1 real candidate check, and it falls outside the 4-hour matching tolerance | A real conductivity calibration-check example (temperature already has 10) | Needs a future field visit's lab/handheld conductivity reading taken closer in time to a logger reading, or a documented decision to widen the matching tolerance |
 | Pine Tree Ranch #2 and SBG-TH1/2/3's real water-level-only time series (a separate, structurally simpler section at the end of Table B-2 -- no chemistry, just monthly depth-to-water) has not been transcribed | Extending real water-level history for these wells | Structurally much simpler than the chemistry blocks (3 clean depth-only columns, no Cl/B/Temp disambiguation needed) -- a good, fast next win once picked up |
-| ~~`PHREEQC_Inverse_Results`' mineral mass-transfer numbers were never correctly parsed~~ **Root cause found 2026-10-25: there was no real solution to parse numbers from at all.** The parser bug (confirmed 2026-09-26) was compounded by a deeper one in `run_phreeqc_inverse()` itself: it never checked PHREEQC's own "Number of models found" summary line, so it reported a false "1 candidate solution" for a run PHREEQC's own output says found 0 feasible models. Fixed 2026-10-25 (`scripts/phreeqc/11_run_phreeqc_inverse.R`) -- every real inverse run on file (the original Soccer Field run, plus new SBW_0001/SBS_0001 attempts) now honestly reports 0 feasible models | Any inverse-model mass-transfer figure/interpretation | Still needs a real, geochemically feasible inverse-model solution before there is anything to extract mass-transfer numbers from -- e.g. more/different candidate phases, a real time-paired end-member set, or a loosened (but still defensible) uncertainty bound |
+| ~~`PHREEQC_Inverse_Results`' mineral mass-transfer numbers were never correctly parsed~~ **Root cause found 2026-10-25: there was no real solution to parse numbers from at all.** The parser bug (confirmed 2026-09-26) was compounded by a deeper one in `run_phreeqc_inverse()` itself: it never checked PHREEQC's own "Number of models found" summary line, so it reported a false "1 candidate solution" for a run PHREEQC's own output says found 0 feasible models. Fixed 2026-10-25 (`scripts/phreeqc/11_run_phreeqc_inverse.R`) -- every real inverse run on file (the original Soccer Field run, plus new SBW_0001/SBS_0001 attempts) now honestly reports 0 feasible models | Any inverse-model mass-transfer figure/interpretation | Still needs a real, geochemically feasible inverse-model solution before there is anything to extract mass-transfer numbers from -- e.g. more/different candidate phases, a real time-paired end-member set, or a loosened (but still defensible) uncertainty bound. A forward REACTION-path titration (Section 1, 2026-10-25) sidesteps this for SBW_0001 specifically, finding a real interior optimum without needing the inverse solver to converge at all |
 | No geolocated southwest/west-of-Steamboat regional groundwater sample exists in this project | A true, defensible meteoric/dilution end-member for the Lower Sinter Terrace mixing model (per White's own documented Carson/Virginia Range mountain-front recharge direction) | A real coordinate for a candidate like Jumbo Grade Spring, or a new sample from a confirmed southwest/west domestic well/spring -- SBRR (real, located, but itself carrying a modest thermal signature) is used as a conservative stand-in in the meantime |
 | SBW_0001 and the fissure (SBF_0001) -- the two real 2026 sampling points central to the current flowpath model -- have NO depth, completion, or lithology data on file at all | Turning the real SBW_0001-vs-springs chemical divergence (Section 1) into an aquifer-level explanation; any real multi-aquifer mixing model for this flowpath | A well log, driller's report, or geophysical survey at either point -- the single biggest concrete subsurface-data gap on the current flowpath |
 | No MODFLOW grid, boundary conditions, recharge estimate, or K-field zonation exists | Any groundwater flow model | Needs the fault/lithology roadblocks above resolved first, plus a real recharge estimate (the one real Dec-2025-storm water-level response at STMGID MW10 is a start, not a calibration) |
@@ -135,14 +154,13 @@ not aspirational claims:
 - Fix `website/results.Rmd`'s hardcoded discharge-timeline chart to reuse
   notebook 07's live-query version (currently two independently-maintained
   copies of the same data).
-- Given inverse modeling's real, repeated inability to find a feasible
-  solution for SBW_0001, try a real **forward** reaction-path model
-  instead of the inverse problem: explicitly titrate calcite/dolomite
-  (dissolution or precipitation, in either direction) into the fissure+
-  SBRR mixing line via PHREEQC `REACTION`/`EQUILIBRIUM_PHASES` and see
-  whether a specific, hypothesis-driven mass-transfer amount reproduces
-  SBW_0001's real Ca/Mg/alkalinity -- a better-posed question than asking
-  the solver to search blindly, and testable with data already on hand.
+- ~~Given inverse modeling's real, repeated inability to find a feasible
+  solution for SBW_0001, try a real forward reaction-path model~~ **Done
+  2026-10-25** -- see Section 1's new forward-titration finding above.
+  Next: run the same method against the three real LST springs (they sit
+  much closer to the pure-mixing curve than SBW_0001, so this checks
+  whether they need little/no reaction correction or a smaller real
+  signal of their own).
 
 **Medium-term (your own field/GIS work, this thesis year):**
 - The SBRR/SBGG calibration sampling campaign (Section 5) -- directly

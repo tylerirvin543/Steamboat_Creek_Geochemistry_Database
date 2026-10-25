@@ -8078,3 +8078,118 @@ thread (Sessions 49-50), executed via an approved Plan-mode plan
   new, gitignored, date-suffixed conductivity CSVs under
   `data/raw/conductivity/raw/`, per this project's standing convention
   for hand-maintained/raw files under the blanket-ignored `data/raw/`.
+
+## Session 55 (2026-10-25, continued): forward PHREEQC REACTION-path
+titration built, run for real against SBW_0001
+
+Direct follow-up to the prior session's roadmap scoping: built the
+forward reaction-path titration recommended as the next step once every
+real inverse-modeling attempt against SBW_0001 found zero feasible
+solutions. Executed via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-10-25-2233-plan.md`).
+
+- **New schema**: `database/schema/23_reaction_path_schema.R` --
+  `PHREEQC_Reaction_Path_Runs`/`PHREEQC_Reaction_Path_Steps`, long-format,
+  mirroring `PHREEQC_Mixing_Runs`/`PHREEQC_Mixing_Results`. New
+  `scripts/phreeqc/16_reaction_path_titration.R`
+  (`format_phreeqc_reaction_path_input()`, `run_reaction_path_titration()`,
+  `summarize_reaction_path_fit()`, `demo_reaction_path_titration()`).
+  Method: `SOLUTION 1`/`SOLUTION 2` (thermal/meteoric) + `MIX 1` at the
+  real, already-stored conservative mixing fraction + `SAVE SOLUTION 3`,
+  then `USE SOLUTION 3` + a `REACTION 1` block titrating the named
+  phases (default Calcite + Dolomite) across a range of cumulative
+  reaction-progress values (mol; negative = net precipitation, positive
+  = net dissolution).
+- **Real PHREEQC `REACTION`-block syntax confirmed empirically before
+  writing any production code** (interactive `executeCode` testing
+  against the real installed PHREEQC 3 executable, not guessed from
+  memory): the step-amounts line must be a bare, space-separated list
+  of numbers with NO `-steps` keyword -- using `-steps` with more than
+  one value, even identical repeated values, fails outright
+  ("To define equal increments, only one reaction increment should be
+  defined"). The bare list IS the cumulative reaction progress at each
+  step directly, not a per-step increment. Each phase listed is
+  titrated by the SAME reaction-progress amount independently (so
+  `Calcite 1`/`Dolomite 1` at progress x consumes/produces x mol of
+  EACH phase, 2x mol Ca total for that pair). `SELECTED_OUTPUT`'s
+  `state` column is right-padded with whitespace in the real tab-
+  delimited output (`"       react"`, not `"react"`) -- a real,
+  previously-undocumented quirk that silently produced zero parsed rows
+  until `trimws()` was added; caught immediately by testing against a
+  real PHREEQC run rather than assumed to work from the input syntax
+  alone.
+- **A real, self-corrected bounds-estimation bug found via the first
+  real run against SBW_0001**: a first version of
+  `.estimate_reaction_bounds_mol()` used a symmetric default range
+  (safety-scaled from the mixed fluid's own Ca/Mg/Alkalinity pool, which
+  IS a real physical limit on the negative/precipitation side -- removing
+  more than the available pool hard-stops PHREEQC outright, confirmed
+  directly). The real best fit for SBW_0001 landed exactly at the
+  positive edge of that symmetric range -- an artifact of the bound, not
+  a real optimum, confirmed by manually widening the positive side alone
+  and finding a genuine interior RMSE minimum at roughly 2.5x the
+  symmetric magnitude. Fixed by making the default range intentionally
+  ASYMMETRIC (`POS_MULTIPLIER = 6`, since dissolution faces no equivalent
+  pool-exhaustion limit from the solution's own current contents) and
+  adding an explicit edge-of-range warning to `summarize_reaction_path_fit()`
+  so this can't recur silently for a different sample. Re-verified: the
+  new default finds the same real interior minimum (step 21 of 41,
+  RMSE=22.9%) with no edge warning.
+- **Config-driven pipeline wiring**, mirroring the existing mixing/
+  inverse pattern exactly: `run_phreeqc_reaction_path_from_config()`
+  added to `scripts/phreeqc/run_phreeqc_analysis.R`, reading
+  `data/raw/phreeqc/reaction_path_config.csv` (new, one real enabled
+  row: target=821/SBW_0001, thermal=816/SBF_0001, meteoric=819/SBRR,
+  phases=Calcite;Dolomite). New `RUN_ANALYSIS$phreeqc_reaction_path`
+  flag (default `FALSE`, consistent with every other optional analysis
+  flag), wired into `run_pipeline.R` right after the existing inverse-
+  modeling step, with its own `print_pipeline_help()` entry.
+- **New figure**: `build_reaction_path_titration_figure()` added to
+  `scripts/analysis/lst_phreeqc_illustration_figures.R` (4th figure in
+  that file's sequence) -- 5-panel faceted plot (Ca, Mg, Alkalinity,
+  Calcite SI, Dolomite SI) vs. net reaction progress, with SBW_0001's
+  real observed Ca/Mg/Alkalinity as dashed reference lines and the
+  best-fit reaction progress as a dotted vertical line.
+- **Real result, verified on a scratch copy first, then applied to the
+  real `geochem_operational.sqlite`** (no backup needed -- purely
+  additive new tables, no existing data touched): the best-fit net
+  reaction progress is a modest net DISSOLUTION of calcite+dolomite
+  (~1.17e-4 mol combined), reducing the combined Ca/Mg/Alkalinity RMSE
+  from ~45-48% at pure conservative mixing (reaction progress ~0) to
+  ~23% at the best fit -- a real, substantial improvement over mixing
+  alone, but alkalinity never fully closes even across the wide explored
+  range. Chloride stays exactly conservative across every step (0.0000%
+  variation), confirming the titration only moves carbonate species, as
+  intended. Read together with the already-documented inverse-model null
+  result: both agree that simple two-end-member-plus-carbonate mixing
+  cannot fully explain SBW_0001, but real net carbonate dissolution
+  along this flowpath is a genuine part of the answer, not a dead end.
+- **Manuscript updated**: a new subsection in
+  `manuscript/00_thesis_proposal.qmd`'s Methods/Results narrative (fixing,
+  in the same edit, a pre-existing stray `)`/code-fence artifact found
+  immediately adjacent to the insertion point -- a real, previously-
+  unnoticed markdown bug, not introduced this session, now fixed), a
+  lighter mirrored paragraph + figure in `04_results.qmd` (using this
+  chapter's own established "figure below" convention rather than a
+  `@fig-` crossref, since no figure in this standalone chapter uses one),
+  and a new discussion paragraph + roadmap list item in
+  `05_discussion_and_future_work.qmd`. All three re-rendered (html for
+  the two chapters; html/pdf/docx for the master document) -- 0 citeproc
+  warnings, 0 undefined citations, new figure confirmed as Figure 10 of
+  21 in final PDF document order via `pdftotext`, caption text verified
+  correct and complete.
+- **`ROADMAP.md` updated**: new confirmed-finding bullet in Section 1,
+  the Section 2 inverse-modeling roadblock row's "what unblocks it"
+  column extended to note the forward alternative, and the Section 3
+  near-term-directions bullet that originally proposed this work marked
+  `~~struck through~~` as **Done 2026-10-25** with a concrete follow-on
+  (run the same method against the three real LST springs, which sit
+  much closer to the pure-mixing curve than SBW_0001).
+- **Not done this session**: no re-run of the inverse model itself (a
+  separate, already-documented limitation); no new field data, fault
+  digitization, or well-log acquisition; no DEMO database rebuild; no
+  GeoPackage re-export (this result isn't spatial); the forward method
+  was not yet run against the three real LST springs (flagged as the
+  concrete next step in both the manuscript and ROADMAP.md, not
+  attempted here). This session's file changes are not yet
+  committed/pushed to git.

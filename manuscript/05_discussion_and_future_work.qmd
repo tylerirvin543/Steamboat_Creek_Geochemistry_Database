@@ -164,6 +164,33 @@ model) rather than treating the null result as a substantive finding
 about the Lower Sinter Terrace system; until that fix is tried, this
 result should be read as "not yet tested successfully," not as
 "tested and rejected."
+
+**A second, genuinely different null result, and what came from asking
+the question forward instead.** A separate inverse-modeling attempt --
+the fissure and SBRR as end-members, SBW_0001 as the target, calcite
+and dolomite as candidate phases -- also finds zero feasible solutions,
+but for a real, Ca-specific reason this time, not the numerical quirk
+above: a bounded search across candidate phases, mass-balanced
+elements, and uncertainty levels from 5 to 15 percent keeps finding the
+same residual, closest to feasible at 11 percent before the solver
+destabilizes. Rather than keep tuning the inverse solver toward an
+answer, the same two end-members were run forward instead: mix them at
+their real conservative fraction, then explicitly titrate calcite and
+dolomite mass transfer across a wide range, in both directions, and
+compare the resulting trajectory to SBW_0001's real chemistry directly.
+This produced a genuine interior optimum, not an artifact of where the
+search happened to stop -- a modest net dissolution of both minerals
+roughly halves the combined calcium, magnesium, and alkalinity error
+relative to pure mixing, without fully closing the gap. The inverse and
+forward results are not in tension; they agree that two-end-member
+mixing alone is insufficient and that real carbonate reaction is part
+of the explanation, while leaving open exactly what else is. This is
+the kind of well-posed, forward question this system's data can
+actually answer today, and it is the template to reach for the next
+time an inverse search comes back empty: ask what a specific,
+hypothesis-driven reaction would predict, rather than widening the
+solver's own uncertainty further.
+
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here
@@ -292,6 +319,14 @@ happen:
    a targeted fix (excluding the specific unused redox couple) is a
    small, bounded task that could turn the current null
    inverse-modeling result into a real one.
+6. **Extend the forward reaction-path titration beyond SBW_0001.** The
+   same method (mix two real end-members at their known fraction, then
+   titrate candidate phases forward) is a natural next check for the
+   three real Low Sinter Terrace springs, which sit much closer to the
+   pure-mixing curve than SBW_0001 does -- confirming whether they
+   need little or no reaction correction, as the mixing figure alone
+   suggests, or whether a smaller but still real signal is hiding
+   there too.
 
 
 ## Closing

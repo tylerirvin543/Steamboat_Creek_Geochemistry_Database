@@ -401,10 +401,123 @@ build_lst_aquifer_depth_profile_figure <- function(
   invisible(p)
 }
 
-#' Convenience wrapper: build all three.
+
+#' Figure 4: forward REACTION-path titration -- does titrating
+#' calcite/dolomite into the fissure+SBRR mixing line reconcile SBW_0001's
+#' real chemistry, where PHREEQC's own inverse-modeling search (every
+#' real attempt on file) finds zero feasible solutions?
+#'
+#' Built 2026-10-25 alongside scripts/phreeqc/16_reaction_path_titration.R
+#' -- reads the most recent PHREEQC_Reaction_Path_Runs/Steps for the
+#' given run (default: the real run_reaction_path_titration() call
+#' against SBW_0001), plots the modeled Ca/Mg/Alkalinity/SI_Calcite/
+#' SI_Dolomite trajectory against net reaction progress (mol of
+#' calcite+dolomite titrated; negative = net precipitation/removal,
+#' positive = net dissolution), overlays the target's own real observed
+#' value as a horizontal reference line per panel, and marks the
+#' best-fit reaction progress (from summarize_reaction_path_fit()) with
+#' a vertical line -- directly visualizing whether a single, physically
+#' plausible mass-transfer amount reconciles the forward model with
+#' reality, or (like the inverse model) no single point fits every
+#' panel at once.
+build_reaction_path_titration_figure <- function(con, run_id = NULL, target_sample_id = 821,
+    out_png = "output/figures/manuscript/reaction_path_titration.png") {
+
+  if (is.null(run_id)) {
+    run_row <- dbGetQuery(con, "
+      SELECT run_id FROM PHREEQC_Reaction_Path_Runs
+      WHERE target_sample_id = ? ORDER BY run_id DESC LIMIT 1
+    ", params = list(target_sample_id))
+    if (nrow(run_row) == 0) {
+      message("  -> No PHREEQC_Reaction_Path_Runs row for target_sample_id ", target_sample_id,
+              "; run run_phreeqc_reaction_path_from_config() first. Skipping.")
+      return(invisible(NULL))
+    }
+    run_id <- run_row$run_id[1]
+  }
+
+  run_info <- dbGetQuery(con, "SELECT * FROM PHREEQC_Reaction_Path_Runs WHERE run_id = ?", params = list(run_id))
+  if (nrow(run_info) == 0) { message("  -> No run_id ", run_id, " found. Skipping."); return(invisible(NULL)) }
+
+  steps <- dbGetQuery(con, "
+    SELECT step_index, reaction_progress_mol, parameter, value
+    FROM PHREEQC_Reaction_Path_Steps
+    WHERE run_id = ? AND parameter IN ('Ca','Mg','Alkalinity','SI_Calcite','SI_Dolomite')
+  ", params = list(run_id))
+  if (nrow(steps) == 0) { message("  -> No PHREEQC_Reaction_Path_Steps rows for run_id ", run_id, ". Skipping."); return(invisible(NULL)) }
+
+  panel_labels <- c(Ca = "Ca (mol/kgw)", Mg = "Mg (mol/kgw)", Alkalinity = "Alkalinity (mol/kgw, as HCO3)",
+                     SI_Calcite = "Calcite SI", SI_Dolomite = "Dolomite SI")
+  steps <- steps |> mutate(parameter_label = factor(panel_labels[parameter], levels = unname(panel_labels)))
+
+  # Real observed reference lines for Ca/Mg/Alkalinity (mol/kgw, same
+  # unit conversion summarize_reaction_path_fit() uses) -- SI panels get
+  # no reference line, since PHREEQC_Solutions doesn't carry a
+  # directly-measured SI (it's a derived quantity, not a lab value).
+  target_row <- dbGetQuery(con, "SELECT * FROM PHREEQC_Solutions WHERE sample_id = ?", params = list(target_sample_id))
+  mw <- c(Ca = 40.078, Mg = 24.305, Alkalinity = 61.017)
+  obs_lines <- tibble::tibble(
+    parameter = names(mw),
+    value = sapply(names(mw), function(p) {
+      v <- target_row[[p]][1]
+      if (is.null(v) || is.na(v)) NA_real_ else v / 1000 / mw[[p]]
+    })
+  ) |>
+    filter(!is.na(value)) |>
+    mutate(parameter_label = factor(panel_labels[parameter], levels = unname(panel_labels)))
+
+  fit <- tryCatch(summarize_reaction_path_fit(con, run_id, target_sample_id = target_sample_id),
+                   error = function(e) { message("  -> summarize_reaction_path_fit() failed: ", conditionMessage(e)); NULL })
+  best_x <- if (!is.null(fit) && !is.null(fit$best_fit) && nrow(fit$best_fit) > 0) fit$best_fit$reaction_progress_mol[1] else NA_real_
+
+  target_labels <- c(`821` = "SBW_0001 (well, across creek)")
+  target_name <- if (as.character(target_sample_id) %in% names(target_labels)) target_labels[[as.character(target_sample_id)]] else paste0("sample_id ", target_sample_id)
+
+  p <- ggplot(steps, aes(x = reaction_progress_mol, y = value)) +
+    geom_line(color = "#D55E00", linewidth = 0.9) +
+    geom_hline(data = obs_lines, aes(yintercept = value), linetype = "dashed", color = "grey30") +
+    { if (is.finite(best_x)) geom_vline(xintercept = best_x, linetype = "dotted", color = "#0072B2", linewidth = 0.8) } +
+    facet_wrap(~parameter_label, scales = "free_y", ncol = 3) +
+    labs(
+      x = "Net reaction progress titrated (mol of Calcite + Dolomite; negative = net precipitation, positive = net dissolution)",
+      y = NULL,
+      title = paste0("Forward REACTION-path titration: can calcite/dolomite mass transfer reconcile ", target_name, "?"),
+      subtitle = paste0(
+        "Orange line: PHREEQC's own modeled trajectory, titrating the fissure(816)+SBRR(819) conservative mix at its real
+",
+        "mixing fraction. Dashed grey: the target's own real observed value (Ca/Mg/Alkalinity only -- SI is derived, not measured).
+",
+        "Dotted blue: the best-fit reaction progress (lowest combined Ca/Mg/Alkalinity RMSE)."
+      ),
+      caption = paste0(
+        "Built as the forward complement to PHREEQC inverse modeling, every real attempt of which (this target included)
+",
+        "finds zero feasible two-end-member-plus-carbonate solutions within PHREEQC's own automatic mass-balance search
+",
+        "(ROADMAP.md Section 1/2). A real interior RMSE minimum here (not at either edge of the explored range) still does
+",
+        "not fully reconcile all three species at once -- read as evidence of real net carbonate dissolution along this
+",
+        "flowpath, not as proof the two-end-member-plus-carbonate model fully explains this sample.
+",
+        "Source: PHREEQC_Reaction_Path_Runs/Steps (run_id ", run_id, "), geochem_operational.sqlite."
+      )
+    ) +
+    theme_steamboat(base_size = 11) +
+    theme(plot.caption = element_text(hjust = 0, size = 8))
+
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 12.5, height = 7, dpi = 300)
+  message("  -> Wrote ", out_png)
+  invisible(p)
+}
+
+
+#' Convenience wrapper: build all four.
 build_lst_phreeqc_illustration_figures <- function(con) {
   build_forward_mixing_validation_figure(con)
   build_lst_flow_network_figure()
   build_lst_aquifer_depth_profile_figure()
+  build_reaction_path_titration_figure(con)
   invisible(TRUE)
 }

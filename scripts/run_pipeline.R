@@ -200,6 +200,7 @@ if (is.null(RUN_ANALYSIS$phreeqc)) RUN_ANALYSIS$phreeqc <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_force_rerun)) RUN_ANALYSIS$phreeqc_force_rerun <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_mixing)) RUN_ANALYSIS$phreeqc_mixing <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_inverse)) RUN_ANALYSIS$phreeqc_inverse <- FALSE
+if (is.null(RUN_ANALYSIS$phreeqc_reaction_path)) RUN_ANALYSIS$phreeqc_reaction_path <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_gas_phase)) RUN_ANALYSIS$phreeqc_gas_phase <- FALSE
 if (is.null(RUN_ANALYSIS$leapfrog_export)) RUN_ANALYSIS$leapfrog_export <- FALSE
 if (is.null(RUN_ANALYSIS$facies_clusters)) RUN_ANALYSIS$facies_clusters <- FALSE
@@ -248,6 +249,7 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     phreeqc_force_rerun = "Force PHREEQC to re-run even if nothing changed",
     phreeqc_mixing = "Real PHREEQC mixing runs from data/raw/phreeqc/mixing_config.csv",
     phreeqc_inverse = "Real PHREEQC inverse-modeling runs from .../inverse_config.csv",
+    phreeqc_reaction_path = "Real forward PHREEQC REACTION-path titrations from .../reaction_path_config.csv",
     phreeqc_gas_phase = "Real PHREEQC gas-phase runs from .../gas_phase_config.csv",
     leapfrog_export = "Export well collar/survey/interval/lithology CSVs for Leapfrog",
     facies_clusters = "Persist hydrochemical facies clustering to the database",
@@ -316,6 +318,7 @@ source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
+source("database/schema/23_reaction_path_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
@@ -366,6 +369,14 @@ source("scripts/phreeqc/12_run_phreeqc_gas_phase.R")
 # and 14_gas_mixing.R for the full rationale.
 source("scripts/phreeqc/13_gas_geothermometry.R")
 source("scripts/phreeqc/14_gas_mixing.R")
+# 2026-10-25: forward PHREEQC REACTION-path titration -- the
+# complement to run_phreeqc_inverse() (see 11_run_phreeqc_inverse.R
+# and 16_reaction_path_titration.R for the full rationale: every real
+# inverse-modeling attempt against SBW_0001 finds zero feasible
+# solutions, so this mixes the known real end-members at a known
+# fraction and titrates calcite/dolomite forward instead of asking
+# the solver to search blindly).
+source("scripts/phreeqc/16_reaction_path_titration.R")
 source("scripts/phreeqc/run_phreeqc_analysis.R")
 
 # optional
@@ -407,6 +418,7 @@ source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
+source("database/schema/23_reaction_path_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 }
 
@@ -951,6 +963,14 @@ if (isTRUE(RUN_ANALYSIS$phreeqc)) {
              error = function(e) { message("[ERROR] [PHREEQC] inverse config run failed: ", conditionMessage(e)); .log_stage("PHREEQC: inverse (config)", .st, "FAILED", conditionMessage(e)) })
   } else {
     message("[PHREEQC] Inverse-model config skipped (RUN_ANALYSIS$phreeqc_inverse = FALSE). Define runs in data/raw/phreeqc/inverse_config.csv.")
+  }
+
+  if (isTRUE(RUN_ANALYSIS$phreeqc_reaction_path)) {
+    .st <- Sys.time()
+    tryCatch({ run_phreeqc_reaction_path_from_config(con); .log_stage("PHREEQC: reaction path (config)", .st) },
+             error = function(e) { message("[ERROR] [PHREEQC] reaction-path config run failed: ", conditionMessage(e)); .log_stage("PHREEQC: reaction path (config)", .st, "FAILED", conditionMessage(e)) })
+  } else {
+    message("[PHREEQC] Reaction-path config skipped (RUN_ANALYSIS$phreeqc_reaction_path = FALSE). Define runs in data/raw/phreeqc/reaction_path_config.csv.")
   }
 
   if (isTRUE(RUN_ANALYSIS$phreeqc_gas_phase)) {

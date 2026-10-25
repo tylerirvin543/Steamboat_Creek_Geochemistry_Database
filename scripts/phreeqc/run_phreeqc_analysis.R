@@ -183,6 +183,45 @@ run_phreeqc_gas_phase_from_config <- function(con, csv = "data/raw/phreeqc/gas_p
   }
 }
 
+#' Run every enabled row of data/raw/phreeqc/reaction_path_config.csv
+#' (columns: label, target_sample_id, thermal_sample_id,
+#' meteoric_sample_id, phases [semicolon-separated], step_min_mol,
+#' step_max_mol, n_steps, enabled, notes). Mixes thermal+meteoric at the
+#' real stored (or freshly computed) mixing fraction for
+#' target_sample_id, then titrates `phases` -- see
+#' scripts/phreeqc/16_reaction_path_titration.R for the full method
+#' (built 2026-10-25 as the forward complement to run_phreeqc_inverse(),
+#' since every real inverse-modeling attempt on file finds zero feasible
+#' solutions). Leave step_min_mol/step_max_mol blank to auto-estimate
+#' bounds from the mixed fluid's own Ca/Mg/Alkalinity.
+run_phreeqc_reaction_path_from_config <- function(con, csv = "data/raw/phreeqc/reaction_path_config.csv", phreeqc_db = "auto") {
+  .ensure_phreeqc_config_csv(csv,
+    "label,target_sample_id,thermal_sample_id,meteoric_sample_id,phases,step_min_mol,step_max_mol,n_steps,enabled,notes",
+    "# One row per forward REACTION-path titration run you want run_pipeline.R (RUN_ANALYSIS$phreeqc_reaction_path = TRUE) to execute automatically. Mixes thermal+meteoric at the real stored (or freshly computed) mixing fraction for target_sample_id, then titrates the listed phases (semicolon-separated, e.g. \"Calcite;Dolomite\") across [step_min_mol, step_max_mol] in n_steps steps. Leave step_min_mol/step_max_mol blank to auto-estimate bounds from the mixed fluid's own Ca/Mg/Alkalinity. sample_ids are real Samples.sample_id values -- never guessed.")
+  rows <- .read_phreeqc_config(csv)
+  if (is.null(rows)) { message("[PHREEQC reaction path] No enabled rows in ", csv, " -- nothing to run."); return(invisible(NULL)) }
+  for (i in seq_len(nrow(rows))) {
+    r <- rows[i, ]
+    phases <- trimws(strsplit(as.character(r$phases), ";")[[1]])
+    step_range <- if ("step_min_mol" %in% names(r) && "step_max_mol" %in% names(r) &&
+                      !is.na(r$step_min_mol) && !is.na(r$step_max_mol)) {
+      c(as.numeric(r$step_min_mol), as.numeric(r$step_max_mol))
+    } else NULL
+    n_steps <- if ("n_steps" %in% names(r) && !is.na(r$n_steps)) as.integer(r$n_steps) else 41
+    message("[PHREEQC reaction path] Running config row '", r$label, "' (target=", r$target_sample_id,
+            ", thermal=", r$thermal_sample_id, ", meteoric=", r$meteoric_sample_id,
+            ", phases=", paste(phases, collapse = ","), ")")
+    tryCatch({
+      run_id <- run_reaction_path_titration(con, target_sample_id = r$target_sample_id,
+                                             thermal_sample_id = r$thermal_sample_id,
+                                             meteoric_sample_id = r$meteoric_sample_id,
+                                             phases = phases, step_range_mol = step_range, n_steps = n_steps,
+                                             phreeqc_db = phreeqc_db, notes = r$notes)
+      summarize_reaction_path_fit(con, run_id, target_sample_id = r$target_sample_id)
+    }, error = function(e) message("  [ERROR] config row '", r$label, "' failed: ", conditionMessage(e)))
+  }
+}
+
 run_phreeqc_analysis_pipeline <- function(con, mode = c("speciation", "temp_sweep", "mixing", "inverse", "gas_phase"),
                                            site_type = NULL, sample_ids = NULL, phreeqc_db = "auto",
                                            # mixing
