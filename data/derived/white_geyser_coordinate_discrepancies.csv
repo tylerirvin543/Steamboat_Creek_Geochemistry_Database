@@ -1,0 +1,4 @@
+sheet_feature_name,existing_location_id,existing_location_name,existing_lat,existing_lon,sheet_lat,sheet_lon,distance_m,recommendation
+old curti location from mariner_janik_1995,159,Curti Domestic Well / Curti Barn Well,39.394361,-119.7396,39.4073625,-119.7439101,1494.0507798645415,Not applied -- existing Locations row left untouched. Review manually.
+old brown school location from mariner_janik_1995,196,Brown's School (Mariner & Janik 1995),39.40842,-119.74852,39.4102134,-119.7490899,205.57045988981733,Not applied -- existing Locations row left untouched. Review manually.
+cox1-1 location from mariner_janik_1995,179,Cox I-1 (Mariner & Janik 1995),39.3819067,-119.7649188,39.3821095,-119.7582129,577.4356287531508,Not applied -- existing Locations row left untouched. Review manually.

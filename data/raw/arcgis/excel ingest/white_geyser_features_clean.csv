@@ -1,0 +1,49 @@
+"external_station_code","location_name","latitude","longitude","bare_lon_only","site_type","altitude","depth_raw","depth_to_water_raw","water_altitude","date_parsed","date_precision","units","cl_ppm","pH","Sc","BHT_C","notes","match_action","match_location_id","match_location_name"
+"WHITE1968_auger_hole_4","auger hole 4",39.3880258,-119.740338,TRUE,"well",4572,"100?","-6.5",4565,"1968-01-01","year","ft",1300,,,,"probably influenced by evaporative concentration at the surface","new",,
+"WHITE1968_auger_hole_5","auger hole 5",39.3881181,-119.739494,FALSE,"well",,"100?",,,,,"ft",1160,,,,,"new",,
+"WHITE1968_gs_1","GS-1",39.3788599,-119.7429649,FALSE,"well",,"399.5","Artesian",,"1952-03-15","day","ft",840,6.4,3320,156.9,"also notes temp was 158F at 193ft, see temperature profile graph","fill_existing",226,"GS-1"
+"WHITE1968_south_steamboat_well","South Steamboat Well",39.3779024,-119.7436586,FALSE,"well",,,,,,,,,,,,,"new",,
+"WHITE1968_well_47","well 47",39.3798872,-119.7417598,FALSE,"well",,,,,,,,,,,,,"new",,
+"WHITE1968_opening_fissure_32se","Opening Fissure 32SE",39.3803277,-119.7411878,FALSE,"seep",,,,,,,,,,,,,"new",,
+"WHITE1968_well_32","well 32",39.3804272,-119.7412109,FALSE,"well",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_ridge_31","Sinter ridge 31",39.3804556,-119.7410741,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_ridge_31n","sinter ridge 31N",39.3805267,-119.7410386,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_ow","OW?",39.3809443,-119.7409352,FALSE,"well",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_cone_29","sinter cone 29",39.381152,-119.7414543,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_spring_54","spring 54",39.3816208,-119.739729,FALSE,"spring",,,,,,,,,,,,,"new",,
+"WHITE1968_spring_50","spring 50",39.3816362,-119.7397083,FALSE,"spring",,,,,,,,,,,,,"new",,
+"WHITE1968_closed_fissure_25s_renamed_25ss_from_white_1968","closed fissure 25s renamed 25ss from white 1968",39.382271,-119.7404379,FALSE,"seep",,,,,,,,,,,,"renamed 25ss from white 1968 from 1964 and verified by geyser society","new",,
+"WHITE1968_closed_fissure_25","closed fissure 25",39.3826056,-119.7403318,FALSE,"seep",,,,,,,,,,,,,"new",,
+"WHITE1968_closed_fissure_26","closed fissure 26",39.3826817,-119.7402856,FALSE,"seep",,,,,,,,,,,,"note from geyser society paper: #26 - Perpetual Spouter
+Visits to the Lower Terrace, being farther south of the
+Main Terrace and across the highway, were uncommon. But
+whenever this area was visited, activity in this spring would be
+observed, the only activity in the Lower Terrace. This spouter
+would splash about 30cm out of its crack. This area was not
+checked. so the effects of Well 28-32 and the powerplant are
+not known.","new",,
+"WHITE1968_closed_fissure_or_fault_trace_26nw","closed fissure or fault trace 26NW",39.3827198,-119.7403509,FALSE,"seep",,,,,,,,,,,,,"new",,
+"WHITE1968_closed_sinter_ridge_44","closed sinter ridge 44",39.383389,-119.7401196,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_spring_46","spring 46",39.385255,-119.7396409,FALSE,"spring",,,,,,,,,,,,,"new",,
+"WHITE1968_spring_45","spring 45",39.3849748,-119.7395076,FALSE,"spring",,,,,,,,,,,,,"new",,
+"WHITE1968_auger_hole_3","auger hole 3",39.3879858,-119.7405246,FALSE,"well",,,,,,,,,,,,,"new",,
+"WHITE1968_nevada_thermal_no_1","Nevada Thermal No.1",39.3892155,-119.7406501,FALSE,"well",,"1830",,,,,,,,,,,"new",,
+"WHITE1968_spring_61","spring 61",39.3786633,-119.7401173,FALSE,"spring",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_ridge_and_cone_30","sinter ridge and cone 30",39.3806762,-119.7408219,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_spring_33","spring 33",39.3784022,-119.7427773,FALSE,"spring",,,,,,,,,,,,,"new",,
+"WHITE1968_old_curti_location_from_mariner_janik_1995","old curti location from mariner_janik_1995",39.4073625,-119.7439101,FALSE,"well",,,,,,,,,,,,,"discrepancy_flag_only",159,"Curti Domestic Well / Curti Barn Well"
+"WHITE1968_old_brown_school_location_from_mariner_janik_1995","old brown school location from mariner_janik_1995",39.4102134,-119.7490899,FALSE,"well",,,,,,,,,,,,,"discrepancy_flag_only",196,"Brown's School (Mariner & Janik 1995)"
+"WHITE1968_old_peigh_location_from_mariner_janik_1995","old peigh location from mariner_janik_1995",39.4035095,-119.7582129,FALSE,"well",,,,,,,,,,,,,"fill_existing",197,"Peigh"
+"WHITE1968_stmgid4_location_from_mariner_janik_1995","stmgid#4 location from mariner_janik_1995",39.3937574,-119.7841372,FALSE,"well",,,,,,,,,,,,,"fill_existing",198,"Stmgid 4"
+"WHITE1968_stuart_location_from_mariner_janik_1995","stuart location from mariner_janik_1995",39.3908734,-119.7713437,FALSE,"well",,,,,,,,,,,,,"fill_existing",195,"Stuart"
+"WHITE1968_cox1_1_location_from_mariner_janik_1995","cox1-1 location from mariner_janik_1995",39.3821095,-119.7582129,FALSE,"well",,,,,,,,,,,,,"discrepancy_flag_only",179,"Cox I-1 (Mariner & Janik 1995)"
+"WHITE1968_herz_1_from_white","herz 1 from white",39.4026054,-119.7506907,FALSE,"well",,,,,,,,,,,,,"fill_existing",229,"Herz 1"
+"WHITE1968_herz_2_from_white","herz 2 from white",39.4026652,-119.7501799,FALSE,"well",,,,,,,,,,,,,"fill_existing",230,"Herz 2"
+"WHITE1968_prospect_pit_from_white","prospect pit from white",39.3809422,-119.7415083,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_natural_opening_from_white","natural opening from white",39.380693,-119.7417687,FALSE,"seep",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_cone_from_white_1","sinter cone from white #1",39.3805141,-119.7413862,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_cone_from_white_2","sinter cone from white #2",39.3802056,-119.7417736,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_sinter_cone_from_white_3","sinter cone from white #3",39.3800761,-119.741739,FALSE,"steaming ground",,,,,,,,,,,,,"new",,
+"WHITE1968_44e_from_white_and_geyser_society","44E FROM WHITE AND GEYSER SOCIETY",39.3833246,-119.7396624,FALSE,"seep",,,,,,,,,,,,,"new",,
+"WHITE1968_44ne_from_white_and_geyser_society","44NE from white and geyser society",39.3835424,-119.7397106,FALSE,"seep",,,,,,,,,,,,,"new",,
+"WHITE1968_25s_from_geyser_society","25s from geyser society",39.3825381,-119.7403486,FALSE,"seep",,,,,,,,,,,,,"new",,

@@ -175,7 +175,14 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # A-2 (added 2026-09-26) -- directly usable in ArcGIS/Leapfrog as
     # collar/interval-style point data without any georeferencing step,
     # since the source table is already UTM-coordinate-tagged.
-    geophysical_depth_points = "SELECT point_id, utm_e, utm_n, latitude, longitude, surface_elevation_m, elevation_source, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m, source_document, coordinate_uncertainty_m, notes FROM Geophysical_Depth_Model_Points WHERE latitude IS NOT NULL AND longitude IS NOT NULL"
+    geophysical_depth_points = "SELECT point_id, utm_e, utm_n, latitude, longitude, surface_elevation_m, elevation_source, qal_thickness_m, tv_thickness_m, alt_kgd_km_thickness_m, depth_to_bedrock_m, source_document, coordinate_uncertainty_m, notes FROM Geophysical_Depth_Model_Points WHERE latitude IS NOT NULL AND longitude IS NOT NULL",
+
+    # Dedicated gas-chemistry point layer (added 2026-10-24) -- joins
+    # Gas_Analyses to its Location so real fissure/fumarole gas
+    # composition (mol%, air-fraction diagnostic) is directly
+    # selectable in ArcGIS without digging through the generic
+    # 'locations' layer.
+    gas_analyses = "SELECT g.gas_analysis_id, g.sample_label, g.location_id, l.name AS location_name, l.latitude, l.longitude, g.collection_date, g.field_temp_c, g.co2_mol_pct, g.he_mol_pct, g.h2_mol_pct, g.ar_mol_pct, g.o2_mol_pct, g.n2_mol_pct, g.ch4_mol_pct, g.co_mol_pct, g.h2s_mol_pct, g.total_mol_pct, g.data_quality_flag, g.lab, g.collected_by, g.source, g.notes FROM Gas_Analyses g JOIN Locations l ON g.location_id = l.location_id WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL"
   )
   
   # ============================================================
@@ -183,7 +190,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # ============================================================
   
   requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow",
-                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points")
+                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points", gas_analyses = "Gas_Analyses")
 
   for (layer_name in names(layers)) {
     

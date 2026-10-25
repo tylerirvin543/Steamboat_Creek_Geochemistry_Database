@@ -15,7 +15,7 @@ Steamboat Hills sits a few kilometers south of Reno, Nevada, at the
 northern end of a fault-bounded belt of Great Basin geothermal systems
 and is one of the longest-studied hydrothermal areas in the western
 United States. The system has been characterized geologically and
-hydrologically since the 1950s [@thompsonwhite1964; @white1968;
+hydrologically since the 1950s [@thompsonwhite1964; @white1964b;
 @white1968c; @silberman1979], produced commercially for electricity
 since the mid-1980s, and is currently operated by Ormat Technologies
 as a binary, fully-reinjected geothermal field generating on the order
@@ -69,7 +69,7 @@ corresponding figure (Figure 1.1) places the same events on a single
 timeline. Three broad periods are worth distinguishing. The
 **historical/characterization period** (roughly 1950-1968) established
 the regional geology, structure, and hydrology that every later study,
-including this one, still relies on [@thompsonwhite1964; @white1968;
+including this one, still relies on [@thompsonwhite1964; @white1964b;
 @white1968c]. The **development period** (1986-2007) covers the
 transition from a natural system to a commercially produced one, the
 1987-89 spring-flow decline documented by Sorey and Colvard
@@ -87,9 +87,9 @@ knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
 
 | Year | Event |
 |---|---|
-| 1950 | USGS thermal-gradient and chemistry test holes (GS-1 through GS-8) drilled [@white1968]. |
-| 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1968c]. |
-| 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968]. |
+| 1950 | USGS thermal-gradient and chemistry test holes (GS-1 through GS-8) drilled [@white1968c]. |
+| 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1964b]. |
+| 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968c]. |
 | 1986 | SB GEO's first power plants begin production; commercial development of the field begins in earnest. |
 | 1987-1989 | Natural hot-spring flow at the main and low silica terraces declines and ceases [@sorey1992]. |
 | 1990 | Ormat consolidates Steamboat production under a single operator. |

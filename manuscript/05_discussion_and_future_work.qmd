@@ -104,6 +104,35 @@ always-equilibrated fluid, and motivates collecting a real time-paired
 gas/water sample (rather than two days apart, as here) as a concrete
 next step for this thread.
 
+
+## A gas-informed parent fluid, traced to the creek: what it does and does not yet show
+
+Extending that first gas-phase run into a full steam-loss/gas-add-back
+reconstruction (Chapter 4) is the thesis's first attempt to connect a
+deep, pre-boiling parent fluid all the way through measured discharge
+to what this project already measures at Steamboat Creek and the
+downstream conductivity logger. What it shows now: the fissure and
+resort-tank parent fluids converge tightly on chloride and several
+other conservative species once each is corrected back toward its own
+reservoir temperature, and the three real thermal points' independently
+derived sodium/potassium reservoir temperatures sit within 7 degrees
+Celsius of each other -- both real, specific pieces of evidence for a
+single shared deep source, not proof of one. What it does not yet
+show: a time-paired gas and water sample (the same limitation already
+flagged above), a converged gas-equilibration step for the resort-tank
+fluid specifically (a real PHREEQC convergence failure, reported rather
+than hidden), or any real digitized boundary between the terrace's
+degassing and seepage zones -- the conceptual figure's framing of
+discrete point-source degassing versus diffuse creek-channel seepage is
+a qualitative read of imagery already in hand, offered because it is a
+real, testable prediction worth stating now, not because the
+underlying thermal-infrared rasters have been formally digitized (they
+have not -- see the Lower Sinter Terrace mapping item above). Once
+those rasters are on file, the natural next step is to turn that
+qualitative read into an actual spatial layer (mirroring the
+`SBO_*` photo-survey-point convention already used elsewhere in this
+project) and test it directly against where the spring-remapping
+fieldwork finds active discharge versus dry ground.
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here

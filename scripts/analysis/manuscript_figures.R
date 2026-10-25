@@ -128,7 +128,8 @@ build_steamboat_timeline_figure <- function(
     2024,     "Shift to discrete seeps/vents; first\nshallow boiling observed\n(Lindsey et al. 2026)", "Reawakening",
     2025.04,  "Existing vents become more energetic;\ndischarge points migrate along fractures", "Reawakening",
     2025.41,  "Ormat's authorized field-wide injection\nlimit raised 49,500 -> 55,000 gpm\n(NDEP UIC permit, May 30)", "Hypothesis",
-    2025.42,  "Lower Sinter Terrace eruption (June 3):\nan uncapped well erupts boiling\nwater ~30 m high", "Reawakening",
+    2025.417, "First geyser eruption (June 1-2):\nresident reports a steam/water spout;\nreported overnight height ~100 ft, moderating\nby morning (NBMG field account)", "Reawakening",
+    2025.43,  "Second geyser eruption (June 5-6):\nactivity resumes overnight; drone-estimated\n8-12 m bursts (to ~18 m); Driveway Spring\n95.1C, new fumaroles to 95.8C (NBMG field account)", "Reawakening",
     2025.46,  "Wellhead capped; discharge does not\ncease, instead redistributes laterally", "Reawakening",
     2025.47,  "NBMG begins an integrated\nmonitoring program", "This project",
     2025.52,  "First calibrated thermal drone survey;\nthis project's temp./conductivity\nloggers deployed", "This project",
@@ -408,6 +409,65 @@ build_gas_geothermometry_figure <- function(con,
   invisible(p)
 }
 
+
+#' Gas-informed parent-fluid reconstruction: two-panel comparison of
+#' (A) the real conservative-species concentrations, measured vs.
+#' reconstructed parent fluid, and (B) the resulting Cl mixing
+#' fractions for real LST target samples under each choice of thermal
+#' end-member. Reads the CSVs written by
+#' scripts/phreeqc/15_gas_informed_parent_fluid.R's
+#' run_parent_fluid_analysis() -- run that first.
+build_parent_fluid_comparison_figure <- function(con,
+    recon_csv = "data/derived/phreeqc/parent_fluid_reconstruction.csv",
+    mixing_csv = "data/derived/phreeqc/parent_fluid_mixing_comparison.csv",
+    out_png = "output/figures/manuscript/parent_fluid_comparison.png") {
+
+  if (!file.exists(recon_csv) || !file.exists(mixing_csv)) {
+    message("  -> Parent-fluid CSVs not found; run run_parent_fluid_analysis(con) first. Skipping figure.")
+    return(invisible(NULL))
+  }
+
+  recon <- read.csv(recon_csv, stringsAsFactors = FALSE)
+  mixing <- read.csv(mixing_csv, stringsAsFactors = FALSE)
+
+  recon_long <- recon |>
+    tidyr::pivot_longer(cols = c(measured, parent), names_to = "fluid", values_to = "value") |>
+    mutate(fluid = factor(fluid, levels = c("measured", "parent"),
+                           labels = c("Measured (degassed) fluid", "Reconstructed parent fluid")))
+
+  p1 <- ggplot(recon_long, aes(x = reorder(species, -value), y = value, fill = fluid)) +
+    geom_col(position = position_dodge(width = 0.75), width = 0.65) +
+    scale_fill_manual(values = c("Measured (degassed) fluid" = "#D55E00",
+                                  "Reconstructed parent fluid" = "#0072B2"), name = NULL) +
+    scale_y_log10() +
+    labs(x = NULL, y = "Concentration (mg/L, log scale)",
+         title = "A. Measured vs. reconstructed parent-fluid composition",
+         subtitle = "Sample 816 (SBF_0001) + NV26-1 gas; parent = measured x (1 - steam-loss fraction)") +
+    theme_steamboat(base_size = 10) +
+    theme(axis.text.x = element_text(angle = 40, hjust = 1), legend.position = "top")
+
+  mixing_long <- mixing |>
+    tidyr::pivot_longer(cols = c(f_thermal_measured, f_thermal_parent), names_to = "endmember", values_to = "fraction") |>
+    mutate(endmember = factor(endmember, levels = c("f_thermal_measured", "f_thermal_parent"),
+                               labels = c("Measured fluid as end-member", "Parent fluid as end-member")))
+
+  p2 <- ggplot(mixing_long, aes(x = location_name, y = fraction, color = endmember)) +
+    geom_hline(yintercept = 1, linetype = "dashed", color = "grey60") +
+    geom_point(size = 3.5, position = position_dodge(width = 0.3)) +
+    scale_color_manual(values = c("Measured fluid as end-member" = "#D55E00",
+                                   "Parent fluid as end-member" = "#0072B2"), name = NULL) +
+    labs(x = NULL, y = "Conservative-Cl thermal mixing fraction",
+         title = "B. Inferred thermal fraction, by end-member choice",
+         subtitle = "Dashed line: fraction = 1 (as concentrated as the chosen thermal end-member itself)") +
+    theme_steamboat(base_size = 10) +
+    theme(legend.position = "top")
+
+  p <- patchwork::wrap_plots(p1, p2, ncol = 1)
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 8, height = 9, dpi = 300)
+  message("  -> Wrote ", out_png)
+  invisible(p)
+}
 #' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
   prepare_field_photo_figures()
@@ -417,5 +477,6 @@ build_manuscript_figures <- function(con) {
   build_u230_timeseries_figure(con)
   build_gas_composition_comparison_figure(con)
   build_gas_geothermometry_figure(con)
+  build_parent_fluid_comparison_figure(con)
   invisible(TRUE)
 }

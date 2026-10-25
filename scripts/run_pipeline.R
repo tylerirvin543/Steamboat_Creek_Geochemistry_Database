@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -240,7 +240,8 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     earthquakes = "USGS regional earthquake catalog",
     fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)",
     injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)",
-    fischer_gas = "Fischer/Ruprecht UCSB fissure gas samples (NV26-1/2/3, April 2026)"
+    fischer_gas = "Fischer/Ruprecht UCSB fissure gas samples (NV26-1/2/3, April 2026)",
+    white_geyser_features = "White 1964/1968 + Geyser Society + Mariner & Janik GIS feature inventory"
   )
   analysis_desc <- c(
     phreeqc = "PHREEQC speciation/saturation-index batch run (slow, opt-in)",
@@ -816,6 +817,23 @@ run_step(RUN_INGEST$fischer_gas, "FISCHER/RUPRECHT UCSB FISSURE GAS SAMPLES (APR
   source("scripts/analysis/gas_historical_comparison.R")
   build_gas_historical_comparison(con)
   build_gas_water_fissure_comparison(con)
+
+run_step(RUN_INGEST$white_geyser_features, "WHITE 1964/1968 + GEYSER SOCIETY + MARINER & JANIK GIS FEATURES", {
+  # Ingests a user-digitized GIS feature inventory of wells, springs,
+  # auger holes, fissures, and sinter/steaming-ground features from
+  # White et al. (1964, PP 458-B) and White (1968, PP 458-C), plus a
+  # few Mariner & Janik (1995) locations and Geyser Society notes --
+  # most sit within the Lower Sinter Terrace. Fills coordinates on
+  # already-registered but coordinate-less Locations (GS-1, Herz 1/2,
+  # Peigh, Stmgid 4, Stuart), logs (never auto-applies) coordinate
+  # discrepancies against already-coordinated similarly-named Locations
+  # (Curti, Brown School, Cox I-1) to
+  # data/derived/white_geyser_coordinate_discrepancies.csv, and
+  # registers real new Locations for the rest. See
+  # scripts/ingest/ingest_white_geyser_features.R.
+  source("scripts/ingest/ingest_white_geyser_features.R")
+  ingest_white_geyser_features(con)
+})
 })
 
 run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", {

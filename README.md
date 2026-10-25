@@ -491,6 +491,25 @@ order):
   (the same class of clay alteration, lower-permeability than fresh
   rock) -- gives no numeric hydraulic-conductivity value itself, so
   this remains qualitative, not quantitative.
+- **White, D.E., Thompson, G.A. & Sandberg, C.H. (1964, USGS PP
+  458-B)** and **White, D.E. (1968, USGS PP 458-C)** -- the classic
+  geologic/hydrologic characterization of the whole Steamboat system,
+  read in full (2026-10-24) with a specific focus on the Lower Sinter
+  Terrace ("Low Terrace" in White's own terminology). Real findings
+  now used directly in this project: a two-layer shallow-saline/
+  deep-meteoric mixing structure at the South Steamboat well,
+  hydraulically connected to an erupting production well; the
+  Lower Terrace's chief hot-water aquifer (an andesitic tuff-breccia
+  dike at drill hole GS-1, 158 C at 193 ft -- the terrace's hottest
+  point); and "Steamboat well 4," a 1947-48 uncapped Low Terrace well
+  that erupted continuously once drilling hit its aquifer -- a direct
+  historical analog to the 2025 Busick-property eruption, with
+  chemistry of the same real magnitude as this project's own 2026
+  resort-tank sample. Plate 2's real, scaled cross-sections through
+  the Low Terrace/GS-1 and the South Steamboat well are a future
+  Leapfrog-section/georeferencing candidate. A real citation-key swap
+  in `manuscript/references.bib` (`white1968` was actually the 1964
+  paper) was found and fixed in the same pass.
 ------------------------------------------------------------------------
 
 # System Architecture
@@ -1562,6 +1581,59 @@ result tables) -> `interpret_phreeqc_results()` (automated
 human-readable text) and the QC stage (`PHREEQC_Run_Failures` surfaces
 any sample that didn't converge with any thermodynamic database tried).
 
+
+# Gas-Informed Parent-Fluid Reconstruction and Flowpath Trace (2026-10-24)
+
+## Status: Built, real results, one real open limitation documented
+
+Following the first real fissure gas data (Fischer/Ruprecht UCSB,
+April 2026, see the PHREEQC section above), `scripts/phreeqc/
+15_gas_informed_parent_fluid.R` works backward from a measured
+(post-boiling) water sample toward a "parent" fluid composition using
+a standard steam-loss enthalpy balance (Giggenbach Na/K reservoir
+temperature -- not quartz, which this project's own data consistently
+places below measured discharge temperature) and a PHREEQC `GAS_PHASE`
+re-equilibration at reservoir pressure, seeded with the real,
+air-corrected gas composition. `scripts/analysis/
+fluid_evolution_flowpath.R` traces both the reconstructed parent and
+the measured discharge forward through a real Lower Sinter Terrace
+well and this project's own Steamboat Creek chloride-mass-balance
+stations (SBRR, then downstream SBBV), covering chemistry, PHREEQC
+saturation indices, geothermometry, and stable isotopes at every real
+node.
+
+**Real result**: the fissure and resort-tank parent fluids converge to
+within 2.1% on chloride, tighter than their raw measured values --
+consistent with (not proof of) a shared deep source. Real PHREEQC
+inverse modeling with the parent fluid as an end-member finds 0
+feasible models for both real targets, traced to the same
+already-documented ~1e-9 numerical-residual PHREEQC quirk from this
+project's synthetic self-tests (not a geochemical rejection).
+
+**A real, resolved database-sensitivity finding**: the resort-tank
+sample's gas-equilibration step fails to converge with LLNL but
+converges (to an implausibly acidic pH ~2.0-2.1) with `phreeqc.dat`/
+`wateq4f.dat`. Root-caused via controlled experiments (not guessed):
+the cause is the resort tank's own higher measured field pH (9.0 vs.
+8.3 for the fissure), not database choice -- re-running its exact
+chemistry with only the starting pH changed to 8.3 converges cleanly
+on all three databases within 0.1 pH units of the fissure's result.
+Scaling the imposed gas load to each sample's own buffering capacity
+(alkalinity) instead of a fixed value was tested as a follow-up and
+confirms, rather than resolves, this finding (negligible effect, since
+the two samples' alkalinities are similar) -- the resort tank's own
+elevated field pH remains the sole identified driver, documented as a
+real, current limitation of the reconstruction rather than silently
+worked around.
+
+Outputs: `data/derived/phreeqc/parent_fluid_*.csv` (reconstruction,
+mixing comparison, database-sensitivity sweep, pH root-cause tests,
+gas-load-scaling test) and `output/figures/manuscript/
+parent_fluid_comparison.png` / `fluid_evolution_flowpath.png` /
+`lst_conceptual_flowpath.png` / `parent_fluid_database_sensitivity.png`.
+Not wired into `run_pipeline.R` (manual-invocation-only, same
+philosophy as the other PHREEQC mixing/inverse/gas-phase modes --
+never auto-run on guessed end-members).
 # Isotope System (Next Phase)
 
 ## Planned Integration

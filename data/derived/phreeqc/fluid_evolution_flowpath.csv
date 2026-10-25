@@ -1,0 +1,8 @@
+"node","sample_id","flowpath_order","node_type","Cl","Na","SO4","Si","B","pH","temperature_C","SI_Calcite","SI_Quartz","T_NaK_Giggenbach","T_quartz_C","d18O","d2H"
+"Parent fluid (fissure, reconstructed)",NA,1,"Reconstructed parent",781.056331625883,628.678470609299,126.502375183579,106.5,34.5006477773396,5.54253,172.720088211708,-1.3324,-999.999,NA,NA,NA,NA
+"Parent fluid (resort, reconstructed)",NA,1,"Reconstructed parent",797.465095650066,644.359311679559,148.409287529694,102,34.8480035908333,NA,178.427271693577,NA,NA,NA,NA,NA,NA
+"SBF_0001 (fissure, measured)",816,2,"Measured LST discharge",815,656,132,106.5,36,8.3,152.6,0.756,-0.2178,172.720088211708,118.226987447699,-12.26,-113.7
+"SBW_0002 (resort tank, measured)",815,2,"Measured LST discharge",849,686,158,102,37.1,9,149,0.8535,-0.5659,178.427271693577,NA,-11.64,-111.4
+"SBW_0001 (nearby LST well)",821,3,"Measured LST discharge",473,404,75,70,21.2,8.2,159.62,1.8201,-0.4028,179.766259367872,98.8687321646963,-12.79,-110.5
+"SBRR (Steamboat Creek, near-field)",819,4,"Downstream creek",17.1,17,4,16.1,0.011,7.9,59.36,0.304,-0.1045,256.051248762659,51.7734472049689,-14.1,-105.5
+"SBBV (Steamboat Creek, downstream)",818,5,"Downstream creek",126,127.5,35.4,22.9,6.94,8.3,74.66,1.2128,-0.1682,196.777989451976,61.4647658489965,-12.69,-101.5

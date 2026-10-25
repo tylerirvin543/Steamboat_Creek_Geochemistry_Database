@@ -127,7 +127,7 @@ derive their heat from regionally elevated mantle heat flow alone,
 Steamboat is one of a small number of magmatic-influenced systems in
 the province, and it is one of the longest-studied hydrothermal areas
 in the western United States, characterized geologically and
-hydrologically since the 1950s [@thompsonwhite1964; @white1968;
+hydrologically since the 1950s [@thompsonwhite1964; @white1964b;
 @white1968c; @silberman1979]. The field has produced electricity
 commercially since the mid-1980s and is currently operated by Ormat
 Technologies as a binary, fully reinjected system generating on the
@@ -175,7 +175,7 @@ outflow going forward.
 Three broad periods structure this history, shown in @fig-timeline. The
 **historical/characterization period** (roughly 1950-1968) established
 the regional geology, structure, and hydrology that every later study,
-including this one, still relies on [@thompsonwhite1964; @white1968;
+including this one, still relies on [@thompsonwhite1964; @white1964b;
 @white1968c]. The **development period** (1986-2007) covers the
 transition from a natural system to a commercially produced one, the
 1987-89 spring-flow decline documented by Sorey and Colvard
@@ -197,9 +197,9 @@ show_fig(
 
 | Year | Event |
 |---|---|
-| 1950 | USGS thermal-gradient and chemistry test holes drilled [@white1968]. |
-| 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1968c]. |
-| 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968]. |
+| 1950 | USGS thermal-gradient and chemistry test holes drilled [@white1968c]. |
+| 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1964b]. |
+| 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968c]. |
 | 1986 | Commercial production begins. |
 | 1987-1989 | Natural hot-spring flow at the main and low silica terraces declines and ceases [@sorey1992]. |
 | 1992 | Sorey and Colvard attribute most of the spring-flow decline to regional groundwater drawdown, not geothermal production [@sorey1992]. |
@@ -529,7 +529,7 @@ Methods section below.
 Steamboat's geology, hydrology, and geochemistry have been
 characterized across seven decades of prior work this proposal builds
 on directly rather than starting over. White, Thompson, and Sandberg
-[@white1968; @thompsonwhite1964] established the regional geologic
+[@white1964b; @thompsonwhite1964] established the regional geologic
 framework, structure, and thermal history still used today, and
 Silberman and others [@silberman1979] constrained the duration of
 hydrothermal activity from spatially associated volcanic rocks. Sorey
@@ -786,6 +786,64 @@ invented for this project, is applied before the D'Amore and Panichi
 implementation already used and literature-validated in the Background
 section) is run on each corrected composition.
 
+
+## A gas-informed parent-fluid reconstruction and flowpath trace
+
+NV26-1's gas composition is paired with sample 816 (SBF_0001, the
+fissure water sample), the only real water-gas pair this project has.
+A first-pass, explicitly simplified reconstruction works backward from
+each measured (post-boiling) fluid toward its likely pre-boiling
+"parent" composition, then traces both the parent and the measured
+fluid forward through the system to the downstream creek:
+
+1. **Reservoir temperature.** The Giggenbach sodium/potassium
+   geothermometer (not quartz/chalcedony, which this project's own
+   data consistently places *below* measured discharge temperature at
+   Steamboat -- see the geothermometer-divergence result above) is
+   used as the reservoir temperature, since it comes out above
+   measured temperature here, as expected for a cooling, diluting flow
+   path.
+2. **Steam-loss fraction.** A standard single-step adiabatic
+   enthalpy-balance calculation (saturated-liquid/-vapor enthalpies
+   from a steam-table lookup) gives the fraction of the parent fluid's
+   mass lost to steam between the reservoir temperature and the
+   measured discharge temperature.
+3. **Conservative species.** Chloride, sodium, potassium, sulfate,
+   boron, lithium, bromide, fluoride, strontium, and alkalinity are
+   scaled back by (1 - steam-loss fraction) -- boiling concentrates the
+   residual liquid, so the parent values are lower than measured, not
+   higher.
+4. **Gas add-back.** NV26-1's air-corrected carbon dioxide-to-hydrogen
+   sulfide ratio is used to seed a PHREEQC `GAS_PHASE` equilibration at
+   the reservoir's own saturation pressure (several atmospheres, not 1
+   atmosphere), re-setting pH and carbonate speciation to a plausible
+   pre-boiling state.
+
+This whole method is a first pass built to be refined, not a finished
+geothermometric technique -- it assumes single-step (not continuous)
+boiling and that carbon dioxide/hydrogen sulfide partition essentially
+completely into the escaping vapor, and it applies the one real gas
+sample (NV26-1) to both the fissure and the resort-tank water samples,
+since no gas sample exists at the resort tank itself. Every PHREEQC run
+in this reconstruction uses the LLNL thermodynamic database (automatically
+recommended for every sample here, since all are geothermal-temperature
+fluids), explicitly logged -- along with each input sample's own
+charge-balance error and each gas-equilibration step's convergence
+status -- to `data/derived/phreeqc/parent_fluid_diagnostics.csv`, so a
+real convergence failure is reported, not hidden (see Results).
+
+The reconstructed parent fluid, the as-measured fissure and resort-tank
+fluids, a nearby Lower Sinter Terrace well (SBW_0001), and this
+project's two Steamboat Creek chloride-mass-balance stations (SBRR,
+near-field; SBBV, downstream -- the same two stations
+`chloride_mass_balance.R` already uses) are assembled into one real
+flowpath table and figure, tracking chloride, sodium, sulfate, silica,
+boron, pH, calcite and quartz saturation indices, sodium/potassium and
+quartz geothermometer estimates, and delta-18-O/delta-2-H across every
+node with real data. A small, honestly-scoped statistical check (three
+real thermal points: fissure, resort tank, and the nearby well) asks
+whether their independently derived sodium/potassium reservoir-temperature
+estimates are consistent with one shared parent fluid.
 ## Hydrochemical endmember characterization
 
 Following Objectives 1 and 3 above, every real water sample with
@@ -1003,6 +1061,60 @@ or reaction-path model should be built from which samples are
 genuinely distinct, chemically credible end-members, not from which
 samples happen to be close together on a map.
 
+
+## Hydraulic conductivity, AQTESOLV, and MODFLOW: a staged approach
+
+This project currently has no site-specific hydraulic-conductivity or
+transmissivity field for the Lower Sinter Terrace, and PHREEQC itself
+is a batch/one-dimensional reaction-path tool with no spatial
+transport -- it cannot consume a conductivity field even if one
+existed. A concrete, staged plan for how subsurface-structure work
+should proceed without overstating what can be done today:
+
+**Near term (this thesis).** Well logs and driller's reports already
+on file (lithology intervals, completion/perforation depths, the
+Leapfrog collar/survey/completion-interval export) are used only to
+define plausible subsurface compartments -- that is, which Lower
+Sinter Terrace wells and springs are geologically reasonable to group
+together as sharing a flow path -- not to populate a hydraulic
+conductivity field. This is exactly the role the gas-informed
+parent-fluid reconstruction and flowpath trace above already play: the
+geologic framework constrains which real samples are plausible
+end-members for a given mixing or inverse-modeling exercise, which is
+a fundamentally different, more modest claim than estimating how fast
+water moves between them.
+
+**Reference-only hydraulic values.** The only real, site-area
+transmissivity and storage-coefficient values on file come from two
+literature sources already cited elsewhere in this proposal: four
+dated aquifer/interference tests summarized by Sorey and Colvard
+[-@sorey1992] (transmissivity on the order of 1,250-9,500 square feet
+per day, storage coefficient on the order of 1e-4 to 1e-3), and a
+single additional point from Collar and Huntley [-@collar1990] for
+spring 42w (transmissivity approximately 3,000 square feet per day,
+storage coefficient 2.6e-3). These are used as a reference range only,
+not as a calibrated model input -- no attempt is made here to assign a
+specific transmissivity to a specific well or spring without real
+pump-test data to support it.
+
+**Future work, explicitly out of scope for this proposal.** A real,
+site-specific hydraulic-conductivity estimate would come from an
+Aqtesolv analysis of real pump-test drawdown data, which does not yet
+exist for any Lower Sinter Terrace well -- obtaining it is a concrete,
+near-term opportunity given the author's own ongoing groundwater
+hydrology coursework, but is not assumed to happen on any particular
+timeline here. Once a real transmissivity/storage-coefficient value
+exists, together with real digitized fault geometry (the Collar and
+Huntley fault map discussed above), the natural next step is a MODFLOW
+grid and zone-boundary-condition build using the same Leapfrog
+collar/survey/completion-interval geometry already exported by this
+project's pipeline. MODFLOW and PHREEQC would then play complementary,
+not overlapping, roles: MODFLOW models where and how fast water
+moves (flow and transport), while PHREEQC -- as used throughout this
+proposal -- models what happens to its chemistry along an assumed or
+MODFLOW-informed flow path. Building both into one coupled model is
+explicitly not proposed here; that is a reasonable longer-term
+direction once both halves exist independently.
 # Preliminary results
 
 Real preliminary work already completed supports the feasibility of
@@ -1117,6 +1229,220 @@ show_fig(
   "D'Amore-Panichi gas-geothermometer estimates versus measured field temperature for the three real fissure gas samples. Already produced.",
   alt = "Point plot comparing gas-geothermometer temperature estimates to measured field temperature for three fissure gas samples, with the historical well 23-5 range shown as reference lines.",
   id = "fig-gastherm"
+)
+```
+
+
+**A gas-informed parent-fluid reconstruction.** Applying the method
+above to sample 816 (the fissure) gives a steam-loss fraction of 4.2
+percent (reservoir 172.7 degrees Celsius, measured discharge 152.6
+degrees Celsius), a reconstructed parent chloride of 781 mg/L (below
+the measured 815 mg/L, as boiling concentrates the residual liquid),
+and -- once the reconstructed fluid is re-equilibrated with NV26-1's
+real gas composition at reservoir pressure (8.5 atmospheres) -- a
+substantially more acidic parent pH (5.5, versus 8.3 measured) and
+calcite/dolomite saturation indices that flip from mildly supersaturated
+to clearly undersaturated. This is the expected direction for a deep,
+gas-charged fluid that has not yet degassed: carbonate scaling is a
+surface/shallow phenomenon as carbon dioxide escapes and pH rises, not
+a deep-reservoir one, shown in @fig-parentfluid. Applying the identical
+method to the resort-tank sample (815) gives a similar steam-loss
+fraction (6.1 percent) and a parent chloride within 2.1 percent of the
+fissure's own reconstructed parent (781 vs. 797 mg/L) -- closer than
+the two samples' raw measured values (815 vs. 849 mg/L) -- consistent
+with, though not proof of, a single shared deep source feeding both
+discharge points. Potassium, sulfate, lithium, and strontium converge
+less tightly (9-15 percent apart even after correction), which could
+reflect either minor water-rock reaction differences along slightly
+different flow paths or real sampling/analytical variability -- not
+resolved further here. The resort-tank sample's own gas-equilibration
+step did not converge (a real PHREEQC limitation at this fluid's
+measured pH of 9.0 combined with the imposed acid-gas load, logged to
+`parent_fluid_diagnostics.csv` rather than hidden), so its reconstructed
+parent pH and saturation indices are not reported -- only its
+conservative-species concentrations, which do not depend on that step.
+
+```{r fig-parentfluid}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/parent_fluid_comparison.png",
+  "A. Measured versus gas-informed reconstructed parent-fluid composition for the fissure sample. B. The resulting conservative-chloride thermal mixing fraction for three real Lower Sinter Terrace samples, computed with the measured fluid versus the reconstructed parent fluid as the thermal end-member.",
+  alt = "Two-panel figure: bar chart comparing measured and parent-fluid concentrations of ten conservative species; point plot comparing mixing fractions under two end-member choices for three target samples.",
+  id = "fig-parentfluid"
+)
+```
+
+
+**Does the choice of thermodynamic database matter here, especially
+given the resort-tank fluid's convergence failure?** Database choice
+turned out to be a symptom, not the real cause. Re-running the
+resort-tank parent fluid's gas-equilibration step against all six
+PHREEQC databases registered in this project finds that `phreeqc.dat`
+and `wateq4f.dat` both converge where LLNL does not, shown in
+@fig-dbsensitivity, but the two newly converging databases land on a
+dramatically more acidic parent pH (approximately 2.0-2.1) than either
+the fissure's own result or anything physically expected for this
+fluid. Tracking this down directly (controlled PHREEQC experiments,
+not guessed) rules out two plausible-looking explanations before
+finding the real one: swapping boron in or out of the fissure's own
+solution changes its final pH by less than 0.01 units (boron is
+excluded from the resort-tank solution only because including it
+prevents the *initial* solution from converging at all, a separate,
+already-documented issue -- not the driver of the acidification
+difference); and the two fluids' conservative-species concentrations
+are too similar to explain a gap this large. The real cause is the
+two samples' different **measured field pH**: 9.0 for the resort tank
+versus 8.3 for the fissure. Re-running the resort tank's exact real
+chemistry with only its starting pH changed to 8.3 converges cleanly
+on all three databases (LLNL included) and lands within 0.1 pH units
+of the fissure's own result (5.53-5.64 across all three) -- confirming
+that a 0.7-unit difference in starting pH, not the choice of
+thermodynamic database, drives both the convergence failure and the
+pH-2 divergence. Mechanistically, a solution starting at pH 9 has
+already converted most of its alkalinity to carbonate rather than
+bicarbonate, leaving much less carbonate buffering capacity before the
+same absolute imposed gas load (this reconstruction applies the same
+total gas moles regardless of each sample's own buffering capacity, a
+real modeling-assumption limitation worth revisiting) drives the
+system into a strongly acidic, weakly buffered regime. This is now
+reported as a resolved, mechanistically understood sensitivity, not an
+open question: the conservative-species correction (chloride, sodium,
+and so on) was never in doubt and is unaffected by any of this; the
+resort tank's own re-equilibrated pH and saturation indices, as
+reported above, should be read as sensitive to its unusually high
+measured field pH specifically, not to a database artifact.
+
+As a direct check on one remaining candidate explanation, the amount
+of gas imposed on each parent fluid (previously a fixed 10 moles for
+every sample, regardless of how much carbonate buffering that
+sample's own water actually has) was changed to scale with each
+sample's own alkalinity instead. Because the resort tank's and
+fissure's alkalinities differ by only about 6 percent, this changes
+the imposed gas load by a similar small amount and leaves the result
+essentially unchanged: LLNL still fails to converge for the resort
+tank, and `phreeqc.dat`/`wateq4f.dat` still converge to the same
+strongly acidic parent pH (2.0-2.1). This is a real, if negative,
+confirmation rather than a wasted step -- it rules out gas-load sizing
+as a contributing factor and leaves the resort tank's unusually high
+measured field pH as the sole identified driver.
+
+```{r fig-dbsensitivity}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/parent_fluid_database_sensitivity.png",
+  "A. Gas-equilibration convergence for both real water-gas pairings, across all six PHREEQC databases registered in this project. B. Reconstructed parent-fluid pH for every database that converged. The resort tank's divergence traces to its higher measured field pH (9.0 vs. 8.3), not database choice -- see text.",
+  alt = "Two-panel figure: tile plot showing convergence status by database and sample; point plot showing reconstructed pH by database for the two samples.",
+  id = "fig-dbsensitivity"
+)
+```
+
+**Feeding the reconstructed parent fluid into real inverse modeling.**
+Running this project's existing PHREEQC inverse-modeling framework
+(end-members: the reconstructed parent fluid and the meteoric
+reference well; candidate phases: calcite, quartz, chalcedony) against
+the two real target samples with complete chemistry (SBW_0001,
+SBW_0002) finds zero feasible mixing-plus-mineral-transfer solutions
+for either target. This is not read as a geochemical rejection of the
+parent-fluid end-member -- the raw PHREEQC output traces the failure to
+the same tiny (on the order of 1e-9), numerically spurious residual on
+an unused trace redox couple (chlorine or carbon oxidation states that
+play no real role in this chemistry) already documented as a known
+PHREEQC execution-plumbing limitation in this project's own synthetic
+self-tests. Reported plainly as a real, current limitation of the
+inverse-modeling tool for this specific end-member pairing, not
+silently retried until something "worked."
+)
+```
+
+**Tracing the flowpath from parent fluid to the downstream creek.**
+Putting the two reconstructed parent fluids, the as-measured fissure
+and resort-tank chemistry, a nearby Lower Sinter Terrace well
+(SBW_0001), and the two real Steamboat Creek chloride-mass-balance
+stations (SBRR, then downstream SBBV) on one real flowpath, shown in
+@fig-evolution, gives a coherent, data-supported picture: chloride,
+sodium, silica, and boron all decline in the same order along the
+flowpath (parent/fissure/resort-tank high, SBW_0001 roughly half,
+SBRR near background, SBBV measurably higher than SBRR again) -- the
+same real chloride-flux difference between SBRR and SBBV that already
+drives this project's own thermal-discharge estimate
+(`chloride_mass_balance.R`), now shown constituent by constituent.
+pH rises from the reconstructed parent (acidic) through the measured,
+partly degassed discharge points (alkaline) to the creek (near-neutral
+to mildly alkaline), consistent with progressive carbon dioxide loss.
+Calcite saturation is undersaturated at the reconstructed parent,
+mildly supersaturated at the two measured discharge points, and most
+supersaturated at the nearby well and downstream creek -- a real,
+specific illustration of where calcite scaling risk is highest along
+this flow path. The quartz geothermometer declines smoothly and
+plausibly along the same sequence (118 and 99 degrees Celsius at the
+two warmest points, down to 53-62 degrees Celsius at the creek
+stations); the sodium/potassium geothermometer does **not** behave
+this way at the two creek stations (physically implausible values of
+195-255 degrees Celsius), a known, already-documented artifact of
+applying that geothermometer to dilute, non-thermal water -- shown for
+transparency, not as a real reservoir-temperature estimate at those two
+points. Delta-18-O and delta-2-H tell a complementary story: both
+creek stations sit close to each other and more isotopically depleted
+than the fissure or resort-tank water, consistent with the real
+thermal inflow being a small enough fraction of total streamflow that
+it shifts the creek's conservative-tracer chemistry (chloride)
+measurably while barely shifting its bulk isotopic signature, which
+stays dominated by meteoric water.
+
+```{r fig-evolution}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/fluid_evolution_flowpath.png",
+  "Real chemistry, PHREEQC saturation indices, geothermometer estimates, and stable isotopes across the sampled Lower Sinter Terrace flowpath, from the two reconstructed parent fluids through measured discharge, a nearby well, and the two Steamboat Creek chloride-mass-balance stations.",
+  alt = "Twelve-panel scatter plot showing chloride, sodium, sulfate, silica, boron, pH, calcite and quartz saturation indices, two geothermometer estimates, and two stable isotopes across seven real or reconstructed flowpath nodes.",
+  id = "fig-evolution"
+)
+```
+
+The three real, independently sampled thermal points (fissure, resort
+tank, nearby well) give sodium/potassium reservoir-temperature
+estimates of 172.7, 178.4, and 179.8 degrees Celsius -- a 7.1-degree
+range and a 2.1 percent coefficient of variation. Three points is too
+few for a formally powered statistical test, stated plainly rather than
+dressed up with an inappropriate p-value, but a spread this tight
+relative to the 50-100 degree Celsius divergence this project's own
+geothermometer-vs-measured-temperature comparison already documents
+across its full real sample set is a real, specific piece of evidence
+consistent with these three points sharing one deep source, not three
+independent ones.
+
+**A conceptual figure, informed by visual inspection of the thermal-infrared
+surveys already shared for this project.** @fig-conceptual lays out the
+full flowpath as a schematic: deep parent fluid, degassing, the three
+real measured discharge points, shallow meteoric mixing, Steamboat
+Creek at SBRR, White's [-@white1968c] own documented approximately
+100 gallon-per-minute "unseen" Lower Sinter Terrace thermal inflow
+between SBRR and SBBV (notebook section 4.7), Steamboat Creek at SBBV,
+and the downstream conductivity logger/United States Geological Survey
+gauge. The calibrated thermal-infrared imagery already shared for this
+project (a July-versus-October 2025 comparison, and a separate
+calibrated orthophoto) shows two visually distinct kinds of warm
+signature: discrete, persistent point sources along the terrace's
+western margin (plausible active degassing/boiling vents, stable
+between the two survey dates) and a broader, more diffuse warm
+signature tracking the creek channel itself (more consistent with
+shallow seepage and mixing than point-source degassing). This is
+stated as a qualitative, visual read of imagery already in hand, not a
+digitized layer -- the underlying raster files are not yet on disk
+(see `docs/action_items_for_user.md`, item 12) -- and is offered here
+as a real, if provisional, answer to what can be said before that
+digitization work happens: the system appears to have at least two
+physically distinct discharge styles operating side by side on the
+same terrace, which is itself a testable prediction for the planned
+spring/seep remapping fieldwork.
+
+```{r fig-conceptual}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/lst_conceptual_flowpath.png",
+  "Conceptual flowpath from the reconstructed deep parent fluid through degassing, the three real measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, with real chloride values annotated at each node.",
+  alt = "Schematic box-and-arrow diagram showing the conceptual flowpath from a deep parent fluid through degassing and discharge points to Steamboat Creek and a downstream conductivity logger.",
+  id = "fig-conceptual"
 )
 ```
 

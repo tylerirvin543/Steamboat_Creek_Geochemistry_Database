@@ -1,0 +1,13 @@
+"water_sample_id","db","converged","pH_parent","SI_Calcite","SI_Quartz","SI_Dolomite","error"
+"816","phreeqc",TRUE,5.55441,-1.0238,-999.999,-2.6624,NA
+"816","llnl",TRUE,5.54253,-1.3324,-999.999,-2.3281,NA
+"816","wateq4f",TRUE,5.65695,-1.3542,-999.999,-5.7876,NA
+"816","pitzer",FALSE,NA,NA,NA,NA,NA
+"816","sit",FALSE,NA,NA,NA,NA,NA
+"816","minteq",FALSE,NA,NA,NA,NA,NA
+"815","phreeqc",TRUE,2.04551,-7.5938,-999.999,-16.4147,NA
+"815","llnl",FALSE,NA,NA,NA,NA,NA
+"815","wateq4f",TRUE,2.09798,-8.3424,-999.999,-20.1432,NA
+"815","pitzer",FALSE,NA,NA,NA,NA,NA
+"815","sit",FALSE,NA,NA,NA,NA,NA
+"815","minteq",FALSE,NA,NA,NA,NA,NA

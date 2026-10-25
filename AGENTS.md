@@ -7326,3 +7326,203 @@ secondhand via Dhakal et al. (2025)'s reference list.
   actually surprising given the 2-day gap between the water and gas
   sample dates.
 - Not yet committed to git.
+
+
+## Session 50 (2026-10-24): Lower Sinter Terrace scope shift -- White/Geyser
+Society GIS ingest, in-depth White (1964/1968) literature review,
+gas-informed parent-fluid reconstruction + full flowpath trace, database-
+sensitivity root cause resolved, hydraulic-conductivity/AQTESOLV/MODFLOW
+advisory section
+
+Large multi-part session executing a user-approved plan
+(`.posit/assistant/plans/2026-10-24-1632-plan.md`) to shift thesis scope
+toward the Lower Sinter Terrace (LST), motivated by Lindsey et al.
+(2026)'s thermal-anomaly-driven surface mapping and new calibrated
+thermal-infrared imagery the user shared directly in chat (not yet
+files on disk).
+
+### Phase 1: data foundations
+- **New White/Geyser Society/Mariner & Janik GIS feature sheet
+  ingested** (`scripts/ingest/ingest_white_geyser_features.R`,
+  `RUN_INGEST$white_geyser_features`): source
+  `data/raw/arcgis/excel ingest/White&Geyser_Society_Mariner&Janik_GIS_located_wells_springs_features.xlsx`
+  cleaned into `white_geyser_features_clean.csv` (41 features, mostly
+  real LST springs/fissures/sinter features/auger holes). Coordinates
+  filled on 6 previously bare `Locations` rows (GS-1, Herz 1/2, Peigh,
+  Stmgid 4, Stuart); 32 new Locations created; 3 coordinate
+  discrepancies (Curti ~1.5 km, Brown School ~206 m, Cox I-1 ~577 m)
+  logged to `data/derived/white_geyser_coordinate_discrepancies.csv`,
+  not auto-resolved; real chemistry for GS-1 and two auger holes
+  promoted into Sampling_Events/Samples/Lab_Analyses/Field_Measurements.
+- New dedicated `gas_analyses` GeoPackage layer added to
+  `export_geopackage.R` (joins `Gas_Analyses` to `Locations`).
+- **Busick/resort-well research**: `SBW_0001`/`SBW_0002` promoted to
+  real (minimal, `well_role='unknown'`) `Wells` rows. NBMG proximity
+  check: `SBW_0001` (the eruption well) has no tight match (nearest
+  131-280 m); `SBW_0002` (resort tank) sits within 10-24 m of three
+  Steamboat Resort-operated NBMG wells ("Carver Geothermal Well,"
+  "Steamboat No. 4," "Steamboat No. 2") -- real depths 8.6/68.58/36.576 m,
+  flagged as leads only.
+- **NBMG eruption-timeline PDF transcribed**: real day-by-day June
+  2025 account (including a previously-unrepresented SECOND eruption
+  pulse, June 5-6, distinct from June 1-2) into
+  `data/raw/historical/nbmg_timeline_2022_2025.csv`; `build_steamboat_
+  timeline_figure()` corrected to show both pulses. Raw PDF not yet
+  on file -- only its extracted text; asked user to drop the real file
+  into `docs/literature/`.
+- Thermal-imagery rasters (TIR ortho, July/Oct 2025 comparison) are
+  still chat attachments only, not on disk -- `docs/action_items_for_user.md`
+  item 12 asks the user to drop the GeoTIFF/raster files in.
+
+### Phase 2: in-depth White (1964, 1968) review
+Read both papers in full via `pdftotext -layout`, focused on the
+"Low Terrace" (White's own term for the LST). Real findings written
+into `notebooks/07_historical_context_sorey1992.qmd` section 4.7:
+- **South Steamboat well**: real historical precedent for a two-layer
+  shallow-saline (0-160 ft)/deep-meteoric (<188 ft, 6-8 ppm Cl)
+  mixing structure, hydraulically connected to erupting Steamboat
+  well 2; deep meteoric component attributed by White's own isotope
+  data to Carson/Virginia Range mountain-front recharge, not
+  Steamboat Creek directly.
+- **GS-1**: andesitic tuff-breccia dike (150-210 ft) is the Low
+  Terrace's chief hot-water aquifer, 158 deg C at 193 ft (the
+  terrace's hottest point) -- corrected a deg-F/deg-C transcription
+  error in the newly-ingested sheet's own notes (flagged in
+  `Locations.notes`, not silently fixed).
+- **Steamboat well 4**: a 1947-48 uncapped Low Terrace well that
+  erupted continuously once drilling hit its aquifer (deepened
+  142->225 ft) -- a direct historical analog to the 2025 Busick-pipe
+  eruption, with chemistry (Cl ~960 ppm, SC ~3645 umhos) strikingly
+  similar in magnitude to the 2026 SBW_0002 sample; its 225 ft final
+  depth matches NBMG's "Steamboat No. 4" (68.58 m) lead for SBW_0002
+  almost exactly -- a well-supported hypothesis, not confirmed.
+- White (1968) Plate 2's real, scaled west-east cross-sections
+  (Low Terrace/GS-1; South Steamboat well) rendered and saved as a
+  future Leapfrog-section/georeferencing candidate.
+- **Fixed a real citation-key swap** in `references.bib`: `white1968`
+  was actually the 1964 paper (PP 458-B); renamed to `white1964b`,
+  and three chronology-table citations that had the two papers
+  backwards were corrected.
+
+### Phase 3: gas-informed parent-fluid reconstruction and flowpath trace
+- **New `scripts/phreeqc/15_gas_informed_parent_fluid.R`**: steam-loss
+  correction (Giggenbach Na/K reservoir temperature -- not quartz,
+  which sits below measured temperature here per Session 16's
+  established finding -- plus a saturated-steam-table enthalpy
+  balance) and gas add-back (`GAS_PHASE` at reservoir saturation
+  pressure, seeded with NV26-1's air-corrected CO2:H2S ratio).
+  Reconstructed both the fissure (816/SBF_0001) and resort-tank
+  (815/SBW_0002) parent fluids using the same NV26-1 gas (no gas
+  sample exists at the tank). Real result: the two reconstructed
+  parents converge to within 2.1% on chloride (781 vs. 797 mg/L),
+  tighter than their raw measured values (815 vs. 849 mg/L) --
+  consistent with (not proof of) a shared deep source.
+- **New `scripts/analysis/fluid_evolution_flowpath.R`**: full real
+  flowpath (parent fluids -> measured fissure/resort discharge ->
+  nearby well SBW_0001 -> Steamboat Creek SBRR -> downstream SBBV)
+  tracking Cl/Na/SO4/SiO2/B/pH/SI/geothermometry/d18O/d2H -- all real
+  data. Cl/Na/SiO2/B decline monotonically along the flowpath;
+  calcite scaling risk increases downstream; quartz geothermometer
+  declines smoothly (99-118 -> 53-62 deg C); Na/K gives implausible
+  195-255 deg C at the two dilute creek stations (a known,
+  already-documented artifact, shown for transparency not as a real
+  estimate); the three real thermal points' Na/K reservoir
+  temperatures span only 7.1 deg C (CV 2.1%); d18O/d2H show both
+  creek stations isotopically depleted and close together, consistent
+  with the real thermal inflow being too small a fraction of
+  streamflow to shift the creek's bulk isotope signature even while
+  shifting its chloride.
+- **New conceptual flowpath figure** (`build_lst_conceptual_
+  flowpath_figure()`): schematic parent fluid -> degassing -> three
+  real discharge points -> shallow mixing -> SBRR -> White's own
+  documented ~100 gpm "unseen" LST inflow -> SBBV -> downstream
+  logger/gauge. Degassing-vs-seepage framing (discrete point sources
+  on the western terrace margin vs. diffuse creek-channel seepage) is
+  an explicitly qualitative read of the shared TIR imagery, not a
+  digitized layer.
+- **Real PHREEQC inverse modeling with the parent fluid as an
+  end-member**: 0 feasible models found for both real targets
+  (SBW_0001, SBW_0002) -- traced to the same tiny (~1e-9) numerical-
+  residual PHREEQC quirk on an unused trace redox couple already
+  documented in this project's Session 14 synthetic self-test, not a
+  geochemical rejection.
+
+### Database-sensitivity investigation and root cause
+- Swept all 6 registered PHREEQC databases (phreeqc, llnl, wateq4f,
+  pitzer, sit, minteq) against both parent-fluid reconstructions
+  (`data/derived/phreeqc/parent_fluid_database_sensitivity.csv` + new
+  figure `parent_fluid_database_sensitivity.png`). `phreeqc.dat`/
+  `wateq4f.dat` converge where LLNL fails for the resort tank, but
+  land on a dramatically more acidic pH (~2.0-2.1) than the fissure's
+  own result (~5.5-5.7, where all three agree) -- initially reported
+  as an open, unresolved database-sensitivity finding.
+- **Root-caused via controlled PHREEQC experiments, not guessed**
+  (`data/derived/phreeqc/parent_fluid_pH_sensitivity_root_cause.csv`):
+  ruled out boron first (swapping it in/out of the fissure's solution
+  changes final pH by <0.01 units; boron is excluded from the resort-
+  tank solution only because including it prevents even the *initial*
+  solution from converging, a separate, already-known issue). Isolated
+  the real cause: the two samples' different **measured field pH**
+  (9.0 for the resort tank vs. 8.3 for the fissure). Re-running the
+  resort tank's exact real chemistry with only its starting pH changed
+  to 8.3 converges cleanly on all three databases and lands within 0.1
+  pH units of the fissure's result (5.53-5.64). Mechanistically: a
+  solution starting at pH 9 has already converted most alkalinity to
+  carbonate rather than bicarbonate, leaving far less buffering
+  capacity before the same imposed gas load drives it acidic.
+- **Follow-up test, requested by the user**: scaled the imposed
+  `GAS_PHASE` moles to each sample's own alkalinity instead of a fixed
+  10 mol for every sample (calibrated so sample 816 still gets ~10
+  mol; `total_gas_moles = NULL` now triggers this by default, pass a
+  number to override). Since 815's alkalinity is only ~6% higher than
+  816's, this barely changes the imposed load (10.56 vs. 10.00 mol)
+  and the result is essentially unchanged (LLNL still fails; phreeqc/
+  wateq4f still ~pH 2) -- a real, useful negative confirmation that
+  gas-load sizing is not a contributing factor, leaving starting pH as
+  the sole identified driver
+  (`data/derived/phreeqc/parent_fluid_gas_load_scaling_test.csv`).
+
+### Hydraulic conductivity, AQTESOLV, and MODFLOW advisory section
+Written into both `manuscript/00_thesis_proposal.qmd` and
+`03_methods.qmd` as a staged, honest plan: near-term, well logs/
+lithology inform *which samples are plausible end-members* (a
+compartment-grouping role), not a K field; reference-only T/S values
+from Sorey & Colvard (1992, ~1,250-9,500 ft2/day) and Collar & Huntley
+(1990, spring 42w, ~3,000 ft2/day); future work (explicitly out of
+scope) is a real AQTESOLV analysis once real pump-test data exists
+(a concrete opportunity given the user's own groundwater hydrology
+coursework), then a MODFLOW grid/zonation build using the existing
+Leapfrog exports, with MODFLOW and PHREEQC framed as complementary
+(flow/transport vs. reaction chemistry along a flow path), not a
+single coupled model.
+
+### Thermal-imagery sourcing
+Checked the Lindsey et al. (2026) paper on file (no data-availability
+statement) and searched online for a public NBMG/Stanford repository
+hosting the drone TIR survey rasters -- found none. Confirmed this is
+unpublished, internal NBMG monitoring data; the only path forward is
+asking the NBMG team (Cary Lindsey et al.) directly for the GeoTIFF
+files.
+
+### Manuscript verification
+All edits re-rendered after every change: `00_thesis_proposal.qmd`
+(html + pdf, 20 sequential figures, 0 citation errors),
+`01_introduction.qmd`, `03_methods.qmd`, `04_results.qmd`,
+`05_discussion_and_future_work.qmd` all render cleanly. Two real
+`show_fig()`-chunk-closure bugs (a `)`/closing-fence pair accidentally
+left out of two insertions) were introduced and caught/fixed via a
+render-then-inspect cycle before being left in a broken state.
+
+### Not done this session
+No fault-trace digitization (still blocked on the user's own ArcGIS
+work); no real AQTESOLV/MODFLOW build (no pump-test data exists);
+DEMO database untouched; the resort-tank parent fluid's gas-
+equilibration step still does not converge with LLNL (worked around
+by reporting the limitation, not forcing a fix); thermal-imagery
+raster files still not on disk. This session's file changes are
+committed and pushed to git immediately following this entry (see
+commit history for the exact hash) -- includes `git add -f` for the
+new gitignored `data/raw/arcgis/excel ingest/white_geyser_features_
+clean.csv`, the source `.xlsx`, and `data/raw/historical/
+nbmg_timeline_2022_2025.csv`, per this project's standing convention
+for hand-maintained files under the blanket-ignored `data/raw/`.

@@ -26,6 +26,19 @@ created it; don't "fix" it, ingest scripts reference the exact path).
   reprojected to EPSG:4326; each polygon's centroid also fills the
   corresponding `Sampling_Ports` row's coordinate.
 
+- **`excel ingest/White&Geyser_Society_Mariner&Janik_GIS_located_wells_springs_features.xlsx`**
+  — a feature inventory (41 real points: wells, springs, auger holes,
+  fissures, sinter features) hand-digitized in ArcGIS against White et
+  al. (1964/1968)'s published plates, plus a few Mariner & Janik (1995)
+  points and Geyser Society notes — mostly Lower Sinter Terrace
+  features. Cleaned into `white_geyser_features_clean.csv` (same
+  folder) and ingested by `scripts/ingest/ingest_white_geyser_
+  features.R` (`RUN_INGEST$white_geyser_features`): fills coordinates
+  on 6 previously bare `Locations` rows, creates 32 new ones, and
+  flags (never auto-resolves) 3 coordinate discrepancies against
+  already-coordinated similarly-named Locations to
+  `data/derived/white_geyser_coordinate_discrepancies.csv`.
+
 ## Planned: `faults/` subfolder
 
 `scripts/ingest/ingest_fault_traces.R` is built and wired into

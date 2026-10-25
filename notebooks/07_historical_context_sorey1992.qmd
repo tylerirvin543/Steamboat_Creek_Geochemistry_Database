@@ -2598,6 +2598,224 @@ Collar & Huntley (1990) Figure 1, though Collar & Huntley's is still
 the better digitizing candidate since it shows faults over a modern,
 better-controlled base map.
 
+
+## 4.7 In-depth review: Lower Sinter Terrace geology and hydrology per White (1964, 1968) (2026-10-24)
+
+Per the thesis's scope shift toward the Lower Sinter Terrace (LST), both
+White papers were read in full via `pdftotext -layout` (not just the
+excerpts used in earlier sessions), specifically for the LST ("Low
+Terrace" in White's own terminology -- distinct from the "Main
+Terrace" further north). White et al. (1964, PP 458-B) covers regional
+geology/structure; White (1968, PP 458-C) covers hydrology, activity,
+and heat flow and is where nearly all of the quantitative LST data
+below comes from.
+
+### The Low Terrace as White described it
+
+White (1968) treats the Low Terrace explicitly as **"a subsystem
+distinct from but similar to the Main Terrace."** Of 20 springs
+mapped on the Low Terrace, 9 erupted as geysers and 2 were pulsating
+springs; most discharge at altitudes of 4,612-4,624 ft, with the
+highest-altitude springs also the hottest. Several named features in
+this project's own newly-ingested White/Geyser Society sheet (Phase
+1, above) are literally the same springs White numbers in his Table 4
+(springs 25, 26, 30/30s/30n, 32, 44, 45, 46, 50, 54, and the fissure
+features around them) -- a direct textual confirmation that the
+feature inventory just ingested is drawn from the same real survey.
+
+**Historical Low Terrace discharge estimates** (both well below this
+project's own 2025-2026 real chloride-flux numbers, and useful as a
+pre-development baseline): Jones (1916, unpublished) estimated ~20 gpm
+from the Low Terrace; Taylor (1916) estimated ~50 gpm. White (1968)
+separately estimates **~100 gpm of additional "unseen" thermal water**
+discharging directly into Steamboat Creek from the Low Terrace margin
+(inferred from Cl-flux measurements of the creek itself) -- essentially
+the same conservative-Cl-tracer logic this project's own SBRR/SBBV
+mass-balance calculation (`chloride_mass_balance.R`) uses today, just
+applied 60+ years earlier.
+
+### A real two-layer mixing model: the South Steamboat well
+```{r white-fig24}
+#| results: asis
+#| fig-width: 8
+#| fig-height: 9
+white_pdf_dir <- file.path(normalizePath(getwd()), "docs", "literature", "White papers and plates")
+if (!dir.exists(white_pdf_dir)) white_pdf_dir <- file.path(normalizePath(file.path(getwd(), "..")), "docs", "literature", "White papers and plates")
+lit_fig_dir2 <- file.path(normalizePath(getwd()), "output", "figures", "literature_reference")
+dir.create(lit_fig_dir2, showWarnings = FALSE, recursive = TRUE)
+fig24_path <- file.path(lit_fig_dir2, "white1968_fig24_south_steamboat_well_log.png")
+if (!file.exists(fig24_path)) {
+  pdftools::pdf_convert(file.path(white_pdf_dir, "White (1968) GSPP458-C.pdf"), format = "png", pages = 58, dpi = 200, filenames = fig24_path)
+}
+if (file.exists(fig24_path)) knitr::asis_output(sprintf("![White (1968) Figure 24: South Steamboat well log](%s)", gsub("\\\\", "/", fig24_path))) else message("[skip] fig24 image not found at render time: ", fig24_path)
+```
+
+The South Steamboat well (drilled 1946-47, ~800 ft SW of the Steamboat
+Resort, ~400 ft SW of drill hole GS-1) gives White's clearest direct
+evidence for exactly the kind of conceptual mixing structure this
+thesis wants to test:
+
+- **Saline thermal water** (temperatures far below boiling, ~75 deg C
+  below 25 ft, ~95 deg C by 240 ft) was found from the surface to
+  ~160 ft depth.
+- **Dilute, essentially meteoric water** (Cl = 6-8 ppm, barely above
+  Steamboat Creek's own background ~4 ppm) was found below ~188 ft
+  (the well's final casing depth) -- "chemical and isotope data provide
+  strong evidence that this thermal water is entirely meteoric in
+  origin."
+- The two zones are **hydraulically connected but distinct**: water-level
+  response tests (the well's level dropped and rose in direct response
+  to cleaning/eruption cycles of the nearby erupting Steamboat well 2)
+  show the deep dilute water flows from the South Steamboat well
+  *toward* Steamboat well 2, which erupts hot saline water -- i.e., a
+  real, measured example of cool meteoric water being drawn into and
+  heated by the shallow thermal upflow zone.
+- White's own isotope data (cited here only as a historical finding,
+  not re-derived -- this project is not adding new isotope data of its
+  own per the gas-sampling scope decision) attribute this deep meteoric
+  component **not to Steamboat Creek directly** (only a small part) but
+  "probably to streams on the flanks of the Carson and Virginia
+  Ranges" -- i.e., regional mountain-front recharge, not the creek
+  itself. This is a direct, literature-sourced answer to one strand of
+  this thesis's own recharge-source question (Creek vs. precipitation
+  vs. Mt. Rose-flank groundwater vs. Steamboat Ditch): White's own data
+  favors mountain-front meteoric recharge over Creek leakage as the
+  dominant diluting end-member at this specific well, 60+ years before
+  this project's own isotope-based mixing work.
+
+### GS-1: the chief hot-water aquifer is a tuff-breccia dike
+```{r white-fig31}
+#| results: asis
+#| fig-width: 8
+#| fig-height: 9
+fig31_path <- file.path(lit_fig_dir2, "white1968_fig31_gs1_log.png")
+if (!file.exists(fig31_path)) {
+  pdftools::pdf_convert(file.path(white_pdf_dir, "White (1968) GSPP458-C.pdf"), format = "png", pages = 73, dpi = 200, filenames = fig31_path)
+}
+if (file.exists(fig31_path)) knitr::asis_output(sprintf("![White (1968) Figure 31: drill hole GS-1 temperature/chloride log and lithology](%s)", gsub("\\\\", "/", fig31_path))) else message("[skip] fig31 image not found at render time: ", fig31_path)
+```
+
+Drill hole GS-1 (399.5 ft total depth, at the south end of the Low
+Terrace) recorded the **highest temperature measured anywhere in the
+Low Terrace: 158 deg C at 193 ft depth**, in an andesitic tuff-breccia
+dike unit. White identifies this dike as "one of the chief hot-water
+aquifers of the system, particularly in the middle and lower parts of
+the hole." The already-ingested GS-1 chemistry in this database
+(Cl=840 mg/L, pH=6.4, SC=3320 uS/cm, BHT=156.9 deg C) corresponds to
+the final (1962) reading in White's own Table 27 -- confirmed by
+cross-checking the raw table directly (`white1968_fig31_gs1_log.png`),
+which also shows an essentially identical final-year reading of
+Cl=840, pH=6.4, SC=3320 at 398.4-399.5 ft. **Correction to the
+originally-digitized spreadsheet**: the sheet's own note "temp was
+158F at 193ft" should read **158 deg C**, not deg F -- White's text is
+explicit that this is the single hottest point in the entire Low
+Terrace, very close to the boiling point for that depth's pressure,
+and 158 deg F (70 deg C) would be unremarkable. This is a transcription
+unit error in the source spreadsheet, not a database ingest bug;
+flagged in `Locations.notes` rather than silently corrected.
+
+### Steamboat well 4: a direct historical analog to the 2025 eruption
+```{r white-fig25}
+#| results: asis
+#| fig-width: 8
+#| fig-height: 9
+fig25_path <- file.path(lit_fig_dir2, "white1968_fig25_steamboat_well4_log.png")
+if (!file.exists(fig25_path)) {
+  pdftools::pdf_convert(file.path(white_pdf_dir, "White (1968) GSPP458-C.pdf"), format = "png", pages = 59, dpi = 200, filenames = fig25_path)
+}
+if (file.exists(fig25_path)) knitr::asis_output(sprintf("![White (1968) Figure 25: Steamboat well 4 (Steamboat Resort, Low Terrace) bottom-hole temperature and chloride log](%s)", gsub("\\\\", "/", fig25_path))) else message("[skip] fig25 image not found at render time: ", fig25_path)
+```
+
+**Steamboat well 4**, drilled at the Steamboat Resort on the Low
+Terrace starting September 1947, is White's best-documented example of
+exactly the kind of event this thesis is built around: an uncapped
+well that began erupting continuously as a geyser once drilling
+reached its productive aquifer (first erupted at 142 ft; drilling
+continued through the erupting column to 147 ft; later deepened to
+225 ft). It produced **hot, saline water very similar in magnitude to
+this project's own real 2026 resort-tank sample (SBW_0002)**:
+
+| Quantity | Steamboat well 4 (White, 1947-48) | SBW_0002 (this project, 2026-05-01) |
+|---|---|---|
+| Max/measured Cl | ~960 ppm (at 68 ft, during drilling) | 849 mg/L |
+| Max/measured temperature | 154.9 deg C (184 ft bottom-hole) | 149 deg F (65 deg C) at tank |
+| Max specific conductance | ~3,645 micromhos/cm | 3,560 uS/cm |
+
+Figure 25 (`white1968_fig25_steamboat_well4_log.png`) shows real
+aquifer structure: temperature and chloride minima near 58 ft and
+105 ft depth (dilution zones), with a high-Cl/high-temperature zone
+near 70-80 ft that the very high bottom-hole temperatures are
+"probably associated with... diluted greatly by water from the major
+aquifer near 105 feet" -- the same kind of multi-aquifer mixing
+structure the gas-informed parent-fluid PHREEQC work (next phase) is
+meant to help untangle for the modern system.
+
+**Well-identity implication for SBW_0002**: the real NBMG proximity
+match already logged in `docs/action_items_for_user.md` (item 12) --
+"Steamboat No. 4," a Steamboat Resort-operated well 12 m from
+SBW_0002's coordinate, 68.58 m (225 ft) deep, Abandoned -- now has
+strong textual corroboration: White's own "Steamboat well 4" was
+drilled to a *final* depth of 225 ft (matching NBMG's 68.58 m exactly)
+at the Steamboat Resort on the Low Terrace, and produced chemistry of
+the same real magnitude as SBW_0002's own 2026 sample. This is now a
+well-supported working hypothesis, not a confirmed identity (White's
+well was eventually abandoned in winter 1952-53 per his own text, so
+if SBW_0002's tank is still fed by a well at this exact location, it
+would be a replacement/redrilled well at the same pad, not literally
+the same 1947 wellbore) -- worth a direct question to Ormat/the resort
+operator before treating it as settled.
+
+### Subsurface structure: a real cross-section through the Low Terrace and GS-1
+```{r white-plate2}
+#| results: asis
+#| fig-width: 9
+#| fig-height: 10
+plate2_path <- file.path(lit_fig_dir2, "white1968_plate2_crosssections.png")
+if (!file.exists(plate2_path)) {
+  pdftools::pdf_convert(file.path(white_pdf_dir, "White (1968) plate-2.pdf"), format = "png", dpi = 150, filenames = plate2_path)
+}
+if (file.exists(plate2_path)) knitr::asis_output(sprintf("![White (1968) Plate 2: structure sections through the principal hot-spring deposits, including Low Terrace/GS-1 and South Steamboat well](%s)", gsub("\\\\", "/", plate2_path))) else message("[skip] plate2 image not found at render time: ", plate2_path)
+```
+
+White (1968) Plate 2, "Structure sections through the principal
+hot-spring deposits" (`white1968_plate2_crosssections.png`), gives a
+real, scaled (not sketch-only) west-east geologic cross-section
+through "Low Terrace and Drill Hole GS-1" and a separate one through
+"South Steamboat Well," ~800 ft apart. Both show the same basic
+architecture: **granodiorite basement** rising to the west, cut by a
+narrow, steeply-dipping **andesitic tuff-breccia dike** (at GS-1) or
+**arkose-filled fault zone** (at South Steamboat well) that channels
+the rising thermal water, overlain by a thin sinter cap and a wedge of
+**older alluvium over sodic trachyte flows** thickening eastward
+toward Steamboat Creek. This is the most concrete, literature-sourced
+subsurface-compartment picture this project has for the LST, and --
+since both cross-sections are feet-scaled and anchored to
+now-precisely-coordinated points (GS-1 and South Steamboat well, both
+resolved to real lat/lon in Phase 1 of this thesis's scope shift) --
+**this plate is a real, usable future georeferencing/digitizing
+candidate** for the Leapfrog/fault-trace work, alongside Collar &
+Huntley (1990) Figure 1 already flagged for that purpose. Unlike
+Collar & Huntley's regional fault map, White's Plate 2 is a true cross
+section (not a plan-view map), so it would inform a Leapfrog section
+not a fault-trace layer -- a useful, different kind of control than
+Collar & Huntley provides.
+
+### What this means for the conceptual model (Phase 5, not yet built)
+
+Three concrete, literature-grounded pieces now feed directly into the
+conceptual-model rewrite planned for later in this thesis: (1) a real
+historical precedent for shallow-saline-over-deep-meteoric mixing,
+hydraulically linked to the active upflow zone (South Steamboat well);
+(2) a real historical precedent for an uncapped well erupting
+continuously once it intersects the shallow aquifer, with chemistry of
+the same real magnitude as this project's own resort-tank sample
+(Steamboat well 4); and (3) a real, scaled subsurface cross-section
+anchored to precisely-known points, usable for future georeferencing
+(Plate 2). None of this required digitizing new fault traces or
+building new PHREEQC code -- it is a direct reading of data White
+already published, now corroborated against (and in one case,
+correcting a unit error in) this project's own 2026 chemistry.
+
 ## Continued human-confirmed well mapping from these two figures (2026-09-26)
 
 Re-reading both figures directly (not from memory) with the specific goal
@@ -2777,6 +2995,7 @@ gap rather than an unrecognized one.
 | 2026-09-25 | Barometric efficiency upgraded from a documented-but-unrunnable stub to a real calculation: ingested hourly Reno Airport (ASOS "RNO") mean-sea-level pressure from the Iowa Environmental Mesonet (`scripts/ingest/ingest_barometric_pressure.R`, `data/raw/airpressure/README.md`), reusing the existing `Weather_Observations`/`Weather_Stations` tables and station_id (`USW00023185`) rather than a new schema. New `scripts/analysis/barometric_efficiency.R` (`run_barometric_efficiency()`) finds every well with continuous water-level data overlapping the pressure record, computes BE two ways (Sorey's original level-vs-pressure regression, and a first-differenced change-vs-change regression that removes secular trend), and prefers a Steamboat-area well for the overlay plot over the wider Reno/South Truckee Meadows monitoring network's longer records. Real result: STMGID MW10/MW3 (the only Steamboat-area wells with both continuous 2025 water level and pressure overlap) give BE = 0.29-0.60 across both methods -- inside White (1968)'s 0.2-1.18 range and the same order of magnitude as Sorey's own 0.42/0.45, a real methodological validation, though explicitly not a like-for-like comparison since neither well is an actual thermal spring.
 | 2026-09-27 | Fixed a real join-correctness bug in `scripts/ingest/helpers/align_timeseries.R` (the shared helper behind `sample_flow`/`temp_flow`): a data.table rolling-join convention was silently overwriting the true matched USGS timestamp with the sample's own timestamp, making `time_diff_min` always exactly 0 and the time-window filter a complete no-op -- `sample_flow` had returned 0 usable rows for most of this project's history as a result. With the fix, `sample_flow` now has 73 real rows. |
 | 2026-09-27 (continued) | Corrected the discharge-through-time section's live recomputation: the first pass used a single-station formula that turned out NOT to match the GRC 2026 poster's own stated method once checked directly against the poster PDF. The poster's real formula is a two-station Cl-FLUX difference, `Q_TW = (Cl-flux_SBBV - Cl-flux_SBRR) / 820 mg/L`, now implemented faithfully in new `scripts/analysis/chloride_mass_balance.R` (`compute_chloride_mass_balance()`), wired into `run_pipeline.R` as an always-on, read-only reporting step (like `data_availability`), and read live in this notebook's `live-qtw-chunk` and by `website/results.Rmd` (via `docs/data/chloride_mass_balance.csv`). Real result for the only real paired SBRR/SBBV date on file (2026-05-01): 58.7 L/s -- different from both the poster's own averaged ~27 L/s (a multi-date average this project cannot yet reproduce with only one paired date) and the earlier, doubly-incorrect 42.1 L/s and 62.6 L/s figures this notebook reported in the two prior passes.
+| 2026-10-24 | Scope shift toward the Lower Sinter Terrace (LST): ingested a new White/Geyser Society/Mariner & Janik GIS feature sheet (32 new Locations, mostly real LST springs/fissures/sinter features, plus coordinates filled on 6 previously bare Locations -- GS-1, Herz 1/2, Peigh, Stmgid 4, Stuart). Read both White (1964/1968) papers in full and found: a real two-layer shallow-saline/deep-meteoric mixing structure at the South Steamboat well (hydraulically connected to the erupting Steamboat well 2, deep water attributed to Carson/Virginia Range mountain-front recharge, not Steamboat Creek); GS-1's tuff-breccia-dike aquifer as the Low Terrace's chief hot-water zone (158 C at 193 ft, the terrace's hottest point -- corrected a deg-F/deg-C transcription error in the newly-ingested sheet's own notes); and Steamboat well 4, a 1947-48 uncapped Low Terrace well that erupted continuously with chemistry remarkably similar in magnitude to this project's own 2026 SBW_0002 resort-tank sample -- a real historical analog to the 2025 Busick-property eruption, and strong (not yet confirmed) textual corroboration for the NBMG-proximity identity lead already logged for SBW_0002. Rendered White (1968) Plate 2's real west-east cross-sections through the Low Terrace/GS-1 and South Steamboat well as a future Leapfrog-section/georeferencing candidate. Also fixed a real citation-key swap in `manuscript/references.bib` (`white1968` was actually the 1964 paper, PP 458-B; renamed to `white1964b`, and three chronology-table citations that had the two papers backwards were corrected).
 
 ::::
 ```{r cleanup-07}

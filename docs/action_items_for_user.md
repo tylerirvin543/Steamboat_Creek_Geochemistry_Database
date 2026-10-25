@@ -527,3 +527,176 @@ single biggest standing temperature-logger gap:
   writing as of the last check (the A010/A013 provenance notes are
   only in the database, not yet in the CSV -- see §10 for the
   details). Close whatever has that file open and let me know.
+
+## 12. Lower Sinter Terrace scope shift -- White/Geyser Society GIS features ingested; real leads/gaps for you to resolve (2026-10-24)
+
+Per the scope shift toward the Lower Sinter Terrace (LST), the new
+`data/raw/arcgis/excel ingest/White&Geyser_Society_Mariner&Janik_GIS_located_wells_springs_features.xlsx`
+sheet is now ingested (`scripts/ingest/ingest_white_geyser_features.R`,
+`RUN_INGEST$white_geyser_features`): 32 new Locations, 6 existing
+coordinate-less Locations (GS-1, Herz 1/2, Peigh, Stmgid 4, Stuart)
+filled in, and real chemistry/temperature for GS-1 and two auger holes
+promoted into Sampling_Events/Samples/Lab_Analyses/Field_Measurements.
+A dedicated `gas_analyses` GeoPackage layer was also added so the
+Fischer/Ruprecht gas sample points export cleanly.
+
+**Three coordinate discrepancies logged, not auto-resolved** (see
+`data/derived/white_geyser_coordinate_discrepancies.csv`): the sheet's
+"old curti"/"old brown school"/"cox1-1" points (all labeled
+`from mariner_janik_1995`) sit 1.49 km / 206 m / 577 m from this
+project's already-coordinated Curti/Brown School/Cox I-1 Locations.
+Worth a quick look to decide which coordinate is right, or whether
+these are genuinely two distinct points.
+
+**Busick-property eruption well and the resort-tank well (SBW_0002) --
+real NBMG leads, not confirmed identities.** A proximity check against
+NBMG's statewide `Geothermal_Wells.csv` found:
+- `SBW_0001` ("Phil's property" / the eruption pipe): nearest named
+  wells are 131-280 m away (Ormat's "Industrial Production Well
+  33-33"; Steamboat Resort's "No. 32 Geyser Well," "Carver Geothermal
+  Well," "Steamboat No. 2," "Steamboat No. 4") -- none close enough to
+  confidently identify. If you have any Busick-provided documents on
+  the well's depth/construction, that would resolve this immediately;
+  otherwise this is a good candidate for the next Ormat/NBMG outreach
+  round.
+- `SBW_0002` (resort main outflow tank): a much stronger lead -- three
+  NBMG wells sit within 10-24 m of it: "Carver Geothermal Well" (10 m,
+  8.6 m deep), "Steamboat No. 4" (12 m, 68.58 m / ~225 ft deep,
+  Abandoned), "Steamboat No. 2" (24 m, 36.576 m / ~120 ft deep,
+  Abandoned) -- all Steamboat Resort-operated. These three are
+  plausible candidates for the aquifer feeding your May 2026 resort-
+  tank sample (SBW_0002, sample 815), but are too close together to
+  pick one without more information. Both locations now have a
+  minimal `Wells` row (`well_role='unknown'`) so a confirmed depth can
+  be recorded once you/Ormat/NBMG confirm which well this is.
+
+**Thermal-imagery rasters (TIR ortho, July/October 2025 two-panel
+comparison, TGCP/vent/pit/launch points) are not yet files on disk** --
+only chat attachments so far. To get these digitized as real,
+GPS-registered Locations (continuing the SBO_* photo-survey-point
+convention), drop the underlying GeoTIFF/raster files and/or the
+labeled TGCP point list into `data/raw/images/` or a new
+`data/raw/thermal_imagery/` folder. This is the concrete next step for
+the "map new surface features from temperature anomalies" mapping
+deliverable.
+
+**NBMG eruption-timeline PDF** ("Steamboat Springs Approximate
+Timeline of Events"): its real day-by-day June 2025 account (including
+a previously-unrepresented SECOND eruption pulse, June 5-6, distinct
+from the June 1-2 first pulse) is now transcribed into
+`data/raw/historical/nbmg_timeline_2022_2025.csv` and reflected in
+`output/figures/manuscript/steamboat_timeline.png` (Figure 1). I only
+have the extracted text, not the actual PDF file -- please drop the
+real PDF into `docs/literature/` so it can be properly archived/cited
+alongside the other literature sources.
+
+**Still to come (not done this pass, per the approved plan's
+checkpoint)**: an in-depth White 1964/1968 hydrology/geology review
+focused on the LST (cross-sections, well logs, Steamboat Creek/Ditch
+interaction); the gas-informed parent-fluid PHREEQC reconstruction
+(NV26-1 + the fissure water sample); a hydraulic-conductivity/
+AQTESOLV/MODFLOW advisory write-up; and the thesis conceptual-model/
+LST-scope-shift rewrite (including removing the He-isotope/d13C
+discussion per your no-isotope-gas decision). These are queued as the
+next steps in `.posit/assistant/plans/2026-10-24-1632-plan.md`.
+
+## 13. Gas-informed parent-fluid reconstruction and fluid-evolution flowpath (2026-10-24)
+
+Built `scripts/phreeqc/15_gas_informed_parent_fluid.R` and
+`scripts/analysis/fluid_evolution_flowpath.R`, extending the PHREEQC
+gas-phase work from Session 49 into a first-pass parent-fluid
+reconstruction (steam-loss correction + gas add-back at reservoir
+pressure) and a full flowpath trace from the reconstructed parent
+fluids through measured fissure/resort-tank discharge, a nearby well
+(SBW_0001), and the two Steamboat Creek chloride-mass-balance stations
+(SBRR, SBBV). Real results written to `data/derived/phreeqc/` and
+`output/figures/manuscript/` (parent_fluid_comparison.png,
+fluid_evolution_flowpath.png, lst_conceptual_flowpath.png).
+
+- **Real, reported PHREEQC convergence failure**: the resort-tank
+  sample's (815, SBW_0002) gas-equilibration step did not converge
+  (pH 9 + imposed acid-gas load) -- see
+  `data/derived/phreeqc/parent_fluid_diagnostics.csv`. The
+  conservative-species (Cl, Na, etc.) reconstruction for that sample is
+  still valid; only the re-equilibrated pH/saturation-index step
+  failed. Worth trying a different database (SIT, Pitzer) or a smaller
+  total_gas_moles if you want a converged result for this one later.
+- **The conceptual figure's degassing-vs-seepage framing is a
+  qualitative read of the thermal-infrared imagery already shared in
+  chat, not a digitized layer** -- the underlying GeoTIFF/raster files
+  are still not on disk (same gap as item 12). Dropping those files in
+  would let this become a real spatial layer instead of a qualitative
+  call.
+- **Isotope data for all 5 real LST/creek samples lives in
+  `Isotope_Analyses` under `d18O`/`d2H`** (not `dD` -- a naming detail
+  worth remembering if you query it directly).
+
+## 14. Database sensitivity, inverse modeling, and thermal-imagery sourcing (2026-10-24, continued)
+
+- **Database sensitivity resolved the pH-9 convergence question, but
+  raised a new one.** `phreeqc.dat` and `wateq4f.dat` both converge
+  where LLNL fails for the resort-tank sample -- but they converge to a
+  parent pH of ~2.0-2.1, dramatically more acidic than the fissure's
+  own result (~5.5-5.7, where all three agree). This is reported as a
+  real, unresolved database-sensitivity finding in the thesis, not
+  picked one-and-moved-on. `data/derived/phreeqc/
+  parent_fluid_database_sensitivity.csv` has the full 6-database x
+  2-sample sweep if you want to dig further (e.g. check whether the
+  pH-2 result is numerically real or an artifact of these simpler
+  databases' more limited species list).
+- **Inverse modeling with the parent fluid as end-member: 0 feasible
+  models found for both real targets** (SBW_0001, SBW_0002), traced to
+  the same tiny (~1e-9) numerical-residual PHREEQC quirk already
+  documented in this project's synthetic self-tests (Session 14) --
+  not a rejection of the parent-fluid hypothesis itself. See
+  `data/derived/phreeqc/parent_fluid_inverse_modeling_summary.csv`.
+- **Thermal-imagery data: no public source found.** Checked the
+  Lindsey et al. (2026) paper on file (no data-availability/repository
+  statement) and searched online for an NBMG or Stanford Geothermal
+  Workshop data repository hosting the drone thermal-infrared survey
+  rasters -- found none. This appears to be unpublished, internal NBMG
+  monitoring-program data, not anything retrievable without asking the
+  NBMG team (Cary Lindsey et al.) directly for the GeoTIFF files. No
+  raster files exist anywhere in this project's `data/raw/` as of this
+  check.
+
+## 15. Database-sensitivity mystery resolved: starting pH, not database choice (2026-10-24, continued)
+
+Root-caused via controlled PHREEQC experiments
+(`data/derived/phreeqc/parent_fluid_pH_sensitivity_root_cause.csv`):
+the resort tank's divergent/non-converging behavior is **not** a
+database artifact. Its measured field pH (9.0, vs. 8.3 for the
+fissure) leaves far less carbonate buffering capacity before the same
+absolute imposed gas load drives the system into a strongly acidic
+regime. Re-running the resort tank's real chemistry with only its
+starting pH changed to 8.3 converges cleanly on all three databases
+(LLNL included) and lands within 0.1 pH units of the fissure's result.
+Ruled out along the way: boron (swapping it in/out of the fissure's
+solution changes its final pH by <0.01 units).
+
+**A real modeling-assumption flagged, not yet addressed**: the
+reconstruction currently imposes the same total gas moles (10 mol)
+regardless of each sample's own alkalinity/buffering capacity. Scaling
+the imposed gas load to each sample's own water mass/buffering
+capacity would likely reduce this kind of pH sensitivity -- worth
+doing if you want the resort-tank parent-fluid pH/SI numbers to be
+more directly comparable to the fissure's, rather than just noting the
+sensitivity as done now.
+
+## 16. Gas-load scaling tested: confirms, doesn't change, the pH finding (2026-10-24, continued)
+
+`scripts/phreeqc/15_gas_informed_parent_fluid.R`'s `reconstruct_parent_fluid()`
+now scales the imposed `GAS_PHASE` moles to each sample's own alkalinity
+(buffering capacity) instead of a fixed 10 mol for every sample
+(`total_gas_moles = NULL` by default now triggers this; pass a number
+to override). Calibrated so sample 816 (the originally-validated case)
+still gets ~10 mol. Re-ran the resort-tank reconstruction with this
+real change: since 815's alkalinity is only ~6% higher than 816's, the
+imposed gas load barely changes (10.56 vs. 10.00 mol) and the result is
+essentially unchanged -- LLNL still fails to converge, `phreeqc.dat`/
+`wateq4f.dat` still land at pH ~2.0-2.1. This is a real, useful
+negative result: it rules out gas-load sizing as a contributing factor
+and leaves the resort tank's own higher measured field pH (9.0 vs.
+8.3) as the sole identified driver, exactly as the prior session's
+root-cause investigation found. See
+`data/derived/phreeqc/parent_fluid_gas_load_scaling_test.csv`.

@@ -1,0 +1,3 @@
+"water_sample_id","location","T_discharge_C","T_reservoir_C","steam_loss_fraction","reservoir_pressure_atm","phreeqc_database","charge_balance_pct","gas_equilibration_convergence","pH_measured","pH_parent_reequilibrated"
+816,"SBF_0001 (fissure)",152.6,172.720088211708,0.0416486728516779,8.54425789254208,"llnl",0.183663646232206,"converged",8.3,5.54253
+815,"SBW_0002 (resort tank)",149,178.427271693577,0.060700711837378,9.83099318098822,"llnl",-0.271902630204839,"failed_to_converge",9,NA

@@ -305,6 +305,27 @@ only other Steamboat-specific gas chemistry on file, Mariner & Janik's
 `scripts/analysis/gas_air_correction.R` and
 `scripts/analysis/gas_historical_comparison.R`).
 
+
+## A gas-informed parent-fluid reconstruction and flowpath trace
+
+NV26-1's gas composition, paired with the fissure water sample, is
+used to work backward toward a pre-boiling "parent" fluid: a Giggenbach
+sodium/potassium reservoir temperature (quartz/chalcedony sit below
+measured temperature here, so are not used for this step), a standard
+single-step adiabatic steam-loss fraction from a saturated-steam-table
+enthalpy balance, conservative-species concentrations scaled back by
+(1 minus that fraction), and a PHREEQC `GAS_PHASE` re-equilibration
+with the real, air-corrected gas composition at the reservoir's own
+saturation pressure. The same method is applied to the resort-tank
+sample using the same gas composition (no gas sample exists at the
+tank itself), and both reconstructed parent fluids, the as-measured
+discharge, a nearby well, and this project's two Steamboat Creek
+chloride-mass-balance stations are assembled into one real flowpath
+table spanning chemistry, PHREEQC saturation indices, geothermometry,
+and stable isotopes. Every run's thermodynamic database, charge-balance
+error, and convergence status are logged explicitly
+(`data/derived/phreeqc/parent_fluid_diagnostics.csv`), including one
+real, reported convergence failure (see Results).
 ## Hydrologic and geologic modeling directions
 
 The database described above is designed to support three further
@@ -361,3 +382,20 @@ efficiency implies something about how confined a given aquifer zone
 is -- but a groundwater flow model itself is explicitly out of scope
 for the work presented in this proposal and is discussed as future
 work in Chapter 5.
+
+
+The only real, site-area transmissivity/storage-coefficient values on
+file today are reference points from the literature, not a calibrated
+field: four dated aquifer tests summarized by Sorey and Colvard
+[-@sorey1992] (transmissivity roughly 1,250-9,500 square feet per day)
+and one point from Collar and Huntley [-@collar1990] for spring 42w
+(approximately 3,000 square feet per day). A real, site-specific value
+would come from an Aqtesolv analysis of real pump-test drawdown data,
+which does not yet exist for any Lower Sinter Terrace well -- a
+concrete opportunity given the author's own ongoing groundwater
+hydrology coursework, but not assumed here on any fixed timeline.
+MODFLOW and PHREEQC are explicitly framed as complementary, not
+overlapping: MODFLOW would model where and how fast water moves,
+while PHREEQC models what happens to its chemistry along an assumed or
+MODFLOW-informed flow path -- a single coupled model is a reasonable
+longer-term direction, not proposed here.

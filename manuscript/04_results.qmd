@@ -155,6 +155,76 @@ equilibrium with the vent gas as sampled, which is itself a useful
 constraint (not a null result) on how these two phases should
 eventually be modeled together.
 
+
+## What does a gas-informed parent-fluid reconstruction add, and does the flowpath trace hold together?
+
+```{r parentfluid-fig}
+#| echo: false
+#| fig-cap: "Measured vs. gas-informed reconstructed parent-fluid composition (panel A) and the resulting conservative-chloride mixing fraction under each end-member choice (panel B). See `scripts/phreeqc/15_gas_informed_parent_fluid.R`."
+knitr::include_graphics("../output/figures/manuscript/parent_fluid_comparison.png")
+```
+
+Working backward from the fissure sample toward a pre-boiling parent
+fluid (4.2 percent steam loss, reservoir 172.7 degrees Celsius) gives a
+reconstructed parent chloride of 781 mg/L, below the measured
+815 mg/L -- boiling concentrates the residual liquid, so the parent is
+more dilute, not less. Re-equilibrating that parent with NV26-1's real
+gas composition at reservoir pressure (8.5 atmospheres, not 1) drops
+the modeled pH from 8.3 to 5.5 and flips calcite/dolomite from
+supersaturated to undersaturated -- consistent with carbonate scaling
+being a shallow/surface phenomenon, not a deep-reservoir one. Applying
+the identical method to the resort-tank sample gives a parent chloride
+within 2.1 percent of the fissure's own (797 vs. 781 mg/L), tighter
+agreement than the two samples' raw measured values -- though the
+resort-tank sample's own gas-equilibration step did not converge (a
+real PHREEQC limitation at its measured pH of 9.0, logged to
+`data/derived/phreeqc/parent_fluid_diagnostics.csv` rather than
+silently dropped), so only its conservative-species reconstruction, not
+its re-equilibrated pH/saturation state, is reported.
+
+```{r evolution-fig}
+#| echo: false
+#| fig-cap: "Real chemistry, saturation indices, geothermometry, and stable isotopes across the sampled flowpath: reconstructed parent fluids, measured fissure/resort-tank discharge, a nearby well (SBW_0001), and Steamboat Creek at SBRR then downstream SBBV. See `scripts/analysis/fluid_evolution_flowpath.R`."
+knitr::include_graphics("../output/figures/manuscript/fluid_evolution_flowpath.png")
+```
+
+Putting these two reconstructed parents, the measured discharge points,
+a nearby well, and this project's own SBRR/SBBV chloride-mass-balance
+stations on one flowpath shows chloride, sodium, silica, and boron all
+declining in the same order from the thermal source to the creek, pH
+rising as the fluid degasses, calcite saturation increasing downstream
+toward the creek and nearby well, and the quartz geothermometer
+declining smoothly from 99-118 to 53-62 degrees Celsius along the same
+sequence. The sodium/potassium geothermometer gives physically
+implausible values (195-255 degrees Celsius) at the two creek stations
+-- a known artifact of applying it to dilute, non-thermal water, shown
+for transparency rather than treated as a real estimate there. The
+three real thermal points' independently derived sodium/potassium
+reservoir temperatures (172.7, 178.4, 179.8 degrees Celsius) span only
+7.1 degrees Celsius (2.1 percent coefficient of variation) -- too few
+points for a formally powered test, but a tight spread relative to this
+project's own documented 50-100 degree Celsius geothermometer
+divergence project-wide, consistent with (not proof of) one shared deep
+source. Delta-18-O/delta-2-H show both creek stations sitting close
+together and more isotopically depleted than the fissure or resort-tank
+water, consistent with the real thermal inflow being too small a
+fraction of total streamflow to shift the creek's bulk isotopic
+signature even while it measurably shifts chloride.
+
+```{r conceptual-fig}
+#| echo: false
+#| fig-cap: "Conceptual flowpath from the reconstructed parent fluid through degassing, three real measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, annotated with real chloride values."
+knitr::include_graphics("../output/figures/manuscript/lst_conceptual_flowpath.png")
+```
+
+This conceptual figure's framing of discrete point-source degassing
+(western terrace margin) versus diffuse creek-channel seepage comes
+from visually inspecting the thermal-infrared surveys already shared
+for this project, not from a digitized layer -- the underlying raster
+files are not yet on disk (`docs/action_items_for_user.md`, item 12).
+Stated now because it is a real, testable prediction, not because the
+digitization work is done.
+
 ## Hydrochemical facies: does unsupervised clustering recover known geochemistry?
 
 ```{r facies-pca-fig}
