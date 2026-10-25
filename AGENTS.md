@@ -8427,3 +8427,76 @@ limitations writeup.
   of this session's new tables/figures are spatial in the GIS-export
   sense). This session's file changes are not yet committed/pushed to
   git.
+
+## Session 55 continued (2026-10-25, part 4): Piper diagram and proximity
+map rebuilt for real publication quality, ported from the IGNIS project
+
+Direct follow-up per explicit user request to improve plot quality,
+specifically citing "ggtern and other code from ignis project ternary
+diagrams." Checked the real IGNIS codebase first
+(`C:/Projects/IGNIS/IGNIS_Geochem_Database_Directory/R/utils_plotting.R`,
+a related prior project by the same author) rather than guessing: IGNIS
+does **not** use ggtern anywhere (confirmed by grepping its full
+codebase, zero hits) -- it hand-builds its own Piper-diagram and
+Giggenbach-ternary geometry directly in ggplot2, because ggtern is
+poorly maintained and frequently breaks against current ggplot2
+releases. That hand-built approach, not ggtern, is what was ported.
+
+- **`build_lst_piper_diagram()` rewritten wholesale**, porting IGNIS's
+  own `piper_coordinates()`/`plot_piper()` geometry (real grid lines
+  every 20%, rotated percent-tick labels on the outer triangle edges,
+  a real shaded-and-labeled central water-type diamond with the four
+  Piper/Hem classification quadrants -- Ca-Mg/HCO3, Ca-Mg/SO4-Cl,
+  Na-K/HCO3, Na-K/SO4-Cl -- bold plotmath vertex labels for every ion,
+  and a dedicated `.theme_piper()` ternary theme) in place of the
+  prior turn's much plainer hand-rolled version (bare triangle outlines,
+  no grid, no percent labels, no water-type diamond). Same real
+  `PHREEQC_Solutions` mg/L chemistry and equivalent-weight factors as
+  before (confirmed matching IGNIS's own `MEQ_FACTORS` table almost
+  exactly), now colored by sample name via `fill` (filled `shape=21`
+  points with a grey border, matching IGNIS's own point style) since
+  this project has no prospect/feature_type concept to map onto IGNIS's
+  dual fill+shape system.
+- **`build_lst_proximity_map_figure()` reworked to fix the real layout
+  bug** flagged by the user after the first version (title clipped
+  against the panel edge, most of the canvas empty): both the panel's
+  aspect ratio and the title/subtitle/caption wrap width are now
+  derived directly from the real geographic extent (longitude/latitude
+  span in meters) instead of a fixed guess, and the inline distance
+  annotation box (which collided with point labels) was dropped in
+  favor of a dashed connector line with the real distance stated in the
+  caption only. Confirmed by inspecting the saved PNG directly, not
+  just the console preview (see note below).
+- **Real, documented caveat (not a new bug, a tooling limitation)**:
+  this sandboxed R session's console/Plots-pane device always uses a
+  small, roughly square fixed viewport regardless of the dimensions
+  passed to a later `ggsave()` call, so `print()`-ing these
+  intentionally wide (Piper) or narrow-and-tall (map) figures in this
+  environment's console view still looks cramped/clipped even after
+  the real fix -- confirmed by reading the actual saved PNG files
+  directly (`output/figures/manuscript/lst_piper_diagram.png`,
+  `lst_proximity_map.png`), which render correctly at their real,
+  intended proportions. This is specific to how this tool displays a
+  live plot device, not a defect in the figures themselves.
+- **Real result, now clearly visible in the rebuilt Piper diagram**: all
+  seven real flowpath samples fall in the Na-K/HCO3 quadrant of the
+  water-type diamond except SBRR (visibly separate, lower on the
+  diamond, consistent with its own real, more Ca-Mg/HCO3-leaning
+  chemistry) -- the already-reported finding that SBS_0001 does not
+  visibly separate toward the anion triangle's SO4 corner is unchanged
+  by this visual upgrade; the real geometry just makes that comparison
+  much easier to see and trust at a glance.
+- **Other three figures** (`build_sbs0001_sensitivity_figure()`,
+  `build_reaction_path_fit_comparison_figure()`,
+  `build_reaction_path_titration_figure()` for SBS_0001/SBW_0002)
+  regenerated with their existing, already-reasonable code (no
+  structural changes needed -- their earlier console-clipping was the
+  same device-viewport artifact described above, not a real figure
+  defect, confirmed by re-inspecting their saved PNGs).
+- **Not done this session**: no further Piper-diagram label-crowding
+  polish attempted beyond `ggrepel`'s existing defaults (the diamond's
+  Na-K/HCO3 quadrant has six of the seven samples clustered tightly,
+  a real feature of the data, not something more repel force would
+  meaningfully fix without distorting point positions); no DEMO
+  database rebuild; no GeoPackage re-export. This session's file
+  changes are not yet committed/pushed to git.
