@@ -8,7 +8,7 @@ what's next" reference behind that checklist, and the source material
 `AGENTS.md`'s 34 session logs and README's "Planned:" sections should be
 consulted for full technical detail on anything summarized here.
 
-Last updated: 2026-09-26.
+Last updated: 2026-10-25.
 
 ## 1. Confirmed findings to date
 
@@ -65,6 +65,38 @@ not aspirational claims:
   behavior -- but no significant coupling at the widest-range fumarole
   logger (A005), a genuine mixed result worth keeping in mind before
   assuming this mechanism applies uniformly.
+- **A gas-informed parent-fluid reconstruction, run independently from two
+  real discharge points** (the fissure SBF_0001 and the resort-tank well
+  SBW_0002), converges to within ~2% on chloride once each is corrected
+  for steam loss and re-equilibrated with the one real fissure gas sample
+  on file -- real, if single-gas-sample, evidence both points share one
+  deep source. A six-database sensitivity sweep on this reconstruction
+  found and mechanistically explained a real pH divergence (traced to
+  each sample's own measured starting pH, not database choice or gas-load
+  size).
+- **A real forward-mixing model (fissure + SBRR) tested against the four
+  real Low Sinter Terrace downgradient targets** (SBW_0001 and the three
+  real LST springs SBS_0001/0002/0003) shows the three springs sitting
+  reasonably close to the pure-conservative-mixing curve on calcite/
+  dolomite SI and pH, while **SBW_0001 is a clear, repeatable outlier**
+  well above the curve on every panel -- real evidence it taps a
+  geochemically distinct aquifer from the springs, not just dilution
+  noise. Hot spring 6 and GS-5 were explicitly tested and excluded as
+  targets: both are confirmed Main Terrace features (this project's own
+  Locations label, plus White 1964's own text), not Low Terrace.
+- **Every real PHREEQC inverse-modeling attempt on file -- the original
+  2026-09 Soccer Field run and the newer SBW_0001/SBS_0001 runs -- now
+  honestly reports zero feasible models**, after a real parser bug (found
+  2026-10-25) that had misread PHREEQC's own echoed-back input as a false
+  "1 candidate solution" was fixed. A bounded follow-up (adding Quartz as
+  a candidate phase, varying which elements are explicitly mass-balanced,
+  scanning uncertainty from 5-15%) found SBW_0001's own residual is a
+  genuine, Ca-specific infeasibility unaffected by any of those choices --
+  11% uncertainty is the closest approach to feasible found (a single
+  residual at the numerical noise floor) before the solver destabilizes
+  at 12%+. This is a real, current limit of what two-end-member-plus-
+  carbonate inverse modeling can resolve for this system, not a software
+  bug waiting to be fixed.
 
 ## 2. Major roadblocks (and what unblocks each)
 
@@ -79,6 +111,8 @@ not aspirational claims:
 | Logger measurement-uncertainty now has real manufacturer specs (`Logger_Specifications`) and real field calibration checks (`Logger_Calibration_Checks`, 10 real temperature checks auto-detected from Field_Measurements) but conductivity has only 1 real candidate check, and it falls outside the 4-hour matching tolerance | A real conductivity calibration-check example (temperature already has 10) | Needs a future field visit's lab/handheld conductivity reading taken closer in time to a logger reading, or a documented decision to widen the matching tolerance |
 | Pine Tree Ranch #2 and SBG-TH1/2/3's real water-level-only time series (a separate, structurally simpler section at the end of Table B-2 -- no chemistry, just monthly depth-to-water) has not been transcribed | Extending real water-level history for these wells | Structurally much simpler than the chemistry blocks (3 clean depth-only columns, no Cl/B/Temp disambiguation needed) -- a good, fast next win once picked up |
 | ~~`PHREEQC_Inverse_Results`' mineral mass-transfer numbers were never correctly parsed~~ **Root cause found 2026-10-25: there was no real solution to parse numbers from at all.** The parser bug (confirmed 2026-09-26) was compounded by a deeper one in `run_phreeqc_inverse()` itself: it never checked PHREEQC's own "Number of models found" summary line, so it reported a false "1 candidate solution" for a run PHREEQC's own output says found 0 feasible models. Fixed 2026-10-25 (`scripts/phreeqc/11_run_phreeqc_inverse.R`) -- every real inverse run on file (the original Soccer Field run, plus new SBW_0001/SBS_0001 attempts) now honestly reports 0 feasible models | Any inverse-model mass-transfer figure/interpretation | Still needs a real, geochemically feasible inverse-model solution before there is anything to extract mass-transfer numbers from -- e.g. more/different candidate phases, a real time-paired end-member set, or a loosened (but still defensible) uncertainty bound |
+| No geolocated southwest/west-of-Steamboat regional groundwater sample exists in this project | A true, defensible meteoric/dilution end-member for the Lower Sinter Terrace mixing model (per White's own documented Carson/Virginia Range mountain-front recharge direction) | A real coordinate for a candidate like Jumbo Grade Spring, or a new sample from a confirmed southwest/west domestic well/spring -- SBRR (real, located, but itself carrying a modest thermal signature) is used as a conservative stand-in in the meantime |
+| SBW_0001 and the fissure (SBF_0001) -- the two real 2026 sampling points central to the current flowpath model -- have NO depth, completion, or lithology data on file at all | Turning the real SBW_0001-vs-springs chemical divergence (Section 1) into an aquifer-level explanation; any real multi-aquifer mixing model for this flowpath | A well log, driller's report, or geophysical survey at either point -- the single biggest concrete subsurface-data gap on the current flowpath |
 | No MODFLOW grid, boundary conditions, recharge estimate, or K-field zonation exists | Any groundwater flow model | Needs the fault/lithology roadblocks above resolved first, plus a real recharge estimate (the one real Dec-2025-storm water-level response at STMGID MW10 is a start, not a calibration) |
 
 ## 3. Future directions, sequenced
@@ -101,11 +135,30 @@ not aspirational claims:
 - Fix `website/results.Rmd`'s hardcoded discharge-timeline chart to reuse
   notebook 07's live-query version (currently two independently-maintained
   copies of the same data).
+- Given inverse modeling's real, repeated inability to find a feasible
+  solution for SBW_0001, try a real **forward** reaction-path model
+  instead of the inverse problem: explicitly titrate calcite/dolomite
+  (dissolution or precipitation, in either direction) into the fissure+
+  SBRR mixing line via PHREEQC `REACTION`/`EQUILIBRIUM_PHASES` and see
+  whether a specific, hypothesis-driven mass-transfer amount reproduces
+  SBW_0001's real Ca/Mg/alkalinity -- a better-posed question than asking
+  the solver to search blindly, and testable with data already on hand.
 
 **Medium-term (your own field/GIS work, this thesis year):**
 - The SBRR/SBGG calibration sampling campaign (Section 5) -- directly
   informs the Cl-EC relationship the whole conductivity-as-proxy thesis
   premise depends on.
+- A real well log, driller's report, or geophysical survey at SBW_0001
+  and/or the fissure (SBF_0001) -- the single biggest concrete subsurface
+  gap on the current flowpath (Section 2), and the most direct way to
+  confirm or rule out SBW_0001 tapping a distinct aquifer.
+- A real, same-day synoptic sampling round across the fissure, resort
+  well, SBW_0001, the three LST springs, and SBRR together -- removes the
+  "representative, not time-paired" caveat that still qualifies every
+  real mixing/inverse result in this project.
+- Pin down a real coordinate for Jumbo Grade Spring (or sample a
+  confirmed southwest/west well/spring instead) to get a true, non-
+  conservative meteoric end-member in place of SBRR.
 - Fault digitization (Collar & Huntley 1990 Figure 1) -> real Leapfrog 3D
   model -> fault-aware PHREEQC end-member regrouping.
 - Following up on the NDEP water-level request to eventually support a
@@ -134,10 +187,18 @@ to *test or inform* connectivity using independent evidence (heads, faults,
 lithology), which can then be used to sanity-check or select among
 chemically-plausible end-member pairs, not to define the chemistry itself.
 The real two-end-member mixing model already in this project (Section 1)
-follows exactly this logic: SBF_0001 and Boyd Domestic Well were chosen for
-being chemically distinct real end-members (Cl = 815 vs. 45 mg/L), not for
-being spatially adjacent. Keep this framing in both the thesis text and
-any future Leapfrog-informed remodeling.
+follows exactly this logic: the fissure (SBF_0001) and SBRR were chosen for
+being chemically distinct real end-members (Cl = 815 vs. 17 mg/L), not for
+being spatially adjacent -- and an earlier choice in this same thread,
+Boyd Domestic Well, was dropped specifically because its chemistry (Ca and
+Mg far below plausible regional norms) didn't hold up, not because of its
+location. The reverse mistake was also caught and corrected directly: hot
+spring 6 and GS-5 looked like plausible nearby targets by name alone, but
+are both confirmed Main Terrace features once actually checked against
+this project's own data and White's (1964) original text -- a real
+reminder that proximity on a map (or in a name) is not a substitute for
+checking the actual identity and chemistry of a point. Keep this framing
+in both the thesis text and any future Leapfrog-informed remodeling.
 
 ## 5. SBRR/SBGG calibration sampling campaign (thesis-year planning)
 
