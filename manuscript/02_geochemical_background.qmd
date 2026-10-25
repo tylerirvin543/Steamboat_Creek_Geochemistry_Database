@@ -187,6 +187,87 @@ implementation is correct, independent of whether this project has its
 own real gas chemistry to apply it to yet (it does not, as of this
 writing).
 
+## Regional setting, exploration history, and heat source (White 1964, 1968)
+
+Beyond the Low Terrace-specific stratigraphy already reviewed in
+Chapter 3 (the GS-1 aquifer, the South Steamboat well's two-layer
+mixing structure, and Steamboat well 4's 1947-48 eruption), White,
+Thompson, and Sandberg's and White's own two monographs
+[@white1964b; @white1968c] establish a regional and historical frame
+this proposal draws on more broadly.
+
+**Regional geology.** The Steamboat Hills basement consists of
+regionally and thermally metamorphosed volcanic and sedimentary rocks,
+probably Mesozoic in age, intruded by Cretaceous granitic rocks. After
+deep erosion exposed this basement, sporadic Cenozoic volcanism
+produced over a hundred cubic miles of mostly andesitic lava flows and
+tuff-breccias across the Virginia City and Mount Rose quadrangles,
+beginning with the Hartford Hill Rhyolite. Basin-and-range extensional
+faulting -- including the Steamboat Springs fault zone that localizes
+the present thermal area -- developed on top of this volcanic pile.
+White's own explanation for why thermal activity localized specifically
+along the Steamboat Springs fault zone, rather than the "many other
+faults to the east and west that might have localized the thermal
+activity," is explicitly topographic: deep thermal water can only
+reach the surface where the water table also intersects it, and "the
+channel that reaches the surface at the lowest altitude will be the
+favored one" [@white1964b].
+
+**A documented history of episodic natural geysering predating any
+drilling.** De Quille's 1876 account of geyser activity observed in
+1860 and 1862 is, per White, "the first published record of geyser
+observations in the United States" [@white1968c]. Laur (1863) gave the
+earliest geological reference to the springs; Le Conte (1883),
+Becker (1888-1889), Lindgren (1903, 1905), and Jones (1912, 1914) each
+documented active mineral deposition (stibnite, metastibnite,
+antimony) at the surface over the following half-century. Gianella
+(1939) reported wells drilled for hot water erupting stibnite and
+metastibnite from depth [@white1964b] -- a direct, pre-Ormat historical
+analog to both Steamboat well 4's 1947-48 eruption (Chapter 3) and the
+2025 Lower Sinter Terrace event this proposal is built around. Read
+together, this project's own eruption is not an unprecedented event at
+Steamboat; it is the latest instance of a pattern of episodic natural
+and drilling-induced eruptive activity documented continuously since
+at least 1860.
+
+**An early, quantitative precedent for this project's own discharge
+method.** Before any of its water boils, White characterized the
+Steamboat system's upflowing water as close to 175 C with a chloride
+content of 800-820 ppm, and used that chloride content as a
+conservative tracer to estimate total system heat flow by monitoring
+the stream that eventually carries all of the system's discharged
+water -- a total heat flow of about 1.2 x 10^7 cal/s, "equivalent to
+the conducted heat flow from about 780 km2 of 'normal' area"
+[@white1968c]. This is methodologically the direct ancestor of the
+chloride mass-balance approach Sorey and Colvard [@sorey1992] and this
+proposal both use, predating it by more than two decades, and White's
+800-820 ppm pre-boiling chloride figure is a striking match to this
+project's own gas-informed parent-fluid reconstruction described in
+Chapter 4 (781-797 mg/L, reconstructed independently from two 2026
+discharge points six decades later).
+
+**Heat source.** White interpreted the Steamboat system as a very
+long-lived convective system with no new magma directly involved: "no
+new magma was directly involved" in the thermal activity, and the
+present rate of heat flow, if sustained, implies the cooling and
+crystallization of a magma chamber on the order of 50 km^3 over a
+period of "at least 100,000 years and possibly a million"
+[@white1964b]. Volcanic steam contributes less than five percent of
+the system's total water; the remaining heat is supplied by
+conduction from a magma chamber whose upper part must remain hot
+enough, over this timescale, to keep meteoric water circulating
+through it at high temperature. This is a meaningfully different
+emphasis from Arehart and others' later trace-element and gas evidence
+favoring an actively magmatic, rather than purely extensional, heat
+source (cited below) -- the two are not necessarily contradictory (a
+large, slowly cooling chamber and a magmatically influenced gas/trace-
+element signature can coexist), but neither view has been fully
+reconciled here, and this proposal does not attempt to adjudicate
+between them. What both views agree on is that Steamboat's heat
+source is a persistent, long-lived feature of the system, not
+something that newly appeared in 2025 -- directly relevant to this
+proposal's central redistribution-versus-new-source question.
+
 ## Related literature: reservoir engineering, structure, and regional analogs
 
 Beyond the geochemical and tracer-method literature cited above, a

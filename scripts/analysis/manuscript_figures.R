@@ -468,6 +468,62 @@ build_parent_fluid_comparison_figure <- function(con,
   message("  -> Wrote ", out_png)
   invisible(p)
 }
+#' Conductivity time series (SBRR/SBGG, Jul-Oct 2026) with the
+#' retrieval/relaunch "ambient-air-exposure" artifact annotated --
+#' confirmed twice now (2026-08-22 and 2026-10-10 downloads) and
+#' flagged automatically by qc_conductivity_checks.R's detector
+#' (qc_flag = 'field_visit_disturbance'). Built to make this real,
+#' recurring instrument-handling artifact visually obvious rather than
+#' only documented in prose/QC tables.
+build_conductivity_timeseries_figure <- function(con,
+    out_png = "output/figures/manuscript/conductivity_timeseries.png") {
+
+  obs <- dbGetQuery(con, "
+    SELECT o.logger_id, l.logger_name, l.role, o.timestamp, o.ec_raw, o.qc_flag
+    FROM Conductivity_Observations o
+    JOIN Conductivity_Loggers l ON l.logger_id = o.logger_id
+  ")
+
+  if (nrow(obs) == 0) {
+    message("  -> No Conductivity_Observations found; skipping figure.")
+    return(invisible(NULL))
+  }
+
+  obs <- obs |>
+    mutate(
+      timestamp = as.POSIXct(timestamp, tz = "UTC"),
+      site_label = ifelse(role == "upstream_control",
+                           "SBRR (Rhodes Road, upstream control)",
+                           "SBGG (Geiger Grade, downstream)"),
+      flagged = !is.na(qc_flag) & qc_flag == "field_visit_disturbance"
+    ) |>
+    arrange(logger_id, timestamp)
+
+  flagged_pts <- obs |> filter(flagged)
+
+  p <- ggplot(obs, aes(x = timestamp, y = ec_raw)) +
+    geom_line(color = "#0072B2", linewidth = 0.3) +
+    geom_point(data = flagged_pts, color = "#D55E00", size = 1.3) +
+    facet_wrap(~site_label, ncol = 1, scales = "free_y") +
+    labs(
+      x = NULL, y = "Raw specific conductance (uS/cm)",
+      title = "Stream conductivity logger record, 2026-07-15 to present",
+      subtitle = paste0(
+        "Orange points: flagged qc_flag = 'field_visit_disturbance' -- a recurring,\n",
+        "confirmed retrieval/relaunch ambient-air-exposure artifact (both loggers, ",
+        "2026-08-22 and 2026-10-10),\nnot a real stream-chemistry change. Detected ",
+        "automatically by qc_conductivity_checks.R."
+      ),
+      caption = "Source: Conductivity_Observations, geochem_operational.sqlite."
+    ) +
+    theme_steamboat(base_size = 11)
+
+  dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
+  ggsave(out_png, p, width = 9, height = 7, dpi = 300)
+  message("  -> Wrote ", out_png)
+  invisible(p)
+}
+
 #' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
   prepare_field_photo_figures()
@@ -479,4 +535,5 @@ build_manuscript_figures <- function(con) {
   build_gas_geothermometry_figure(con)
   build_parent_fluid_comparison_figure(con)
   invisible(TRUE)
+  build_conductivity_timeseries_figure(con)
 }

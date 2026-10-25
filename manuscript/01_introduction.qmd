@@ -87,6 +87,7 @@ knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
 
 | Year | Event |
 |---|---|
+| 1860-1862 | Earliest published record of geyser observations in the United States, at Steamboat [@white1968c]. |
 | 1950 | USGS thermal-gradient and chemistry test holes (GS-1 through GS-8) drilled [@white1968c]. |
 | 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1964b]. |
 | 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968c]. |

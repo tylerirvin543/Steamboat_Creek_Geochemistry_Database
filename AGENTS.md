@@ -7526,3 +7526,221 @@ new gitignored `data/raw/arcgis/excel ingest/white_geyser_features_
 clean.csv`, the source `.xlsx`, and `data/raw/historical/
 nbmg_timeline_2022_2025.csv`, per this project's standing convention
 for hand-maintained files under the blanket-ignored `data/raw/`.
+
+## Session 51 (2026-10-25): new conductivity shuttle readout ingested,
+general retrieval-artifact QC detector built, Curti Barn coordinate
+bug fixed, more White (1964/1968) background pulled into the thesis,
+gas/parent-fluid narrative reorganized for readability
+
+Continuation of the Lower Sinter Terrace / gas-informed parent-fluid
+thread (Sessions 49-50), executed via an approved Plan-mode plan
+(`.posit/assistant/plans/2026-10-25-1950-plan.md`).
+
+- **New conductivity shuttle readout ingested**
+  (`data/raw/conductivity/raw/ShuttleReadout10_12_26_10_11_18_AM_GMT-07_00/`,
+  both loggers). `ingest_conductivity()`'s raw-directory glob is
+  non-recursive and its file-level dedup is keyed on basename only, so
+  the two shuttle CSVs (which reuse the existing top-level files'
+  exact basenames) were copied into `data/raw/conductivity/raw/` with
+  date-suffixed names (`Conductivity_Logger_1_20261012.csv`,
+  `Conductivity_logger_2_20261012.csv`) rather than overwritten or
+  silently skipped. Since the shuttle export re-exports the loggers'
+  *entire* history (not just new readings), the ~14,100 rows/logger
+  parsed from each file were mostly already-ingested duplicates --
+  safe, since row-level dedup is independently keyed on
+  `(logger_id, timestamp)`, not file identity. Verified on a scratch
+  copy first (28,218 new rows, record extended from 2026-08-22 through
+  2026-10-10), then applied to the real, backed-up
+  `geochem_operational.sqlite` (backup:
+  `database/archive/geochem_operational_pre_conductivity_oct2026_<timestamp>.sqlite`)
+  with an identical result.
+- **New general "end-of-record/start-of-record ambient-air-exposure"
+  QC detector built** in `scripts/qc/qc_conductivity_checks.R`
+  (Section 7), closing a gap flagged in the prior session's README
+  writeup after the first manually-caught instance of this artifact
+  (2026-08-22). Confirmed from the raw files that both loggers show
+  the same physical phenomenon at **every** deployment boundary: a
+  brief in-air reading right after a "Logged" relaunch marker, and an
+  erratic decline-then-crash in the readings right before a
+  retrieval/relaunch event (the 2026-10-10 download shows this as a
+  ~7-reading ramp from 776.7 down to 75.9 uS/cm at SBGG, not just a
+  single-point crash). The new detector: for every segment boundary
+  (a `logger_event='Logged'` marker, or a gap exceeding
+  `gap_multiplier x expected_interval_min`), scans a trailing/leading
+  window for the first reading that drops below
+  `ambient_drop_fraction` (default 0.85) of a baseline computed from
+  the adjacent stable window, then flags that reading **and everything
+  after/before it through the segment's own end/start** (an air-
+  exposed sensor stays erratic until it's back in the water, not just
+  at its single lowest point) -- requires the baseline itself to
+  exceed `ambient_min_baseline_us_cm` (default 15) before trusting a
+  relative-fraction comparison. **Validated by exact reproduction**:
+  run against the real, newly-extended dataset, this detector
+  reproduces all 5 of the already-manually-flagged 2026-08-22 rows
+  *exactly* (same rows, same boundaries) with zero tuning toward that
+  known answer, and additionally catches 2 new 2026-08-22 relaunch-air
+  rows (previously unflagged) and the full 7+5-row 2026-10-10 tail
+  excursion at both loggers (17 total flags, up from 5). Verified on a
+  scratch copy first, then applied to the real database. The summary
+  message and header doc-comment were both updated to describe the new
+  check.
+- **Swept `data/raw/` broadly for other un-ingested files**
+  (temperature loggers, field/lab/isotope chemistry, NDEP/NDWR,
+  airpressure/NOAA, photos) using `find -newermt` against each
+  pipeline stage's own already-processed-file tracking -- confirmed
+  nothing else was newer than what's already reflected in the
+  database; conductivity was the only genuinely new data this round.
+  (`data/raw/historical/torgersen_jenkins_1982_he_isotopes.csv`,
+  initially flagged as a candidate during the sweep, turned out to
+  already be wired into `scripts/analysis/gas_historical_comparison.R`
+  and the thesis proposal from Session 49 -- a reference-only
+  historical-comparison CSV, not a database-ingest target, consistent
+  with the Nehring/Mariner & Janik gas-table pattern already
+  established.)
+- **Real bug found and fixed while reviewing the three White/Geyser
+  Society coordinate discrepancies**: "Curti Barn Well (geothermal)"
+  (`Locations.location_id=160`) had been silently given a **duplicate
+  copy of the separate "Curti Domestic Well" (159) coordinate**
+  (39.39436, -119.7396) rather than its own real point, when it was
+  first registered from an NDWR owner-name match in an earlier session
+  -- so the discrepancy CSV's comparison against location 159 was
+  comparing the sheet's real "Curti Barn" digitization against the
+  *wrong well's* coordinate entirely, not against its own. Fixed by
+  giving location 160 the real NBMG Geothermal_Wells exact-name match
+  for "Curti Barn Geothermal Well" (39.40524, -119.74316, Sec 21 T18N
+  R20E) -- which sits only ~154 m from the sheet's own independent
+  Mariner & Janik (1995) digitization, good agreement for a hand-
+  digitized figure, confirming this is the right fix rather than a
+  different wrong answer. Brown School (206 m) and Cox I-1 (577 m)
+  were both left at their existing coordinates (exact NBMG name
+  matches, Cox I-1 additionally corroborated by a footage/legal
+  description) -- the sheet's points are hand-digitizations from
+  Mariner & Janik's own figure and are within plausible digitizing
+  error of both; logged as secondary references in each Location's
+  `notes` rather than discarded.
+  `data/derived/white_geyser_coordinate_discrepancies.csv` rewritten
+  to record the resolution and reasoning for all three. Verified on a
+  scratch copy first, then applied to the real database.
+- **More White (1964, 1968) background material pulled into the
+  thesis**, re-reading both papers via `pdftotext -layout` beyond the
+  already-done Low-Terrace-specific review (notebook 07 section 4.7):
+  regional basement geology (Mesozoic metamorphic basement intruded by
+  Cretaceous granitics, >100 cubic miles of Cenozoic andesitic
+  volcanism) and White's own topographic explanation for why the
+  Steamboat Springs fault zone specifically localizes the thermal area
+  (the lowest-elevation available fault, not a special structural
+  property); a documented history of natural geysering at Steamboat
+  back to **1860-1862** (De Quille 1876, "the first published record of
+  geyser observations in the United States") through Laur (1863),
+  LeConte (1883), Becker (1888-89), Lindgren (1903-05), Jones
+  (1912-14), and Gianella's 1939 account of wells erupting stibnite
+  from depth -- real historical precedent that the 2025 Lower Sinter
+  Terrace eruption is the latest instance of a pattern documented
+  continuously for over 160 years, not an unprecedented event; and
+  White's own 1968 pre-boiling parent-fluid chemistry (175 C, Cl
+  800-820 ppm, used as a conservative tracer for total system heat
+  flow via the same stream-monitoring logic Sorey's chloride mass-
+  balance method would use more than two decades later) -- a striking,
+  explicitly-noted match to this project's own 2026 gas-informed
+  parent-fluid chloride reconstruction (781-797 mg/L). White's own
+  heat-source interpretation (a large, ~50 km^3, slowly-cooling magma
+  chamber providing conductive heat for >=100,000 years, "no new magma
+  directly involved") is also now cited alongside Arehart et al.
+  (2003)'s later, partly-differing magmatic-heat-source evidence,
+  without adjudicating between them -- both views agree the heat
+  source itself is a long-lived, persistent feature, which is the
+  point actually relevant to this proposal's redistribution-vs-new-
+  source question. Added to `manuscript/02_geochemical_background.qmd`
+  (new "Regional setting, exploration history, and heat source"
+  section) and `manuscript/00_thesis_proposal.qmd`'s Previous Work
+  section, plus a new 1860-1862 chronology-table row in both
+  `00_thesis_proposal.qmd` and `01_introduction.qmd`.
+- **A planned thermal-infrared/mapped-feature overlay paragraph
+  added** to `00_thesis_proposal.qmd`'s "Planned figures, not yet
+  produced" section (confirmed again, directly, that no raster files
+  exist anywhere under `data/raw/` as of this session) -- describes
+  what the overlay would show (TIR surface thermal anomalies vs. the
+  32 new White/Geyser Society points vs. the 51 real `SBO_*` field-
+  survey points vs. other dated field observations) and what question
+  it answers (reactivation along known pathways vs. migration to new
+  ground), without attempting to build it.
+- **The gas-informed parent-fluid/database-sensitivity/flowpath thread
+  reorganized for readability** in `00_thesis_proposal.qmd`: the whole
+  ~530-line "Preliminary results" section had no `##` subheaders at
+  all (only bold lead-in sentences) -- added five new section headers
+  throughout, plus an explicit "What this section covers, in sequence"
+  callout (`::: {.callout-note}`) right at the start of the gas thread,
+  recapping all six real steps (reconstruction -> convergence
+  comparison -> 6-database sweep -> pH-9 root-cause -> inverse
+  modeling -> flowpath trace) in one place so a reader (e.g. an
+  advisor) doesn't have to reconstruct the story from six sessions'
+  worth of incremental additions. Also fixed a stale Methods-section
+  claim ("only one real mixing run and one real inverse-modeling run
+  exist") that predated this session's second, gas-informed inverse
+  run -- now correctly states one real mixing run and two real
+  inverse-modeling runs, with a one-sentence description of how the
+  second one differs and cross-references the Results section for
+  detail.
+- **New interpretive paragraphs added to
+  `05_discussion_and_future_work.qmd`**: (1) the pH-9 database-
+  sensitivity finding is generalized into a standing project-wide
+  caveat -- any future PHREEQC pH/SI output for a high-pH (>=9) sample
+  should be cross-checked across more than one thermodynamic database
+  before being trusted, not just this one resort-tank case; (2) the
+  null inverse-modeling result is explicitly reframed as "not yet
+  tested successfully" (a known PHREEQC numerical-plumbing gap) rather
+  than "tested and rejected" (a geochemical finding), with a concrete
+  suggested fix (excluding the specific unused redox couple).
+- **New figure**: `build_conductivity_timeseries_figure()` added to
+  `scripts/analysis/manuscript_figures.R` and wired into
+  `build_manuscript_figures()` -- full SBRR/SBGG record faceted by
+  site, with `qc_flag='field_visit_disturbance'` rows highlighted in
+  orange. Added to `00_thesis_proposal.qmd` (Figure 17 of 20) and a
+  matching prose subsection in `04_results.qmd`. A combined "state of
+  the LST conceptual model" summary figure (item (a) in the session's
+  own task list) was considered and judged redundant with the three
+  figures that already cover this ground
+  (`lst_conceptual_flowpath.png`, `fluid_evolution_flowpath.png`,
+  `parent_fluid_database_sensitivity.png`) -- not built, to avoid
+  adding a fourth figure that would mostly repeat the other three. A
+  map overlaying White/Geyser points, `SBO_*` points, and TIR imagery
+  (item (b)) was described only, not built, per the still-missing
+  raster files (see above).
+- **Road-ahead section added** to `05_discussion_and_future_work.qmd`
+  ("Immediate next steps, given this session's new data"): start the
+  calibration sampling campaign now rather than waiting (confirmed,
+  directly against the database, that zero real chloride samples
+  overlap the logger deployment window even after this session's
+  three-month extension); keep both conductivity loggers on the same
+  download cadence as the temperature-logger network; restate the
+  Collar & Huntley fault-digitization and NDEP/NBMG data-request items
+  as still the two biggest blockers, unchanged by this session; revisit
+  the inverse-modeling numerical quirk as a small, bounded next fix.
+  Roadblock bullet 1 (chloride-conductance calibration) updated with
+  this same concrete, dated confirmation.
+- **Verified end-to-end**: all three manuscript formats (html/pdf/docx)
+  for `00_thesis_proposal.qmd` re-rendered cleanly (0 citeproc
+  warnings, 0 undefined citations) after every change; standalone
+  renders of `01_introduction.qmd`, `02_geochemical_background.qmd`,
+  `04_results.qmd`, and `05_discussion_and_future_work.qmd` all
+  confirmed clean too. New PDF figures visually spot-checked via
+  `pdftools::pdf_convert()` (the recap callout and the new conductivity
+  figure both render correctly, as Figure numbers 7 and 17
+  respectively in final document order).
+- **Per explicit user instruction, `data/raw/conductivity/README.md`'s
+  recently-added verbose, session-log-style "Known limitations"
+  bullets were removed** and replaced with concise, durable, reference-
+  style statements (the retrieval-artifact phenomenon is real/
+  recurring/now auto-detected; the current record's real end date;
+  the calibration gap's current status) -- no longer narrates when or
+  how each fact was discovered.
+- **Not done this session**: no GeoPackage re-export (the Curti Barn
+  coordinate fix and the new conductivity data would both be reflected
+  in a re-export, worth doing on the next full pipeline run); no DEMO
+  database rebuild; no attempt to fix the inverse-modeling numerical
+  quirk itself (flagged as a next step, not attempted); this session's
+  file changes are committed and pushed to git immediately following
+  this entry (see commit history) -- includes `git add -f` for the two
+  new, gitignored, date-suffixed conductivity CSVs under
+  `data/raw/conductivity/raw/`, per this project's standing convention
+  for hand-maintained/raw files under the blanket-ignored `data/raw/`.

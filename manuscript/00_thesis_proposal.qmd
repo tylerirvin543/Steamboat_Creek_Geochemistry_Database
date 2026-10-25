@@ -197,6 +197,7 @@ show_fig(
 
 | Year | Event |
 |---|---|
+| 1860-1862 | Earliest published record of geyser observations in the United States, at Steamboat [@white1968c]. |
 | 1950 | USGS thermal-gradient and chemistry test holes drilled [@white1968c]. |
 | 1964 | Regional geology and structure of the Steamboat Springs area described [@thompsonwhite1964; @white1964b]. |
 | 1968 | Hydrology, activity, and heat flow of the thermal system characterized in detail [@white1968c]. |
@@ -530,8 +531,37 @@ Steamboat's geology, hydrology, and geochemistry have been
 characterized across seven decades of prior work this proposal builds
 on directly rather than starting over. White, Thompson, and Sandberg
 [@white1964b; @thompsonwhite1964] established the regional geologic
-framework, structure, and thermal history still used today, and
-Silberman and others [@silberman1979] constrained the duration of
+framework, structure, and thermal history still used today: a
+Mesozoic metamorphic basement intruded by Cretaceous granitic rocks,
+buried under more than a hundred cubic miles of mostly andesitic
+Cenozoic volcanic rock, cut by the basin-and-range Steamboat Springs
+fault zone that White argued localizes the present thermal area simply
+because it is the lowest-elevation fault system available for deep
+thermal water to intersect the water table. White's own interpretation
+of the heat source -- a large (about 50 km^3), slowly cooling magma
+chamber supplying heat by conduction for at least 100,000 years, with
+"no new magma... directly involved" and volcanic steam contributing
+less than five percent of total system water [@white1964b] -- frames
+Steamboat as a persistent, long-lived convective system rather than
+one newly activated by fresh magmatic input, directly relevant to this
+proposal's own redistribution-versus-new-source question (see
+Arehart's later, partly differing view, cited below). White also
+documented a published record of episodic natural geysering at
+Steamboat extending back to 1860-1862 (De Quille, 1876, "the first
+published record of geyser observations in the United States"
+[@white1968c]) and historical accounts of mineral deposition and
+drilling-induced eruptions (Lindgren 1903-1905; Jones 1912-1914;
+Gianella 1939, wells erupting stibnite from depth) through the early
+twentieth century [@white1964b] -- real historical precedent that the
+2025 Lower Sinter Terrace eruption is the latest instance of a
+long-documented pattern, not an unprecedented event. White's own
+pre-boiling chloride content for Steamboat's upflowing water, 800-820
+ppm at about 175 C, measured using chloride as a conservative tracer
+for total system heat flow decades before Sorey's own chloride
+mass-balance method [@white1968c], is strikingly close to this
+proposal's own gas-informed parent-fluid chloride reconstruction
+(781-797 mg/L; see Chapter 4) six decades later. Silberman and others
+[@silberman1979] constrained the duration of
 hydrothermal activity from spatially associated volcanic rocks. Sorey
 and Colvard's 1992 administrative report [@sorey1992] is the single
 most detailed historical baseline for spring flow, chemistry, and the
@@ -737,13 +767,18 @@ fraction and comparing PHREEQC's own predicted speciation against the
 sample's observed chemistry -- a genuine test of the mixing hypothesis,
 not just an arithmetic ratio. `INVERSE_MODELING` goes further, solving
 for mixing fractions and mineral mass transfer simultaneously, within
-stated elemental uncertainty bounds. Only one real mixing run and one
-real inverse-modeling run exist as of this writing, both using a
-representative rather than a time-paired thermal/meteoric end-member
-pair, because no two chloride samples have yet been collected close
-enough together in time to serve as a genuinely paired end-member set
--- exactly the gap the calibration sampling plan above is meant to
-close. The automated parser for PHREEQC's own inverse-modeling text
+stated elemental uncertainty bounds. One real mixing run and two real
+inverse-modeling runs exist as of this writing. The first mixing and
+inverse run uses a representative (not time-paired) thermal/meteoric
+end-member pair, because no two chloride samples have yet been
+collected close enough together in time to serve as a genuinely
+paired end-member set -- exactly the gap the calibration sampling
+plan above is meant to close. A second, gas-informed inverse run,
+described in the Results section below, instead uses a reconstructed
+deep parent-fluid composition as the thermal end-member and finds
+zero feasible solutions, traced to a known PHREEQC numerical
+limitation rather than a chemical rejection of that end-member (also
+described below). The automated parser for PHREEQC's own inverse-modeling text
 output also has a known, real gap: it correctly identifies that a
 feasible solution was found, but hasn't yet correctly pulled that
 solution's mineral-mass-transfer numbers out of PHREEQC's raw text
@@ -1120,6 +1155,8 @@ direction once both halves exist independently.
 Real preliminary work already completed supports the feasibility of
 this plan.
 
+## Geochemical ratios and geothermometry across time
+
 **Chloride-to-boron ratio across seven decades.** A two-sample
 comparison of the curated thermal end-member (seven historical samples
 from Sorey and Colvard [@sorey1992]; six modern samples from this
@@ -1160,6 +1197,8 @@ show_fig(
   id = "fig-geo"
 )
 ```
+
+## A new gas-chemistry dataset
 
 **A first, independent gas-chemistry check.** The three real April 2026
 fissure gas samples described in the Methods section give a second,
@@ -1232,6 +1271,31 @@ show_fig(
 )
 ```
 
+
+## Gas-informed parent-fluid reconstruction, database sensitivity, and flowpath trace
+
+
+::: {.callout-note}
+## What this section covers, in sequence
+
+This subsection covers one connected analysis built across several
+steps, in this order: (1) a steam-loss and gas-add-back correction
+reconstructs each discharge sample's deep "parent fluid" using the
+one available real fissure gas sample; (2) the fissure's and resort
+tank's independently reconstructed parent fluids are compared and
+agree within about 2 percent on chloride; (3) a six-database
+sensitivity sweep is run on the resort-tank reconstruction because
+its gas-equilibration step failed to converge on this project's
+default database; (4) that divergence is root-caused to the resort
+tank's own high measured starting pH (9.0 versus the fissure's 8.3),
+not to database choice or gas-load size; (5) the reconstructed
+parent fluid is then used as an end-member in real PHREEQC inverse
+modeling, which finds zero feasible solutions -- attributed to a
+known PHREEQC numerical quirk, not a geochemical rejection of the
+end-member; and (6) the reconstructed and measured chemistry are
+traced along a full flowpath from parent fluid to the downstream
+creek. Each step is reported with its own real result below.
+:::
 
 **A gas-informed parent-fluid reconstruction.** Applying the method
 above to sample 816 (the fissure) gives a steam-loss fraction of 4.2
@@ -1452,6 +1516,8 @@ Giggenbach-bottle gas sampling at this terrace should avoid breaking
 through fresh pavement and should re-check bottle seals in the field
 before leaving the site.
 
+## Further cross-checks: water/gas geothermometers, facies, and discharge
+
 **Water and gas geothermometers side by side.** Putting the gas
 geothermometer estimates next to this project's existing water
 geothermometers (Na/K-Giggenbach, Na/K-Fournier, quartz, chalcedony;
@@ -1546,6 +1612,8 @@ show_fig(
 )
 ```
 
+## Sampling-frequency feasibility and recent monitoring time series
+
 **Sampling-frequency feasibility.** The Monte Carlo result described
 in the Methods section above and shown in @fig-mc is itself a
 completed preliminary analysis, not a planned one.
@@ -1571,6 +1639,40 @@ real, opposite-direction multi-month trends not explained by any
 change in the other monitored parameter at the same well, a pattern
 that cautions against treating any single field parameter as a
 universal proxy for thermal fraction across the whole system.
+
+**An extended conductivity record, and a recurring instrument-handling
+artifact now caught automatically.** Both stream conductivity loggers
+(SBRR and SBGG) were re-downloaded October 12, 2026, extending the
+continuous record from 2026-08-22 through 2026-10-10 and nearly
+doubling the total logger-observation count on file. The new data show
+the same recurring pattern already documented at the prior
+2026-08-22 download: when a logger is physically removed from the
+stream to connect a shuttle and then relaunched, it briefly reads
+ambient air instead of stream water, producing a sharp, implausible
+drop in specific conductance immediately before and after the
+retrieval/relaunch event (@fig-conductivity-timeseries). Rather than
+re-flag this by hand a second time, a general detector was added to
+this project's conductivity QC script that scans for exactly this
+signature -- a reading that falls below a fraction of the local stable
+baseline immediately adjacent to a deployment-start marker or a large
+time gap -- and flags it automatically (`qc_flag =
+'field_visit_disturbance'`). Applied retroactively, the new detector
+reproduces every previously hand-flagged row exactly and additionally
+catches a short relaunch-related dip on 2026-08-22 and the full width
+of the 2026-10-10 retrieval excursion that a simple point-outlier
+check alone would have missed. This means every future logger download
+will be checked for the same artifact automatically, rather than
+requiring a manual review each time.
+
+```{r fig-conductivity-timeseries}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/conductivity_timeseries.png",
+  "Full SBRR/SBGG conductivity record, 2026-07-15 to 2026-10-10, with the automatically detected ambient-air-exposure artifact highlighted in orange at both the 2026-08-22 and 2026-10-10 retrieval/relaunch events.",
+  alt = "Two-panel time series of raw specific conductance at SBGG and SBRR, with orange points marking flagged retrieval-artifact readings near two dates.",
+  id = "fig-conductivity-timeseries"
+)
+```
 
 **A still-changing system: September 2026 field observations.** Field
 photographs taken September 27, 2026 (GPS- and time-stamped by camera
@@ -1668,6 +1770,30 @@ synthesizing the chemical, discharge, and geologic evidence into a
 single interpretive diagram, will be developed once the calibration,
 tracer-ratio, and geologic-context results above are complete -- it
 is deliberately not sketched in advance of that evidence.
+
+**A thermal-infrared/mapped-feature overlay map.** NBMG's own
+calibrated nighttime thermal-infrared drone surveys of the Lower
+Sinter Terrace (flown 2025-07-07/08 and 2025-10-01, per Lindsey and
+others 2026) would, overlaid against three other real, already-
+database-resident point layers, directly test whether this project's
+mapped surface thermal anomalies line up with (a) the 32 historically
+mapped wells, springs, and fissures newly ingested from the White/
+Geyser Society GIS sheet in this chapter's Methods, (b) the 51 real,
+GPS-tagged `SBO_*` Lower Sinter Terrace survey points from this
+project's own 2026 field remapping (28 seeps, 13 steaming-ground
+observations, 7 springs, 3 creek points), and (c) any other dated
+field observation with a real coordinate in the `Locations` table.
+The question this map answers is whether the current surface thermal
+signature is concentrated at historically documented features (support
+for conduit reactivation along known pathways) or has migrated to new
+ground not previously mapped as thermal (which would argue for a less
+constrained, more diffuse redistribution). This map is not yet built:
+the thermal-infrared raster files themselves are not on disk in this
+project (confirmed directly -- no `.tif`/`.tiff` file exists anywhere
+under `data/raw/`, and no public repository hosting them was found);
+they exist today only as images shared informally and still need to be
+requested directly from NBMG. The three point layers it would overlay
+against are themselves already real and mappable today.
 
 **The three September 27, 2026 field photographs** above (@fig-hotspring,
 @fig-sulfur, @fig-seep) carry real GPS coordinates and timestamps in

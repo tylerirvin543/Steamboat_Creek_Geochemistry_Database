@@ -133,6 +133,37 @@ qualitative read into an actual spatial layer (mirroring the
 `SBO_*` photo-survey-point convention already used elsewhere in this
 project) and test it directly against where the spring-remapping
 fieldwork finds active discharge versus dry ground.
+
+**What the pH-9 database-sensitivity finding implies more broadly.**
+Tracking the resort tank's acidic (pH ~2) divergence on simpler
+PHREEQC databases down to its own measured starting pH (9.0, versus
+the fissure's 8.3) rather than to a database artifact is a useful,
+generalizable result beyond this one sample. It means this project's
+high-pH samples specifically -- anything starting near or above pH 9
+-- carry noticeably less carbonate buffering capacity against an
+imposed gas load than a near-neutral sample does, so any PHREEQC pH
+or saturation-index output for such a sample should be cross-checked
+across more than one thermodynamic database before being trusted at
+face value, not reported from a single default run the way a
+near-neutral sample reasonably can be. This is a standing caveat for
+this project's PHREEQC workflow going forward, not a one-off fix for
+the resort tank alone.
+
+**What the null inverse-modeling result does and does not mean.**
+Finding zero feasible mixing-plus-mineral-transfer solutions when the
+reconstructed parent fluid is used as a PHREEQC `INVERSE_MODELING`
+end-member is not evidence that the parent-fluid reconstruction is
+geochemically implausible. The failure traces to a specific,
+previously documented PHREEQC numerical quirk -- a tiny residual on
+an unused trace redox couple that has already appeared in this
+project's own synthetic self-tests of the same inverse-modeling code
+path -- not to PHREEQC rejecting the proposed mixture or mineral set
+on chemical grounds. The appropriate next step is a plumbing fix (for
+example, explicitly excluding the offending redox couple from the
+model) rather than treating the null result as a substantive finding
+about the Lower Sinter Terrace system; until that fix is tried, this
+result should be read as "not yet tested successfully," not as
+"tested and rejected."
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here
@@ -162,9 +193,15 @@ next.
    calibration objective (Chapter 4's Monte Carlo result is a
    preparatory analysis, not yet a real calibration) and blocks real,
    time-paired end-member selection for PHREEQC mixing and inverse
-   modeling. It is resolved by collecting new chloride samples during
-   an active logger deployment -- exactly the campaign proposed in
-   Chapter 6.
+   modeling. Extending the conductivity record through 2026-10-10
+   (Chapter 4) does not by itself resolve this -- checked directly
+   against the database as of this writing, zero real chloride
+   samples fall after the loggers' 2026-07-15 deployment start. It is
+   resolved only by collecting new chloride samples during an active
+   logger deployment -- exactly the campaign proposed in Chapter 6,
+   which this proposal now recommends starting as soon as possible
+   rather than waiting for a later field season, since the loggers
+   are already running.
 2. **Too few wells inside the Steamboat field itself have current,
    usable water-level data.** This blocks a real, field-specific
    potentiometric surface and a site-specific barometric efficiency
@@ -221,6 +258,41 @@ dissolved-gas sample yet exists) would benefit from the same
 temporally-paired sampling this proposal's calibration campaign is
 designed to produce. Both are named here as explicit future work, not
 as part of the thesis this proposal describes.
+
+## Immediate next steps, given this session's new data
+
+A handful of concrete, near-term actions follow directly from this
+round of data work, listed roughly in the order they can realistically
+happen:
+
+1. **Start the calibration sampling campaign now, not later.** The
+   conductivity loggers already cover three full months with no
+   overlapping chloride sample; every week without a paired sample
+   is a week of logger data this project cannot yet use for
+   calibration. A collection protocol that lets the logger settle
+   before and after a shuttle swap (rather than the current
+   immediate-removal pattern that produces the ambient-air-exposure
+   artifact documented in Chapter 4) would also reduce how much of
+   each download needs to be discarded around every retrieval event.
+2. **Keep re-downloading both conductivity loggers on a regular
+   schedule**, ideally matched to the temperature-logger network's
+   own cadence, so the two logger networks stop drifting apart in
+   coverage the way they had before this session's download.
+3. **Send the Collar and Huntley [@collar1990] fault map to ArcGIS
+   digitizing** -- still the single blocker standing between this
+   project's real well/location data and a Leapfrog model, unchanged
+   by anything in this session's work.
+4. **Follow up on the NDEP and NBMG data requests** (deeper-well water
+   levels and pressures; the calibrated thermal-infrared drone
+   survey rasters) -- both already drafted asks, both still
+   outstanding, and both block real next steps described above and
+   in Chapter 4 (a field-specific potentiometric surface; the
+   thermal-infrared/mapped-feature overlay map).
+5. **Revisit the inverse-modeling numerical quirk** flagged above --
+   a targeted fix (excluding the specific unused redox couple) is a
+   small, bounded task that could turn the current null
+   inverse-modeling result into a real one.
+
 
 ## Closing
 

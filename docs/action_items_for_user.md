@@ -540,13 +540,20 @@ promoted into Sampling_Events/Samples/Lab_Analyses/Field_Measurements.
 A dedicated `gas_analyses` GeoPackage layer was also added so the
 Fischer/Ruprecht gas sample points export cleanly.
 
-**Three coordinate discrepancies logged, not auto-resolved** (see
-`data/derived/white_geyser_coordinate_discrepancies.csv`): the sheet's
-"old curti"/"old brown school"/"cox1-1" points (all labeled
-`from mariner_janik_1995`) sit 1.49 km / 206 m / 577 m from this
-project's already-coordinated Curti/Brown School/Cox I-1 Locations.
-Worth a quick look to decide which coordinate is right, or whether
-these are genuinely two distinct points.
+**Three coordinate discrepancies -- resolved 2026-10-25** (see
+`data/derived/white_geyser_coordinate_discrepancies.csv`): the Curti
+case turned out to be a real bug, not just an ambiguous discrepancy --
+"Curti Barn Well (geothermal)" (location 160) had been silently given
+a duplicate copy of the separate "Curti Domestic Well" (159) point
+rather than its own real coordinate, so comparing the sheet's point
+against 159 was comparing against the wrong well entirely. Fixed by
+giving location 160 the real NBMG "Curti Barn Geothermal Well" match
+(39.40524, -119.74316), which sits only ~154 m from the sheet's own
+digitization -- good agreement. Brown School (206 m) and Cox I-1
+(577 m) were both left at their existing, better-corroborated NBMG
+coordinates (exact name match plus, for Cox I-1, a footage/legal
+description); the sheet's points are logged as secondary references in
+each Location's own notes rather than discarded.
 
 **Busick-property eruption well and the resort-tank well (SBW_0002) --
 real NBMG leads, not confirmed identities.** A proximity check against
@@ -700,3 +707,99 @@ and leaves the resort tank's own higher measured field pH (9.0 vs.
 8.3) as the sole identified driver, exactly as the prior session's
 root-cause investigation found. See
 `data/derived/phreeqc/parent_fluid_gas_load_scaling_test.csv`.
+
+## 17. New conductivity data ingested, retrieval-artifact detector built, background/narrative pass (2026-10-25)
+
+- **New conductivity shuttle readout (2026-10-12) ingested**, extending
+  both loggers' continuous record from 2026-08-22 through 2026-10-10
+  (~28,200 new rows). Copied into `data/raw/conductivity/raw/` with
+  date-suffixed filenames since the shuttle export reused the existing
+  files' basenames (which would otherwise have been silently skipped
+  by the ingest script's file-level dedup).
+- **A general "retrieval/relaunch ambient-air-exposure" detector was
+  added to `scripts/qc/qc_conductivity_checks.R`** (this was flagged as
+  worth building after the first, manually-caught instance of this
+  artifact on 2026-08-22 -- now built after a second real instance on
+  2026-10-10). It scans for a sharp EC drop relative to a local
+  baseline immediately around any deployment-start marker or large time
+  gap, flags the whole affected span (not just the single lowest
+  point), and reproduces every previously hand-flagged row exactly
+  while also catching a short 2026-08-22 relaunch dip and the full
+  width of the 2026-10-10 excursion that a simple point-outlier check
+  would have missed. No manual review needed on future downloads.
+  `data/raw/conductivity/README.md` rewritten to describe this as a
+  standing, durable fact rather than a session narrative.
+- **Swept `data/raw/` broadly for other un-ingested files** (temperature
+  loggers, field/lab/isotope chemistry, NDEP/NDWR, weather/pressure,
+  photos) -- nothing else was newer than what's already reflected in
+  the database; conductivity was the only genuinely new data this
+  round.
+- **Cl-conductivity calibration gap confirmed still open**: checked
+  directly against the database as of 2026-10-24 -- zero real chloride
+  samples fall after the loggers' 2026-07-15 deployment start, despite
+  the conductivity record itself now running three months longer. The
+  calibration campaign described in the thesis proposal (Chapter 6)
+  is the only way to close this, and the proposal now recommends
+  starting it as soon as possible rather than waiting for a later field
+  season.
+- **More White (1964, 1968) background material pulled into the
+  thesis** beyond the already-done Low-Terrace-specific review: regional
+  basement geology and the Steamboat Springs fault zone's topographic
+  localization argument; a documented history of natural geysering at
+  Steamboat back to 1860-1862 (the earliest published U.S. geyser
+  record) through early-1900s mineral-deposition accounts and
+  Gianella's 1939 wells-erupting-stibnite-from-depth account -- real
+  historical precedent that the 2025 eruption is not unprecedented;
+  and White's own 1968 pre-boiling parent-fluid chemistry (175 C,
+  800-820 ppm Cl, used as a conservative tracer for total system heat
+  flow decades before Sorey's own chloride mass-balance method), which
+  is strikingly close to this project's own 2026 gas-informed
+  parent-fluid reconstruction (781-797 mg/L). Added to both
+  `manuscript/02_geochemical_background.qmd` and
+  `00_thesis_proposal.qmd`'s Previous Work section, plus a new
+  1860-1862 chronology-table row in `00_thesis_proposal.qmd` and
+  `01_introduction.qmd`.
+- **A planned thermal-infrared/mapped-feature overlay paragraph added**
+  to `00_thesis_proposal.qmd`'s "Planned figures, not yet produced"
+  section -- describes overlaying the TIR rasters (still not on disk,
+  see item 12/14 above) against the new White/Geyser Society points,
+  the `SBO_*` field-survey points, and other dated field observations,
+  and what question it would answer. Not built, since the raster files
+  are the blocker, not anything database-side.
+- **The gas-informed parent-fluid/database-sensitivity/flowpath thread
+  in `00_thesis_proposal.qmd` reorganized for readability**: new `##`
+  section headers added throughout the previously header-less
+  "Preliminary results" section, plus an explicit "What this section
+  covers, in sequence" callout at the start of the gas thread
+  recapping all six steps (reconstruction, convergence comparison,
+  database sweep, pH root-cause, inverse modeling, flowpath) in one
+  place for a reader who doesn't want to re-derive the story from six
+  sessions' worth of additions. Also fixed a stale Methods-section claim
+  that only one real inverse-modeling run existed (there are now two,
+  with different outcomes).
+- **New interpretive paragraphs added to `05_discussion_and_future_work.qmd`**:
+  what the pH-9 database-sensitivity finding implies for how cautiously
+  to treat PHREEQC pH/SI output on any high-pH (>=9) sample project-wide
+  (a standing caveat now, not just a one-off note); and an explicit
+  statement that the null inverse-modeling result means "not yet tested
+  successfully," not "tested and rejected."
+- **New figure**: `conductivity_timeseries.png` (both loggers' full
+  record with the retrieval artifact highlighted), added to
+  `00_thesis_proposal.qmd` and `04_results.qmd`. A separate combined
+  "state of the LST conceptual model" summary figure was considered but
+  judged redundant with the three figures that already cover this
+  (`lst_conceptual_flowpath.png`, `fluid_evolution_flowpath.png`,
+  `parent_fluid_database_sensitivity.png`) -- not built.
+- **Road-ahead summary added** to `05_discussion_and_future_work.qmd`
+  ("Immediate next steps, given this session's new data"): start the
+  calibration campaign now; keep both logger networks on the same
+  download cadence; the Collar & Huntley fault digitization and the
+  NDEP/NBMG data requests remain the two biggest blockers, unchanged;
+  revisit the inverse-modeling numerical quirk as a small, bounded fix.
+- All three manuscript formats (html/pdf/docx) re-rendered cleanly
+  (0 citation errors, correct sequential figure numbering) after every
+  change this session.
+- Database GeoPackage layers were **not** re-exported this session
+  (the Curti Barn coordinate fix and the new conductivity data would
+  both affect `locations`/future conductivity-adjacent layers) -- worth
+  doing on the next full pipeline run.

@@ -310,6 +310,24 @@ Well's 10/24/2025 conductivity, 9,933 uS/cm) is flagged in the
 database as a likely OCR misread, pending a check against the original
 scanned form, and is excluded from this characterization.
 
+## An extended conductivity record and an automated artifact detector
+
+Both stream conductivity loggers (SBRR, SBGG) were re-downloaded
+October 12, 2026, extending the continuous record from 2026-08-22
+through 2026-10-10 and nearly doubling the total logger-observation
+count on file. The new data reproduce the same artifact already seen
+at the prior 2026-08-22 download: a logger briefly reads ambient air,
+not stream water, whenever it is physically removed for a shuttle
+download and relaunched, producing a sharp, implausible drop in
+specific conductance immediately around that event. A new, general
+detector added to this project's conductivity QC script catches this
+automatically from now on (flagging it `qc_flag =
+'field_visit_disturbance'`) rather than requiring a manual review of
+every future download -- verified to reproduce every previously
+hand-flagged row exactly, while also catching a short relaunch dip
+and the full width of the 2026-10-10 retrieval excursion that a
+simple point-outlier check would have missed on its own.
+
 ## What these results do not yet show
 
 Stated plainly, for scope: a naive chloride-versus-year regression
