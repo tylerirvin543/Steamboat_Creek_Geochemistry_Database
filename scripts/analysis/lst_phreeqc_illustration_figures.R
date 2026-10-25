@@ -53,84 +53,163 @@ source("scripts/analysis/plot_theme.R")
 
 #' Figure 1: real target chemistry vs. the real PHREEQC conservative-
 #' mixing curve.
+#'
+#' Restructured 2026-10-25 per direct user correction: the real
+#' upgradient thermal sources are the fissure (sample 816, SBF_0001)
+#' and the resort well (815, SBW_0002) -- their gas-informed parent-
+#' fluid reconstructions already agree within ~2% Cl (session
+#' 2026-10-24) -- and the real downgradient targets are the LST's own
+#' discharge points: SBW_0001 (821, the across-creek well) and the
+#' three real Lower Sinter Terrace springs SBS_0001/0002/0003
+#' (825/820/822). "Hot spring 6" and GS-5 were considered and
+#' explicitly rejected as targets: this project's own Locations record
+#' labels the former "main terrace ACEC," and White (1964) states in
+#' his own text that GS-3/GS-4/GS-5 are "drill holes on the Main
+#' Terrace" -- neither is a Low Terrace feature.
+#'
+#' Meteoric end-member: Jumbo Grade Spring (sample 920, Mariner & Janik
+#' 1995, real measured pH/temperature), chosen over Boyd Domestic Well
+#' on real Ca/Mg/alkalinity residual fit (see AGENTS.md 2026-10-25).
+#' Caveat, stated here and in mixing_config.csv: this project has NO
+#' geolocated southwest/west-of-Steamboat groundwater sample on file at
+#' all -- Jumbo Grade Spring's own coordinates are not in this
+#' database either, so while its chemistry fits far better than
+#' Boyd's, its assumed upgradient (southwest/west, mountain-front)
+#' position is a plausible, UNCONFIRMED assumption, not a verified one.
 build_forward_mixing_validation_figure <- function(con,
+    thermal_sample_id = 816, meteoric_sample_id = 920,
+    target_sample_ids = c(821, 825, 820, 822),
     out_png = "output/figures/manuscript/forward_mixing_model_validation.png") {
+
+  run_row <- dbGetQuery(con, "
+    SELECT mixing_run_id FROM PHREEQC_Mixing_Runs
+    WHERE thermal_end_member_id = ? AND meteoric_end_member_id = ?
+    ORDER BY mixing_run_id DESC LIMIT 1
+  ", params = list(thermal_sample_id, meteoric_sample_id))
+
+  if (nrow(run_row) == 0) {
+    message("  -> No PHREEQC_Mixing_Runs row for thermal=", thermal_sample_id,
+            "/meteoric=", meteoric_sample_id, "; run run_phreeqc_mixing_from_config() first. Skipping.")
+    return(invisible(NULL))
+  }
+  mixing_run_id <- run_row$mixing_run_id[1]
 
   curve <- dbGetQuery(con, "
     SELECT mixing_fraction_thermal, parameter, predicted_value
     FROM PHREEQC_Mixing_Results
-    WHERE parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz','pH')
-  ") |>
+    WHERE mixing_run_id = ? AND parameter IN ('SI_Calcite','SI_Dolomite','SI_Quartz','pH')
+  ", params = list(mixing_run_id)) |>
     filter(predicted_value > -900, parameter != "SI_Quartz") |>  # drop PHREEQC's undefined sentinel; quartz SI never defined along this run
     mutate(parameter_label = recode(parameter,
       SI_Calcite = "Calcite SI", SI_Dolomite = "Dolomite SI", pH = "pH"))
 
   if (nrow(curve) == 0) {
-    message("  -> No PHREEQC_Mixing_Results found; run run_phreeqc_mixing_from_config()/15_gas_informed_parent_fluid.R first. Skipping.")
+    message("  -> No usable PHREEQC_Mixing_Results rows for mixing_run_id ", mixing_run_id, ". Skipping.")
     return(invisible(NULL))
   }
 
-  targets_raw <- dbGetQuery(con, "
+  target_labels <- c(`821` = "SBW_0001 (well, across creek)", `825` = "SBS_0001 (spring)",
+                      `820` = "SBS_0002 (seep)", `822` = "SBS_0003 (spring)")
+
+  frac <- dbGetQuery(con, "
+    SELECT sample_id, mixing_fraction_thermal FROM PHREEQC_Mixing_Fractions
+    WHERE mixing_run_id = ? AND sample_id IN (?,?,?,?)
+  ", params = c(list(mixing_run_id), as.list(target_sample_ids)))
+
+  targets_raw <- dbGetQuery(con, paste0("
     SELECT r.sample_id, r.parameter, r.value
     FROM PHREEQC_Results r
-    WHERE r.sample_id IN (815, 821)
+    WHERE r.sample_id IN (", paste(target_sample_ids, collapse = ","), ")
       AND r.parameter IN ('SI_Calcite','SI_Dolomite','pH')
-  ")
-  mix_frac <- c(`815` = 1.04415584415584, `821` = 0.555844155844156)  # from parent_fluid_mixing_comparison.csv (f_thermal_measured)
+  "))
+
   targets <- targets_raw |>
+    left_join(frac, by = "sample_id") |>
     mutate(
-      mixing_fraction_thermal = mix_frac[as.character(sample_id)],
-      sample_label = ifelse(sample_id == 815, "SBW_0002 (resort tank)", "SBW_0001 (nearby LST well)"),
+      sample_label = target_labels[as.character(sample_id)],
       parameter_label = recode(parameter, SI_Calcite = "Calcite SI", SI_Dolomite = "Dolomite SI", pH = "pH")
-    )
+    ) |>
+    filter(!is.na(mixing_fraction_thermal))
+
+  target_colors <- c(
+    "SBW_0001 (well, across creek)" = "#D55E00",
+    "SBS_0001 (spring)" = "#009E73",
+    "SBS_0002 (seep)" = "#CC79A7",
+    "SBS_0003 (spring)" = "#0072B2"
+  )
 
   p <- ggplot(curve, aes(x = mixing_fraction_thermal, y = predicted_value)) +
-    geom_line(color = "#0072B2", linewidth = 0.9) +
+    geom_line(color = "grey40", linewidth = 0.9) +
     geom_vline(xintercept = 1, linetype = "dotted", color = "grey60") +
-    geom_point(data = targets, aes(x = mixing_fraction_thermal, y = value, color = sample_label), size = 3.5) +
+    geom_point(data = targets, aes(x = mixing_fraction_thermal, y = value, color = sample_label), size = 3.2) +
     facet_wrap(~parameter_label, scales = "free_y", ncol = 3) +
-    scale_color_manual(values = c("SBW_0002 (resort tank)" = "#D55E00", "SBW_0001 (nearby LST well)" = "#009E73"), name = NULL) +
+    scale_color_manual(values = target_colors, name = "Real downgradient target") +
     labs(
       x = "Conservative-Cl thermal mixing fraction (f = 0 meteoric, f = 1 thermal end-member)",
       y = "PHREEQC-predicted value",
-      title = "Forward model: does real target chemistry fall on the pure-mixing curve?",
+      title = "Forward model: do the real downgradient LST targets fall on the pure-mixing curve?",
       subtitle = paste0(
-        "Blue line: PHREEQC MIX-block prediction for pure conservative mixing (no reaction) between the\n",
-        "reconstructed parent fluid and Boyd Domestic Well. Points: each target's own real, full-chemistry\n",
-        "PHREEQC speciation, plotted at its own real measured mixing fraction."
+        "Grey line: PHREEQC MIX-block prediction for pure conservative mixing (no reaction) between the\n",
+        "fissure (SBF_0001, sample 816) and Jumbo Grade Spring (regional meteoric reference, sample 920).\n",
+        "Points: each real target's own full-chemistry PHREEQC speciation at its own real mixing fraction."
       ),
       caption = paste0(
-        "A point on the curve is consistent with simple dilution; a point off the curve implies additional\n",
-        "reaction (precipitation/dissolution, degassing) beyond conservative mixing. Quartz SI omitted: PHREEQC\n",
-        "did not report a defined quartz saturation index anywhere along this mixing run.\n",
-        "Source: PHREEQC_Mixing_Results + PHREEQC_Results, geochem_operational.sqlite."
+        "Targets are the real downgradient LST discharge points (SBW_0001 + the three real LST springs), NOT hot\n",
+        "spring 6/GS-5 (both confirmed Main Terrace, not Low Terrace -- excluded). Jumbo Grade Spring was chosen for\n",
+        "its real Ca/Mg/alkalinity fit; its assumed southwest/west, upgradient position is UNCONFIRMED -- this\n",
+        "project has no geolocated southwest/west regional groundwater sample on file. Quartz SI omitted (never\n",
+        "defined along this mixing run). Source: PHREEQC_Mixing_Results/Fractions + PHREEQC_Results, geochem_operational.sqlite."
       )
     ) +
     theme_steamboat(base_size = 11) +
     theme(legend.position = "top", plot.caption = element_text(hjust = 0))
 
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 11, height = 5.2, dpi = 300)
+  ggsave(out_png, p, width = 11.5, height = 5.5, dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }
 
 #' Figure 2: a real ggraph network diagram of the LST flow/mixing
 #' system (flow connections + chemical groupings).
+#'
+#' Restructured 2026-10-25 per direct user correction:
+#'  - Flow direction now runs upgradient -> downgradient: the fissure
+#'    (SBF_0001) and resort well (SBW_0002) sit spatially higher
+#'    (elevation ~1408 m, upper Low Sinter Terrace, west side) and feed
+#'    a shallow mixing zone that discharges to SBW_0001 (east side,
+#'    across the creek, lower elevation ~1397 m -- presumed to tap an
+#'    aquifer that passes beneath the creek despite sitting beside it)
+#'    and the three real Low Terrace springs SBS_0001/0002/0003
+#'    (elevations 1388-1400 m, a real, monotonic downgradient sequence).
+#'  - Meteoric end-member changed from Boyd Domestic Well to Jumbo
+#'    Grade Spring, with its unconfirmed southwest/west position noted
+#'    directly in its own node label (no geolocated southwest/west
+#'    groundwater sample exists in this project yet).
+#'  - The Steamboat Creek chain is now geographically ordered SBRR ->
+#'    SBGG -> SBBV (SBGG, Geiger Grade, sits well upstream of SBBV, not
+#'    downstream of it as an earlier version of this figure had it),
+#'    fed by the LST mixing zone collectively (not by any one target
+#'    individually) via the same real "~100 gpm unseen inflow" estimate
+#'    already used in the flowpath-evolution figure.
 build_lst_flow_network_figure <- function(
     out_png = "output/figures/manuscript/lst_flow_network_graph.png") {
 
   nodes <- tibble::tribble(
-    ~name,            ~label_full,                                                         ~group,
-    "parent_fissure", "Parent fluid\n(from fissure + NV26-1 gas)\nCl = 781 mg/L",            "Reconstructed parent",
-    "parent_resort",  "Parent fluid\n(from resort tank + NV26-1 gas)\nCl = 797 mg/L",         "Reconstructed parent",
-    "fissure",        "Fissure discharge\nSBF_0001\nCl = 815 mg/L",                           "Measured thermal discharge",
-    "resort",         "Resort-tank discharge\nSBW_0002\nCl = 849 mg/L",                       "Measured thermal discharge",
-    "nearby_well",    "Nearby LST well\nSBW_0001\nCl = 473 mg/L",                             "Mixed (thermal+meteoric)",
-    "meteoric",       "Meteoric end-member\nBoyd Domestic Well\nCl = 45 mg/L",                "Meteoric end-member",
-    "sbrr",           "Steamboat Creek\n@ SBRR\nCl = 17 mg/L",                                "Downstream creek",
-    "sbbv",           "Steamboat Creek\n@ SBBV\nCl = 126 mg/L",                               "Downstream creek",
-    "sbgg",           "SBGG logger /\nUSGS gauge",                                           "Monitoring point"
+    ~name,            ~label_full,                                                                 ~group,
+    "parent_fissure", "Parent fluid\n(from fissure + NV26-1 gas)\nCl = 781 mg/L",                    "Reconstructed parent",
+    "parent_resort",  "Parent fluid\n(from resort tank + NV26-1 gas)\nCl = 797 mg/L",                 "Reconstructed parent",
+    "fissure",        "Fissure discharge\nSBF_0001 (upper LST, west side)\nCl = 815 mg/L, elev. 1408 m", "Measured thermal discharge",
+    "resort",         "Resort-tank discharge\nSBW_0002 (upper LST, west side)\nCl = 849 mg/L, elev. 1409 m", "Measured thermal discharge",
+    "mixing_zone",    "Shallow LST mixing/\ndegassing zone",                                          "Mixing zone",
+    "meteoric",       "Meteoric end-member\nJumbo Grade Spring (regional)\nCl = 7 mg/L -- SW/W position UNCONFIRMED,\nno geolocated SW/W sample on file", "Meteoric end-member",
+    "sbw1",           "SBW_0001\n(across creek, ag. field, elev. 1397 m)\nf_thermal = 0.58",          "Downgradient target",
+    "sbs2",           "SBS_0002 (seep)\nelev. 1400 m, f_thermal = 0.78",                              "Downgradient target",
+    "sbs1",           "SBS_0001 (spring)\nelev. 1397 m, f_thermal = 0.89",                            "Downgradient target",
+    "sbs3",           "SBS_0003 (spring, lowest)\nelev. 1389 m, f_thermal = 0.85",                    "Downgradient target",
+    "sbrr",           "Steamboat Creek\n@ SBRR (upstream control)\nCl = 17 mg/L",                     "Downstream creek",
+    "sbgg",           "SBGG logger\n(Geiger Grade)",                                                  "Monitoring point",
+    "sbbv",           "Steamboat Creek\n@ SBBV\nCl = 126 mg/L",                                       "Downstream creek"
   )
 
   edges <- tibble::tribble(
@@ -138,32 +217,40 @@ build_lst_flow_network_figure <- function(
     "parent_fissure", "fissure",      "steam loss 4.2%",
     "parent_resort",  "resort",       "steam loss 6.1%",
     "parent_fissure", "parent_resort","Cl agree within 2.1%",
-    "fissure",        "nearby_well",  "shallow mixing",
-    "resort",         "nearby_well",  "shallow mixing",
-    "meteoric",       "nearby_well",  "dilution",
-    "nearby_well",    "sbrr",         "f_thermal=0.56-0.58",
-    "meteoric",       "sbrr",         "dilution",
-    "sbrr",           "sbbv",         "+ ~100 gpm unseen\nLST inflow (White 1968)",
-    "sbbv",           "sbgg",         ""
+    "fissure",        "mixing_zone",  "",
+    "resort",         "mixing_zone",  "",
+    "meteoric",       "mixing_zone",  "dilution",
+    "mixing_zone",    "sbw1",         "",
+    "mixing_zone",    "sbs2",         "",
+    "mixing_zone",    "sbs1",         "",
+    "mixing_zone",    "sbs3",         "",
+    "mixing_zone",    "sbrr",         "+ ~100 gpm unseen\nLST inflow (White 1968)",
+    "sbrr",           "sbgg",         "",
+    "sbgg",           "sbbv",         ""
   )
 
   manual_xy <- tibble::tribble(
     ~name,            ~x,   ~y,
     "parent_fissure", 0,    2.2,
     "parent_resort",  0,    0.0,
-    "fissure",        2.5,  2.2,
-    "resort",         2.5,  0.0,
-    "meteoric",       2.5,  4.8,
-    "nearby_well",    5.0,  1.1,
-    "sbrr",           7.4,  1.1,
-    "sbbv",           10.4, 1.1,
-    "sbgg",           12.9, 1.1
+    "fissure",        2.3,  2.2,
+    "resort",         2.3,  0.0,
+    "meteoric",       2.3,  4.6,
+    "mixing_zone",    4.8,  2.2,
+    "sbw1",           7.3,  4.4,
+    "sbs2",           7.3,  2.9,
+    "sbs1",           7.3,  1.4,
+    "sbs3",           7.3, -0.1,
+    "sbrr",           9.8,  2.2,
+    "sbgg",           12.3, 2.2,
+    "sbbv",           14.8, 2.2
   )
 
   group_colors <- c(
     "Reconstructed parent" = "#0072B2",
     "Measured thermal discharge" = "#D55E00",
-    "Mixed (thermal+meteoric)" = "#CC79A7",
+    "Mixing zone" = "#E69F00",
+    "Downgradient target" = "#CC79A7",
     "Meteoric end-member" = "#56B4E9",
     "Downstream creek" = "#009E73",
     "Monitoring point" = "#999999"
@@ -184,9 +271,17 @@ build_lst_flow_network_figure <- function(
                      lineheight = 0.9) +
     scale_fill_manual(values = group_colors, name = "Fluid grouping") +
     labs(
-      title = "Lower Sinter Terrace flow network: real chemistry grouping and mixing connections",
-      subtitle = "Edge labels give the real PHREEQC/mass-balance quantity linking each pair of points where available.",
-      caption = "Source: scripts/phreeqc/15_gas_informed_parent_fluid.R, fluid_evolution_flowpath.R, geochem_operational.sqlite."
+      title = "Lower Sinter Terrace flow network: upgradient sources to downgradient springs/well",
+      subtitle = paste0(
+        "Flow runs upgradient (fissure/resort well, upper LST, west side) to downgradient (SBW_0001 across\n",
+        "the creek, and the three real LST springs). SBGG sits upstream of SBBV. Edge labels give real\n",
+        "PHREEQC/mass-balance quantities where available."
+      ),
+      caption = paste0(
+        "Meteoric end-member: Jumbo Grade Spring (real Ca/Mg/alkalinity fit), not Boyd Domestic Well -- its own\n",
+        "assumed southwest/west position is unconfirmed (no geolocated SW/W groundwater sample on file).\n",
+        "Source: scripts/phreeqc/15_gas_informed_parent_fluid.R, fluid_evolution_flowpath.R, geochem_operational.sqlite."
+      )
     ) +
     theme_graph(base_family = "sans") +
     theme(
@@ -198,7 +293,7 @@ build_lst_flow_network_figure <- function(
     expand_limits(x = c(min(nodes$x) - 1.8, max(nodes$x) + 1.8), y = c(min(nodes$y) - 1, max(nodes$y) + 1))
 
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 16.5, height = 7.8, dpi = 300)
+  ggsave(out_png, p, width = 17, height = 9.5, dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }
@@ -209,40 +304,49 @@ build_lst_flow_network_figure <- function(
 build_lst_aquifer_depth_profile_figure <- function(
     out_png = "output/figures/manuscript/lst_aquifer_depth_profile.png") {
 
-  wells_order <- c("GS-1\n(400 ft TD)", "South Steamboat well\n(~188 ft TD)",
+  # Ordered south-to-north (real latitude): South Steamboat Well (39.3779)
+  # < GS-1 (39.3789) < SBW_0002/Steamboat well 4 (39.3797) < SBW_0001
+  # (39.3806) < SBF_0001, the fissure (39.3824, farther north but west of
+  # SBW_0001) -- per direct user correction 2026-10-25.
+  wells_order <- c("South Steamboat well\n(~188 ft TD)", "GS-1\n(400 ft TD)",
                     "Steamboat well 4 /\nSBW_0002 (unconfirmed\nsame pad, 225 ft TD)",
-                    "SBW_0001\n(no depth data on file)")
-  well_x <- c(1, 5, 9, 13)
+                    "SBW_0001\n(no depth data on file)",
+                    "SBF_0001 fissure\n(farther north, west side;\nno depth data on file)")
+  well_x <- c(1, 5, 9, 13, 17)
   names(well_x) <- wells_order
   bar_width <- 0.9
 
   total_depth <- tibble::tribble(
     ~well, ~depth,
-    wells_order[1], 400,
-    wells_order[2], 188,
+    wells_order[1], 188,
+    wells_order[2], 400,
     wells_order[3], 225
   )
 
   zones <- tibble::tribble(
     ~well, ~ymin, ~ymax, ~zone_type, ~zone_label,
-    wells_order[1], 150, 399.5, "Thermal/aquifer", "Tuff-breccia\ndike aquifer",
-    wells_order[2], 0,   160,   "Thermal/aquifer", "Saline thermal\n(75-95C)",
-    wells_order[2], 160, 188,   "Meteoric",        "Dilute meteoric\n(Cl 6-8 ppm)",
+    wells_order[1], 0,   160,   "Thermal/aquifer", "Saline thermal\n(75-95C)",
+    wells_order[1], 160, 188,   "Meteoric",        "Dilute meteoric\n(Cl 6-8 ppm)",
+    wells_order[2], 150, 399.5, "Thermal/aquifer", "Tuff-breccia\ndike aquifer",
     wells_order[3], 70,  80,    "Thermal/aquifer", "High-Cl zone"
   )
 
   points <- tibble::tribble(
     ~well, ~depth, ~label, ~kind,
-    wells_order[1], 193, "Peak 158C\n(hottest point,\nLow Terrace)", "peak_temp",
+    wells_order[2], 193, "Peak 158C\n(hottest point,\nLow Terrace)", "peak_temp",
     wells_order[3], 142, "Eruption\nonset", "eruption",
     wells_order[3], 58,  "Dilution zone", "dilution",
     wells_order[3], 105, "Dilution zone\n(major aquifer)", "dilution",
     wells_order[3], 184, "Peak BHT\n154.9C", "peak_temp"
   )
 
+  no_data_wells <- c(wells_order[4], wells_order[5])
+
   zone_colors <- c("Thermal/aquifer" = "#D55E00", "Meteoric" = "#56B4E9")
   point_colors <- c("peak_temp" = "#B2182B", "eruption" = "#E69F00", "dilution" = "#2166AC")
   point_shapes <- c("peak_temp" = 18, "eruption" = 17, "dilution" = 16)
+
+  no_data_df <- tibble::tibble(well = no_data_wells, x = well_x[no_data_wells])
 
   p <- ggplot() +
     geom_rect(data = total_depth, aes(xmin = well_x[well] - bar_width, xmax = well_x[well] + bar_width,
@@ -256,11 +360,11 @@ build_lst_aquifer_depth_profile_figure <- function(
                                      y = depth, yend = depth), color = "grey50", linewidth = 0.3) +
     geom_text(data = points, aes(x = well_x[well] + bar_width + 0.65, y = depth, label = label),
               hjust = 0, size = 2.7, lineheight = 0.85, color = "grey20") +
-    annotate("rect", xmin = well_x[4] - bar_width, xmax = well_x[4] + bar_width, ymin = 0, ymax = 70,
-             fill = NA, color = "grey40", linetype = "dashed", linewidth = 0.6) +
-    annotate("text", x = well_x[4], y = 35, label = "?\nNo structured depth/\ncompletion data\non file",
-             size = 3.1, color = "grey30", fontface = "italic", lineheight = 0.95) +
-    scale_x_continuous(breaks = well_x, labels = names(well_x), position = "top", limits = c(-1.5, 17.5)) +
+    geom_rect(data = no_data_df, aes(xmin = x - bar_width, xmax = x + bar_width, ymin = 0, ymax = 70),
+              fill = NA, color = "grey40", linetype = "dashed", linewidth = 0.6) +
+    geom_text(data = no_data_df, aes(x = x, y = 35), label = "?\nNo structured depth/\ncompletion data\non file",
+              size = 3.1, color = "grey30", fontface = "italic", lineheight = 0.95) +
+    scale_x_continuous(breaks = well_x, labels = names(well_x), position = "top", limits = c(-1.5, 21.5)) +
     scale_y_reverse(name = "Depth below ground surface (ft)", limits = c(430, -15)) +
     scale_fill_manual(values = zone_colors, name = "Zone type") +
     scale_color_manual(values = point_colors, guide = "none") +
@@ -269,13 +373,14 @@ build_lst_aquifer_depth_profile_figure <- function(
     labs(
       title = "Where are the aquifers? Real well-log evidence along the Lower Sinter Terrace flowpath",
       subtitle = paste0(
-        "Depth intervals and features from White (1964, 1968)'s original drilling logs -- the only structured subsurface\n",
-        "control this project currently has for any point on the real 2026 flowpath."
+        "Ordered south to north by real latitude. Depth intervals and features from White (1964, 1968)'s\n",
+        "original drilling logs -- the only structured subsurface control this project currently has for any point\n",
+        "on the real 2026 flowpath."
       ),
       caption = paste0(
-        "SBW_0001 (a real 2026 sampling point on the flowpath) has NO depth, completion, or lithology data on file at all --\n",
-        "the single biggest concrete gap for turning this flowpath into a real multi-aquifer mixing model. Steamboat well 4's\n",
-        "identity as SBW_0002's feeding well is a plausible, NBMG-corroborated hypothesis, not confirmed.\n",
+        "Both SBW_0001 and the fissure (SBF_0001) -- real 2026 sampling points on the flowpath -- have NO depth,\n",
+        "completion, or lithology data on file at all. Steamboat well 4's identity as SBW_0002's feeding well is a\n",
+        "plausible, NBMG-corroborated hypothesis, not confirmed.\n",
         "Source: White (1964, 1968), notebooks/07_historical_context_sorey1992.qmd section 4.7; Wells, geochem_operational.sqlite."
       )
     ) +
@@ -288,7 +393,7 @@ build_lst_aquifer_depth_profile_figure <- function(
     )
 
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 12.5, height = 7.5, dpi = 300)
+  ggsave(out_png, p, width = 15, height = 7.5, dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }

@@ -7527,6 +7527,146 @@ clean.csv`, the source `.xlsx`, and `data/raw/historical/
 nbmg_timeline_2022_2025.csv`, per this project's standing convention
 for hand-maintained files under the blanket-ignored `data/raw/`.
 
+## Session 52 (2026-10-25, continued): PHREEQC illustration figures,
+Main Terrace exclusion, meteoric end-member corrected to Jumbo Grade
+Spring, LST flowpath restructured to upgradient->downgradient
+
+Follow-up to Session 51, covering three new publication-oriented
+PHREEQC figures and then two rounds of real, user-driven corrections
+to the underlying conceptual model.
+
+- **Three new figures built** (`scripts/analysis/
+  lst_phreeqc_illustration_figures.R`, wired into
+  `build_manuscript_figures()`): a forward-mixing-model validation
+  figure (real target chemistry vs. the real PHREEQC MIX-block
+  conservative-mixing curve), a `ggraph`/`tidygraph` network diagram of
+  the LST flow/mixing system, and a literature-sourced (White 1964,
+  1968) aquifer depth-profile figure. Also caught and fixed a real,
+  pre-existing dead-code bug in `build_manuscript_figures()`: a call to
+  `build_conductivity_timeseries_figure()` had landed after the
+  function's own `invisible(TRUE)` return, making it unreachable.
+- **Real, substantive finding from the first version of the forward-
+  mixing figure**: SBW_0001 sits well above the pure-mixing curve for
+  Calcite/Dolomite SI (using Boyd Domestic Well as the meteoric
+  end-member), while SBW_0002 sits on-curve for carbonates but off-
+  curve for pH -- independently corroborating the already-documented
+  pH-9 sensitivity finding from a completely different angle.
+- **Investigated the SBW_0001 deviation directly** (per user request):
+  compared Boyd Domestic Well against three other real candidate
+  meteoric end-members on Ca/Mg/alkalinity residual fit. Boyd's own
+  Ca (4.1 mg/L) and Mg (0.5 mg/L) are far too low for a plausible
+  regional meteoric water -- a 2-end-member mix using Boyd under-
+  predicts SBW_0001's real Ca by 21.5 mg/L and Mg by 4.4 mg/L (7-8x
+  too low). **Jumbo Grade Spring** (sample 920, Mariner & Janik 1995,
+  real measured pH=8/T=15C, Ca=95/Mg=18 mg/L) gives by far the best
+  fit (alkalinity residual +7.9 mg/L vs. Boyd's +53.8; Ca/Mg flip to a
+  modest *over*-prediction, consistent with the water having
+  subsequently precipitated a small amount of calcite+dolomite along
+  the flow path -- matching its own measured supersaturation).
+- **Also discovered**: Boyd Domestic Well sits essentially due north of
+  the fissure at the *identical* longitude (-119.7399) -- not
+  southwest/west of Steamboat as a true upgradient meteoric recharge
+  source should be, per White's own documented Carson/Virginia Range
+  mountain-front recharge direction. **Checked for a better-positioned
+  candidate and found none**: Jumbo Grade Spring (and the other
+  regional springs checked) have NO coordinates on file in this
+  database at all -- this project currently has zero geolocated
+  southwest/west groundwater samples. Jumbo Grade Spring is used as the
+  best available REAL CHEMISTRY match, with its assumed upgradient
+  position flagged explicitly as unconfirmed everywhere it's used
+  (`mixing_config.csv`, both figure captions, node labels).
+- **"Hot spring 6" and GS-5 confirmed NOT Low Terrace features, per
+  direct user question.** This project's own `Locations` row already
+  labels the former `"Hot spring 6, main terrace ACEC"` -- literal
+  Main Terrace. Re-read White (1964)'s actual text for GS-5 (not
+  relying on memory): it explicitly groups "GS-3, GS-4, and GS-5 drill
+  holes on the Main Terrace" and separately places GS-5 "east of the
+  crest of the Main Terrace." GS-1 (already established as the one
+  real Low Terrace GS-well) is a different hole entirely -- the GS
+  series spanned multiple sub-areas of the broader thermal field, not
+  one terrace. Both were therefore **excluded** as downgradient
+  targets.
+- **Real Low Terrace springs identified as the correct targets
+  instead**: SBS_0001, SBS_0002, SBS_0003, all with real coordinates
+  sitting inside the same cluster as SBF_0001/SBW_0001/SBW_0002
+  (39.38-39.39 N), unlike GS-5's seep (39.389, ~1 km further north).
+  Elevation data independently confirms a real, monotonic downgradient
+  sequence matching the user's own geographic read: SBW_0002 (1408.8 m)
+  and SBF_0001 (1407.8 m, both upper LST, west side) > SBS_0002
+  (1400.1 m) > SBW_0001 (1397.4 m, east bank/ag. field) ~ SBS_0001
+  (1396.6 m) > SBS_0003 (1388.9 m, lowest).
+- **Real PHREEQC mixing run executed** (not just a figure change):
+  added `lst_fissure_jumbograde_2026` to
+  `data/raw/phreeqc/mixing_config.csv` (thermal=816 SBF_0001,
+  meteoric=920 Jumbo Grade Spring) and ran
+  `run_phreeqc_mixing_from_config(con)` for real -- verified on a
+  scratch copy first, then applied to the real, backed-up
+  `geochem_operational.sqlite` (backup:
+  `database/archive/geochem_operational_pre_jumbograde_mixing_<timestamp>.sqlite`).
+  New `mixing_run_id` with 11,297 `PHREEQC_Mixing_Results` rows across
+  the full ~754-sample Cl-fraction continuum. Real computed mixing
+  fractions for the 4 targets against the new end-members: SBW_0001
+  f=0.577, SBS_0002 f=0.777, SBS_0003 f=0.854, SBS_0001 f=0.887.
+  **Known, pre-existing, not-yet-fixed limitation surfaced while
+  running this**: the MIX-block code path
+  (`format_phreeqc_mix_input()`/`format_solution_block()` as called
+  from `10_run_phreeqc_mixing.R`) throws `"WARNING: Could not find
+  element in database, SO4"` / `"SiO2"` on every single run (both the
+  old Boyd-based run and the new one) -- these get silently zeroed
+  rather than correctly mapped to `S(6)`/`SiO2`, the same class of bug
+  already fixed for the main speciation path in Session 14/19. Since
+  `SI_Calcite`/`SI_Dolomite`/pH (this figure's actual outputs) don't
+  depend directly on SO4/SiO2, this wasn't blocking, but it is a real
+  latent accuracy gap in the MIX-block path specifically, not yet
+  fixed -- flagged for a future session.
+- **Figure 1 (forward-mixing-validation) rebuilt**: now looks up its
+  `mixing_run_id` dynamically by thermal/meteoric sample_id (not
+  hardcoded), plots all 4 real downgradient targets (SBW_0001,
+  SBS_0001, SBS_0002, SBS_0003) against the new Jumbo-Grade-based
+  curve instead of the old 2-target Boyd-based one. **Sharper real
+  finding than before**: SBW_0001 is now clearly the outlier (well off
+  the curve on Calcite/Dolomite SI and pH), while the three real LST
+  springs cluster much closer to the curve -- supporting the
+  hypothesis that SBW_0001 taps a geochemically distinct aquifer
+  (consistent with its real, physically-separated across-the-creek
+  position) rather than sharing the same shallow mixing system as the
+  LST springs.
+- **Figure 2 (flow network) restructured**: flow direction now runs
+  upgradient (fissure + resort well, upper LST, west side) through a
+  new explicit "shallow LST mixing/degassing zone" node to the 4 real
+  downgradient targets, replacing the old single `nearby_well->sbrr`
+  edge (which wrongly implied SBW_0001 discharges directly into SBRR).
+  The whole LST mixing zone now feeds Steamboat Creek collectively via
+  the real "~100 gpm unseen LST inflow (White 1968)" estimate. Creek
+  chain corrected to the real geographic order SBRR -> SBGG -> SBBV
+  (SBGG, Geiger Grade, sits well upstream of SBBV -- the prior version
+  had this backwards). Meteoric end-member node updated to Jumbo Grade
+  Spring with its unconfirmed-position caveat in the node label itself.
+- **Figure 3 (aquifer depth profile) reordered and extended**: columns
+  now run South Steamboat Well -> GS-1 -> Steamboat well 4/SBW_0002,
+  matching the real south-to-north latitude order the user identified
+  (GS-1's own latitude, 39.3789, sits almost exactly between South
+  Steamboat Well's 39.3779 and SBW_0002's 39.3797). Added a 5th column
+  for the fissure (SBF_0001) with its own "no structured depth data on
+  file" dashed box, positioned last (northernmost, per its real
+  39.3824 latitude) and labeled "west side" to distinguish it from
+  SBW_0001's east-bank position -- both now visually flagged as the
+  real, concrete well-log data gaps on this flowpath.
+- **Verified end-to-end**: all three figures regenerated cleanly via
+  `build_lst_phreeqc_illustration_figures(con)` against the real,
+  updated `geochem_operational.sqlite`; visually spot-checked each PNG
+  directly (not just confirmed it rendered without error).
+- **Not done this session**: no fix yet for the MIX-block SO4/SiO2
+  element-mapping bug (flagged above); no attempt to geolocate Jumbo
+  Grade Spring or any other southwest/west regional groundwater sample
+  (would need a real field trip/GPS fix, not a database fix); no
+  inverse-modeling or reaction-path (e.g. explicit calcite+dolomite
+  mass-transfer) run yet against the new end-member pair -- a natural
+  next step given SBW_0001's now-sharper deviation from pure mixing;
+  the Monte-Carlo-excluding-ambient-air-records request from earlier in
+  this session's conversation was not completed (superseded by this
+  investigative thread) -- still open for a future session.
+
 ## Session 51 (2026-10-25): new conductivity shuttle readout ingested,
 general retrieval-artifact QC detector built, Curti Barn coordinate
 bug fixed, more White (1964/1968) background pulled into the thesis,

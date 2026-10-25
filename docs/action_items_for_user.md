@@ -708,6 +708,28 @@ and leaves the resort tank's own higher measured field pH (9.0 vs.
 root-cause investigation found. See
 `data/derived/phreeqc/parent_fluid_gas_load_scaling_test.csv`.
 
+## 18. A real southwest/west groundwater sample is needed for the LST meteoric end-member (2026-10-25)
+
+The Lower Sinter Terrace mixing/forward-model work (fissure + resort
+well -> SBW_0001 + the three real LST springs) needs a real, dilute,
+**geolocated** groundwater sample from southwest/west of Steamboat to
+serve as the meteoric end-member -- the true upgradient recharge
+direction per White's own documented Carson/Virginia Range mountain-
+front recharge interpretation. Checked directly: **this project has
+none on file.** Boyd Domestic Well (the end-member used until this
+session) sits essentially due north of the fissure, not southwest/west
+at all. Jumbo Grade Spring (now used instead, on real Ca/Mg/alkalinity
+chemistry fit) has no coordinates in this database either -- its
+assumed southwest/west position is a plausible guess from the place
+name only, not verified.
+
+**What would resolve this**: a real coordinate for Jumbo Grade Spring
+(check Mariner & Janik 1995's own site map/description, or a modern
+GPS fix if the spring is still accessible), or a new real sample from
+a known southwest/west-of-Steamboat domestic well or spring. Either
+would let the mixing/forward-model work swap in a confirmed, correctly-
+positioned end-member instead of a chemistry-only best guess.
+
 ## 17. New conductivity data ingested, retrieval-artifact detector built, background/narrative pass (2026-10-25)
 
 - **New conductivity shuttle readout (2026-10-12) ingested**, extending
