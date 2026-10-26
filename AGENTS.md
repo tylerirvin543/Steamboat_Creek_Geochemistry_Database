@@ -8913,3 +8913,77 @@ process, not natural flashing.
   GeoPackage not re-exported (the one database change -- a
   `Locations.notes` text append -- is not a GIS-relevant field). This
   session's file changes are not yet committed/pushed to git.
+
+## Session 59 (2026-10-26): baseline flowpath chemical-evolution
+characterization -- species gain/loss, mixing fractions, temperature
+profile, springs-vs-wells figures; thesis scoping refined
+
+Per explicit user direction, the PHREEQC mixing/reaction-path work on
+the Lower Sinter Terrace flowpath is treated as a **one-time, same-era
+baseline characterization** -- a demonstration of the modeling
+approach's capability, not an iterative refinement project. This
+session interprets the already-successful runs on file with four new
+figures and no new PHREEQC execution.
+
+- **New script**: `scripts/analysis/flowpath_baseline_characterization_figures.R`
+  -- `compute_species_gainloss_table()` generalizes the Ca/Mg/Alkalinity
+  conservative-mixing-residual logic already used in the forward
+  REACTION-path titration to every major species (Na, K, SO4, Si, B,
+  Alkalinity) across all six real targets, using the real, already-
+  stored Cl-based mixing fraction (mixing_run_id 6, fissure 816 + SBRR
+  819). Four new figures built from this and from the already-computed
+  Na/K/quartz geothermometers: `species_gainloss_heatmap.png` (species x
+  target tile plot), `mixing_fraction_by_target.png` (sorted bar chart,
+  colored by feature type), `temperature_flowpath_profile.png`
+  (2-panel: a 3-stage Na/K->quartz->measured cooling profile per
+  feature, plus the real SBRR->SBBV creek re-warming), and
+  `springs_vs_wells_residuals.png` (focused SO4/Alkalinity-only version
+  of the heatmap).
+- **Real, new findings from this analysis**: Na is conservative
+  everywhere (+/-6%) -- direct justification for treating Cl/Na as
+  reliable tracers; K is gained everywhere (13-31%), an open,
+  unexplained signal; **sulfate is gained far more at springs/seep
+  (44-62%) than at wells (-3 to +20%)**; **alkalinity is gained at both
+  wells but lost at two of three springs** -- opposite signs for the
+  same species by feature type; the quartz-vs-measured-temperature gap
+  is largest at the two coolest real springs (SBS_0001, SBS_0003),
+  smaller at the wells -- consistent with springs undergoing more
+  near-surface cooling/processing than wells, even though all six real
+  thermal features agree closely on Na/K reservoir temperature
+  (173-190°C). Read together: these features share one deep source but
+  diverge systematically in near-surface process by feature type -- a
+  sharper, more defensible answer than a simple "connected or not"
+  verdict, and a direct, quantitative extension of the already-
+  documented SBS_0001/SBW_0001 proximity-but-different-chemistry
+  finding.
+- **Thesis scoping refined**: `manuscript/01_introduction.qmd`'s
+  Objective 3 rewritten to split the subsurface-plumbing question into
+  its hydraulic half (still blocked on water-level data and fault
+  digitization) and its chemical half (demonstrated now, via this
+  baseline characterization), and to state explicitly that the
+  chemical-evolution work is what connects the fissure-specific
+  geochemistry to the Cl-conductivity proxy work in Objective 2.
+  `manuscript/00_thesis_proposal.qmd` gained a geothermometer
+  interpretation paragraph (the three-stage cooling signature, directly
+  answering "can this tell us about hot/dissolving zones in the shallow
+  subsurface") and a new "A baseline chemical-evolution characterization
+  of the flowpath" subsection with all four figures, explicit
+  one-time-snapshot framing, and the mixing-fraction link to
+  `chloride_mass_balance.R`'s own 58.7 L/s estimate.
+- **Verified**: `01_introduction.qmd` and the full `00_thesis_proposal.qmd`
+  (html + pdf) re-render cleanly -- 0 citeproc warnings, 0 undefined
+  citations, figure numbering sequential 1-30 (up from 26) with no gaps
+  (`pdftotext` check). QC re-run clean on the real database (same 2
+  pre-existing, unrelated `PHREEQC_Run_Failures`).
+- **Not done this session**: per explicit user instruction, no further
+  PHREEQC refinement (new end-members, uncertainty estimation, more
+  reaction-path phase sets) was attempted -- this was purely an
+  interpretation/visualization pass on existing successful runs; the
+  parallel mirrored edits to `03_methods.qmd`/`04_results.qmd`/
+  `05_discussion_and_future_work.qmd` that usually accompany a
+  `00_thesis_proposal.qmd` finding were NOT made this session, since the
+  user's request explicitly scoped the edit to `01_introduction.qmd` and
+  `00_thesis_proposal.qmd` only -- worth a follow-up pass to keep the
+  standalone chapters in sync if they'll be used independently; DEMO
+  database untouched; GeoPackage not re-exported (no new spatial data).
+  This session's file changes are not yet committed/pushed to git.

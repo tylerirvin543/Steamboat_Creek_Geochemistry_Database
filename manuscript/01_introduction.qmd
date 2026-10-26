@@ -223,11 +223,29 @@ hand can actually speak to it:
 3. **What does the subsurface plumbing feeding the Lower Sinter
    Terrace actually look like, and can it be reconstructed well enough
    to test whether the 2025 eruption reactivated an existing conduit
-   or opened something new?** This is the least resolved of the three
-   questions today -- it depends on well water-level data this
-   project has requested but not yet received, and on fault traces
-   that have not yet been digitized -- and Chapters 3 and 5 lay out
-   concretely what would need to happen for it to be answerable.
+   or opened something new?** This question has two distinct halves,
+   pursued by two different kinds of evidence. The *hydraulic* half --
+   a real potentiometric surface, fault-aware compartmentalization --
+   remains the least resolved of the three questions today, blocked on
+   well water-level data this project has requested but not yet
+   received and on fault traces that have not yet been digitized; see
+   the roadblocks laid out in Chapters 3 and 5 for what would need to
+   happen for it to be answerable. The *chemical* half does not share
+   that blocker: Chapter 4 demonstrates a real, one-time baseline
+   chemical-evolution characterization -- PHREEQC mixing, forward
+   reaction-path titration, and geothermometry run on real, same-era
+   samples along the real fissure-to-creek flowpath -- that already
+   speaks to how the Lower Sinter Terrace's distinct discharge
+   features (wells, springs, a seep) relate to one shared deep source
+   and to each other. This is presented as a baseline characterization
+   and a demonstration of the method's capability on a single snapshot
+   of real data, not an iterative refinement effort; further
+   precision is explicitly deferred to a future same-day synoptic
+   sampling round (Chapter 5), and it is this chemical-evolution work
+   that most directly connects the fissure-specific geochemistry to
+   the conductivity-as-chloride-proxy work in Objective 2 -- both are
+   ultimately asking how far, and in what form, the same thermal
+   signal travels from its source.
 
 ## What this proposal covers
 

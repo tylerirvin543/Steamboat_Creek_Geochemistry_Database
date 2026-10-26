@@ -1811,6 +1811,38 @@ across its full real sample set is a real, specific piece of evidence
 consistent with these three points sharing one deep source, not three
 independent ones.
 
+**What the geothermometers say about hot and dissolving zones in the
+shallow subsurface.** Reading the Na/K estimate, the quartz-
+equilibration estimate, and the measured discharge temperature
+together for all six real thermal features (not just the three used
+for the agreement test above) turns the geothermometer divergence
+already documented in Chapter 2 into a real diagnostic. At every
+single feature, quartz equilibration (99-127 degrees Celsius) sits
+above the measured discharge temperature, and Na/K (173-190 degrees
+Celsius) sits higher still -- a real, three-stage cooling signature:
+a shared deep reservoir around 175-190 degrees Celsius (Na/K, slow to
+re-equilibrate), transit through a shallower zone still hot enough to
+leave a quartz signature well above final discharge temperature, then
+a last, near-surface step down to whatever temperature is actually
+measured at the tap or pool. The SIZE of that last step is not uniform
+across feature types, and it lines up with the gain/loss pattern
+below: the two coolest real springs (SBS_0001, 47.8 degrees Celsius;
+SBS_0003, 39.6 degrees Celsius) show the largest gap between their
+quartz estimate and their measured temperature (79 and 63 degrees
+Celsius respectively), while the wells (SBW_0001, SBF_0001) show a
+smaller gap (28-51 degrees Celsius) despite starting from a similar
+quartz-equilibration temperature. Read together with the sulfate-gain/
+alkalinity-loss pattern below, this is consistent with the springs
+undergoing more near-surface processing -- more cooling, more
+atmosphere-driven chemical change -- on the way to discharge than the
+wells do, even though all of these features' deeper temperatures agree
+closely. This does not identify a specific hot zone or dissolving zone
+with a depth or a coordinate -- that would need real well-log or
+geophysical data this project does not yet have (Chapter 3) -- but it
+does say, with real numbers, that the shallow subsurface is not
+thermally or chemically uniform between discharge points, and that
+springs and wells experience that non-uniformity differently.
+
 **A conceptual figure, informed by visual inspection of the thermal-infrared
 surveys already shared for this project.** @fig-conceptual lays out the
 full flowpath as a schematic: deep parent fluid, degassing, the three
@@ -1851,6 +1883,130 @@ sampling plan above, not just a data-quality footnote: future
 Giggenbach-bottle gas sampling at this terrace should avoid breaking
 through fresh pavement and should re-check bottle seals in the field
 before leaving the site.
+
+## A baseline chemical-evolution characterization of the flowpath
+
+Everything in this subsection is read from the mixing, reaction-path,
+and geothermometer runs already reported above -- no new PHREEQC
+execution was needed. The real samples feeding every result here were
+all collected within the same field season, so this is explicitly a
+**one-time, same-era baseline characterization**: a demonstration that
+this modeling approach can reconstruct mixing, chemical evolution, and
+feature-type connectivity along a real flowpath from a single snapshot
+of real data, not an iterative refinement project. Further precision --
+tighter end-members, a real paired uncertainty estimate for inverse
+modeling, resolving SBS_0001's own unresolved tension -- is explicitly
+deferred to the same-day synoptic sampling round proposed in Chapter 5,
+not pursued further here. What follows connects this fissure-specific
+work directly to the broader chloride-conductivity proxy work: both
+are, at bottom, asking how far, and in what chemical form, the same
+thermal signal travels from its source.
+
+**How much of each discharge point is fissure-strength fluid, and how
+does that connect to the downstream proxy record?** Using the real,
+already-computed Cl-based mixing fraction against the fissure and SBRR
+end-members, shown in @fig-mixingfraction, the three real Low Sinter
+Terrace springs and seep sit at 0.77-0.89 (mostly fissure-strength
+fluid, diluted only modestly), the nearby well (SBW_0001) sits lower
+at 0.57, and the resort tank exceeds the fissure reference itself
+(1.04, already documented as a real finding, not an error). SBRR
+itself anchors the dilute end by definition; its downstream partner
+SBBV, several kilometers further down Steamboat Creek, still implies
+about 14 percent fissure-strength fluid by chloride alone -- the same
+real signal, at a much smaller concentration, that
+`chloride_mass_balance.R`'s own 58.7 liter-per-second thermal-discharge
+estimate is built on. This is the direct link between the fissure-
+specific chemistry above and the creek-scale conductivity-as-proxy
+work: the same conservative mixing framework explains both.
+
+```{r fig-mixingfraction}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/mixing_fraction_by_target.png",
+  "Real Cl-based mixing fraction (fraction fissure end-member) for every real downgradient target, colored by feature type.",
+  alt = "Horizontal bar chart of mixing fraction for six real targets, sorted from SBBV (lowest) to the resort tank (highest, exceeding 1).",
+  id = "fig-mixingfraction"
+)
+```
+
+**What is gained or lost, species by species, and does it distinguish
+feature types?** Comparing each real target's measured chemistry
+against what the same Cl-based mixing fraction would predict if every
+species traveled conservatively, shown in @fig-gainloss, sodium comes
+back essentially conservative everywhere (within 6 percent), the
+direct justification for treating chloride and sodium as reliable
+tracers in this system. Potassium is modestly gained everywhere (13-31
+percent), a real, open signal plausibly reflecting mild clay or
+feldspar exchange, not chased further here. Sulfate and alkalinity are
+where the real feature-type distinction shows up, sharpened in
+@fig-springswells: **every spring and the seep gain far more sulfate
+relative to conservative mixing than either well** (44-62 percent
+versus -3 to 20 percent), and alkalinity is **gained at both wells but
+lost at two of the three springs** -- opposite signs for the same
+species, split cleanly along feature type. Plausible mechanisms for
+both: open spring and seep discharge points are exposed to the
+atmosphere in a way a cased well is not, so near-surface oxidation of
+residual hydrogen sulfide to sulfate, and carbon dioxide degassing
+that would otherwise support alkalinity, both have more opportunity to
+happen before a sample is ever collected.
+
+```{r fig-gainloss}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/species_gainloss_heatmap.png",
+  "Real measured concentration versus the conservative-mixing prediction for six species, for every real downgradient target, expressed as percent gained or lost.",
+  alt = "Tile plot with targets on rows and species on columns, colored and labeled by percent deviation from conservative mixing.",
+  id = "fig-gainloss"
+)
+```
+
+```{r fig-springswells}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/springs_vs_wells_residuals.png",
+  "Sulfate and alkalinity gain/loss relative to conservative mixing, grouped by feature type, isolating the clearest feature-type pattern from the full heatmap above.",
+  alt = "Two-panel bar chart, one panel for alkalinity and one for sulfate, bars colored by feature type (well, well resort, spring, seep).",
+  id = "fig-springswells"
+)
+```
+
+**How does the real temperature record fit into this, and is this a
+chemically feasible connection for every feature type, or not?** The
+three-stage cooling picture in @fig-tempprofile (Na/K reservoir
+estimate, quartz-equilibration estimate, measured discharge
+temperature) and the Steamboat Creek re-warming between SBRR and SBBV
+are both drawn directly from values already reported above, placed
+side by side here as the clearest single summary figure for this
+subsection. Put all of this together and the honest answer is neither
+a clean "yes, connected" nor a clean "no, not connected": the real
+Na/K reservoir-temperature agreement (173-190 degrees Celsius across
+every real thermal feature, not just the three used for the formal
+agreement test above) is consistent with one shared deep source
+feeding wells, springs, and the seep alike. But the sulfate, alkalinity,
+and quartz-versus-measured-temperature patterns above show that
+**springs and wells diverge systematically in near-surface process**,
+not randomly -- springs and the seep show more cooling below their own
+quartz-equilibration temperature and a consistent sulfate-gain/
+alkalinity-loss signature that the wells do not share. The more precise
+and more defensible statement, given this real baseline snapshot, is
+that these features are chemically consistent with a shared deep
+source but **not** chemically consistent with identical near-surface
+pathways -- a real, specific, testable distinction between spring-type
+and well-type connectivity that a simple proximity map alone (SBS_0001
+and SBW_0001 sit only 109 meters apart yet show two of the most
+different fit behaviors on this flowpath, already noted above) cannot
+provide on its own.
+
+```{r fig-tempprofile}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/temperature_flowpath_profile.png",
+  "A. Three-stage cooling (Na/K reservoir estimate, quartz-equilibration estimate, measured discharge) for all six real thermal features, colored by feature type. B. Steamboat Creek's real measured temperature rise from SBRR to SBBV.",
+  alt = "Two-panel figure: a line plot of temperature across three cooling stages for six features colored by type, and a two-point line plot showing creek temperature rising downstream.",
+  id = "fig-tempprofile"
+)
+```
+
 
 ## Further cross-checks: water/gas geothermometers, facies, and discharge
 
