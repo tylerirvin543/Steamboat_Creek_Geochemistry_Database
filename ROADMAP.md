@@ -214,6 +214,26 @@ not aspirational claims:
     (`manuscript/00_thesis_proposal.qmd`, `02_geochemical_background.qmd`,
     `04_results.qmd`, `05_discussion_and_future_work.qmd`) were
     corrected in the same pass, not left stale.
+- **Correction (2026-10-25, continued): the resort tank's reconstructed
+  "parent fluid" is not reliable -- the well is a confirmed true,
+  intermittent air-lift pump.** User-confirmed in the field. Forced
+  atmospheric aeration (not natural adiabatic boiling) most plausibly
+  explains the resort tank's unusually high measured field pH (9.0 vs.
+  the fissure's 8.3) and its gas-equilibration convergence failure on
+  all six PHREEQC databases -- a more parsimonious, mechanistically
+  grounded explanation than treating pH 9 as an unexplained deep-fluid
+  property. The resort tank's own parent-fluid reconstruction (and the
+  ~2.3% Cl agreement with the fissure's reconstruction) is now reported
+  as diagnostic only, not relied upon as evidence for a shared deep
+  source. This does NOT affect every use of SBW_0002 in this project:
+  its as-measured (as-pumped) chemistry is used, unaffected, as a
+  reaction-path titration target (4.6% combined Ca/Mg/Alkalinity error,
+  the best fit of any real target) and as an inverse-modeling target,
+  since calcium/magnesium/alkalinity are not species an air-lift pump
+  would be expected to alter. A field note recording this (and the
+  reasoning above) was added to `Locations.notes` for SBW_0002
+  (location_id 76). Manuscript prose corrected in the same four files
+  as the temperature-bug fix above, plus `03_methods.qmd`.
 
 ## 2. Major roadblocks (and what unblocks each)
 

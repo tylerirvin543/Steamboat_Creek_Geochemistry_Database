@@ -246,13 +246,17 @@ chloride mass-balance approach Sorey and Colvard [@sorey1992] and this
 proposal both use, predating it by more than two decades. White's
 800-820 ppm pre-boiling chloride figure is of the same order of
 magnitude as this project's own gas-informed parent-fluid
-reconstruction described in Chapter 4 (657-672 mg/L, reconstructed
-independently from two 2026 discharge points six decades later),
-though roughly 18-20 percent lower -- a real gap worth keeping in
-view rather than smoothing over, since it could reflect six decades
-of real change in the system, a difference in method (White's
-single-step reservoir chemistry versus this project's
-steam-loss-and-gas-add-back reconstruction), or both.
+reconstruction described in Chapter 4 (657 mg/L at the fissure, the
+one reliable reconstruction of the two attempted; a second,
+diagnostic-only reconstruction at the resort tank gives 672 mg/L but
+is not treated as trustworthy, since that well is pumped with a true
+air-lift pump whose forced aeration the method does not represent),
+six decades later, though the fissure's own figure is roughly 18
+percent lower -- a real gap worth keeping in view rather than
+smoothing over, since it could reflect six decades of real change in
+the system, a difference in method (White's single-step reservoir
+chemistry versus this project's steam-loss-and-gas-add-back
+reconstruction), or both.
 
 **Heat source.** White interpreted the Steamboat system as a very
 long-lived convective system with no new magma directly involved: "no

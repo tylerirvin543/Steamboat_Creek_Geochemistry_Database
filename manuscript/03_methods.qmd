@@ -369,14 +369,21 @@ single-step adiabatic steam-loss fraction from a saturated-steam-table
 enthalpy balance, conservative-species concentrations scaled back by
 (1 minus that fraction), and a PHREEQC `GAS_PHASE` re-equilibration
 with the real, air-corrected gas composition at the reservoir's own
-saturation pressure. The same method is applied to the resort-tank
-sample using the same gas composition (no gas sample exists at the
-tank itself), and both reconstructed parent fluids, the as-measured
-discharge, a nearby well, and this project's two Steamboat Creek
-chloride-mass-balance stations are assembled into one real flowpath
-table spanning chemistry, PHREEQC saturation indices, geothermometry,
-and stable isotopes. Every run's thermodynamic database, charge-balance
-error, and convergence status are logged explicitly
+saturation pressure. The same method is applied, diagnostically, to
+the resort-tank sample using the same gas composition (no gas sample
+exists at the tank itself) -- but the well feeding the resort tank is
+pumped with a true, intermittent air-lift pump, a forced-aeration
+mechanism this method's steam-loss physics does not represent, so its
+reconstruction is reported but not treated as a reliable estimate of a
+deep fluid; the resort tank's as-measured (as-pumped) chemistry is
+used instead everywhere it appears as a target or end-member. The
+fissure's reconstructed parent fluid, the as-measured discharge at
+every node (including the resort tank), a nearby well, and this
+project's two Steamboat Creek chloride-mass-balance stations are
+assembled into one real flowpath table spanning chemistry, PHREEQC
+saturation indices, geothermometry, and stable isotopes. Every run's
+thermodynamic database, charge-balance error, and convergence status
+are logged explicitly
 (`data/derived/phreeqc/parent_fluid_diagnostics.csv`), including one
 real, reported convergence failure (see Results).
 ## Hydrologic and geologic modeling directions

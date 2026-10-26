@@ -909,7 +909,29 @@ geothermometric technique -- it assumes single-step (not continuous)
 boiling and that carbon dioxide/hydrogen sulfide partition essentially
 completely into the escaping vapor, and it applies the one real gas
 sample (NV26-1) to both the fissure and the resort-tank water samples,
-since no gas sample exists at the resort tank itself. Every PHREEQC run
+since no gas sample exists at the resort tank itself.
+
+**A real limitation specific to the resort-tank sample.** The well
+feeding the resort tank is pumped with a true air-lift pump, confirmed
+by its intermittent discharge pattern -- compressed air is injected
+into the well to lift the water, rather than the water flowing or
+flashing naturally. That is a fundamentally different degassing
+pathway from the fissure's natural adiabatic boiling that this method's
+steam-loss correction assumes, and it is a more parsimonious
+explanation for the resort tank's own behavior than the method's own
+physics: forced, intermittent contact with injected air plausibly
+strips carbon dioxide (and may add oxygen) regardless of how much, if
+any, the deep fluid itself boiled on the way up, which would explain
+both the resort tank's unusually high measured field pH and the
+gas-equilibration convergence failure reported below without invoking
+any property of the deep reservoir fluid at all. The resort tank's own
+"parent fluid" reconstruction is still computed and reported below, for
+completeness and because the exercise is instructive about the method's
+limits, but it should not be read as a reliable estimate of the deep
+reservoir fluid at the resort well -- its as-measured (as-pumped)
+chemistry is used instead everywhere it appears as a target or
+end-member elsewhere in this proposal (the reaction-path titration and
+inverse-modeling sections below). Every PHREEQC run
 in this reconstruction uses the LLNL thermodynamic database (automatically
 recommended for every sample here, since all are geothermal-temperature
 fluids), explicitly logged -- along with each input sample's own
@@ -1330,21 +1352,28 @@ show_fig(
 
 This subsection covers one connected analysis built across several
 steps, in this order: (1) a steam-loss and gas-add-back correction
-reconstructs each discharge sample's deep "parent fluid" using the
-one available real fissure gas sample; (2) the fissure's and resort
-tank's independently reconstructed parent fluids are compared and
-agree within about 2 percent on chloride; (3) a six-database
-sensitivity sweep is run on the resort-tank reconstruction because
-its gas-equilibration step failed to converge on this project's
-default database; (4) that divergence is root-caused to the resort
-tank's own high measured starting pH (9.0 versus the fissure's 8.3),
-not to database choice or gas-load size; (5) the reconstructed
-parent fluid is then used as an end-member in real PHREEQC inverse
-modeling, which finds zero feasible solutions -- attributed to a
-known PHREEQC numerical quirk, not a geochemical rejection of the
-end-member; and (6) the reconstructed and measured chemistry are
-traced along a full flowpath from parent fluid to the downstream
-creek. Each step is reported with its own real result below.
+reconstructs the fissure's deep "parent fluid" using the one available
+real fissure gas sample; (2) the identical method is also applied,
+diagnostically, to the resort tank, but the well feeding the resort
+tank is pumped with a true, intermittent air-lift pump, a mechanically
+forced aeration process the method's own steam-loss physics does not
+represent, so the resulting "agreement" between the two reconstructions
+is reported but not relied on as evidence; (3) a six-database
+sensitivity sweep is run on the resort-tank reconstruction because its
+gas-equilibration step failed to converge on this project's default
+database; (4) that divergence is root-caused to the resort tank's own
+high measured starting pH (9.0 versus the fissure's 8.3) -- itself very
+plausibly a direct consequence of the air-lift pump's forced aeration,
+not database choice, gas-load size, or a property of the deep reservoir
+fluid; (5) the fissure's reconstructed parent fluid (not the resort
+tank's) is then used as an end-member in real PHREEQC inverse modeling
+against both targets, which finds zero feasible solutions -- attributed
+to a known PHREEQC numerical quirk, not a geochemical rejection of the
+end-member; and (6) the reconstructed fissure parent fluid and the
+as-measured chemistry at every other node, including the resort tank's
+own as-pumped composition, are traced along a full flowpath from parent
+fluid to the downstream creek. Each step is reported with its own real
+result below.
 :::
 
 **A gas-informed parent-fluid reconstruction.** Applying the method
@@ -1362,16 +1391,22 @@ surface/shallow phenomenon as carbon dioxide escapes and pH rises, not
 a deep-reservoir one, shown in @fig-parentfluid. Applying the identical
 method to the resort-tank sample (815) gives a similar steam-loss
 fraction (20.8 percent) and a parent chloride within 2.3 percent of the
-fissure's own reconstructed parent (657 vs. 672 mg/L) -- closer than
-the two samples' raw measured values (815 vs. 849 mg/L) -- consistent
-with, though not proof of, a single shared deep source feeding both
-discharge points. Potassium, sulfate, lithium, and strontium converge
-less tightly (9-15 percent apart even after correction), which could
-reflect either minor water-rock reaction differences along slightly
-different flow paths or real sampling/analytical variability -- not
-resolved further here. The resort-tank sample's own gas-equilibration
-step did not converge (a real PHREEQC limitation at this fluid's
-measured pH of 9.0 combined with the imposed acid-gas load, logged to
+fissure's own reconstructed parent (657 vs. 672 mg/L) -- closer than the
+two samples' raw measured values (815 vs. 849 mg/L). This agreement is
+reported, not relied upon: the resort-tank well is pumped with a true,
+intermittent air-lift pump, a forced-aeration process this method's
+steam-loss physics does not represent, so its reconstructed "parent"
+is not a trustworthy estimate of a deep fluid, and the tight Cl
+agreement could just as easily be a coincidence of applying an
+inapplicable correction as it could be real evidence of a shared
+source. Potassium, sulfate, lithium, and strontium converge less
+tightly (9-15 percent apart even after correction), which could reflect
+either minor water-rock reaction differences along slightly different
+flow paths, real sampling/analytical variability, or the resort tank's
+pumping artifact -- not resolved further here. The resort-tank sample's
+own gas-equilibration step did not converge (a real PHREEQC limitation
+at this fluid's measured pH of 9.0 combined with the imposed acid-gas
+load, logged to
 `parent_fluid_diagnostics.csv` rather than hidden), so its reconstructed
 parent pH and saturation indices are not reported -- only its
 conservative-species concentrations, which do not depend on that step.
@@ -1441,7 +1476,17 @@ the conservative-species correction (chloride, sodium, and so on) was
 never in doubt and is unaffected by any of this; the resort tank's own
 re-equilibrated pH and saturation indices, as reported above, should be
 read as sensitive to its unusually high measured field pH specifically,
-not to a database artifact.
+not to a database artifact. That high starting pH itself has a specific,
+mechanistically plausible real-world cause rather than being an
+unexplained property of the fluid: the well feeding the resort tank is
+pumped with a true, intermittent air-lift pump, which forces atmospheric
+air through the water column to lift it. Stripping carbon dioxide via
+forced air contact raises pH in essentially the same direction as
+natural degassing does, so the resort tank's elevated pH plausibly
+reflects pumping, not an unusually large amount of natural boiling or
+an unusually alkaline deep source -- a more parsimonious explanation
+than treating the convergence failure purely as a numerical sensitivity
+to be worked around.
 
 As a direct check on one remaining candidate explanation, the amount
 of gas imposed on each parent fluid is scaled to each sample's own
@@ -1454,13 +1499,14 @@ the two (`phreeqc.dat`, `wateq4f.dat`) that had converged before the
 temperature correction was applied. This is a real, if negative,
 confirmation rather than a wasted step -- it rules out gas-load sizing
 as a contributing factor and leaves the resort tank's unusually high
-measured field pH as the sole identified driver.
+measured field pH -- itself most plausibly a product of its air-lift
+pump, not a deep-fluid property -- as the sole identified driver.
 
 ```{r fig-dbsensitivity}
 #| results: asis
 show_fig(
   "output/figures/manuscript/parent_fluid_database_sensitivity.png",
-  "A. Gas-equilibration convergence for both real water-gas pairings, across all six PHREEQC databases registered in this project. B. Reconstructed parent-fluid pH for every database that converged. The resort tank's divergence traces to its higher measured field pH (9.0 vs. 8.3), not database choice -- see text.",
+  "A. Gas-equilibration convergence for both real water-gas pairings, across all six PHREEQC databases registered in this project. B. Reconstructed parent-fluid pH for every database that converged. The resort tank's divergence traces to its higher measured field pH (9.0 vs. 8.3), not database choice -- plausibly itself a consequence of the resort well's true air-lift pump -- see text.",
   alt = "Two-panel figure: tile plot showing convergence status by database and sample; point plot showing reconstructed pH by database for the two samples.",
   id = "fig-dbsensitivity"
 )
@@ -1468,11 +1514,12 @@ show_fig(
 
 **Feeding the reconstructed parent fluid into real inverse modeling.**
 Running this project's existing PHREEQC inverse-modeling framework
-(end-members: the reconstructed parent fluid and the meteoric
+(end-members: the fissure's reconstructed parent fluid -- not the
+resort tank's, for the reasons given above -- and the meteoric
 reference well; candidate phases: calcite, quartz, chalcedony) against
 the two real target samples with complete chemistry (SBW_0001,
-SBW_0002) finds zero feasible mixing-plus-mineral-transfer solutions
-for either target. This is not read as a geochemical rejection of the
+SBW_0002, both used as-measured) finds zero feasible
+mixing-plus-mineral-transfer solutions for either target. This is not read as a geochemical rejection of the
 parent-fluid end-member -- the raw PHREEQC output traces the failure to
 the same tiny (on the order of 1e-9), numerically spurious residual on
 an unused trace redox couple (chlorine or carbon oxidation states that
@@ -1602,7 +1649,14 @@ gap." Under that explicitly adjusted question, SBW_0002 fits extremely
 well: a combined Ca/Mg/Alkalinity error of only 4.6 percent at a tiny
 net precipitation (on the order of one-millionth of a mole), by far the
 best fit of any real target tested on this flowpath, shown in
-@fig-reactionpath-comparison.
+@fig-reactionpath-comparison. This titration uses SBW_0002's real
+as-measured (as-pumped) composition throughout, not a reconstructed
+parent fluid, so the air-lift pump's effect on gas chemistry and pH
+does not bear on it: calcium, magnesium, and alkalinity are not the
+species an air-lift pump would be expected to alter, so this excellent
+fit is read as a genuine, trustworthy result about how closely
+SBW_0002's major-ion chemistry resembles the fissure's, independent of
+the separate pH/gas-equilibration concerns raised above.
 
 **Does a sulfate phase, or a different meteoric input, resolve
 SBS_0001's own tension?** SBS_0001's real chemistry gave a specific,

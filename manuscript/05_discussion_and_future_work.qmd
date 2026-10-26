@@ -134,22 +134,39 @@ qualitative read into an actual spatial layer (mirroring the
 project) and test it directly against where the spring-remapping
 fieldwork finds active discharge versus dry ground.
 
-**What the pH-9 database-sensitivity finding implies more broadly.**
+**What the pH-9 database-sensitivity finding implies more broadly --
+and what it most likely means for the resort tank specifically.**
 Tracking the resort tank's gas-equilibration convergence failure --
 which, with the project's corrected field temperature, now occurs on
 all six registered PHREEQC databases, not just three -- down to its
 own measured starting pH (9.0, versus the fissure's 8.3) rather than to
-a database artifact is a useful, generalizable result beyond this one
-sample. It means this project's high-pH samples specifically --
-anything starting near or above pH 9 -- carry noticeably less
-carbonate buffering capacity against an imposed gas load than a
-near-neutral sample does, so any PHREEQC pH or saturation-index output
-for such a sample should be cross-checked across more than one
-thermodynamic database before being trusted at face value, not
-reported from a single default run the way a near-neutral sample
-reasonably can be. This is a standing caveat for this project's
-PHREEQC workflow going forward, not a one-off fix for the resort tank
-alone.
+a database artifact has two distinct implications, one general and one
+specific to this sample. The specific one: the well feeding the resort
+tank is pumped with a true, intermittent air-lift pump, confirmed in
+the field, which forces atmospheric air through the water column to
+lift it. Stripping carbon dioxide via forced air contact raises pH in
+much the same direction as natural degassing, so the resort tank's
+unusually high measured pH -- and by extension its gas-equilibration
+failure and its unreliable 'parent fluid' reconstruction -- most
+plausibly reflects this pumping mechanism rather than any property of
+the deep reservoir fluid. This is a more parsimonious, mechanistically
+grounded explanation than treating the pH simply as an unexplained
+input, and it is the reason this proposal does not rely on the resort
+tank's own reconstructed parent fluid anywhere, using its as-measured
+chemistry instead. The general implication still stands independent of
+this one sample's explanation: this project's high-pH samples broadly
+-- anything starting near or above pH 9, for whatever underlying reason
+-- carry noticeably less carbonate buffering capacity against an
+imposed gas load than a near-neutral sample does, so any PHREEQC pH or
+saturation-index output for such a sample should be cross-checked
+across more than one thermodynamic database before being trusted at
+face value, not reported from a single default run the way a
+near-neutral sample reasonably can be. This is a standing caveat for
+this project's PHREEQC workflow going forward, not a one-off fix for
+the resort tank alone -- and a reminder to ask, for any future
+unusually high- or low-pH sample, whether a sampling or pumping
+artifact is a more likely explanation before reaching for a modeling
+fix.
 
 **What the null inverse-modeling result does and does not mean.**
 Finding zero feasible mixing-plus-mineral-transfer solutions when the

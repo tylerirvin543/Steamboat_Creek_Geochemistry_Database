@@ -175,13 +175,22 @@ supersaturated to undersaturated -- consistent with carbonate scaling
 being a shallow/surface phenomenon, not a deep-reservoir one. Applying
 the identical method to the resort-tank sample gives a parent chloride
 within 2.3 percent of the fissure's own (672 vs. 657 mg/L), tighter
-agreement than the two samples' raw measured values -- though the
-resort-tank sample's own gas-equilibration step did not converge on
-any of the six registered PHREEQC databases at its measured pH of 9.0
-(a real PHREEQC limitation, logged to
+agreement than the two samples' raw measured values -- but this
+agreement is reported, not relied on: the well feeding the resort tank
+is pumped with a true, intermittent air-lift pump, a forced-aeration
+process this method's steam-loss physics does not represent, so its
+reconstructed parent is not a trustworthy estimate of a deep fluid, and
+the close Cl agreement could be coincidental. The resort-tank sample's
+own gas-equilibration step did not converge on any of the six
+registered PHREEQC databases at its measured pH of 9.0 -- itself
+plausibly a direct consequence of the air-lift pump's forced aeration
+rather than an unusual deep-fluid property (a real PHREEQC limitation,
+logged to
 `data/derived/phreeqc/parent_fluid_diagnostics.csv` rather than
 silently dropped), so only its conservative-species reconstruction, not
-its re-equilibrated pH/saturation state, is reported.
+its re-equilibrated pH/saturation state, is reported. SBW_0002's
+as-measured (as-pumped) chemistry, not this reconstruction, is used
+wherever it appears later as a target or end-member.
 ```{r evolution-fig}
 #| echo: false
 #| fig-cap: "Real chemistry, saturation indices, geothermometry, and stable isotopes across the sampled flowpath: reconstructed parent fluids, measured fissure/resort-tank discharge, a nearby well (SBW_0001), and Steamboat Creek at SBRR then downstream SBBV. See `scripts/analysis/fluid_evolution_flowpath.R`."
@@ -258,7 +267,12 @@ valid 0-1 range -- a real, already-documented finding that it is more
 concentrated than the fissure reference itself, not a new problem.
 Clamped to 1.0 (pure fissure end-member) for the titration, it fits
 extremely well: 4.6 percent combined error, by far the best of any
-real target tested.
+real target tested. This titration uses SBW_0002's as-measured,
+as-pumped chemistry, not a reconstructed parent fluid -- calcium,
+magnesium, and alkalinity are not species the resort well's air-lift
+pump would be expected to alter, so this fit is read as a genuine
+result about SBW_0002's real similarity to the fissure, independent of
+the pH/gas-equilibration concerns discussed above.
 
 A real, specific lead -- SBS_0001 has the highest sulfate and lowest
 alkalinity of its peer group, the classic gypsum/anhydrite signature a

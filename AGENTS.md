@@ -8818,3 +8818,98 @@ entry's handoff list are now complete.
   per several prior sessions' notes, and was not attempted here since
   html/pdf verification was already thorough). This session's file
   changes are not yet committed/pushed to git.
+
+## Session 58 (2026-10-25, continued): resort tank (SBW_0002) confirmed
+true air-lift pumped -- parent-fluid reconstruction reframed as
+diagnostic-only, not relied on
+
+User-requested review of the rewritten inverse-modeling/reaction-path
+section surfaced a real methodological gap: the gas-informed
+parent-fluid reconstruction (Session 56/57's own work) assumes natural,
+single-step adiabatic boiling for both the fissure and the resort tank.
+Asked directly whether that assumption holds for the resort tank, the
+user confirmed it is a **true air-lift pump** (confirmed by its
+intermittent discharge pattern) -- a mechanically forced-aeration
+process, not natural flashing.
+
+- **New real field fact recorded in the database**: `Locations.notes`
+  for SBW_0002 (location_id 76) appended with the air-lift confirmation
+  and its mechanistic implication, cross-referencing the manuscript and
+  `ROADMAP.md`.
+- **Reframed, not deleted, the resort-tank parent-fluid reconstruction**:
+  the exercise is still computed and reported (consistent with this
+  project's standing rule to report real results, not hide them), but
+  every place it's used is now explicitly caveated that it should not be
+  treated as a reliable estimate of a deep fluid. Specifically: (1) the
+  ~2.3% Cl agreement between the two independently reconstructed parent
+  fluids (fissure vs. resort) is now reported as "could be coincidental
+  given the resort side's inapplicable physics," not as evidence for a
+  shared deep source; (2) the resort tank's anomalously high measured
+  field pH (9.0 vs. the fissure's 8.3) and its gas-equilibration
+  convergence failure on all six PHREEQC databases are now attributed,
+  as the leading explanation, to forced CO2 stripping by the air-lift
+  pump itself -- a more parsimonious, mechanistically grounded
+  explanation than treating pH 9 as an unexplained property of the fluid
+  (the real database-sensitivity/root-cause work from Session 57 is
+  unchanged and still correct -- starting pH is still the proximate
+  driver -- this just adds the real-world reason *why* the pH differs);
+  (3) the White (1968) parent-fluid chloride comparison in
+  `02_geochemical_background.qmd` now explicitly treats only the
+  fissure's 657 mg/L as the reliable comparison point, with the resort's
+  672 mg/L noted as diagnostic-only.
+- **Confirmed and stated explicitly that this does NOT affect most of
+  SBW_0002's other uses in the document**: the reaction-path titration
+  (SBW_0002 as a target, 4.6% combined Ca/Mg/Alkalinity error, the best
+  fit of any real target on the flowpath) and its use as an
+  inverse-modeling target both already use its as-measured/as-pumped
+  chemistry, not a reconstructed parent -- and calcium, magnesium, and
+  alkalinity are not species an air-lift pump would be expected to
+  alter, so these results stand independent of the pH/gas issue. Added
+  one clarifying sentence to each of these passages making this
+  explicit rather than leaving it implicit.
+- **Edited files**: `manuscript/00_thesis_proposal.qmd` (Methods
+  preamble, the "what this section covers" callout, the main
+  reconstruction paragraph, the database-sensitivity paragraph x2, the
+  figure caption, the inverse-modeling paragraph, the SBW_0002
+  reaction-path paragraph), `02_geochemical_background.qmd` (White
+  comparison), `03_methods.qmd` (method description), `04_results.qmd`
+  (parallel edits to the above), `05_discussion_and_future_work.qmd`
+  (the "what the pH-9 finding implies" paragraph rewritten to lead with
+  the air-lift explanation while keeping the still-valid general
+  high-pH/cross-database-check caveat). `ROADMAP.md` given a second,
+  dated correction block (appended after Session 57's own correction
+  block, not merged into it).
+- **Verified**: all four standalone chapters plus the full combined
+  `00_thesis_proposal.qmd` (html + pdf) re-rendered cleanly -- 0
+  citeproc warnings, 0 undefined citations, figure numbering still
+  sequential 1-26 with no gaps (`pdftotext` check). QC re-run clean on
+  the real database (same 2 pre-existing, unrelated
+  `PHREEQC_Run_Failures`, 0 logger outliers) after the `Locations.notes`
+  update.
+- **Recurring CRLF/exact-match editing note (same pattern as many prior
+  sessions)**: the `edit` tool's exact-string matching failed
+  unpredictably against all of `00_thesis_proposal.qmd`,
+  `02_geochemical_background.qmd`, `03_methods.qmd`, and
+  `04_results.qmd` for several of this session's multi-line
+  replacements despite byte-verified-correct `old_string` values;
+  worked around every time with the established
+  `readLines()`/`writeLines(sep="\n")` splice via `executeCode`. Two of
+  these splices initially truncated content mid-sentence because the
+  replacement vector's length didn't match the indexed range being
+  overwritten (`txt[a:b] <- longer_vector` silently drops the excess
+  rather than inserting it) -- caught immediately by re-reading the file
+  after each splice (not just trusting the "done" message) and fixed by
+  switching to an insert-based splice (`c(txt[1:anchor], new_lines,
+  txt[(anchor+1):length(txt)])`) instead of a fixed-range assignment.
+  Worth remembering: always re-read and visually confirm a splice's
+  output before moving on, and prefer insert-based splicing over
+  fixed-range replacement when the new content has a different line
+  count than the old.
+- **Not done this session**: no attempt to independently verify the
+  air-lift-pump claim against any other source (taken as given, per
+  direct, confirmed user field knowledge); no re-run of any PHREEQC
+  computation (this was a reframing/interpretation and documentation
+  correction, not a code or data bug); DEMO database untouched;
+  GeoPackage not re-exported (the one database change -- a
+  `Locations.notes` text append -- is not a GIS-relevant field). This
+  session's file changes are not yet committed/pushed to git.
