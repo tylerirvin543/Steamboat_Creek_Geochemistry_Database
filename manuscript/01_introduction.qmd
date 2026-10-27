@@ -97,13 +97,15 @@ knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
 | 1992 | Sorey and Colvard attribute most of the spring-flow decline to regional groundwater drawdown, not geothermal production [@sorey1992]. |
 | 2000 | Groundwater levels recover, but natural spring flow does not resume on the main terrace [@sorey2000]. |
 | 2007 | The groundwater/geothermal monitor-well network is documented in detail [@klein2007]. |
-| 2022 | Steaming ground expands and water reappears along natural fractures at the Lower Sinter Terrace, the first sign of renewed activity [@lindsey2026]. |
-| 2023 | Diffuse steaming measurably expands across the lower sinter terrace; no focused vents or flowing water yet [@lindsey2026]. |
-| 2024 | Activity shifts from diffuse degassing to localized seeps and vents; first evidence of shallow boiling [@lindsey2026]. |
-| 2025 (early) | Existing vents intensify and discharge points begin migrating along nearby fractures [@lindsey2026]. |
+| 2022 | Water begins accumulating in the fissure's "Big Pool" and steaming ground expands at the Lower Sinter Terrace, the first signs of renewed activity -- the Busick property fissure and pipe had reportedly been dry for years before this [@lindsey2026; NBMG field timeline, 2024]. |
+| 2023 | The fissure fills with water and sustained bubbling begins by November; a new fumarole forms near the Hot Springs Resort parking lot. Diffuse steaming measurably expands across the terrace, though no focused vents or flowing water are seen yet [@lindsey2026; NBMG field timeline, 2024]. |
+| 2024-03 | A site visit documents sustained bubbling in the fissure, a boiling "Driveway Spring," and a new fumarole with fresh sulfur staining; activity shifts from diffuse degassing to localized seeps and vents over the year [@lindsey2026; NBMG field timeline, 2024]. |
+| 2025 (May) | Sustained bubbling and spouting resume in the fissure 1-2 weeks before the eruption; existing vents intensify and discharge points migrate along nearby fractures [@lindsey2026; NBMG field timeline, 2024]. |
 | 2025-05-30 | Ormat's field-wide authorized injection limit is raised from 49,500 to 55,000 gpm (NDEP UIC Temporary Permit UNEV2007204T2025-1 [@nevadadep2025uic]) -- about two weeks before the eruption; a candidate contributing factor, not yet confirmed (see below). |
-| 2025 | The Lower Sinter Terrace erupts (June 3); the wellhead is capped and discharge redistributes laterally [@lindsey2026]. NBMG begins an integrated monitoring program, and this project's temperature and conductivity logger network is deployed. |
-| 2026 | Lindsey et al. publish the first full account of the eruption [@lindsey2026]; spring/well remapping and chemistry/isotope sampling continue under this thesis. |
+| 2025-06-01/02 | A geyser erupts overnight from the Busick property pipe, reported at an estimated 100 ft before moderating to 20-30 ft by morning and ceasing by afternoon; a resident report brings NBMG to the site within hours (NBMG field timeline, 2024). |
+| 2025-06-05/06 | A second eruption pulse begins overnight and is surveyed in detail the next morning: drone-estimated bursts of 8-12 m (to 18 m), the "Driveway Spring" measured at 95.1 C, new fumaroles to 95.8 C, and a previously unsurveyed warm spring at 40.0 C (NBMG field timeline, 2024). |
+| 2025 | The wellhead is capped and discharge redistributes laterally [@lindsey2026]. NBMG begins an integrated monitoring program, and this project's temperature and conductivity logger network is deployed. |
+| 2026 | Lindsey et al. publish the first full account of the eruption [@lindsey2026]; spring/well remapping and chemistry/isotope sampling continue under this thesis. In August, the author and Dave find a new seep-fed hot spring at the terrace (GPS-logged and photographed the following month, September 27); a growing sulfur deposit and new alluvium-to-sinter seeps are documented the same month. |
 
 : A brief chronology of Steamboat Hills, from first characterization to the current reawakening. {#tbl-chronology}
 
@@ -246,6 +248,21 @@ hand can actually speak to it:
    the conductivity-as-chloride-proxy work in Objective 2 -- both are
    ultimately asking how far, and in what form, the same thermal
    signal travels from its source.
+
+Each objective carries a working expectation going into the data,
+stated plainly so the Results chapter can say clearly whether it held
+up: (1) thermal-water chloride at Steamboat has likely declined
+somewhat since the 1950-1991 baseline, consistent with decades of
+production, but the conservative Cl/B signature of the thermal source
+itself should be essentially unchanged; (2) specific conductance
+should track chloride closely enough at daily-to-weekly resolution to
+serve as a practical proxy, with the exact frequency at which that
+relationship breaks down being the real open question, not whether a
+relationship exists at all; (3) the Lower Sinter Terrace's wells,
+springs, and seep should share one deep chemical source but need not
+behave identically once that water nears the surface, since wells and
+open discharge points are exposed to very different near-surface
+conditions.
 
 ## What this proposal covers
 

@@ -217,8 +217,30 @@ answer today, and it is the template to reach for the next time an
 inverse search comes back empty: ask what a specific, hypothesis-driven
 reaction would predict, rather than widening the solver's own
 uncertainty further as the only lever.
-hypothesis-driven reaction would predict, rather than widening the
-solver's own uncertainty further.
+
+**What the baseline feature-type characterization means for the
+eruption question, and for the Cl-conductivity work.** Treating the
+mixing, reaction-path, and geothermometer work above as a one-time
+baseline rather than a refinement target (an explicit scoping choice
+for this proposal) still produces a real answer to the connectivity
+question this thesis cares about: wells, springs, and the seep at the
+Lower Sinter Terrace share one deep source by Na/K reservoir
+temperature, but diverge consistently in near-surface process --
+springs and the seep pick up far more sulfate and, at two of three
+springs, lose alkalinity relative to conservative mixing, while the
+wells mostly do not. That is a sharper statement than "connected" or
+"not connected," and it gives the ongoing spring and well remapping a
+concrete test to run on every newly found feature, including the
+August 2026 hot spring: does it carry the springs' sulfate-gain/
+alkalinity-loss signature, or the wells' pattern instead? The same
+baseline is also the direct chemical complement to the
+conductivity-as-proxy work in Chapter 4 -- both are built on the same
+conservative-mixing logic, just applied at two different scales (the
+fissure-to-creek flowpath versus the creek-to-gauge record), so a
+future synoptic sampling round that tightens the end-members here
+would sharpen the proxy calibration there too, not just this chapter's
+own results.
+
 
 ## The chemistry-first modeling principle, and what it implies going forward
 

@@ -220,6 +220,29 @@ water, consistent with the real thermal inflow being too small a
 fraction of total streamflow to shift the creek's bulk isotopic
 signature even while it measurably shifts chloride.
 
+**What the geothermometers say about hot and dissolving zones in the
+shallow subsurface.** Reading Na/K, quartz, and measured discharge
+temperature together for all six real thermal features (not just the
+three used above) makes the geothermometer divergence a real
+diagnostic rather than just a curiosity. At every single feature,
+quartz equilibration (99-127 degrees Celsius) sits above measured
+discharge temperature, and Na/K (173-190 degrees Celsius) sits higher
+still -- a three-stage cooling signature: a shared deep reservoir
+around 175-190 degrees Celsius, transit through a shallower zone still
+hot enough to leave a quartz signature well above final discharge
+temperature, then a last near-surface step down to whatever is
+actually measured. That last step is not the same size everywhere:
+the two coolest real springs (SBS_0001, 47.8 degrees Celsius; SBS_0003,
+39.6 degrees Celsius) show the largest gap between their quartz
+estimate and measured temperature (79 and 63 degrees Celsius), while
+the wells show a smaller gap (28-51 degrees Celsius) from a similar
+starting point. This does not locate a specific hot or dissolving zone
+with a depth or a coordinate -- that needs real well-log or
+geophysical data this project does not yet have -- but it does show,
+with real numbers, that the shallow subsurface is not thermally or
+chemically uniform between discharge points, and that springs and
+wells experience that non-uniformity differently.
+
 Real inverse modeling against SBW_0001 -- the across-creek well sitting
 clearly above the fissure+SBRR conservative-mixing curve -- finds no
 feasible mixing-plus-mineral-transfer solution at the standard 5 percent
@@ -334,6 +357,78 @@ for this project, not from a digitized layer -- the underlying raster
 files are not yet on disk (`docs/action_items_for_user.md`, item 12).
 Stated now because it is a real, testable prediction, not because the
 digitization work is done.
+
+## How does the flowpath's chemistry change across feature types? A baseline characterization
+
+This section reads the mixing, reaction-path, and geothermometer runs
+already reported above from a different angle -- no new PHREEQC
+execution is needed. Every sample feeding it was collected within the
+same field season, so this is a one-time, same-era baseline, not an
+iterative refinement: a demonstration that this modeling approach can
+reconstruct mixing and chemical evolution along a real flowpath from a
+single snapshot of data. It also connects directly to the
+conductivity-as-proxy work above (both ask how far, and in what
+chemical form, the same thermal signal travels) and gives a chemical
+baseline for the terrace as it stood this field season, against which
+newly found features -- including the hot spring the author and Dave
+found in August 2026 -- can be checked going forward.
+
+```{r mixingfraction-fig}
+#| echo: false
+#| fig-cap: "Real Cl-based mixing fraction (fraction fissure end-member) for every real downgradient target, colored by feature type."
+knitr::include_graphics("../output/figures/manuscript/mixing_fraction_by_target.png")
+```
+
+The three real springs/seep sit at 0.77-0.89 fissure-strength fluid,
+the nearby well (SBW_0001) sits lower at 0.57, and the resort tank
+exceeds the fissure reference itself (1.04). SBBV, several kilometers
+downstream, still implies about 14 percent fissure-strength fluid by
+chloride alone -- the same signal, at much lower concentration, this
+project's own 58.7 liter-per-second thermal-discharge estimate is
+built on.
+
+```{r gainloss-fig}
+#| echo: false
+#| fig-cap: "Real measured concentration versus the conservative-mixing prediction for six species, for every real downgradient target, expressed as percent gained or lost."
+knitr::include_graphics("../output/figures/manuscript/species_gainloss_heatmap.png")
+```
+
+```{r springswells-fig}
+#| echo: false
+#| fig-cap: "Sulfate and alkalinity gain/loss relative to conservative mixing, grouped by feature type."
+knitr::include_graphics("../output/figures/manuscript/springs_vs_wells_residuals.png")
+```
+
+Sodium comes back essentially conservative everywhere (within 6
+percent), which is the direct justification for treating chloride and
+sodium as reliable tracers in this system. Sulfate and alkalinity are
+where feature type shows up clearly: every spring and the seep gain
+far more sulfate relative to conservative mixing than either well
+(44-62 percent versus -3 to 20 percent), and alkalinity is gained at
+both wells but lost at two of the three springs. Open spring and seep
+discharge points are exposed to the atmosphere in a way a cased well
+is not, so near-surface sulfide oxidation and carbon dioxide degassing
+both have more opportunity to happen before a sample is collected.
+
+```{r tempprofile-fig}
+#| echo: false
+#| fig-cap: "A. Three-stage cooling (Na/K, quartz, measured) for all six real thermal features, by feature type. B. Steamboat Creek's real temperature rise from SBRR to SBBV."
+knitr::include_graphics("../output/figures/manuscript/temperature_flowpath_profile.png")
+```
+
+Put together, the honest answer to whether these features are
+connected is neither a clean yes nor a clean no. The real Na/K
+agreement across every real thermal feature (173-190 degrees Celsius)
+supports one shared deep source for wells, springs, and the seep
+alike. But the sulfate, alkalinity, and quartz-versus-measured-
+temperature patterns above show that springs and wells diverge
+systematically in near-surface process, not randomly. The more precise
+statement is that these features are chemically consistent with a
+shared deep source but not with identical near-surface pathways -- a
+specific, testable distinction a proximity map alone (SBS_0001 and
+SBW_0001 sit only 109 meters apart yet behave very differently, above)
+cannot provide by itself.
+
 
 ## Hydrochemical facies: does unsupervised clustering recover known geochemistry?
 

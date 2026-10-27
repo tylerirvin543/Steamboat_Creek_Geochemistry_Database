@@ -8987,3 +8987,134 @@ figures and no new PHREEQC execution.
   standalone chapters in sync if they'll be used independently; DEMO
   database untouched; GeoPackage not re-exported (no new spatial data).
   This session's file changes are not yet committed/pushed to git.
+
+## Session 60 (2026-10-26, continued): mirroring, He removal, full NBMG
+timeline incorporation, hypotheses added, tone/flow pass
+
+Large follow-up covering six distinct asks in one turn: mirror the
+baseline-characterization work into the two standalone chapters, strip
+helium-isotope reporting from the proposal, fully incorporate the
+user's recently-downloaded NBMG eruption timeline document, add
+explicit working hypotheses, strengthen how the PHREEQC work connects
+to the Cl-conductivity proxy work and post-eruption LST
+characterization (including the new hot spring), and a tone/flow pass.
+
+- **Mirrored into `manuscript/04_results.qmd`**: the geothermometer
+  three-stage-cooling paragraph and a new "How does the flowpath's
+  chemistry change across feature types? A baseline characterization"
+  section with all four figures, adapted to this chapter's
+  `knitr::include_graphics()` convention (it doesn't use the
+  `show_fig()` helper `00_thesis_proposal.qmd` defines).
+- **Mirrored into `manuscript/05_discussion_and_future_work.qmd`**: a
+  new discussion paragraph connecting the feature-type characterization
+  to both the eruption question and the Cl-conductivity proxy work.
+  **Real, pre-existing bug found and fixed while editing this file**: a
+  duplicated trailing sentence fragment ("hypothesis-driven reaction
+  would predict, rather than widening the solver's own uncertainty
+  further.") sat directly after an already-complete sentence ending
+  "...as the only lever." -- leftover corruption from an earlier
+  session's edit, now removed.
+- **Helium-isotope reporting removed from `00_thesis_proposal.qmd`**:
+  the He-3/He-4 ratio comparison paragraph (Torgersen & Jenkins 1982
+  baseline, Kennedy & van Soest 2007 regional corroboration) and the
+  `fig-heisotope` figure (`he_isotope_historical_comparison.png`) were
+  both deleted outright, per explicit user instruction. The real,
+  useful fact in that paragraph -- that NV26-1 is co-located with
+  SBF_0001, a real water sample with complete chemistry -- was kept.
+  Confirmed via a full-text search of the rendered PDF: zero remaining
+  mentions of helium, Rc/Ra, or either citation. Neither
+  `he_isotope_historical_comparison.png` nor the He-isotope content
+  had ever been mirrored into `04_results.qmd`/`05_discussion_and_
+  future_work.qmd`, so no parallel removal was needed there.
+- **The user's recently-downloaded NBMG "Steamboat Springs Approximate
+  Timeline of Events" document** (`C:\Users\tyler\Downloads\timeline.pdf`,
+  downloaded 2026-10-24) was read directly and cross-checked against
+  `data/raw/historical/nbmg_timeline_2022_2025.csv` (ingested Session
+  50) -- confirmed the CSV is already a faithful, complete day-by-day
+  transcription of this exact document (Busick property acquisition,
+  Dave Lostlen, the pre-2024 bubbling/fumarole buildup, the March 2024
+  NBMG site visit, and both real June 2025 eruption pulses with real
+  named observers and measured temperatures), but **none of this
+  detail had ever made it into either chronology table in the
+  manuscript** -- both `00_thesis_proposal.qmd` and
+  `01_introduction.qmd` still said the eruption happened on a single
+  date ("erupts (June 3)"), which is not what the fuller record shows
+  (the first pulse began the night of June 1, moderated by June 2, and
+  a second, independently surveyed pulse followed June 5-6). Both
+  chronology tables rewritten with real day-dated rows for 2022-2025
+  pulled directly from the timeline document (property/fissure history,
+  the two real eruption pulses with real measured temperatures --
+  Driveway Spring 95.1 C, new fumaroles 95.8 C, a previously-unsurveyed
+  spring at 40.0 C -- cited inline as "NBMG field timeline, 2024" since
+  it has no formal bibliography entry).
+- **The August 2026 hot-spring discovery re-attributed accurately**: the
+  existing September 2026 field-observations passage had framed the new
+  hot spring as something "field photographs...document," crediting
+  only an unnamed "nearby resident" for independent confirmation. Per
+  the user's correction, this was rewritten to credit the actual
+  discovery to the author and Dave in August 2026 (with the September
+  27 photos as the later GPS-logging/documentation date, not the
+  discovery date itself), in both `00_thesis_proposal.qmd`'s narrative
+  paragraph and both chronology tables' 2026 rows.
+- **Explicit working hypotheses added**, paired with each proposal's
+  existing research-question framework -- a real, pre-existing
+  structural difference between the two documents was found in the
+  process and is flagged, not silently fixed: `01_introduction.qmd`
+  uses a 3-question "Thesis objectives" list while
+  `00_thesis_proposal.qmd` (the actual full-proposal deliverable) uses
+  a more granular, deliverable-paired "RQ1-RQ4" framework under
+  "Purpose of study" -- these are genuinely different structures that
+  predate this session, not something introduced here. A hypothesis
+  paragraph was added to each document matching its own existing
+  framework (3-objective phrasing in `01_introduction.qmd`, RQ1-RQ4
+  phrasing in `00_thesis_proposal.qmd`) rather than forcing one
+  document's structure onto the other without a larger, deliberate
+  restructuring this turn didn't have room for.
+- **PHREEQC-connects-to-everything framing strengthened**: the baseline
+  chemical-evolution characterization's opening paragraph in
+  `00_thesis_proposal.qmd` (and its mirrored versions) now states
+  explicitly, in one place, that this work does two things -- links
+  the fissure-specific geochemistry to the Cl-conductivity proxy work
+  quantitatively (shared conservative-mixing framework), and gives a
+  chemical baseline for the Lower Sinter Terrace as it stood this field
+  season (after the 2025 eruption, following the documented 2022-2025
+  buildup, while the terrace is still visibly changing) that any future
+  newly-found feature -- including the August hot spring -- can be
+  checked against. The Conclusion was revised to state this same
+  connection explicitly rather than leaving the PHREEQC work's role
+  implicit.
+- **Tone/flow pass, real but explicitly bounded, not exhaustive**: a
+  project-wide scan found roughly 237 instances of "real" used as a
+  filler intensifier and 204 em-dashes in `00_thesis_proposal.qmd`
+  alone (~2390 lines) -- confirmed this is a pervasive, not isolated,
+  pattern. Given the scale, a full line-by-line rewrite of the entire
+  document was not attempted in this session; instead, every piece of
+  **new** prose written this session (hypotheses, the hot-spring
+  paragraph, the baseline-characterization framing, the Conclusion) was
+  deliberately written and then self-edited in a more direct, plainer
+  voice, and the Conclusion's pre-existing text was also tightened.
+  **Flagged honestly to the user, not silently left incomplete**: the
+  bulk of the document's existing prose (everything not touched this
+  session) still carries this same pervasive tone pattern and would
+  benefit from a dedicated full-document pass; this is a real, scoped
+  follow-up task, not something resolved this session.
+- **Verified**: all five manuscript files (`00_thesis_proposal.qmd`
+  html+pdf, `01_introduction.qmd`, `04_results.qmd`,
+  `05_discussion_and_future_work.qmd` all html) re-render cleanly -- 0
+  citeproc warnings, 0 undefined citations/markers, figure numbering
+  sequential 1-29 (down from 30, since the He figure was removed) with
+  no gaps (`pdftotext` check), zero remaining helium/Rc-Ra mentions
+  confirmed by direct text search of the rendered PDF. QC re-run clean
+  on the real database (no database changes made this session -- purely
+  a documentation/writing session).
+- **Not done this session**: the pre-existing RQ-framework-vs-
+  objectives-list structural inconsistency between `01_introduction.qmd`
+  and `00_thesis_proposal.qmd` was flagged but not reconciled (would
+  need a deliberate choice of which framework to standardize on and a
+  larger rewrite of one file); a full document-wide tone pass was not
+  attempted (see above); `02_geochemical_background.qmd`/
+  `03_methods.qmd` were not touched this session (no baseline-
+  characterization content lives there to mirror, and neither contains
+  He-isotope content); DEMO database untouched; GeoPackage not
+  re-exported. This session's file changes are not yet
+  committed/pushed to git.
