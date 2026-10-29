@@ -1,0 +1,134 @@
+---
+title: "Collar (1990) as a Historical Baseline for the Lower Sinter Terrace"
+subtitle: "What the 1986-89 decline thesis tells us about today's thermal expressions and monitoring network"
+format: html
+---
+
+## Purpose and scope
+
+This notebook is the living reference for how **Collar (1990)** is used in this
+project. Full citation: Collar, R.J., 1990, *Causes for the decline of hot spring
+and geyser activity, Steamboat Springs, Nevada*: M.S. thesis, San Diego State
+University (a by-product of the Collar and Huntley USGS grant study). It is **not**
+the same document as Collar and Huntley (1990, 12th NZ Geothermal Workshop), cited
+in `references.bib` as `collar1990`. Source files are in
+`docs/literature/collar paper and plates/` (gitignored: cite, do not re-host). Plates 1-4
+are unreferenced scanner TIFFs; they must be georeferenced in ArcGIS before any
+coordinate is taken from them.
+
+Every number below was read from page images of the thesis (Table 3 = thesis p. 152;
+Table 4 = pp. 322-323), because the OCR text layer scrambles both tables.
+
+```{r root-10}
+#| include: false
+if (basename(getwd()) == "notebooks") knitr::opts_knit$set(root.dir = normalizePath(file.path(getwd(), "..")))
+```
+
+```{r setup-10}
+#| message: false
+library(DBI); library(RSQLite); library(dplyr); library(ggplot2); library(knitr)
+root <- "."
+con <- dbConnect(SQLite(), file.path(root, "database", "geochem_operational.sqlite"))
+source(file.path(root, "scripts", "analysis", "historical_comparison_collar1990.R"))
+```
+
+## 1. What the thesis contains and why it matters here
+
+| Content (thesis pages, approx.) | Use in this project |
+|---|---|
+| Spring numbering and 1977-89 observations, main and low terrace (App. A, pp. 222-265) | Dated baseline of low-terrace features; White cataloged 20 low-terrace springs (9 geysers). By 1988 only spring 50 still flowed (about 3 gpm). |
+| Fault and air-photo-lineament map, Plate 3 / Fig. 14 | Candidate source for digitized faults; shows Mud Volcano Basin, Steamboat Springs, Silica Pit, and Pleasant Valley faults and about 40 labeled wells and springs. |
+| Chloride mass balance and Table 3 (pp. 150-154), App. D | Same method as the thesis; defines the creek reaches; supplies 1988-89 discharge. |
+| Table 4 (pp. 322-323) | 86 station-date measurements of discharge, chloride, boron at 63 stations: transcribed to `data/raw/historical/collar1990_table4_stream_chemistry.csv`. |
+| Barometric efficiency (pp. 56-64) | Spring 6: 42% (r = 0.79); spring 12: 45% (r = 0.44); White's low-terrace vent 31n: 60-75%. |
+| Spa well, GS-1, spring 50 (pp. 81-85, 135-136, 154-155) | A pumped well near the low terrace produced weekday drawdown and weekend recovery in GS-1 and spring 50; main-terrace springs did not respond. |
+| Earthquakes (pp. 52-56); precipitation (pp. 65-79) | Response thresholds and a cumulative-departure method for testing recharge. |
+| Well logs (App. B, pp. 266-299) | About 20 scanned NDWR driller's reports for strat wells and others (not yet extracted). |
+
+## 2. Collar versus Sorey and Colvard: one decline, two weightings
+
+| | Collar (1990) | Sorey and Colvard (1992) |
+|---|---|---|
+| Principal cause of the 1986-89 decline | CPI field production, OESI to a lesser degree | Shallow South Truckee Meadows groundwater decline (80-95%) |
+| Share attributed to production | "Principal" | 1-3 ft of about 17 ft (5-20%) |
+| Agreement | CPI hydraulically connected to strat wells 2 and 9; terrace head fell about 17 ft; drought alone insufficient | same |
+
+The disagreement is unresolved in the literature, and it is the right frame for any
+2025 pressure or injection hypothesis.
+
+## 3. Thermal discharge, 1955-2026, with the basis of each value
+
+Only **creek-inflow** values are comparable with the SBRR-SBBV mass balance. White's 1955
+total (1,125 gpm) includes 315 gpm from wells; creek-only is 325 + 485 = 810 gpm.
+
+```{r discharge-table}
+tbl <- build_collar_discharge_table(con)
+kable(tbl[, c("source", "date", "basis", "gpm_low", "gpm_high", "Ls_low", "Ls_high")],
+      col.names = c("Source", "Date", "Basis", "gpm low", "gpm high", "L/s low", "L/s high"))
+```
+
+Applying this project's two-station flux difference to Collar's own cleanest survey (same
+date, March 4, 1989, S10 against S77):
+
+```{r flux-check}
+kable(build_collar_cl_flux_check())
+```
+
+The same-date two-station arithmetic gives about 32 L/s (508 gpm), against Collar's
+reach-summed 660 gpm (42 L/s): about a quarter low. That bias is plausible for a survey
+with distributaries and tributaries along the reach, and it applies to the 58.7 L/s and
+27 L/s values as well.
+
+## 4. Chloride at the two logger reaches
+
+Station S10 is Steamboat Creek at Rhodes Road, immediately upstream of the Steamboat
+Ditch inflow at S20 (Plate 4). Its chloride (17.2 and 23.8 mg/L) matches NDEP SB5
+(median 14 mg/L, n = 143) and this project's SBRR (17.1 mg/L). The USGS gauge discharge
+used for the SBRR flux (11.2 cfs, May 2026) is far larger than Collar's S10 flow (0.11 cfs
+in August 1988, 2.5 cfs in March 1989), so whether the gauge sits above or below the
+ditch inflow should be checked before that flux is treated as an upstream-control flux.
+
+```{r cl-figure}
+#| fig-height: 7
+p <- build_collar_creek_chloride_figure(con, csv = file.path(root, "data/raw/historical/collar1990_table4_stream_chemistry.csv"))
+print(p)
+```
+
+## 5. Candidate-cause checklist, Collar's tests applied to 2022-2026
+
+```{r quakes}
+sw <- read.csv(file.path(root, "data/derived/historical_comparison/swarm2024_waterlevel_step_check.csv"))
+kable(sw, caption = "Standardized water-level step at STMGID wells around the four M3.0-3.5 events within about 6 km of the field (Jan-Mar 2024). Baseline SD is the SD of the same 3-day before/after statistic on all other days in Nov 2023-Jun 2024.")
+```
+
+Seven comparisons, standardized steps from -2.3 to +1.6: no consistent response, and the
+single |z| > 2 is expected by chance in seven tests. The 2024 cluster stays a lead.
+
+```{r weekday}
+wk <- read.csv(file.path(root, "data/derived/historical_comparison/logger_weekday_periodicity_check.csv"))
+kable(wk, caption = "Weekend-minus-weekday difference and Kruskal-Wallis test on daily mean temperature (15-day running mean removed), seven loggers.")
+```
+
+No weekday/weekend signal in temperature at any logger (all p > 0.7). Collar's spa-well
+effect was in water level, so a pressure transducer in GS-1 or the resort-tank well is
+the direct equivalent.
+
+## 6. Plates: what to georeference and what is already known
+
+`data/derived/historical_comparison/plate_georeferencing_features.csv` lists the Plate 3
+and 4 features: 22 with coordinates already on file (use as control points), 24 to be
+located from the plate (strat wells 2, 5-9, 13, 14, MacKay, Woods, Tangen, STMGID/Otten,
+Towne, Byers, Gerold, the spa production well, and hot springs 50, 62, 63), and 5 to
+digitize (four named faults and the ACEC box). Bianco's current database coordinate is
+only a section centroid; Plate 3 shows it east of Highway 395 and can replace it.
+
+```{r plate-table}
+pl <- read.csv(file.path(root, "data/derived/historical_comparison/plate_georeferencing_features.csv"))
+kable(pl[, c("plate_label", "plate", "category", "status")])
+```
+
+## Changelog
+
+| Date | Change |
+|---|---|
+| 2026-10-29 | Notebook created: Collar (1990) thesis integrated; Table 4 transcribed; discharge basis table; Rhodes Road/Geiger Grade chloride comparison; 2024 swarm and weekday tests; plate feature list. |

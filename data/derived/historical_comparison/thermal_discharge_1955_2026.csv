@@ -1,0 +1,11 @@
+"source","date","basis","gpm_low","gpm_high","method","definition_and_caveat","Ls_low","Ls_high"
+"White (1968), via Collar Table 3","1955-04","creek inflow only",810,810,"Cl mass balance (820 / 4 mg/L)","325 (main/low terrace area, upstream of Geiger Grade) + 485 (downstream to Huffaker Hills). With wells (315) the total is 1125 (thesis text: 1130).",51.1,51.1
+"White (1968), via Collar Table 3","1964-04","total incl. wells",1385,1385,"Cl mass balance","Total only; Table 3 gives no breakdown, so not comparable with creek-inflow rows.",87.4,87.4
+"Shump (1985), via Collar","1981-82","creek inflow only",1300,1300,"Specific conductivity","SC-based. Collar states a revised SC estimate using nonthermal SC consistent with White's nonthermal Cl is much greater, because SC and Cl are not directly related in the carbonate/bicarbonate nonthermal groundwater.",82,82
+"Collar (1990) Table 3","1988-06","creek inflow only",490,530,"Cl mass balance (820 / 4 mg/L), reach sums","160-190 (geothermal area) + 330-340 (South Truckee Meadows). Wells (210-405 gpm at 20 C) excluded; thesis total with wells 700-935. Irrigation diversions complicate this survey.",30.9,33.4
+"Collar (1990) Table 3","1988-08","creek inflow only",150,150,"Cl mass balance","Geothermal-area reach only; no downstream value reported (partial, not a total).",9.5,9.5
+"Collar (1990) Table 3","1989-03","creek inflow only",660,660,"Cl mass balance, reach sums","230 + 430; irrigation had ceased (cleanest survey). Total with wells 870-1065.",41.6,41.6
+"Sorey and Spielman (2008)","2007-08","creek inflow only",730,1214,"Cl mass balance at SBRR and SBBV","Range as reported.",46.1,76.6
+"Sorey and Spielman (2017)","2008-2016","creek inflow only",713,1427,"Cl mass balance at SBRR and SBBV","Reported as 60 L/s average, 45-90 L/s range across 24 events (converted here).",45,90
+"Irvin and Lindsey (2026 poster)","post-eruption","creek inflow only",428,428,"Cl mass balance at SBRR and SBBV","Multi-date average on the poster.",27,27
+"This project (database)","2026-05-01","creek inflow only",930,930,"Cl flux difference SBBV - SBRR / 820 mg/L","Single paired date; no nonthermal Cl term and no tributary/diversion correction. In Collar's cleanest survey (3/89) the same two-station arithmetic gives about 23 percent less than his reach-sum, so this method likely reads low.",58.7,58.7

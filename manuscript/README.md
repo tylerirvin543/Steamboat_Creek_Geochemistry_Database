@@ -127,3 +127,5 @@ advisory section, and a Lower Sinter Terrace literature deep-dive
 citation-key bug (`white1968` was actually the 1964 paper) was found
 and fixed in `references.bib`. See `AGENTS.md` Session 50 for the full
 detail.
+
+**2026-10-29 update**: Collar (1990) M.S. thesis integrated (new bib keys `collar1990thesis`, `shump1985`; the earlier `collar1990` is the 12th NZ Workshop paper). `00_thesis_proposal.qmd` gained a Collar paragraph set in Previous work, a rewritten seismic paragraph and Collar injection precedent in Candidate explanations, and a new "Monitoring network: 1986-89 compared with the present" subsection (Table 5, Figure 9). `04_results.qmd` and `05_discussion_and_future_work.qmd` mirror it. Analysis lives in `notebooks/10_collar1990_historical_baseline.qmd` and `scripts/analysis/historical_comparison_collar1990.R`.

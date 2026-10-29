@@ -252,6 +252,21 @@ smaller increase at the margin. One well, 23-33, is reported at a
 current pressure (135 psig) above its own newly authorized limit (120
 psig), which the permit table states as given.
 
+A documented precedent shows why the location of injection, and not only its
+total rate, matters for the terraces. Collar [@collar1990thesis] recorded
+water-level responses in the alluvial Herz 2 and Brown School wells that
+coincided with injection into OESI well IW-3 (completed in tuff breccia),
+compared the spring 6 hydrograph directly against the IW-3 injection rate,
+and concluded that the reservoir is heterogeneous, with production wells
+better connected to the terrace springs than injection wells. His mitigation
+proposals (injecting closer to the terrace, perforating the 950-ft zone in
+Cox I-1) were aimed at raising head beneath the terraces above land surface,
+which is what spring flow requires. The sign was opposite in 1986-89, when
+net production lowered heads; for 2025 the question is whether injection
+changes raised them, and the June 2025 pipe eruption implies heads at that
+spot stood above land surface. This is a mechanism and a precedent, not
+evidence that injection caused the 2025 eruption.
+
 The injection question sits inside a longer history of change at the
 facility, which the data on file document only partly. Ormat operates
 Steamboat as a binary, fully reinjected system [@dhakal2025], and the
@@ -308,19 +323,37 @@ has historically been insufficient to reactivate this system. Whether
 a slower, multi-decade continuation of that same recovery eventually
 crossed some threshold by 2022 is untested with the data on hand.
 
-**Local seismic triggering.** A real earthquake-catalog cross-check
-against this project's own water-level record found no detectable,
-co-located step-change at the three nearest real events (M1.5-1.6,
-2025), and no catalogued earthquake at all overlapping the actual
-temperature-logger deployment window. Current support for this
-explanation is weak.
+**Local seismic triggering.** White [@white1968c] saw definite spring
+responses to six of fifteen earthquakes between 1947 and 1952, all moderate
+(above about M5) and near, including a 1947 episode in which low-terrace
+discharge shifted from spring 25 to spring 50; Collar [@collar1990thesis]
+found no link to the largest event of 1986-89 (M3.9, about 11 miles north).
+This project's first check used only the three nearest 2025 events (M1.5-1.6),
+which are far below any historical response threshold, and found no step in
+STMGID water levels. A broader USGS catalog pull (M2.5 and above within 60
+km, 2021-2026) finds a more relevant cluster: four M3.0-3.5 events within
+about 6 km of the field between 2024-01-29 and 2024-03-09, in the window when
+Lindsey and others [@lindsey2026] describe the shift from diffuse steaming to
+discrete seeps and vents. Daily water levels at STMGID MW10 (and MW3 from
+February 2024) show no consistent step at those events: standardized steps
+range from -2.3 to +1.6 across seven comparisons, and none is robust to the
+number of tests. That is consistent with the historical pattern that small
+events have no detectable effect, but two regional wells outside the field
+cannot exclude a local response, so the 2024 cluster is a lead rather than an
+explanation. The largest recent regional events (M4.7-4.8 on 19 and 22 April
+2026) were about 58 km away. Current support for this explanation is weak.
 
-**Precipitation/recharge-driven.** A real, large December 2025 storm
-produced a modest water-level response at one regional monitoring
-well, but not at a second, nearby well with a different completion
-depth, and no precipitation record exists on file for most of the
-2022-2025 reactivation window. Support is mixed and incomplete, not
-absent.
+**Precipitation/recharge-driven.** A large December 2025 storm produced a
+modest water-level response at one regional monitoring well but not at a
+second, nearby well with a different completion depth, and no precipitation
+record exists on file for most of the 2022-2025 reactivation window. Collar
+[@collar1990thesis] showed how this question should be tested: 1946-52 spring
+discharge tracked annual precipitation, the 1949 drought minimum (48 gpm) was
+far above the 1988 flow (3-4 gpm), and a cumulative departure from mean
+precipitation at Reno and Sky Tavern (1938-89) separated drought from the
+production signal. The same cumulative-departure analysis for 2018-2026 needs a
+longer NOAA record than the October 2025 start currently on file. Support is
+mixed and incomplete, not absent.
 
 None of these explanations are mutually exclusive, and this proposal's own
 calibration and remapping work (Methods, below) is designed to generate the
@@ -716,7 +749,7 @@ sinter and an acid-sulfate alteration halo around the fumaroles, which
 is the kind of surface evidence this proposal's remapping is designed to
 update for the post-eruption terrace.
 
-Collar and Huntley [@collar1990] contributed the fault and air-photo-
+Collar [@collar1990thesis; also Collar and Huntley, @collar1990] contributed the fault and air-photo-
 lineament map this thesis treats as its best candidate for the
 structural context: it also locates several wells already resolved in
 this project's database, which gives natural control points for
@@ -742,10 +775,10 @@ tabulates 1950-1991 chemistry for nine features, a Cl/B ratio near 19 in
 1990-91 thermal samples, barometric efficiencies of 0.42-0.45 at two
 springs, aquifer-test results, and a chloride mass balance that treats an
 820 mg/L thermal and 6 mg/L non-thermal end-member as the two components
-of Steamboat Creek flow. Collar and Huntley [@collar1990] applied the same
-chloride-flux logic to 1988-89 discharge measurements, 35 years before
-this proposal's version of it, and reported a spring-flow deficit (3-4
-gpm measured against 34-40 gpm predicted in 1988). Sorey [@sorey2000]
+of Steamboat Creek flow. Collar's M.S. thesis [@collar1990thesis], written
+from the same USGS grant study, applied the same chloride-flux logic to
+1988-89 discharge measurements, 35 years before this proposal's version of
+it, and is treated in detail below. Sorey [@sorey2000]
 found that groundwater levels had recovered by 2000 while spring flow
 had not resumed, the critical observation that recovery alone did not
 reactivate the terrace. Sorey and Spielman [@sorey2008; @sorey2017]
@@ -756,6 +789,55 @@ gallons per minute for 2007-08 and an average of 60 liters per second
 Loeltz [@cohenloeltz1964] characterized Truckee Meadows groundwater
 outside the field, providing background for several wells this proposal
 uses for its barometric-efficiency calculation.
+
+Collar's thesis [@collar1990thesis] is the most complete single treatment of
+the 1986-89 decline and the closest methodological predecessor of this
+proposal. Over 1986-89 he logged water levels in about a dozen main- and
+low-terrace spring vents, strat and observation wells, and private alluvial
+wells, gaged Steamboat Creek, Galena Creek, and the ditches at 63 stations in
+three surveys (June-July 1988, August 1988, March 1989), and tested earthquakes, barometric pressure, earth tides,
+precipitation, a nearby spa well, and geothermal production as candidate
+causes. He concluded that discharging wells in the CPI field, and to a much
+lesser degree the OESI field, were the principal cause of the decline, on the
+grounds that spring levels fell during production and recovered during
+shut-ins, many springs moved in parallel, spring hydrographs mimicked those of
+observation wells known to be connected to the production wells, and natural
+thermal discharge to the creek had fallen. Sorey and Colvard [@sorey1992],
+working on the same period and drawing on overlapping data, reached a
+different weighting: 80-95 percent of the roughly 17 ft head decline beneath
+the main terrace attributed to shallow South Truckee Meadows groundwater
+decline and only 1-3 ft (5-20 percent) to the CPI field. The two analyses
+agree on the facts that matter most for this proposal: the CPI field is
+hydraulically connected to strat wells 2 and 9, heads beneath the terrace
+fell by about 17 ft, and drought alone does not explain the decline. They
+disagree on how much of the head loss was caused by production, which is
+exactly the kind of attribution question that a pressure or injection
+change would raise again, and it remains unresolved.
+
+Collar's creek work uses the same two-end-member chloride balance as this
+proposal (thermal water 820 mg/L, nonthermal 4 mg/L), with explicit
+equations for gaining and losing reaches, and divides the creek at Virginia
+City Highway (Geiger Grade) into a "geothermal area" reach and a South
+Truckee Meadows reach extending to Huffaker Hills. His June 1988 and March
+1989 surveys put thermal inflow to the creek at 490-530 and 660 gpm,
+about 60 to 80 percent of White's 1955 value, with the shortfall concentrated
+near the main and low terraces (about 60 percent of 1955) rather than
+downstream (about 80 percent). He also records that Shump's earlier estimate
+[@shump1985], made with specific conductivity, changed substantially when its
+nonthermal end-member was set consistently with White's chloride value,
+because specific conductivity and chloride are not directly related in the
+carbonate- and bicarbonate-dominated nonthermal groundwater of the South
+Truckee Meadows. That is a documented precedent for the failure mode this
+proposal's conductance-proxy test is designed to detect. Two further results
+bear directly on the Lower Sinter Terrace. First, during 1989 an intermittently
+pumped well at the Steamboat Spa, about 2,800 ft south of the main terrace,
+produced weekday drawdown spikes and weekend recoveries in well GS-1 and the
+old spa well on the low terrace and lowered spring 50, while main-terrace
+springs 6 and 12 did not respond, so the low terrace is hydraulically
+sensitive to nearby withdrawal in a way the main terrace is not. Second, of
+twenty low-terrace springs White cataloged (nine of them geysers), only spring
+50 was still flowing (about 3 gpm) in 1988, and spring 50 was the one spring
+where Nehring found young meteoric water mixing with thermal water in 1977.
 
 ## Monitoring network, gas chemistry, and early geochemistry
 
@@ -807,7 +889,7 @@ database-grounded one and tests the conclusion against more data.
 | 1964 | White, Thompson, and Sandberg; Thompson and White | Geology, structure, thermal history | Geologic framework |
 | 1968 | White | Hydrology, heat flow, Low Terrace wells, chloride as tracer | Parent-fluid chloride; Low Terrace analogs |
 | 1979 | Silberman and others; Nehring | Activity duration; 1977 reservoir temperature | Geothermometer comparison |
-| 1990 | Collar and Huntley | Fault and lineament map; 1988-89 chloride flux | Structural candidate; method precedent |
+| 1990 | Collar (thesis); Collar and Huntley | Decline attributed mainly to CPI/OESI production; spa-well effect on the low terrace; fault and lineament map; 1988-89 chloride flux and discharge | Structural candidate; method and reach precedent; attribution contrast with Sorey and Colvard |
 | 1992 | Sorey and Colvard | 1986-89 spring decline; 1950-91 chemistry; Cl/B | Primary historical baseline |
 | 1995 | Mariner and Janik | Gas chemistry and conceptual model | Gas geothermometer validation |
 | 2000 | Sorey | Groundwater recovered, spring flow did not | Reactivation hypotheses |
@@ -1088,6 +1170,83 @@ rise-and-fall several of these historically-documented wells do, or would
 instead track the thermal end-member's own apparent stability: a real,
 open, and directly testable question this proposal's monitoring plan is
 positioned to answer going forward.
+
+## Monitoring network: 1986-89 compared with the present
+
+Collar's thesis [@collar1990thesis] documents the monitoring network that was
+in place when the main-terrace springs failed, and it is the most direct
+yardstick for the one assembled here. In 1986-89 the network was dense at the
+spring vents and in bedrock: water levels in about a dozen main- and
+low-terrace spring vents, in strat wells 2, 5, 9, 13, and 14, in GS-1, GS-8,
+and an old spa well on the low terrace, in OESI wells OW-1, OW-2, and IW-1,
+and in private alluvial wells (Steinhardt, Brown School, Herz 2, Pine Tree
+Ranch-1, and others), with chloride and boron at several of them, plus
+stream gaging at 63 stations. Today's network is denser in continuous
+temperature and conductance (a dozen temperature loggers, some since lost, and two stream
+conductivity loggers) and has modern laboratory chemistry and gas data, but it
+has no current water level in the strat wells or the production reservoir, and
+no spring-vent water levels at all: the two gaps Collar and Sorey and Colvard
+both identified as limiting what could be concluded. @tbl-oldnew sets recent
+values beside the older ones, quantity by quantity, with the comparability
+limit stated in each row.
+
+| Quantity | 1950s-1989 (Collar; Sorey and Colvard; sources they compile) | Recent / this project | Reading |
+|---|---|---|---|
+| Thermal discharge to the creek (creek inflow only) | White 1955: 810 gpm (51 L/s). Collar: 490-530 gpm (31-33 L/s) in 6/88; 660 gpm (42 L/s) in 3/89, about 60-80 percent of 1955 | Sorey and Spielman: 730-1,214 gpm (2007-08), 60 L/s average (2008-16); poster: 27 L/s; database 5/1/2026: 58.7 L/s (one date) | Discharge was low in the late 1980s and back in the 1955 range by 2007; the 2026 single-date value is within the 2008-16 range and the poster average is below it. Reaches and methods differ (see text). |
+| Chloride, Rhodes Road (upstream control) | S10: 17.2 mg/L (8/88), 23.8 mg/L (3/89) | NDEP SB5: median 14 mg/L, range 6-72 (n = 143, 1987-2024); SBRR 17.1 mg/L (5/2026) | Indistinguishable across 38 years; no sign of drift at the upstream control. |
+| Chloride, Geiger Grade reach | S70: 139, 418, 130 mg/L (6/88, 8/88, 3/89); station match provisional | NDEP SB7: median 91 mg/L, range 10-760 (n = 114) | Large, persistent variability in both eras; no SBGG chemistry yet. |
+| Thermal end-member chloride | White 820 mg/L; Nehring about 700; CPI reservoir 739 | Reconstructed parent fluid 657-672 mg/L; 2024 outlet samples 740-860 mg/L | Modern values sit in the historical range. |
+| Cl/B in thermal water | About 18 (White; Collar below Rhodes Road); nonthermal 40-60 | Sorey and Colvard 19.3 (1990-91); this project 20-22 | Stable to within a few percent over seven decades. |
+| Barometric efficiency | Spring 6: 42 percent (r = 0.79); spring 12: 45 percent (r = 0.44); White's low-terrace vent 31n: 60-75 percent | STMGID MW3 and MW10: 0.29-0.34 (differenced) and 0.58-0.60 (level) | Different wells; a spring-vent value at the Lower Sinter Terrace has not been measured. |
+| Water-level change at monitored wells | Springs up to 17 ft; strat wells 2, 5, 9: 14-26 ft; GS-1: 2.5 ft; Steinhardt: 7 ft with chloride 300 to 143 mg/L | 2025: Herz Domestic and NDOT declining about 0.2-0.3 ft/month; Herz Domestic tracks STMGID MW3 (r = 0.94) | Shared seasonal signal with the regional well plus a faster local decline, as in 1988-89. |
+| Low-terrace surface features | 1977: springs 25, 26, 44ne, and 50 flowing (45-95 C); 1988: only spring 50 (about 3 gpm) | 2026: fissure SBF_0001 (67 C), springs SBS_0001-0003 (40-72 C), resort-tank well, new hot spring (Aug 2026) | Matching to White's spring numbers waits on georeferencing Plate 1. |
+| Seismicity | White: responses to M5-class nearby events; Collar: M3.9 (1986) had no effect | 2021-26 catalog: four M3.0-3.5 events within 6 km in Jan-Mar 2024 | No consistent water-level step at STMGID wells; a lead only. |
+| Production and injection | 1989: OESI fully reinjected; CPI about 11 percent net production (230-450 gpm) | Fully reinjected binary system [@dhakal2025]; injection limit raised 49,500 to 55,000 gpm (2025) | The balance of production and injection has changed since 1989; 2022-25 history not on file. |
+
+: Recent and older values side by side, with the comparability limit of each. {#tbl-oldnew}
+
+The chloride comparison at the two logger reaches (@fig-collarcl) is the
+clearest case. At Rhodes Road, Collar's two S10 values fall inside the NDEP
+record, and this project's 2026 SBRR sample does too, so the upstream control
+is chemically the same place it was in 1988-89. At Geiger Grade the NDEP
+record is far more variable, from 10 to 760 mg/L, and Collar's three S70
+values (130-418 mg/L) sit inside that scatter; because S70 carried only
+0.1-3.7 cfs it may be a thermal side channel rather than the main creek, so
+this match is provisional until Plate 4 is georeferenced. The discharge
+comparison (@fig-discharge) needs more care than the chloride one. White's
+1955 total of 1,125 gpm includes about 315 gpm from wells and is not
+comparable with the creek-inflow values; only creek-inflow rows are plotted on
+one axis, and Shump's value, made with specific conductivity, is labeled as
+such. Applying this project's two-station flux difference to Collar's own
+cleanest survey (S10 against S77, 4 March 1989) gives about 32 L/s (508
+gpm), against his reach-summed 660 gpm (42 L/s) for the same date, so the
+two-station method probably reads about a quarter low in a survey like that.
+The 58.7 L/s database value and the 27 L/s poster value should be read with
+that in mind.
+
+```{r fig-collarcl}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/collar_creek_chloride_comparison.png",
+  "Steamboat Creek chloride at the Rhodes Road and Geiger Grade reaches: Collar's 1988-89 stations S10 and S70 (S70 provisional) against NDEP samples and this project's 2026 SBRR sample.",
+  alt = "Two-panel scatter plot of chloride through time, 1988 to 2026, for the Rhodes Road and Geiger Grade reaches, showing Collar's stations, NDEP samples, and this project's sample.",
+  id = "fig-collarcl",
+  width = "85%"
+)
+```
+
+Collar's spa-well observation also offers a test that can be run on current
+data. If an intermittently pumped well near the low terrace produces a
+weekday-weekend cycle in nearby heads, the resort-tank well (SBW_0002), which
+is pumped intermittently by an air-lift, might leave a trace in the nearby
+loggers. A weekday-weekend and seven-day spectral test on the daily mean
+temperature of seven loggers (six terrace sites and SBRR, 83-98 days each, after removing a
+15-day running mean) found none: weekend-minus-weekday differences were
+within 0.9 C (the largest at the fissure logger), and no Kruskal-Wallis
+test across weekdays had p below 0.7. Temperature is a weaker indicator than
+the water levels Collar used, so this is a negative result for temperature
+only; a pressure transducer in GS-1 or the resort-tank well would be the
+direct equivalent.
 
 ## PHREEQC workflow: sample eligibility, databases, and interpretation
 
@@ -2645,7 +2804,7 @@ documented seasonal variability is taken into account, shown in
 #| results: asis
 show_fig(
   "output/figures/manuscript/discharge_through_time.png",
-  "Thermal-water discharge to Steamboat Creek, 1955-2026.",
+  "Thermal-water discharge to Steamboat Creek, 1955-2026, creek-inflow basis except where labeled. White's 1955 point excludes wells; the 1964 point includes them; Shump's is specific-conductivity based; reaches differ slightly between studies.",
   alt = "Line and point plot of estimated thermal-water discharge to Steamboat Creek from 1955 to 2026.",
   id = "fig-discharge"
 )
@@ -2676,9 +2835,9 @@ them without that real input would produce a model dominated by untested
 assumptions rather than constraints, exactly the outcome the batch-modeling
 framing above is meant to avoid, not just defer elsewhere. Digitized fault
 traces need a committed ArcGIS georeferencing session against the
-fault-and-lineament map published by Collar and Huntley [@collar1990]
-(chosen because it also locates several wells already resolved in this
-database, giving natural control points); a calibrated hydraulic-
+fracture and air-photo-lineament map in Collar's thesis (Plate 3 and Figure 14 [@collar1990thesis]; a shorter version is in Collar and Huntley [@collar1990])
+(chosen because it also shows selected wells and hot springs, several already resolved in this
+database, giving natural control points; his Plate 1 (springs) and Plate 4 (stream stations) are the matching targets for tying White's spring numbers and his gaging stations to present locations); a calibrated hydraulic-
 conductivity and storage-coefficient field needs real pump-test drawdown
 data, which does not yet exist for any Lower Sinter Terrace well (an
 Aqtesolv analysis of such data, once collected, is a concrete near-term
@@ -2687,8 +2846,8 @@ coursework, but is not assumed here on any fixed timeline). The only real,
 site-area transmissivity/storage-coefficient values on file today are
 literature reference points, not a calibrated field: four dated aquifer
 tests summarized by Sorey and Colvard [-@sorey1992] (roughly 1,250-9,500
-square feet per day) and one point from Collar and Huntley [-@collar1990]
-for spring 42w (approximately 3,000 square feet per day).
+square feet per day) and the thesis values of Collar [-@collar1990thesis]: 2,950-9,500 square feet per day from well and spring response, with a storage coefficient of 2.6e-3 (spring 42w, about
+3,000 square feet per day, also in Collar and Huntley [-@collar1990]).
 
 What already exists and is genuinely usable today, at essentially no
 further cost, is worth naming so it is not lost alongside what is being

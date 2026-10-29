@@ -256,6 +256,27 @@ would sharpen the proxy calibration there too, not just this chapter's
 own results.
 
 
+## What Collar's 1990 thesis adds to the interpretation
+
+Collar [@collar1990thesis] and Sorey and Colvard [@sorey1992] studied the same
+decline and weighted its causes differently: production was the principal
+cause in Collar's analysis, and a minor one (5-20 percent of about 17 ft of
+head) in theirs. That unresolved disagreement is the right frame for the
+2025 injection question. It shows that the terraces respond to head changes
+transmitted through fractures, that the low terrace responds to nearby local
+withdrawal (the spa well and GS-1) where the main terrace does not, and that
+injection location mattered as much as rate. It does not show that injection
+changes caused the 2025 eruption, and the data on file cannot yet test that.
+What would test it is the same kind of evidence Collar and Sorey and Colvard
+had and this project lacks: continuous water levels in wells completed in the
+production reservoir and in the reservoir feeding the terrace springs, ideally
+with a pressure transducer in GS-1 or the resort-tank well, plus dated
+well-by-well injection and production histories for 2022-2025. Collar's
+documented rejection of precipitation, earthquakes, tides, and barometric
+pressure as sufficient causes in 1986-89 also supplies the checklist this
+project is following for 2022-2025: barometric efficiency, a 2025-26 earthquake
+window, and the December 2025 storm have been examined, while the 2024
+earthquake cluster's effect on heads, earth tides, and a longer precipitation record remain open.
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here

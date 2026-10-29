@@ -856,3 +856,12 @@ positioned end-member instead of a chemistry-only best guess.
   (the Curti Barn coordinate fix and the new conductivity data would
   both affect `locations`/future conductivity-adjacent layers) -- worth
   doing on the next full pipeline run.
+
+## Collar (1990) thesis: follow-up items (2026-10-29)
+
+1. **Georeference Plates 3 and 4 in ArcGIS** (`docs/literature/collar paper and plates/collar-plate3.tif`, `collar-plate4.tif`; Plate 1 for spring numbers). Use the 22 control points in `data/derived/historical_comparison/plate_georeferencing_features.csv` (Cox I-1, 23-5, 21-5, 83A-6, 28-32, PW-2/3, IW-2, OW-2, Steinhardt, Brown School, Herz, Curti, Boyd, Jeppson, Rogers, Peigh, GS-1, SBRR). Then digitize the four named faults (Steamboat Springs Fault Zone, Mud Volcano Basin, Silica Pit, Pleasant Valley) into `data/raw/arcgis/faults/` for `ingest_fault_traces.R`, and locate the 24 features marked "locate/digitize" (strat wells 2, 5-9, 13, 14; MacKay, Woods, Tangen, STMGID/Otten, Towne, Byers, Gerold, spa production well, springs 50/62/63).
+2. **Confirm S10 = Rhodes Road and the S70 match to Geiger Grade** on Plate 4 once georeferenced; Table 4 stations are transcribed but are not in the database until their coordinates are known.
+3. **Check the USGS gauge position relative to the Steamboat Ditch inflow (Collar's S20).** Collar's S10 (above the ditch) flowed 0.11-2.5 cfs; the SBRR flux uses the gauge's 11.2 cfs with a Cl of 17.1 mg/L. If the gauge is below the ditch inflow, the SBRR flux needs a ditch correction.
+4. **Collar Appendix B** (about 20 NDWR driller's reports, thesis pp. 266-299) can be extracted and run through the existing well-log pipeline to get lithology and log numbers for the strat wells.
+5. **Pressure transducer** in GS-1 (or the resort-tank well) is the direct modern equivalent of Collar's spa-well experiment; temperature loggers show no weekday cycle.
+6. **Longer precipitation record** (Reno, NOAA GHCN-D USW00023185, 2018-2026) to repeat Collar's cumulative-departure test.

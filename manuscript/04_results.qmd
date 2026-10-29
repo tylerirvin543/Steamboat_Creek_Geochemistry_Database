@@ -22,7 +22,7 @@ and states plainly, in its final section, what remains unresolved.
 
 ```{r discharge-fig}
 #| echo: false
-#| fig-cap: "Thermal-water discharge to Steamboat Creek, 1955-2026, from White (1968) through this project's own live, database-computed estimate (see `scripts/analysis/chloride_mass_balance.R`, `notebooks/07`)."
+#| fig-cap: "Thermal-water discharge to Steamboat Creek, 1955-2026 (creek-inflow basis except where labeled in the figure), from White (1968) through this project's own live, database-computed estimate (see `scripts/analysis/chloride_mass_balance.R`, `notebooks/07`)."
 knitr::include_graphics("../output/figures/manuscript/discharge_through_time.png")
 ```
 
@@ -43,6 +43,30 @@ variable record rather than representing an unambiguous before/after
 step change. Establishing enough real, paired samples to build a true
 seasonal average, rather than one date, is precisely what Chapter 6's
 sampling plan is designed to produce.
+
+## How do recent values compare with the 1986-89 monitoring record?
+
+Collar's thesis [@collar1990thesis] provides the closest older comparison for
+this project's data, and the full quantity-by-quantity table is in the
+proposal (Table 5). Three results stand out. First, chloride at the upstream
+control is unchanged: Collar's two S10 samples (17.2 and 23.8 mg/L, 1988-89)
+fall inside the NDEP Rhodes Road record (median 14 mg/L, n = 143, 1987-2024),
+and so does this project's 2026 SBRR sample (17.1 mg/L). The Geiger Grade
+reach is far more variable in both eras (NDEP 10-760 mg/L), and Collar's S70
+match to it is provisional. Second, the discharge series needs a stated basis:
+White's 1955 total includes about 315 gpm from wells, so the creek-inflow
+comparison starts at 810 gpm (51 L/s), against Collar's 490-530 gpm (31-33
+L/s) in June 1988 and 660 gpm (42 L/s) in March 1989, Sorey and Spielman's
+45-90 L/s for 2008-16, and this project's 58.7 L/s on 1 May 2026. Third,
+this project's two-station flux difference, applied to Collar's own cleanest
+survey (S10 against S77, 4 March 1989), gives about 32 L/s against his
+reach-summed 42 L/s, so that method probably reads about a quarter low.
+
+```{r}
+#| echo: false
+#| fig-cap: "Steamboat Creek chloride at the Rhodes Road and Geiger Grade reaches: Collar's 1988-89 stations S10 and S70 (S70 provisional) against NDEP samples and this project's 2026 SBRR sample (see `scripts/analysis/historical_comparison_collar1990.R`)."
+knitr::include_graphics("../output/figures/manuscript/collar_creek_chloride_comparison.png")
+```
 
 ## Has Steamboat's thermal-water signature persisted for three decades?
 

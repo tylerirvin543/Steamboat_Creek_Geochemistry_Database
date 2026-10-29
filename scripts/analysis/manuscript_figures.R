@@ -48,9 +48,9 @@ build_discharge_through_time_figure <- function(con,
   discharge_hist <- tibble::tribble(
     ~period, ~year_mid, ~Ls,
 
-    "White (1968), Apr 1955",                        1955,    1110 * 0.0630902,
-    "White (1968), Apr 1964",                        1964,    1385 * 0.0630902,
-    "Shump (1985), 1981-82 avg",                     1981.5,  1300 * 0.0630902,
+    "White (1968), Apr 1955 (creek inflow only)",     1955,     810 * 0.0630902,
+    "White (1968), Apr 1964 (total incl. wells)",    1964,    1385 * 0.0630902,
+    "Shump (1985), 1981-82 (SC-based)",              1981.5,  1300 * 0.0630902,
     "Collar (1990), Jun 1988",                       1988.5,   523 * 0.0630902,
     "Collar (1990), Mar 1989",                       1989.2,   663 * 0.0630902,
     "Collar & Huntley (1990), 1988-89 natural-only",  1988.8,  0.80 * 1120 * 0.0630902,
@@ -62,7 +62,6 @@ build_discharge_through_time_figure <- function(con,
     filter(!is.na(Ls))
 
   p <- ggplot(discharge_hist, aes(x = year_mid, y = Ls)) +
-    geom_line(alpha = 0.3) +
     geom_point(aes(color = grepl("This project", period)),
                size = 3, show.legend = FALSE) +
     ggrepel::geom_text_repel(aes(label = period), size = 2.6,
@@ -71,7 +70,7 @@ build_discharge_through_time_figure <- function(con,
     labs(
       x = "Year", y = "Thermal-water discharge (L/s)",
       title = "Thermal-water discharge to Steamboat Creek, 1955-2026",
-      subtitle = "No confidence intervals shown -- no source reports a measurement uncertainty"
+      subtitle = "Creek-inflow basis except where noted; no source reports a measurement uncertainty; reaches differ slightly (see text)"
     ) +
     theme_steamboat()
 
