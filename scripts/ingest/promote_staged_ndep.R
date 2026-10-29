@@ -117,7 +117,11 @@ promote_staged_ndep <- function(con,
   }
 
   map <- read_csv(map_csv, show_col_types = FALSE) |>
-    filter(!is.na(latitude), !is.na(longitude), !is.na(external_station_code))
+    # 2026-10-29: only the station -> Location link is required; lat/lon are
+    # needed only to REGISTER a brand-new Location (see new_locs below), so
+    # stations whose Location already exists without a coordinate (Herz Deep,
+    # NDOT) can still have their chemistry promoted.
+    filter(!is.na(external_station_code))
 
   if (nrow(map) == 0) {
     message("[promote NDEP] No resolved (lat/lon-having) rows in the location map yet.")
@@ -126,7 +130,8 @@ promote_staged_ndep <- function(con,
 
   # ---- Register any locations from the map that don't exist yet ----
   existing_locations <- dbGetQuery(con, "SELECT location_id, external_station_code FROM Locations")
-  new_locs <- map |> filter(!(external_station_code %in% existing_locations$external_station_code))
+  new_locs <- map |> filter(!(external_station_code %in% existing_locations$external_station_code),
+                            !is.na(latitude), !is.na(longitude))
   if (nrow(new_locs) > 0) {
     to_insert <- new_locs |>
       transmute(
@@ -183,6 +188,22 @@ promote_staged_ndep <- function(con,
     left_join(events, by = "external_event_id")
 
   samples_needed <- staged |> distinct(location_id, event_id, sample_date)
+  # 2026-10-29: attach lab results to the hand-keyed U230 field sample taken at the
+  # same location on the same date (within 2 h when both have a time) instead of
+  # creating a second, field-less sample -- keeps field pH/temperature and lab
+  # chemistry on ONE sample_id, which PHREEQC needs.
+  .fs <- dbGetQuery(con, "SELECT sample_id AS reuse_sample_id, location_id, collection_time FROM Samples WHERE data_source LIKE '%U230%'")
+  .mins <- function(x) { tm <- sub("^[^ ]* ?", "", x); h <- suppressWarnings(as.numeric(sub(":.*", "", tm))); m <- suppressWarnings(as.numeric(sub("^[^:]*:", "", tm))); h * 60 + m }
+  .dts <- function(x) as.Date(sub(" .*", "", x), "%m/%d/%Y")
+  reuse_map <- samples_needed |>
+    inner_join(.fs, by = "location_id", relationship = "many-to-many") |>
+    filter(!is.na(.dts(sample_date)), .dts(sample_date) == .dts(collection_time)) |>
+    mutate(dt = abs(.mins(sample_date) - .mins(collection_time))) |>
+    filter(is.na(dt) | dt <= 120) |>
+    arrange(location_id, event_id, dt) |>
+    distinct(location_id, event_id, .keep_all = TRUE) |>
+    select(location_id, event_id, reuse_sample_id)
+  samples_needed <- anti_join(samples_needed, reuse_map, by = c("location_id", "event_id"))
   existing_samples <- dbGetQuery(con, "SELECT sample_id, location_id, event_id, collection_time FROM Samples")
 
   new_samples <- samples_needed |>
@@ -200,7 +221,10 @@ promote_staged_ndep <- function(con,
   }
   samples <- dbGetQuery(con, "SELECT sample_id, location_id, event_id FROM Samples")
 
-  staged <- staged |> left_join(samples, by = c("location_id", "event_id"))
+  staged <- staged |> left_join(samples, by = c("location_id", "event_id")) |>
+    left_join(reuse_map, by = c("location_id", "event_id")) |>
+    mutate(sample_id = dplyr::coalesce(reuse_sample_id, sample_id)) |>
+    select(-reuse_sample_id)
 
   # ---- Lab_Analyses rows ----
   unmapped <- staged |>

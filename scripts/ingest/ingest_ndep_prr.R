@@ -127,6 +127,32 @@ ingest_ndep_prr <- function(con, base_dir = "data/raw/ndep/PRR", force_reprocess
     is_wetlab <- tryCatch(is_wetlab_format(f), error = function(e) FALSE)
 
     char_count <- sum(nchar(pdftools::pdf_text(f)))
+    ocr_slug <- gsub("[^A-Za-z0-9]+", "_", tools::file_path_sans_ext(basename(f)))
+    ocr_dir <- file.path("data/derived/ndep_prr_ocr", ocr_slug)
+    if (char_count == 0 && dir.exists(ocr_dir) && length(list.files(ocr_dir, "[.]rds$")) > 0) {
+      # Scanned PDF with a cached OCR text (scripts/ingest/ocr_ndep_prr_scans.R):
+      # parse the typed SGS lab-report pages; handwritten U230 forms are not parsed here.
+      message("  -> Scanned PDF with cached OCR; parsing SGS lab-report pages.")
+      source("scripts/ingest/helpers/parse_sgs_ocr_text.R")
+      staged <- tryCatch(stage_sgs_ocr(ocr_slug, basename(f)),
+                         error = function(e) { warning("  -> OCR parse failed: ", conditionMessage(e), call. = FALSE); data.frame() })
+      if (nrow(staged) > 0) {
+        prior <- dbGetQuery(con, "SELECT station_name, sample_date, analyte FROM Staging_NDEP_WQ")
+        staged <- dplyr::anti_join(staged, prior, by = c("station_name", "sample_date", "analyte"))
+      }
+      dbAppendTable(con, "Documents_Processed", data.frame(
+        file_name = basename(f), file_hash = file_hash, source_dir = dirname(f),
+        processed_at = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC"),
+        rows_staged = nrow(staged)
+      ))
+      if (nrow(staged) > 0) {
+        dbAppendTable(con, "Staging_NDEP_WQ", staged)
+        total_staged <- total_staged + nrow(staged)
+      }
+      message("  -> Staged ", nrow(staged), " OCR-parsed result row(s) (OCR text: check against the scan before relying on any single value).")
+      if (nrow(staged) > 0) hold_ocr_outliers(con, unique(staged$raw_source_file))
+      next
+    }
     if (char_count == 0) {
       message("  → No extractable text (scanned/image-only PDF) — OCR required, not attempted. Skipping.")
       dbAppendTable(con, "Documents_Processed", data.frame(

@@ -1,0 +1,24 @@
+"loc","date","doc","page","ph","sc","tf","flag","tc"
+"Galena 2 Outlet","09/20/2024","SA2024",29,6.8,395.8,137,"",58.3
+"Galena 3 Outlet","09/20/2024","SA2024",23,6.54,361.5,140,"",60
+"SBHR Outlet","09/20/2024","SA2024",21,6.39,352.1,143,"form time reads 04:30; lab sample time 09:30",61.7
+"SB2 Outlet","09/20/2024","SA2024",25,6.7,364.2,137,"",58.3
+"Galena 1 Outlet","09/20/2024","SA2024",27,7.1,363.1,139,"pH written over a prior value",59.4
+"SB3 Outlet","09/20/2024","SA2024",31,7,361.6,135,"",57.2
+"Galena 2 Outlet","12/19/2024","SA2024",9,6.48,539.7,137,"",58.3
+"Galena 3 Outlet","12/19/2024","SA2024",11,7.2,396.6,125,"",51.7
+"SB2 Outlet","12/19/2024","SA2024",14,6.26,361.1,117,"",47.2
+"Galena 1 Outlet","12/19/2024","SA2024",16,6.89,359,133,"",56.1
+"SBHR Outlet","12/19/2024","SA2024",18,6.35,386.1,129,"",53.9
+"SB3 Outlet","12/19/2024","SA2024",20,6.86,358.7,114,"",45.6
+"Galena 1 Outlet","03/30/2025","IMR1",10,6.78,361.5,133,"",56.1
+"SBHR Outlet","03/30/2025","IMR1",12,6.37,361.1,126,"form time 22:12; lab time 22:17",52.2
+"SB2 Outlet","03/30/2025","IMR1",14,7.42,368.1,112,"",44.4
+"Galena 2 Outlet","03/30/2025","IMR1",16,6.39,639.6,132.1,"",55.6
+"Galena 3 Outlet","03/30/2025","IMR1",18,6.61,848,98,"",36.7
+"Galena 2 Outlet","06/24/2025","IMR1",22,6.72,5449,185,"conductivity has no visible decimal point; digit pattern ambiguous; temperature digits ambiguous",85
+"SB3 Outlet","06/24/2025","IMR1",24,6.52,3652,171,"conductivity has no visible decimal point",77.2
+"Galena 1 Outlet","06/24/2025","IMR1",26,6.66,3650,173,"conductivity has no visible decimal point",78.3
+"Galena 3 Outlet","06/24/2025","IMR1",28,6.43,3664,171,"conductivity has no visible decimal point",77.2
+"SB2 Outlet","06/24/2025","IMR1",30,7,3672,171,"conductivity has no visible decimal point",77.2
+"SBHR Outlet","06/24/2025","IMR1",32,6.38,3667,175,"conductivity has no visible decimal point",79.4

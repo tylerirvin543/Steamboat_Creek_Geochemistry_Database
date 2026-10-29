@@ -1,0 +1,59 @@
+"staging_id","station_name","sample_date","analyte","value","units","med","ratio","action","raw_source_file","scan_value","decision","note","checked_on"
+868,"Galena 2 Outlet","08/04/2025 12:46","Arsenic",17,"mg/L",1.95,8.71794871794872,"held","UNEV2007204 IMR July - December 2025.pdf",1.7,"corrected_and_released",NA,"2026-10-29"
+886,"Soccer Field","08/27/2025 9:15","Arsenic",15,"mg/L",1.6,9.375,"held","UNEV2007204 IMR July - December 2025.pdf",1.5,"corrected_and_released",NA,"2026-10-29"
+912,"Herz Dom","08/27/2025 9:45","Magnesium",4.9,"mg/L",47,0.104255319148936,"held","UNEV2007204 IMR July - December 2025.pdf",4.9,"confirmed_and_released","Scan prints 4.9. The other four Herz Dom rounds were OCR decimal drops (printed 4.9, 4.7, 4.8, 4.6 and read as 49, 47, 48, 46); corrected.","2026-10-29"
+924,"Eich Well","08/27/2025 10:05","Arsenic",42,"mg/L",0.97,43.298969072165,"held","UNEV2007204 IMR July - December 2025.pdf",4.2,"corrected_and_released",NA,"2026-10-29"
+936,"Eich Well","08/27/2025 10:05","Suspended Solids",130,"mg/L",26,5,"held","UNEV2007204 IMR July - December 2025.pdf",130,"confirmed_and_released",NA,"2026-10-29"
+988,"Jeppson Dom","08/27/2025 11:05","Magnesium",1,"mg/L",11,0.0909090909090909,"held","UNEV2007204 IMR July - December 2025.pdf",11,"corrected_and_released",NA,"2026-10-29"
+1008,"Rogers Well","08/27/2025 11:25","Potassium",26,"mg/L",2.3,11.304347826087,"held","UNEV2007204 IMR July - December 2025.pdf",2.6,"corrected_and_released",NA,"2026-10-29"
+1018,"Galena 1 Injection Outlet","08/29/2025 12:15","Antimony",0.4,"mg/L",0.036,11.1111111111111,"held","UNEV2007204 IMR July - December 2025.pdf",0.4,"confirmed_and_released",NA,"2026-10-29"
+1038,"SB2 Injection Outlet","08/29/2025 14:30","Arsenic",4.2,"mg/L",0.985,4.26395939086294,"held","UNEV2007204 IMR July - December 2025.pdf",1.2,"corrected_and_released",NA,"2026-10-29"
+1099,"Herz Deep","11/21/2025 10:42","Chloride",1500,"mg/L",700,2.14285714285714,"watch","UNEV2007204 IMR July - December 2025.pdf",1500,"confirmed_watch_kept","Scan prints 1500 (S flag); about twice neighbouring rounds, kept.","2026-10-29"
+1114,"Eich Well","11/21/2025 11:10","Arsenic",18,"mg/L",0.97,18.5567010309278,"held","UNEV2007204 IMR July - December 2025.pdf",1.8,"corrected_and_released",NA,"2026-10-29"
+1126,"Eich Well","11/21/2025 11:10","Suspended Solids",260,"mg/L",26,10,"held","UNEV2007204 IMR July - December 2025.pdf",260,"confirmed_and_released",NA,"2026-10-29"
+1136,"Jeppson Dom","11/21/2025 12:12","Calcium",45,"mg/L",23,1.95652173913043,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1137,"Jeppson Dom","11/21/2025 12:12","Chloride",88,"mg/L",11,8,"held","UNEV2007204 IMR July - December 2025.pdf",8.8,"corrected_and_released",NA,"2026-10-29"
+1140,"Jeppson Dom","11/21/2025 12:12","Magnesium",22,"mg/L",11,2,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1141,"Jeppson Dom","11/21/2025 12:12","Potassium",27,"mg/L",14,1.92857142857143,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1143,"Jeppson Dom","11/21/2025 12:12","Sodium",120,"mg/L",61,1.9672131147541,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1177,"Galena 2 Injection Composite (TFT)","11/25/2025 10:06","Magnesium",48,"mg/L",5.5,8.72727272727273,"held","UNEV2007204 IMR July - December 2025.pdf",4.8,"corrected_and_released",NA,"2026-10-29"
+1226,"Galena 1 Injection Outlet","11/25/2025 12:32","Antimony",0.014,"mg/L",0.036,0.388888888888889,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1227,"Galena 1 Injection Outlet","11/25/2025 12:32","Arsenic",0.88,"mg/L",2.54,0.346456692913386,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1340,"NDOT","10/24/2025 11:02","Antimony",0.086,"mg/L",0.16,0.5375,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1341,"NDOT","10/24/2025 11:02","Arsenic",16,"mg/L",2,8,"held","UNEV2007204 IMR July - December 2025.pdf",1.6,"corrected_and_released",NA,"2026-10-29"
+1353,"NDOT","10/24/2025 11:02","Suspended Solids",11,"mg/L",22,0.5,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1368,"Boyd Dom","10/24/2025 11:35","Potassium",0.7,"mg/L",3.25,0.215384615384615,"held","UNEV2007204 IMR July - December 2025.pdf",0.7,"confirmed_and_released",NA,"2026-10-29"
+1402,"Rogers Well","10/24/2025 12:10","Chloride",68,"mg/L",7.15,9.51048951048951,"held","UNEV2007204 IMR July - December 2025.pdf",6.8,"corrected_and_released",NA,"2026-10-29"
+1424,"Galena 2 Injection Composite (TFT)","10/29/2025 11:55","Magnesium",47,"mg/L",5.5,8.54545454545454,"held","UNEV2007204 IMR July - December 2025.pdf",4.7,"corrected_and_released",NA,"2026-10-29"
+1455,"Galena 1 Injection Outlet","10/29/2025 12:20","Arsenic",11,"mg/L",2.54,4.33070866141732,"held","UNEV2007204 IMR July - December 2025.pdf",1.1,"corrected_and_released","Page shows two arsenic rows (1.1 and 0.94); 1.1 used.","2026-10-29"
+1542,"Soccer Field","09/15/2025 9:30","Sulfate",54,"mg/L",98,0.551020408163265,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1572,"Herz Deep","09/15/2025 10:00","Calcium",4,"mg/L",28,0.142857142857143,"held","UNEV2007204 IMR July - December 2025.pdf",4,"confirmed_and_released",NA,"2026-10-29"
+1580,"Herz Deep","09/15/2025 10:00","Sulfate",22,"mg/L",53.05,0.414703110273327,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1630,"Jeppson Dom","09/15/2025 11:30","Chloride",74,"mg/L",11,6.72727272727273,"held","UNEV2007204 IMR July - December 2025.pdf",7.4,"corrected_and_released",NA,"2026-10-29"
+1644,"NDOT","09/15/2025 10:50","Antimony",0.87,"mg/L",0.16,5.4375,"held","UNEV2007204 IMR July - December 2025.pdf",0.87,"confirmed_and_released",NA,"2026-10-29"
+1645,"NDOT","09/15/2025 10:50","Arsenic",48,"mg/L",2,24,"held","UNEV2007204 IMR July - December 2025.pdf",4.8,"corrected_and_released",NA,"2026-10-29"
+1650,"NDOT","09/15/2025 10:50","Fluoride",17,"mg/L",1.85,9.18918918918919,"held","UNEV2007204 IMR July - December 2025.pdf",1.7,"corrected_and_released",NA,"2026-10-29"
+1657,"NDOT","09/15/2025 10:50","Suspended Solids",460,"mg/L",22,20.9090909090909,"held","UNEV2007204 IMR July - December 2025.pdf",460,"confirmed_and_released",NA,"2026-10-29"
+1688,"Soccer Field","12/12/2025 9:50","Fluoride",3,"mg/L",1.4,2.14285714285714,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1726,"Herz Deep","12/12/2025 10:15","Fluoride",3,"mg/L",1,3,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1739,"Eich Well","12/12/2025 10:45","Antimony",0.017,"mg/L",0.038,0.447368421052632,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1773,"Boyd Dom","12/12/2025 11:35","Alkalinity, Bicarbonate (As CaCO3)",360,"mg/L",195,1.84615384615385,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1776,"Boyd Dom","12/12/2025 11:35","Alkalinity, Total (As CaCO3)",360,"mg/L",190,1.89473684210526,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1785,"Boyd Dom","12/12/2025 11:35","Magnesium",7.3,"mg/L",14,0.521428571428571,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1835,"Galena 1 Injection Outlet","12/10/2025 13:15","Arsenic",0.67,"mg/L",2.54,0.263779527559055,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+1925,"SB2 Outlet","12/19/2024 14:45","Suspended Solids",10,"mg/L",21,0.476190476190476,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+1950,"SB3 Outlet","12/19/2024 14:38","Suspended Solids",42,"mg/L",22,1.90909090909091,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+1957,"Galena 1 Outlet","12/19/2024 14:28","Antimony",0.81,"mg/L",0.11,7.36363636363636,"held","UNEV2007204 Semi Annual Report July-December 2024.pdf",0.81,"confirmed_and_released",NA,"2026-10-29"
+1983,"Galena 3 Outlet","12/19/2024 14:17","Arsenic",441,"mg/L",1.3,339.230769230769,"held","UNEV2007204 Semi Annual Report July-December 2024.pdf",1.1,"corrected_and_released",NA,"2026-10-29"
+2007,"SBHR Outlet","12/19/2024 14:00","Antimony",1.1,"mg/L",0.2735,4.02193784277879,"held","UNEV2007204 Semi Annual Report July-December 2024.pdf",1.1,"confirmed_and_released",NA,"2026-10-29"
+2056,"Herz Deep","12/13/2024 10:15","Antimony",0.017,"mg/L",0.0054,3.14814814814815,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+2076,"NDOT","12/13/2024 11:12","Arsenic",17,"mg/L",2.55,6.66666666666667,"held","UNEV2007204 Semi Annual Report July-December 2024.pdf",1.7,"corrected_and_released",NA,"2026-10-29"
+2108,"Jeppson Dom","12/13/2024 11:52","Total Dissolved Solids",120,"mg/L",390,0.307692307692308,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+2113,"SB2 Outlet","09/20/2024 10:35","Antimony",0.3,"mg/L",0.14,2.14285714285714,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+2145,"SB3 Outlet","09/20/2024 10:25","Suspended Solids",6,"mg/L",22,0.272727272727273,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+2194,"SBHR Outlet","09/20/2024 9:30","Fluoride",1.6,"mg/L",3.5,0.457142857142857,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+2201,"SBHR Outlet","09/20/2024 9:30","Suspended Solids",410,"mg/L",12,34.1666666666667,"held","UNEV2007204 Semi Annual Report July-December 2024.pdf",10,"corrected_and_released",NA,"2026-10-29"
+2259,"SB2 Outlet","03/30/2025 23:12","Suspended Solids",6,"mg/L",20,0.3,"watch","UNEV 2007204 IMR Jan-June 2025.pdf",NA,NA,NA,NA
+2476,"Herz Deep","09/20/2024 10:10","Bromide",3,"mg/L",1.4,2.14285714285714,"watch","UNEV2007204 Semi Annual Report July-December 2024.pdf",NA,NA,NA,NA
+2548,"Galena 2 Injection Composite (TFT)","08/29/2025 12:50","Antimony",0.37,"mg/L",0.1005,3.68159203980099,"watch","UNEV2007204 IMR July - December 2025.pdf",NA,NA,NA,NA
+2567,"Galena 3 Injection Outlet","08/29/2025 13:31","Antimony",47,"mg/L",1.037,45.3230472516876,"held","UNEV2007204 IMR July - December 2025.pdf",4.7,"corrected_and_released",NA,"2026-10-29"
