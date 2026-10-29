@@ -9,6 +9,7 @@ format:
     geometry: [landscape, margin=0.7in]
     fontsize: 10pt
     colorlinks: true
+    fig-pos: "H"
   docx: default
 execute:
   echo: false
@@ -113,3 +114,95 @@ rec <- tiers[tiers$tier == "Recommended", ]
 **Recommended option:** the Recommended tier with package B, about `r rec$total` chemistry samples and `r rec$iso` isotope samples, roughly `r usd(rec$B)` for the year. It is the smallest design that covers a full seasonal cycle at both stations, includes the ions needed for the mixing-model cross-check, and keeps the daily window short enough to be done in the field by one person. The Lean tier gives a first calibration but no seasonal test; the Full tier adds the fissure and resort wells and a longer daily window, and depends on Ormat access.
 
 **Notes for the cost discussion.** (1) ALS lab pricing depends on method set, turnaround time and any UNR or project discount, so the totals above scale directly with the package prices in Table 2. (2) Shipping, sample bottles, filters and sampling supplies are not included. (3) Tier totals can be reduced by running packages A or B on routine samples and C only on the quarterly subset.
+
+## Equations used for the conductance proxy, model fitting and sampling-error test
+
+**1. Specific conductance from logger conductivity.** The loggers record raw electrical conductivity $EC$ at water temperature $T$ (degrees C). I remove the temperature effect with the USGS non-linear compensation (coefficient $a = 0.0191$ per degree C, to be recalibrated against field checks):
+
+$$SC_{25} = \frac{EC}{1 + a\,(T - 25)}$$
+
+**2. Chloride from specific conductance (the proxy).** Chloride is the conservative tracer of thermal water, and in this system conductance tracks chloride because chloride and sodium dominate the thermal fluid. The simplest model is a linear regression, fitted to paired samples:
+
+$$\mathrm{Cl}_t = \beta_0 + \beta_1\,SC_{25,t} + \varepsilon_t$$
+
+The generalized additive model (GAM) adds smooth terms for conductance and temperature and a seasonal harmonic ($d$ is day of year; splines with $k = 4$):
+
+$$\mathrm{Cl}_t = \beta_0 + f_1(SC_{25,t}) + f_2(T_t) + \beta_3 \sin\!\left(\tfrac{2\pi d_t}{365}\right) + \beta_4 \cos\!\left(\tfrac{2\pi d_t}{365}\right) + \varepsilon_t$$
+
+A random forest on the same predictors is the skill benchmark. Models are scored with rolling-origin (blocked, time-aware) cross-validation: each fold trains on all samples up to time $t_k$ and predicts the next block, so autocorrelation cannot inflate skill:
+
+$$\mathrm{RMSE} = \sqrt{\frac{1}{n}\sum_{i=1}^{n}\left(\mathrm{Cl}_i - \widehat{\mathrm{Cl}}_i\right)^2}$$
+
+**3. Monte Carlo sampling-interval test.** For a candidate sampling interval of $f$ days and a logger step of $\Delta t$ minutes, the number of logger steps between samples is $n_f = f \cdot 1440 / \Delta t$. For draw $j = 1,\dots,200$ a random start offset $o_j \sim \mathrm{U}\{1,\dots,n_f\}$ selects samples at steps $o_j, o_j + n_f, o_j + 2n_f, \dots$. The full series is rebuilt by linear interpolation between those samples, and the error against the dense record $y_t$ is
+
+$$\mathrm{RMSE}_{f,j} = \sqrt{\frac{1}{N}\sum_{t=1}^{N}\left(y_t - \hat y_{t}^{(f,j)}\right)^2},\qquad \text{reported as } 100\,\frac{\overline{\mathrm{RMSE}_{f}}}{\bar y}\ \text{percent of the mean.}$$
+
+**4. Chloride flux and thermal discharge.** With discharge $Q$ and concentration $C$, chloride mass flux is the integral of $C\,Q$, computed by the trapezoid rule; the thermal-water inflow between SBRR (upstream) and SBBV (downstream) uses an end-member chloride $C_{TW} = 820$ mg/L (Sorey and Colvard 1992):
+
+$$M = \int C(t)\,Q(t)\,dt,\qquad Q_{TW} = \frac{Q_{BV}\,C_{BV} - Q_{RR}\,C_{RR}}{C_{TW}}$$
+
+## Conductivity record and the data each analysis uses
+
+```{r data}
+find_root <- function(p = getwd()) { for (i in 1:5) { if (file.exists(file.path(p, "database", "geochem_operational.sqlite"))) return(p); p <- dirname(p) }; stop("project root not found") }
+root <- find_root()
+library(DBI); library(RSQLite); library(ggplot2); library(dplyr)
+con <- dbConnect(SQLite(), file.path(root, "database", "geochem_operational.sqlite"), flags = SQLITE_RO)
+ec <- dbGetQuery(con, "
+  SELECT l.external_station_code AS site, o.timestamp, o.sc_25c, o.qc_flag
+  FROM Conductivity_Observations o
+  JOIN Conductivity_Loggers cl ON o.logger_id = cl.logger_id
+  JOIN Locations l ON cl.location_id = l.location_id
+  WHERE l.external_station_code IN ('SBRR','SBGG') AND o.sc_25c IS NOT NULL")
+ec$timestamp <- as.POSIXct(ec$timestamp, tz = "UTC")
+ec$site <- factor(ec$site, c("SBRR", "SBGG"), c("SBRR (Rhodes Road, upstream)", "SBGG (Geiger Grade, downstream)"))
+ec$use <- ifelse(is.na(ec$qc_flag), "Used in Monte Carlo", "QC-flagged, excluded")
+```
+
+```{r fig-record}
+#| fig-width: 9
+#| fig-height: 5
+ggplot(ec, aes(timestamp, sc_25c)) +
+  geom_line(data = subset(ec, use == "Used in Monte Carlo"), aes(color = use), linewidth = 0.35) +
+  geom_point(data = subset(ec, use != "Used in Monte Carlo"), aes(color = use), size = 0.7) +
+  facet_wrap(~site, ncol = 1, scales = "free_y") +
+  scale_color_manual(NULL, values = c("Used in Monte Carlo" = "#0072B2", "QC-flagged, excluded" = "#D55E00")) +
+  labs(x = NULL, y = "Specific conductance (uS/cm, 25 C)",
+       title = "Logger record used for the Monte Carlo sampling-interval test",
+       subtitle = paste0(format(min(ec$timestamp), "%Y-%m-%d"), " to ", format(max(ec$timestamp), "%Y-%m-%d"),
+                         ": ", format(sum(ec$use == "Used in Monte Carlo"), big.mark = ","), " readings used, ",
+                         sum(ec$use != "Used in Monte Carlo"), " QC-flagged readings excluded"),
+       caption = "The Monte Carlo test subsamples this dense record at 1, 2, 3, 7 and 14 days and rebuilds it by interpolation (equation 3).") +
+  theme_minimal(base_size = 10) + theme(legend.position = "bottom", plot.caption = element_text(hjust = 0))
+```
+
+```{r fig-pairs}
+#| fig-width: 7
+#| fig-height: 4
+suppressMessages(suppressWarnings({
+  old_wd <- setwd(root); source("scripts/analysis/sampling_frequency/03_chloride_models.R")
+  pr <- get_chloride_conductance_pairs(con); setwd(old_wd)
+}))
+h <- subset(pr, pairing_type == "historical_ndep")
+m <- lm(chloride_mgL ~ sc_25c, h)
+ggplot(h, aes(sc_25c, chloride_mgL)) +
+  geom_point(color = "#0072B2", alpha = 0.6, size = 1.4) +
+  geom_abline(intercept = coef(m)[1], slope = coef(m)[2], color = "#D55E00") +
+  labs(x = "Specific conductance (uS/cm)", y = "Chloride (mg/L)",
+       title = "The only real chloride-conductance fit so far: historical NDEP pairs at Rhodes Road",
+       subtitle = sprintf("n = %d pairs, %s to %s; Cl = %.2f + %.4f SC, R-squared = %.2f",
+                          nrow(h), format(min(h$collection_time), "%Y"), format(max(h$collection_time), "%Y"),
+                          coef(m)[1], coef(m)[2], summary(m)$r.squared),
+       caption = paste0("No chloride sample yet overlaps the logger record (0 pairs), so the GAM and random forest have only been run on synthetic data.\n",
+                        "The calibration campaign proposed above supplies the first real pairs to fit equation 2.")) +
+  theme_minimal(base_size = 10) + theme(plot.caption = element_text(hjust = 0))
+dbDisconnect(con)
+```
+
+## Why the proposed sampling interval matters: error grows with days between samples
+
+```{r err-curve}
+#| results: asis
+f <- normalizePath(file.path(root, "output/figures/manuscript/sampling_frequency_error_curve.png"), winslash = "/")
+cat(sprintf("![Reconstruction error of the conductance record against the candidate interval between samples, SBRR and SBGG (200 random start days per interval, QC-flagged readings excluded). Error rises from about 3-4%% of mean conductance with daily samples to about 8-9%% at 14 days; a longer interval is cheaper but leaves a larger error in the calibrated record.](%s)\n", f))
+```
