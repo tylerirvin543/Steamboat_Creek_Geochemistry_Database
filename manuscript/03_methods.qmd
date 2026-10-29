@@ -113,7 +113,7 @@ since it was capped, without needing a person physically present at
 the vent.
 
 **Conductivity loggers as a chloride proxy.** Two continuous specific-
-conductance loggers were deployed in Steamboat Creek in mid-2025: one
+conductance loggers were deployed in Steamboat Creek on July 15, 2026: one
 co-located with the existing U.S. Geological Survey gauge near Rhodes
 Road (SBRR, serving as the upstream/control site) and one further
 downstream near Geiger Grade (SBGG, the downstream site), matching the
@@ -138,7 +138,7 @@ chloride sample yet overlaps the period the conductivity loggers have
 been running, the single highest-priority field task is a short (two
 to four week), daily-to-sub-daily intensive chloride-sampling campaign
 at both SBRR and SBGG -- and since the loggers have already been
-running since mid-2025, this window is now planned to start as soon as
+running since mid-July 2026, this window is now planned to start as soon as
 possible (this fall/winter) rather than waiting for a conventional
 spring/summer field season. Following that intensive window, chloride
 sampling should continue at roughly monthly intervals for a full
@@ -153,11 +153,42 @@ quantitatively: reconstructing the mean specific conductance from
 daily sampling keeps error under about 5%, while weekly sampling costs
 6-8%, with the error growing smoothly rather than showing a sharp
 cliff at any particular interval -- though that analysis still only
-has a five-week, summer-only record to draw on, which a full year of
+has a roughly twelve-week, summer-to-early-fall record to draw on, which a full year of
 monthly sampling is specifically meant to extend. Every calibration
 sample should also carry major-ion and, for a subset, isotope
 chemistry, since chloride alone cannot distinguish simple mixing from
 evaporative concentration.
+
+This thesis explicitly proposes a chloride sampling campaign at the two
+existing conductivity-logger stations, **SBRR (Rhodes Road, upstream
+control) and SBGG (Geiger Grade, downstream)**, the only two points where
+a chloride measurement can be paired directly with a continuous
+conductance record. @tbl-samplingplan lays out the design.
+
+| Site | What is sampled | Frequency / timing | Why |
+|------------------|----------------------------|------------------------|------------------------------|
+| SBRR (Rhodes Road, upstream control) | Chloride, major ions (Na, K, Ca, Mg, SO4, alkalinity), field pH/temperature/specific conductance | Daily to sub-daily for 2-4 weeks (intensive window, starting fall/winter 2026) | Establishes the calibration's short-timescale behavior and noise floor against the logger's continuous record. |
+| SBGG (Geiger Grade, downstream) | Same analyte set as SBRR | Daily to sub-daily for 2-4 weeks, concurrent with SBRR | A second, independently calibrated site tests whether one relationship serves the whole system or each site needs its own equation. |
+| SBRR and SBGG | Same analyte set | Monthly for a full annual cycle after the intensive window | Tests seasonal stability across winter baseflow, spring runoff, summer baseflow, and fall transition. |
+| SBRR and SBGG (opportunistic) | Same analyte set | Additional samples around large storms and spring snowmelt | These are the conditions most likely to break conservative mixing (dilution, flashy runoff). |
+| SBRR and SBGG (subset) | delta-18-O / delta-D isotopes | Roughly one isotope sample per season, with a regular chloride visit | Chloride alone cannot distinguish thermal/meteoric mixing from evaporative concentration; isotopes can. |
+
+: Proposed chloride sampling plan at the two conductivity-logger stations. {#tbl-samplingplan}
+
+**Calibration models and validation.** Three forms are fit and compared,
+each for a stated reason: a linear regression of chloride on specific
+conductance (with temperature if it improves fit), the simplest form and
+the one used for conductance-as-chloride-proxy work in Yellowstone
+[@mccleskey2012; @mccleskey2016]; a log-linear fit, because chloride is
+strictly positive and spans over an order of magnitude across site types;
+and a generalized additive model fit with `mgcv` [@wood2017], which lets
+the relationship curve where the data demand it. A random forest fit with
+`ranger` [@breiman2001] serves only as a benchmark for how much skill a
+flexible model can extract from the same predictors. Because chloride and
+conductance are autocorrelated time series, models are validated with
+rolling-origin (blocked, time-aware) cross-validation [@bergmeir2012],
+which trains only on earlier data and tests on later data, and are scored
+by cross-validated root-mean-square error rather than an in-sample fit.
 
 ## Statistical methods
 
@@ -340,6 +371,15 @@ status as a conservative, not theoretically pure, meteoric reference
 (stated above) compounds all four points, since every one of these
 tests inherits that same starting assumption.
 
+**Geothermometer equilibrium checks.** Two Giggenbach ternary diagrams
+(Na-K-square-root-Mg maturity, and Cl-SO4-HCO3 water-source), plus a
+multicomponent mineral-equilibration diagram (Reed and Spycher 1984,
+using the already-stored PHREEQC temperature-sweep output), test
+whether the Na/K geothermometer is trustworthy here and whether any
+candidate mineral set converges on a single shared equilibration
+temperature, rather than relying on the quartz/chalcedony pair alone.
+No new PHREEQC execution is needed for any of the three.
+
 ## Fissure gas geochemistry
 
 Three real free-gas samples collected April 2026 at the Lower Sinter
@@ -386,76 +426,47 @@ thermodynamic database, charge-balance error, and convergence status
 are logged explicitly
 (`data/derived/phreeqc/parent_fluid_diagnostics.csv`), including one
 real, reported convergence failure (see Results).
-## Hydrologic and geologic modeling directions
+## Geologic and hydraulic context: explicitly out of scope beyond what already exists
 
-The database described above is designed to support three further
-modeling steps beyond the chemistry itself, each at a different stage
-of readiness.
+Three further steps -- a digitized fault geometry, a full
+three-dimensional Leapfrog geologic model built on top of it, and a
+MODFLOW groundwater-flow model built on top of that -- would eventually
+let this project's chemistry be tested against real subsurface
+structure and real flow paths, rather than inferred from chemistry and
+proximity alone. None of the three is pursued as an active deliverable
+of this thesis, for the same reason in each case: each needs a real
+input this project does not yet have, and building any of them without
+that real input would produce a model dominated by untested assumptions
+rather than real constraints -- exactly the outcome the batch-modeling
+limitation discussed in Chapter 2 is meant to avoid, not just defer
+elsewhere.
 
-**Potentiometric surface mapping.** A groundwater-elevation surface
-around the Lower Sinter Terrace would let hydraulic gradients, not
-just chemistry, speak to where thermal water is moving in the
-subsurface. Today, only two or three wells inside the Steamboat field
-itself carry continuous, current water-level data; the much larger
-pool of wells with real water-level records belongs to the wider,
-hydrogeologically distinct South Truckee Meadows basin. A standing
-data request to NDEP (Chapter 5) for daily water levels at several
-specific production and monitor wells is the concrete step that would
-unblock a real, field-specific potentiometric surface; ArcGIS Pro's
-Geostatistical Analyst (Empirical Bayesian Kriging), cross-checked
-with R's `gstat` package, is the recommended interpolation approach
-once enough wells qualify.
+Digitized fault traces need a committed ArcGIS georeferencing session
+against the fault-and-lineament map published by Collar and Huntley
+[@collar1990] (chosen because it also locates several wells already
+resolved in this database, giving natural control points); an ingestion
+script (`ingest_fault_traces.R`) is already built and waiting for that
+real input. A calibrated hydraulic-conductivity and storage-coefficient
+field needs real pump-test drawdown data, which does not yet exist for
+any Lower Sinter Terrace well (an Aqtesolv analysis of such data, once
+collected, is a concrete near-term opportunity given the author's own
+ongoing groundwater hydrology coursework, but is not assumed here on
+any fixed timeline). The only real, site-area transmissivity/storage-
+coefficient values on file today are literature reference points, not a
+calibrated field: four dated aquifer tests summarized by Sorey and
+Colvard [-@sorey1992] (roughly 1,250-9,500 square feet per day) and one
+point from Collar and Huntley [-@collar1990] for spring 42w
+(approximately 3,000 square feet per day).
 
-**A Leapfrog three-dimensional geologic model.** Leapfrog is
-purpose-built for exactly the kind of implicit geologic modeling this
-system needs: well collars, lithology, and structural surfaces built
-into a 3D volume that a groundwater or reactive-transport model can
-then be built on top of. This project already exports well collar,
-survey, and completion-interval data into Leapfrog's input format for
-every well with adequate location and depth data (roughly half of the
-wells on file today), all vertical, since no well in this project has
-a recorded directional survey. The piece Leapfrog needs that does not
-yet exist is real fault geometry: no fault trace has yet been
-digitized anywhere in this project. The proposed path forward is
-squarely a field-and-GIS task rather than a database task: digitize
-the fault-and-lineament map in Collar and Huntley [@collar1990]
-(chosen because it is a real, published fault map that also locates
-several wells already resolved in this database, providing natural
-control points) in ArcGIS, using this project's own well coordinates
-as georeferencing anchors, and bring the resulting shapefile back into
-the database through an ingestion script (`ingest_fault_traces.R`)
-that is already built and waiting for real input. Once real faults
-exist, PHREEQC's own end-member and mixing results (Chapter 2's
-"chemistry first" principle) can be used to test, rather than assume,
-which wells the fault geometry says should or should not be
-hydraulically connected -- checking the geologic model against the
-chemistry, and vice versa, rather than letting either one dictate the
-other.
+What already exists and is genuinely usable today, at essentially no
+further cost: real well collar, total-depth, and completion-interval
+data for roughly half the wells on file, already exported in Leapfrog's
+own input format and standing ready the moment real fault geometry
+exists to build on top of it; and a standing NDEP data request for
+deeper-well water levels (only two or three wells inside the Steamboat
+field itself currently carry continuous, current water-level data) that
+would, if it comes through, support a real, field-specific
+potentiometric surface. Both are named as concrete next steps for
+whoever picks this thread up next, not as deliverables of this
+proposal.
 
-**Toward a groundwater flow model.** A MODFLOW-style flow model is the
-natural longer-term destination for this work, once the potentiometric
-surface and the Leapfrog hydrostratigraphic zones both exist to
-inform its boundary conditions and zonation. This project's real,
-first calculation of barometric efficiency for two wells near the
-field (Chapter 4) is an early step in that direction -- a barometric
-efficiency implies something about how confined a given aquifer zone
-is -- but a groundwater flow model itself is explicitly out of scope
-for the work presented in this proposal and is discussed as future
-work in Chapter 5.
-
-
-The only real, site-area transmissivity/storage-coefficient values on
-file today are reference points from the literature, not a calibrated
-field: four dated aquifer tests summarized by Sorey and Colvard
-[-@sorey1992] (transmissivity roughly 1,250-9,500 square feet per day)
-and one point from Collar and Huntley [-@collar1990] for spring 42w
-(approximately 3,000 square feet per day). A real, site-specific value
-would come from an Aqtesolv analysis of real pump-test drawdown data,
-which does not yet exist for any Lower Sinter Terrace well -- a
-concrete opportunity given the author's own ongoing groundwater
-hydrology coursework, but not assumed here on any fixed timeline.
-MODFLOW and PHREEQC are explicitly framed as complementary, not
-overlapping: MODFLOW would model where and how fast water moves,
-while PHREEQC models what happens to its chemistry along an assumed or
-MODFLOW-informed flow path -- a single coupled model is a reasonable
-longer-term direction, not proposed here.

@@ -121,20 +121,31 @@ build_steamboat_timeline_figure <- function(
     2007,  "Klein, Johnson & Spielman:\nmonitor-well network documented",      "Development"
   )
 
-  events_recent <- tibble::tribble(
+  # Split into a slow 2022-2024 buildup (3 events, room to breathe) and a
+  # separate, much more crowded 2025-2026 eruption/aftermath panel (9
+  # events packed into about 20 months) -- lumping both into one
+  # 2022-2026 panel, as an earlier version of this figure did, forced
+  # every label into the same narrow x-range and made the 2025 cluster
+  # unreadable regardless of repel tuning. Shorter labels here too
+  # (detail that doesn't fit is still in @tbl-chronology).
+  events_buildup <- tibble::tribble(
+    ~year, ~label, ~era,
+    2022,  "Steaming ground expands; water\nreappears along natural fractures", "Reawakening",
+    2023,  "Diffuse steaming measurably\nexpands across the terrace\n(Lindsey et al. 2026)", "Reawakening",
+    2024,  "Shift to discrete seeps/vents;\nfirst shallow boiling observed\n(Lindsey et al. 2026)", "Reawakening"
+  )
+
+  events_eruption <- tibble::tribble(
     ~year,    ~label, ~era,
-    2022,     "Steaming ground expands; water\nreappears along natural fractures\nat the Lower Sinter Terrace", "Reawakening",
-    2023,     "Diffuse steaming measurably expands\nacross the lower sinter terrace\n(Lindsey et al. 2026)", "Reawakening",
-    2024,     "Shift to discrete seeps/vents; first\nshallow boiling observed\n(Lindsey et al. 2026)", "Reawakening",
-    2025.04,  "Existing vents become more energetic;\ndischarge points migrate along fractures", "Reawakening",
-    2025.41,  "Ormat's authorized field-wide injection\nlimit raised 49,500 -> 55,000 gpm\n(NDEP UIC permit, May 30)", "Hypothesis",
-    2025.417, "First geyser eruption (June 1-2):\nresident reports a steam/water spout;\nreported overnight height ~100 ft, moderating\nby morning (NBMG field account)", "Reawakening",
-    2025.43,  "Second geyser eruption (June 5-6):\nactivity resumes overnight; drone-estimated\n8-12 m bursts (to ~18 m); Driveway Spring\n95.1C, new fumaroles to 95.8C (NBMG field account)", "Reawakening",
-    2025.46,  "Wellhead capped; discharge does not\ncease, instead redistributes laterally", "Reawakening",
-    2025.47,  "NBMG begins an integrated\nmonitoring program", "This project",
-    2025.52,  "First calibrated thermal drone survey;\nthis project's temp./conductivity\nloggers deployed", "This project",
-    2025.75,  "Second calibrated thermal drone\nsurvey (cooler than July)", "This project",
-    2026,     "Lindsey et al. publish the first full\neruption account; spring/well remapping\nand chemistry sampling continue", "This project"
+    2025.04,  "Existing vents more energetic;\ndischarge migrates along fractures", "Reawakening",
+    2025.41,  "Ormat's injection limit raised\n49,500 -> 55,000 gpm (May 30)", "Hypothesis",
+    2025.417, "1st eruption (June 1-2): ~100 ft\nspout, moderating by morning", "Reawakening",
+    2025.43,  "2nd eruption (June 5-6): 8-12 m\nbursts; Driveway Spring 95.1C", "Reawakening",
+    2025.46,  "Wellhead capped; discharge\nredistributes laterally", "Reawakening",
+    2025.47,  "NBMG begins integrated\nmonitoring program", "This project",
+    2025.52,  "1st calibrated thermal drone\nsurvey (July 2025)", "This project",
+    2025.75,  "2nd calibrated drone survey\n(cooler than July)", "This project",
+    2026,     "Lindsey et al. publish eruption\naccount; remapping continues", "This project"
   )
 
   era_colors <- c(
@@ -172,33 +183,52 @@ build_steamboat_timeline_figure <- function(
     theme_steamboat(base_size = 11) +
     theme(axis.text.y = element_blank(), panel.grid.major.y = element_blank())
 
-  p_recent <- ggplot(events_recent, aes(x = year, y = 0)) +
+  p_buildup <- ggplot(events_buildup, aes(x = year, y = 0)) +
+    geom_hline(yintercept = 0, color = "grey70") +
+    geom_point(aes(color = era, shape = era), size = 3, show.legend = FALSE) +
+    ggrepel::geom_text_repel(
+      aes(label = paste0(year, ": ", label), color = era),
+      size = 2.6, direction = "y", force = 1.5, box.padding = 0.6,
+      segment.size = 0.3, max.overlaps = Inf, seed = 2419, lineheight = 0.95,
+      ylim = c(-1.8, 1.8), show.legend = FALSE
+    ) +
+    scale_color_manual(values = era_colors, guide = "none") +
+    scale_shape_manual(values = era_shapes, guide = "none") +
+    scale_x_continuous(breaks = c(2022, 2023, 2024), limits = c(2021.5, 2024.5)) +
+    scale_y_continuous(limits = c(-2, 2)) +
+    labs(x = NULL, y = NULL, title = "B. Gradual buildup, 2022-2024") +
+    theme_steamboat(base_size = 11) +
+    theme(axis.text.y = element_blank(), panel.grid.major.y = element_blank())
+
+  p_eruption <- ggplot(events_eruption, aes(x = year, y = 0)) +
     geom_hline(yintercept = 0, color = "grey70") +
     geom_point(aes(color = era, shape = era), size = 3) +
     ggrepel::geom_text_repel(
       aes(label = label, color = era),
-      size = 2.3, direction = "y", force = 3, box.padding = 0.4,
-      segment.size = 0.3, max.overlaps = Inf, seed = 2419, lineheight = 0.9,
-      ylim = c(-2.6, 2.6)
+      size = 2.4, direction = "y", force = 8, box.padding = 0.9,
+      point.padding = 0.3, segment.size = 0.3, max.overlaps = Inf,
+      seed = 83, lineheight = 0.95, ylim = c(-3.3, 3.3)
     ) +
     scale_color_manual(values = era_colors, name = "Period / status") +
     scale_shape_manual(values = era_shapes, name = "Period / status") +
-    scale_x_continuous(breaks = c(2022, 2023, 2024, 2025, 2026), limits = c(2021.6, 2026.4)) +
-    scale_y_continuous(limits = c(-2.8, 2.8)) +
-    labs(x = NULL, y = NULL, title = "B. Reactivation detail, 2022-2026",
+    scale_x_continuous(breaks = c(2025.0, 2025.25, 2025.5, 2025.75, 2026),
+                        labels = c("2025", "Apr", "Jul", "Oct", "2026"),
+                        limits = c(2024.97, 2026.15)) +
+    scale_y_continuous(limits = c(-3.4, 3.4)) +
+    labs(x = NULL, y = NULL, title = "C. Eruption and aftermath, zoomed in (2025-2026)",
          caption = "Triangle: a candidate contributing-factor event (the injection-limit increase), not a directly observed surface change -- see text.") +
     theme_steamboat(base_size = 11) +
     theme(axis.text.y = element_blank(), panel.grid.major.y = element_blank(),
           legend.position = "bottom")
 
-  p <- patchwork::wrap_plots(p_hist, p_recent, ncol = 1, heights = c(1, 1.5)) +
+  p <- patchwork::wrap_plots(p_hist, p_buildup, p_eruption, ncol = 1, heights = c(1, 0.8, 1.7)) +
     patchwork::plot_annotation(
       title = "Steamboat Hills: from characterization to reawakening",
       theme = theme(plot.title = element_text(face = "bold", size = 13))
     )
 
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 11, height = 10.5, dpi = 300)
+  ggsave(out_png, p, width = 11.5, height = 14, dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }
@@ -301,6 +331,41 @@ prepare_field_photo_figures <- function() {
     }
     img <- magick::image_resize(magick::image_read(src), "1600x")
     magick::image_write(img, path = dst, format = "jpeg", quality = 85)
+    message("  -> Wrote ", dst)
+  }
+  invisible(TRUE)
+}
+
+#' Render the three real thermal-infrared / field-sketch PDFs added
+#' 2026-10-27 (data/raw/arcgis/thermal_infrared/, see that folder's own
+#' README.md) to resized, embed-ready images. Each source PDF is a
+#' single-page, very large (up to ~80 MB) georeferenced map -- rendered
+#' via pdftools::pdf_convert() at a dpi chosen per-file for legibility
+#' at manuscript figure size, not full native resolution.
+prepare_thermal_imagery_figures <- function() {
+  if (!requireNamespace("pdftools", quietly = TRUE)) {
+    stop("prepare_thermal_imagery_figures() requires the pdftools package")
+  }
+  src_dir <- "data/raw/arcgis/thermal_infrared"
+  out_dir <- "output/figures/manuscript"
+  if (!dir.exists(out_dir)) dir.create(out_dir, recursive = TRUE)
+
+  jobs <- list(
+    list(src = "thermalmap_broad_july2025.pdf",
+         dst = "tir_broad_thermal_map_july2025.png", dpi = 110),
+    list(src = "fissure_system_zoomin_calibrated_july2025.pdf",
+         dst = "tir_fissure_zoomin_calibrated_july2025.png", dpi = 130),
+    list(src = "busick_property_sketch_map_20250606.pdf",
+         dst = "busick_property_sketch_map_20250606.png", dpi = 160)
+  )
+  for (j in jobs) {
+    src <- file.path(src_dir, j$src)
+    dst <- file.path(out_dir, j$dst)
+    if (!file.exists(src)) {
+      warning("Missing source PDF: ", src, " -- skipping")
+      next
+    }
+    pdftools::pdf_convert(src, format = "png", pages = 1, dpi = j$dpi, filenames = dst)
     message("  -> Wrote ", dst)
   }
   invisible(TRUE)
@@ -501,25 +566,47 @@ build_conductivity_timeseries_figure <- function(con,
 
   flagged_pts <- obs |> filter(flagged)
 
+  # Retrieval/relaunch dates: where a logger was pulled and re-deployed.
+  # The orange points mark only the readings the QC detector could
+  # identify as a sharp drop in EC adjacent to those events. They do NOT
+  # mark when the sensor actually stopped being submerged in flowing
+  # water: per direct field knowledge the logger sat in open air inside
+  # its housing for at least several days before each pull, and that
+  # earlier interval is not separable from real stream signal in EC
+  # alone (EC stays smooth at both sites through the final days; checked
+  # directly), so it is not shaded here rather than guessed at.
+  retrieval_dates <- obs |>
+    group_by(site_label) |>
+    summarise(t = max(timestamp[flagged], na.rm = TRUE), .groups = "drop") |>
+    filter(is.finite(t))
+
   p <- ggplot(obs, aes(x = timestamp, y = ec_raw)) +
     geom_line(color = "#0072B2", linewidth = 0.3) +
-    geom_point(data = flagged_pts, color = "#D55E00", size = 1.3) +
+    geom_vline(data = retrieval_dates, aes(xintercept = t, linetype = "Last auto-flagged retrieval reading"),
+               color = "grey30", linewidth = 0.4) +
+    geom_point(data = flagged_pts, aes(shape = "Auto-flagged retrieval/relaunch reading"),
+               color = "#D55E00", size = 1.6) +
+    scale_shape_manual(name = NULL, values = c("Auto-flagged retrieval/relaunch reading" = 16)) +
+    scale_linetype_manual(name = NULL, values = c("Last auto-flagged retrieval reading" = "dashed")) +
     facet_wrap(~site_label, ncol = 1, scales = "free_y") +
     labs(
       x = NULL, y = "Raw specific conductance (uS/cm)",
-      title = "Stream conductivity logger record, 2026-07-15 to present",
+      title = "Stream conductivity logger record, 2026-07-15 to 2026-10-10",
       subtitle = paste0(
-        "Orange points: flagged qc_flag = 'field_visit_disturbance' -- a recurring,\n",
-        "confirmed retrieval/relaunch ambient-air-exposure artifact (both loggers, ",
-        "2026-08-22 and 2026-10-10),\nnot a real stream-chemistry change. Detected ",
-        "automatically by qc_conductivity_checks.R."
+        "Orange points = readings the QC detector flagged at retrieval/relaunch events only.\n",
+        "They do not bound the full period each logger spent partly or fully out of flowing water."
       ),
-      caption = "Source: Conductivity_Observations, geochem_operational.sqlite."
+      caption = paste0(
+        "Field notes indicate each logger sat in air inside its housing for at least several days before each pull; that interval\n",
+        "is not detectable in EC alone and is not shaded. Readings from the days immediately before a retrieval should be treated as\n",
+        "provisional. Source: Conductivity_Observations, geochem_operational.sqlite."
+      )
     ) +
-    theme_steamboat(base_size = 11)
+    theme_steamboat(base_size = 11) +
+    theme(legend.position = "bottom")
 
   dir.create(dirname(out_png), showWarnings = FALSE, recursive = TRUE)
-  ggsave(out_png, p, width = 9, height = 7, dpi = 300)
+  ggsave(out_png, p, width = 9, height = 7.5, dpi = 300)
   message("  -> Wrote ", out_png)
   invisible(p)
 }
@@ -527,6 +614,7 @@ build_conductivity_timeseries_figure <- function(con,
 #' Convenience wrapper: build all manuscript/outreach figures.
 build_manuscript_figures <- function(con) {
   prepare_field_photo_figures()
+  prepare_thermal_imagery_figures()
   build_seep_comparison_figure()
   build_discharge_through_time_figure(con)
   build_steamboat_timeline_figure()

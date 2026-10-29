@@ -13,22 +13,18 @@
 ## cross-correlation, lag analysis, PCA, or null-model testing is
 ## implemented here -- that is explicitly the next, separate step per
 ## the design sketch's own phasing.
-
 suppressPackageStartupMessages({
   library(DBI)
   library(dplyr)
   library(ggplot2)
 })
-
 .month_floor <- function(d) as.Date(format(d, "%Y-%m-01"))
-
 ## "field_mean" (used as the `site` value for injection_pressure and
 ## well_production) means: the simple average, across every well
 ## reporting a value in that document/month, of the given metric --
 ## not a flow-weighted or production-weighted average. Documented here
 ## once and referenced from both indicators' figure captions below.
 .FIELD_MEAN_NOTE <- "'field_mean' = the simple average across every well reporting a value for that document date (not flow- or production-weighted)."
-
 .monthly_injection_pressure <- function(con) {
   df <- DBI::dbGetQuery(con, "
     SELECT document_date, canonical_well_name, value
@@ -42,7 +38,6 @@ suppressPackageStartupMessages({
     dplyr::summarise(value = mean(value, na.rm = TRUE), n = dplyr::n(), .groups = "drop") %>%
     dplyr::mutate(indicator = "injection_pressure", metric = "mean_current_psig", site = "field_mean")
 }
-
 .monthly_well_production <- function(con) {
   df <- DBI::dbGetQuery(con, "
     SELECT document_date, well_name, well_type, parameter, unit, value
@@ -57,7 +52,6 @@ suppressPackageStartupMessages({
     dplyr::summarise(value = mean(value, na.rm = TRUE), n = dplyr::n(), .groups = "drop") %>%
     dplyr::mutate(indicator = "well_production", site = "field_mean")
 }
-
 .monthly_conductivity <- function(con) {
   df <- DBI::dbGetQuery(con, "
     SELECT co.timestamp, cl.logger_name, cl.role, co.sc_25c
@@ -84,7 +78,6 @@ suppressPackageStartupMessages({
     dplyr::summarise(value = mean(sc_25c, na.rm = TRUE), n = dplyr::n(), .groups = "drop") %>%
     dplyr::mutate(indicator = "conductivity", metric = "mean_sc25c_uScm")
 }
-
 .monthly_field_chemistry <- function(con) {
   df <- DBI::dbGetQuery(con, "
     SELECT s.collection_time, l.name AS site, fm.parameter, fm.value
@@ -105,7 +98,6 @@ suppressPackageStartupMessages({
     dplyr::summarise(value = mean(value, na.rm = TRUE), n = dplyr::n(), .groups = "drop") %>%
     dplyr::mutate(indicator = "field_chemistry", metric = parameter)
 }
-
 .monthly_tracer_ratios <- function(tracer_wide) {
   if (is.null(tracer_wide) || nrow(tracer_wide) == 0) return(NULL)
   tracer_wide %>%
@@ -121,7 +113,6 @@ suppressPackageStartupMessages({
     dplyr::mutate(indicator = "tracer_ratios") %>%
     dplyr::rename(site = sample_group_label)
 }
-
 ## STMGID MW3/MW10 (continuous, multi-year, wider South Truckee
 ## Meadows basin) and the three real 2025 U230-round wells (Herz
 ## Domestic, Herz Deep, NDOT -- short series, genuinely inside the
@@ -134,7 +125,6 @@ suppressPackageStartupMessages({
   stmgid_regional = c("STMGID MW3", "STMGID MW10"),
   u230_field_wells = c("Herz Domestic Well", "Herz Deep", "NDOT")
 )
-
 .monthly_water_levels <- function(con) {
   df <- DBI::dbGetQuery(con, "
     SELECT wl.timestamp, w.well_name, wl.depth_to_water
@@ -151,7 +141,6 @@ suppressPackageStartupMessages({
     dplyr::mutate(indicator = "water_level", metric = "mean_depth_to_water_ft") %>%
     dplyr::rename(site = well_name)
 }
-
 ## Per-indicator (or per-indicator-subgroup, for water_level) title and
 ## a short, real caption describing what the figure shows, what
 ## "field_mean" means where relevant, and -- for field_chemistry, whose
@@ -179,7 +168,7 @@ suppressPackageStartupMessages({
   ),
   field_chemistry = list(
     title = "Field parameters at monitoring wells/outlets (U230 rounds)",
-    caption = "Monthly mean pH, temperature, and specific conductance at real named monitoring wells, domestic wells, and injection/outlet taps sampled during NDEP's U230 field rounds (Aug 2025-May 2026). Single-visit steaming-ground survey points are excluded. Legend is suppressed here (29 real sites) -- see data/derived/monthly_indicator_timeline/monthly_indicator_timeline.csv for the full per-site, per-month values behind this figure."
+    caption = "Monthly mean pH, temperature, and specific conductance at real named monitoring wells, domestic wells, and injection/outlet taps sampled during NDEP's U230 field rounds (Jul 2025-May 2026). Single-visit steaming-ground survey points are excluded. Color shows site group (29 real sites; one thin line per site); see data/derived/monthly_indicator_timeline/monthly_indicator_timeline.csv for per-site values."
   ),
   tracer_ratios = list(
     title = "Conservative tracer ratios (Cl/B, Na/Cl), monthly means",
@@ -194,7 +183,6 @@ suppressPackageStartupMessages({
     caption = "Depth-to-water readings at three real Steamboat-field monitoring wells (Herz Domestic, Herz Deep, NDOT), measured during each NDEP U230 field-sampling round in 2025 -- a short, real series, not yet a multi-year baseline."
   )
 )
-
 #' Build a real, monthly-resolution indicator table spanning the
 #' available post-eruption record.
 #'
@@ -209,13 +197,10 @@ build_monthly_indicator_timeline <- function(con,
                                               derived_dir = "data/derived/monthly_indicator_timeline") {
   dir.create(out_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(derived_dir, recursive = TRUE, showWarnings = FALSE)
-
   start <- as.Date(start)
   end <- as.Date(end)
-
   source("scripts/analysis/conservative_tracer_ratios.R")
   tracer_result <- tryCatch(compute_tracer_ratios(con), error = function(e) NULL)
-
   pieces <- list(
     .monthly_injection_pressure(con),
     .monthly_well_production(con),
@@ -225,19 +210,15 @@ build_monthly_indicator_timeline <- function(con,
     .monthly_water_levels(con)
   )
   pieces <- Filter(Negate(is.null), pieces)
-
   if (length(pieces) == 0) {
     message("[MONTHLY TIMELINE] No indicator data found at all -- nothing to build.")
     return(invisible(NULL))
   }
-
   timeline <- dplyr::bind_rows(pieces) %>%
     dplyr::filter(month >= start, month <= end) %>%
     dplyr::select(month, indicator, metric, site, value, n) %>%
     dplyr::arrange(indicator, metric, site, month)
-
   readr::write_csv(timeline, file.path(derived_dir, "monthly_indicator_timeline.csv"))
-
   coverage <- timeline %>%
     dplyr::group_by(indicator) %>%
     dplyr::summarise(n_months = dplyr::n_distinct(month),
@@ -247,60 +228,69 @@ build_monthly_indicator_timeline <- function(con,
     message("  - ", coverage$indicator[i], ": ", coverage$n_months[i], " month(s), ",
             coverage$first_month[i], " to ", coverage$last_month[i])
   }
-
   eruption_date <- as.Date("2025-06-03")
-
   ## Builds and saves one figure for a given (indicator, data, key,
   ## meta) combination -- used directly for every indicator except
   ## water_level, which calls this once per subgroup instead.
   .wrap_text <- function(x, width = 95) paste(strwrap(x, width = width), collapse = "\n")
-
   .build_one_figure <- function(df_ind, key, meta) {
     n_metrics <- dplyr::n_distinct(df_ind$metric)
     n_sites <- dplyr::n_distinct(df_ind$site)
-
-    p_ind <- ggplot(df_ind, aes(x = month, y = value, color = site)) +
+    # field_chemistry has 29 sites -- an unreadable, unlabeled rainbow when
+    # each gets its own color. Color by site GROUP instead (a real,
+    # two-entry legend), keep one thin line per site so individual
+    # trajectories are still visible, and let the group carry the meaning.
+    use_groups <- identical(key, "field_chemistry")
+    if (use_groups) {
+      df_ind$grp <- dplyr::case_when(
+        grepl("Outlet|Injection", df_ind$site) ~ "Plant outlet / injection-side tap",
+        grepl("^SB[A-Z]", df_ind$site) ~ "This project's terrace/creek samples (2026)",
+        TRUE ~ "Monitoring or domestic well"
+      )
+      p_ind <- ggplot(df_ind, aes(x = month, y = value, color = grp, group = site)) +
+        scale_color_manual(values = c("Plant outlet / injection-side tap" = "#D55E00",
+                                      "This project's terrace/creek samples (2026)" = "#009E73",
+                                      "Monitoring or domestic well" = "#0072B2"))
+    } else {
+      p_ind <- ggplot(df_ind, aes(x = month, y = value, color = site))
+    }
+    p_ind <- p_ind +
       geom_vline(xintercept = eruption_date, linetype = "dashed", color = "firebrick", alpha = 0.7) +
-      geom_line(na.rm = TRUE) +
+      geom_line(na.rm = TRUE, linewidth = if (use_groups) 0.4 else 0.5, alpha = if (use_groups) 0.7 else 1) +
       geom_point(size = 1.3, na.rm = TRUE) +
       labs(
         title = meta$title,
         subtitle = .wrap_text("Dashed red line = 2025-06-03 Lower Sinter Terrace eruption (Lindsey et al. 2026). Assembly/visualization only -- no cross-correlation or causal analysis yet."),
         caption = .wrap_text(meta$caption),
         x = NULL, y = "Value (see metric facet label / axis)",
-        color = "Site/group"
+        color = if (use_groups) "Site group" else "Site/group"
       ) +
       theme_minimal() +
       theme(plot.caption = ggplot2::element_text(hjust = 0, size = 8))
-
     if (n_metrics > 1) {
       p_ind <- p_ind + facet_wrap(~metric, scales = "free_y", ncol = 1)
     }
-
     # Every figure keeps a real legend per the 2026-10-04 request; very
     # busy legends (field_chemistry's 29 real sites) are suppressed
     # specifically (not just shrunk) since even a multi-column legend
     # at that cardinality is unreadable -- the caption above points to
     # the full per-site CSV instead.
-    if (n_sites > 20) {
+    if (n_sites > 20 && !use_groups) {
       p_ind <- p_ind + theme(legend.position = "none")
     } else {
-      n_legend_cols <- if (n_sites > 8) 3 else 1
+      n_legend_cols <- if (use_groups) 2 else if (n_sites > 8) 3 else 1
       p_ind <- p_ind +
         theme(legend.position = "bottom", legend.text = ggplot2::element_text(size = 7)) +
         guides(color = guide_legend(ncol = n_legend_cols))
     }
-
     fig_height <- if (n_metrics > 1) 3 * n_metrics + 1 else 6
     fig_path <- file.path(out_dir, paste0("monthly_indicator_timeline_", key, ".png"))
     ggsave(fig_path, p_ind, width = 9, height = fig_height, dpi = 150)
     p_ind
   }
-
   plots <- list()
   for (ind in unique(timeline$indicator)) {
     df_ind <- dplyr::filter(timeline, indicator == ind)
-
     if (ind == "water_level") {
       # Split into the two site groups defined above instead of one
       # combined figure (2026-10-04, per direct user feedback that
@@ -317,10 +307,8 @@ build_monthly_indicator_timeline <- function(con,
       plots[[ind]] <- .build_one_figure(df_ind, ind, .FIGURE_META[[ind]])
     }
   }
-
   message("[MONTHLY TIMELINE] Wrote ", nrow(timeline), " rows across ", length(pieces),
           " indicator source(s) to ", derived_dir, " and ", length(plots),
           " separate figure(s) to ", out_dir)
-
   invisible(list(timeline = timeline, coverage = coverage, plots = plots))
 }

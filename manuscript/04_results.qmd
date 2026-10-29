@@ -90,6 +90,59 @@ a single cooling, diluting flow path from a genuinely hot (roughly
 150-250 degree Celsius) reservoir, rather than two disconnected water
 types with independent thermal histories.
 
+**Is Na/K trustworthy here, and does a genuine multicomponent
+equilibrium exist?** Two new checks address both questions directly.
+
+```{r giggenbach-fig}
+#| echo: false
+#| fig-cap: "Giggenbach (1988) Na-K-sqrt(Mg) maturity ternary, real PHREEQC-conditioned chemistry, all seven flowpath samples (see `scripts/analysis/lst_ternary_diagrams.R`)."
+knitr::include_graphics("../output/figures/manuscript/giggenbach_ternary.png")
+```
+
+The fissure and resort tank plot inside the Full Equilibrium field,
+the three real springs and seep sit in the Partial Equilibrium band,
+SBW_0001 sits just into the Immature field, and SBRR plots at the
+magnesium-rich corner, exactly where a cold, unreacted water should.
+This independently supports trusting the Na/K estimates already used
+for the fissure, resort tank, and springs, and flags SBW_0001's own
+Na/K estimate as the least chemically mature of the group.
+
+```{r anion-ternary-fig}
+#| echo: false
+#| fig-cap: "Cl-SO4-HCO3 ternary (Giggenbach 1991), real PHREEQC-conditioned chemistry, all seven flowpath samples."
+knitr::include_graphics("../output/figures/manuscript/anion_ternary.png")
+```
+
+```{r mineraleq-fig}
+#| echo: false
+#| fig-cap: "Multicomponent mineral-equilibration diagram: saturation index vs. temperature for six candidate minerals, all six real thermal samples, from the real, already-stored PHREEQC temperature-sweep output (see `scripts/analysis/lst_mineral_equilibration.R`)."
+knitr::include_graphics("../output/figures/manuscript/mineral_equilibration.png")
+```
+
+No real sample shows two or more minerals (besides the
+quartz/chalcedony pair itself) converging within 15 degrees Celsius of
+one another -- confirmed programmatically, not assumed. Calcite and
+dolomite stay supersaturated across almost the entire 25-300 degree
+Celsius explored range, and anhydrite and fluorite stay undersaturated
+throughout. This sharpens, rather than undermines, the
+quartz-versus-Na/K story told above: the quartz/chalcedony pair's own
+apparent agreement is real, not an artifact of only checking two
+minerals while ignoring others that might have told a different story.
+
+```{r geotherm-table}
+#| echo: false
+geo_tbl <- read.csv("../data/derived/phreeqc/geothermometer_summary_table.csv")
+geo_tbl$multicomponent_converges <- ifelse(geo_tbl$multicomponent_converges, "Yes", "No")
+knitr::kable(
+  geo_tbl[, c("location_name", "measured_temp_c", "T_NaK_gigg_C", "T_NaK_four_C",
+              "T_quartz_C", "T_chalcedony_C", "multicomponent_converges")],
+  digits = 1, row.names = FALSE,
+  col.names = c("Sample", "Measured T (C)", "Na/K (Giggenbach)", "Na/K (Fournier)",
+                "Quartz", "Chalcedony", "2+ minerals converge?"),
+  caption = "Geothermometer comparison, all seven real flowpath samples. SBRR's Na/K estimate is not physically meaningful at this dilute, non-thermal site."
+)
+```
+
 ## Does fissure gas chemistry independently support the same cooling-flow-path pattern?
 
 ```{r gas-ratio-fig}
@@ -350,13 +403,26 @@ knitr::include_graphics("../output/figures/manuscript/lst_piper_diagram.png")
 knitr::include_graphics("../output/figures/manuscript/lst_conceptual_flowpath.png")
 ```
 
-This conceptual figure's framing of discrete point-source degassing
-(western terrace margin) versus diffuse creek-channel seepage comes
-from visually inspecting the thermal-infrared surveys already shared
-for this project, not from a digitized layer -- the underlying raster
-files are not yet on disk (`docs/action_items_for_user.md`, item 12).
-Stated now because it is a real, testable prediction, not because the
-digitization work is done.
+The real thermal-infrared raster files behind this framing are now on
+file (closing the earlier `docs/action_items_for_user.md` item 12 gap):
+
+```{r tirzoom-fig}
+#| echo: false
+#| fig-cap: "Calibrated thermal-infrared orthophoto of the fissure/western-margin area, July 2025 (7-44 degrees Celsius scale)."
+knitr::include_graphics("../output/figures/manuscript/tir_fissure_zoomin_calibrated_july2025.png")
+```
+
+Discrete, bright point sources cluster along the terrace's western
+margin, and a broader, diffuse warm signature tracks the creek channel
+itself -- the real image behind the discrete-point-source-versus-
+diffuse-seepage framing above. A real, dated field sketch from the June
+6, 2025 Busick property visit (five days after the first documented
+2025 eruption pulse) independently corroborates this picture with
+named, measured features: the Driveway Spring (95.1 degrees Celsius),
+the New North Fumarole (95.8 degrees Celsius), and the Geyser/Pipe
+eruption site itself. This is still a qualitative, visual read, not a
+digitized layer -- turning either image into a real georeferenced
+layer remains a concrete next step.
 
 ## How does the flowpath's chemistry change across feature types? A baseline characterization
 

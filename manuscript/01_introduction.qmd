@@ -104,8 +104,8 @@ knitr::include_graphics("../output/figures/manuscript/steamboat_timeline.png")
 | 2025-05-30 | Ormat's field-wide authorized injection limit is raised from 49,500 to 55,000 gpm (NDEP UIC Temporary Permit UNEV2007204T2025-1 [@nevadadep2025uic]) -- about two weeks before the eruption; a candidate contributing factor, not yet confirmed (see below). |
 | 2025-06-01/02 | A geyser erupts overnight from the Busick property pipe, reported at an estimated 100 ft before moderating to 20-30 ft by morning and ceasing by afternoon; a resident report brings NBMG to the site within hours (NBMG field timeline, 2024). |
 | 2025-06-05/06 | A second eruption pulse begins overnight and is surveyed in detail the next morning: drone-estimated bursts of 8-12 m (to 18 m), the "Driveway Spring" measured at 95.1 C, new fumaroles to 95.8 C, and a previously unsurveyed warm spring at 40.0 C (NBMG field timeline, 2024). |
-| 2025 | The wellhead is capped and discharge redistributes laterally [@lindsey2026]. NBMG begins an integrated monitoring program, and this project's temperature and conductivity logger network is deployed. |
-| 2026 | Lindsey et al. publish the first full account of the eruption [@lindsey2026]; spring/well remapping and chemistry/isotope sampling continue under this thesis. In August, the author and Dave find a new seep-fed hot spring at the terrace (GPS-logged and photographed the following month, September 27); a growing sulfur deposit and new alluvium-to-sinter seeps are documented the same month. |
+| 2025 | The wellhead is capped and discharge redistributes laterally [@lindsey2026]. NBMG begins an integrated monitoring program. |
+| 2026 | Lindsey et al. publish the first full account of the eruption [@lindsey2026]; this project deploys temperature loggers (April) and stream conductivity loggers (July 15); spring/well remapping and chemistry/isotope sampling continue under this thesis. In August, the author and Dave find a new seep-fed hot spring at the terrace (GPS-logged and photographed the following month, September 27); a growing sulfur deposit and new alluvium-to-sinter seeps are documented the same month. |
 
 : A brief chronology of Steamboat Hills, from first characterization to the current reawakening. {#tbl-chronology}
 
@@ -204,65 +204,78 @@ than trying to sample chloride itself at high frequency indefinitely.
 
 ## Thesis objectives
 
-This proposal is organized around three questions, each revisited
-explicitly in the Results and Discussion chapters once the data on
-hand can actually speak to it:
+**Central question.** Can continuous conductivity measurements be
+used to accurately estimate chloride discharge and geothermal outflow
+at Steamboat Hills, and what do those measurements reveal about
+hydrothermal-system evolution following the 2025 eruption?
 
-1. **Has thermal-water outflow at Steamboat changed since Sorey's own
-   studies, and if so, how?** This requires comparing modern chemistry
-   and discharge estimates against the historical baseline Sorey and
-   Colvard [@sorey1992], Sorey [@sorey2000], and Sorey and Spielman
-   [@sorey2008; @sorey2017] established, using the same conservative
-   tracers (chloride, and the chloride-to-boron ratio) wherever
-   possible so that a real change is not confused with a change in
-   method.
-2. **Can continuous conductivity substitute for discrete chloride
-   sampling, and at what sampling frequency does that substitution
-   stop being reliable?** This is directly testable against the
-   conductivity record already collected at SBRR and SBGG, and its
-   answer determines how a real field-sampling budget should be spent
-   (Chapter 3's sampling plan, Chapter 4's Monte Carlo result).
-3. **What does the subsurface plumbing feeding the Lower Sinter
-   Terrace actually look like, and can it be reconstructed well enough
-   to test whether the 2025 eruption reactivated an existing conduit
-   or opened something new?** This question has two distinct halves,
-   pursued by two different kinds of evidence. The *hydraulic* half --
-   a real potentiometric surface, fault-aware compartmentalization --
-   remains the least resolved of the three questions today, blocked on
-   well water-level data this project has requested but not yet
-   received and on fault traces that have not yet been digitized; see
-   the roadblocks laid out in Chapters 3 and 5 for what would need to
-   happen for it to be answerable. The *chemical* half does not share
-   that blocker: Chapter 4 demonstrates a real, one-time baseline
-   chemical-evolution characterization -- PHREEQC mixing, forward
-   reaction-path titration, and geothermometry run on real, same-era
-   samples along the real fissure-to-creek flowpath -- that already
-   speaks to how the Lower Sinter Terrace's distinct discharge
-   features (wells, springs, a seep) relate to one shared deep source
-   and to each other. This is presented as a baseline characterization
-   and a demonstration of the method's capability on a single snapshot
-   of real data, not an iterative refinement effort; further
-   precision is explicitly deferred to a future same-day synoptic
-   sampling round (Chapter 5), and it is this chemical-evolution work
-   that most directly connects the fissure-specific geochemistry to
-   the conductivity-as-chloride-proxy work in Objective 2 -- both are
-   ultimately asking how far, and in what form, the same thermal
-   signal travels from its source.
+This proposal is organized around four research questions, each with
+its own concrete deliverable, each revisited explicitly in the
+Results and Discussion chapters once the data on hand can actually
+speak to it.
 
-Each objective carries a working expectation going into the data,
-stated plainly so the Results chapter can say clearly whether it held
-up: (1) thermal-water chloride at Steamboat has likely declined
+**RQ1 -- How stable is the chloride-conductivity relationship through
+time and across site types?** Does a single calibration apply
+everywhere, or do outlet, creek, monitoring-well, and spring waters
+each require their own relationship, and how much uncertainty results
+from seasonal and temporal variation? *Deliverable:* one or more
+chloride-to-conductance calibration equations, with stated
+uncertainty.
+
+**RQ2 -- What is the minimum chloride-sampling frequency required to
+maintain a scientifically defensible, conductivity-based estimate of
+chloride flux?** *Deliverable:* a quantitative monitoring-design
+recommendation, developed through the Monte Carlo analysis described
+in Chapter 3.
+
+**RQ3 -- Are conductivity variations driven primarily by conservative
+mixing, or by geochemical reactions that would decouple conductance
+from chloride?** Is chloride itself behaving conservatively here? Is
+conductivity? Are mineral reactions altering conductance
+independently of chloride concentration? *Deliverable:* a
+geochemical, PHREEQC-based physical justification -- or an explicit,
+documented limitation -- for the chloride-conductivity proxy. This
+question has two distinct halves. The *chemical* half is addressed
+directly: Chapter 4 demonstrates a one-time baseline
+chemical-evolution characterization -- PHREEQC mixing, forward
+reaction-path titration, and geothermometry run on same-era samples
+along the fissure-to-creek flowpath -- showing how the Lower Sinter
+Terrace's distinct discharge features (wells, springs, a seep) relate
+to one shared deep source and to each other. The *hydraulic* half --
+a potentiometric surface, fault-aware compartmentalization -- remains
+the least resolved part of this question, blocked on well
+water-level data this project has requested but not yet received and
+on fault traces that have not yet been digitized; see the roadblocks
+laid out in Chapters 3 and 5 for what would need to happen for it to
+be answerable.
+
+**RQ4 -- Has geothermal outflow at Steamboat changed following the
+2025 eruption?** *Deliverable:* a post-eruption interpretation of
+chloride flux, conservative-tracer ratios, and outlet chemistry, read
+against the 70-year discharge record Sorey and Colvard [@sorey1992],
+Sorey [@sorey2000], and Sorey and Spielman [@sorey2008; @sorey2017]
+established, using the same conservative tracers (chloride, and the
+chloride-to-boron ratio) wherever possible so that a change is not
+confused with a change in method.
+
+**Working hypotheses.** Going into the data, the expectation for each
+question is: (RQ1) a single calibration will not fit every site type
+equally well, since outlet, creek, monitoring-well, and spring waters
+are exposed to different near-surface conditions, but the relationship
+should hold within a given site type; (RQ2) daily-to-weekly chloride
+sampling should be sufficient to keep a conductivity-based estimate
+defensible, with the open question being exactly where that breaks
+down, not whether a workable frequency exists; (RQ3) chloride should
+behave conservatively everywhere, but conductance will likely decouple
+from it to some degree wherever carbonate dissolution or precipitation
+is active, which PHREEQC modeling should be able to flag, and the
+Lower Sinter Terrace's wells, springs, and seep should share one deep
+chemical source but need not behave identically once that water nears
+the surface; (RQ4) thermal-water chloride has probably declined
 somewhat since the 1950-1991 baseline, consistent with decades of
-production, but the conservative Cl/B signature of the thermal source
-itself should be essentially unchanged; (2) specific conductance
-should track chloride closely enough at daily-to-weekly resolution to
-serve as a practical proxy, with the exact frequency at which that
-relationship breaks down being the real open question, not whether a
-relationship exists at all; (3) the Lower Sinter Terrace's wells,
-springs, and seep should share one deep chemical source but need not
-behave identically once that water nears the surface, since wells and
-open discharge points are exposed to very different near-surface
-conditions.
+production, but the thermal source's own conservative Cl/B signature
+should be essentially unchanged.
+
 
 ## What this proposal covers
 
@@ -275,5 +288,5 @@ hydrologic/geologic modeling this database is meant to support.
 Chapter 4 presents the real findings produced so far. Chapter 5
 discusses what those findings do and do not settle, and lays out the
 remaining work. Chapter 6 is a focused, decision-facing proposal for
-the calibration chloride-sampling campaign that Objective 2 above
+the calibration chloride-sampling campaign that RQ1 above
 depends on.

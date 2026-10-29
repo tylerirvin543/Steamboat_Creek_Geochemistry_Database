@@ -739,6 +739,102 @@ next step is a `Gas_Samples`/`Gas_Analyses` schema designed around its
 with this project's standing rule against building storage for a data shape
 that hasn't been seen yet.
 
+## Database sensitivity and the SBS_0001 phase-sensitivity test (2026-10-27)
+
+Two deeper sensitivity analyses, run on real flowpath samples, are
+documented here in full; `manuscript/00_thesis_proposal.qmd` carries only
+a short summary pointing back to this section, since neither is
+proposal-justification material -- both feed the planned second
+manuscript (*Hydrochemical Evolution of the Lower Sinter Terrace System
+Following the 2025 Eruption*), not the chloride-conductivity calibration
+thesis itself.
+
+### Does thermodynamic database choice matter for the resort-tank convergence failure?
+
+Re-running the resort-tank (SBW_0002) parent-fluid gas-equilibration step
+against all six PHREEQC databases registered in this project, with the
+corrected field temperature, found it fails to converge on every one of
+the six at its own real, measured field pH (9.0) -- a larger, more
+consistent failure than first found (before the temperature correction,
+two of the six databases had converged, landing on a dramatically more
+acidic parent pH near 2.0-2.1; the corrected, larger steam-loss fraction
+increases the imposed gas load enough that even those two now fail
+outright). Two plausible-looking explanations were ruled out with
+controlled PHREEQC experiments before finding the real one: swapping
+boron in or out of the fissure's own solution changes its final pH by
+less than 0.01 units (boron is excluded from the resort-tank solution
+only because including it prevents the *initial* solution from
+converging at all, a separate, already-documented issue, not the driver
+of the acidification difference); and the two fluids' conservative-
+species concentrations are too similar to explain a gap this large. The
+actual cause is the two samples' different measured field pH: 9.0 for
+the resort tank versus 8.3 for the fissure. Re-running the resort tank's
+exact real chemistry with only its starting pH changed to 8.3 converges
+cleanly on all three general-purpose databases tested (`phreeqc.dat`,
+LLNL, and `wateq4f.dat`) and lands within 0.1 pH units of the fissure's
+own result (5.44-5.55 versus the fissure's 5.48-5.60 across the same
+three databases) -- confirming that a 0.7-unit difference in starting pH,
+not the choice of thermodynamic database, drives both the convergence
+failure and the acidic divergence. Mechanistically, a solution starting
+at pH 9 has already converted most of its alkalinity to carbonate rather
+than bicarbonate, leaving much less carbonate buffering capacity before
+the same imposed gas load drives the system into a strongly acidic,
+weakly buffered regime. That high starting pH itself has a plausible
+real-world cause, not an unexplained property of the fluid: the well
+feeding the resort tank is pumped with a true, intermittent air-lift
+pump, and stripping carbon dioxide via forced air contact raises pH in
+essentially the same direction natural degassing does.
+
+As a direct check on one remaining candidate explanation, the amount of
+gas imposed on each parent fluid was scaled to each sample's own
+alkalinity rather than applied as a fixed total. Because the resort
+tank's and fissure's alkalinities differ by only about 6 percent, this
+changes the imposed gas load by a similar small amount and leaves the
+result unchanged: the resort tank still fails to converge on every
+database tested -- a real, negative confirmation that rules out gas-load
+sizing as a contributing factor and leaves the resort tank's unusually
+high measured field pH, most plausibly a product of its air-lift pump,
+as the sole identified driver. Full figure:
+`output/figures/manuscript/parent_fluid_database_sensitivity.png`; data:
+`data/derived/phreeqc/parent_fluid_diagnostics.csv`.
+
+### Does a sulfate phase, or a different meteoric input, resolve SBS_0001's own reaction-path tension?
+
+SBS_0001's real chemistry gave a specific, testable lead: it has the
+highest sulfate (187 mg/L) and lowest alkalinity of the four original
+downgradient reaction-path targets -- the classic gypsum/anhydrite
+signature a carbonate-only titration cannot reproduce, since calcite and
+dolomite tie calcium directly to carbonate, not sulfate. Two hypotheses
+were tested directly: adding anhydrite, gypsum, or anhydrite plus
+fluorite as additional candidate phases (fluorite tested because
+SBS_0001 also has modest real fluoride data), and separately, mixing
+with a different, higher-sulfate shallow water instead of SBRR, using
+two real candidates with usable chemistry already in this database (Tick
+Spring and Jumbo Grade Spring, both from Mariner and Janik 1995, neither
+with a coordinate on file). Scored on the same fixed calcium, magnesium,
+and alkalinity basis as the baseline for a fair comparison, every
+variant improves on the baseline's 44.5 percent error somewhat:
+anhydrite and gypsum each reach 40.3 percent, anhydrite plus fluorite
+reaches 36.6 percent, Jumbo Grade Spring reaches 39.0 percent, and Tick
+Spring reaches 33.4 percent, the best single result on this fixed
+metric. None fully resolves the tension, and the best result is still
+notably worse than SBS_0002's own 39.4 percent or SBS_0003's own 19.7
+percent baseline fits.
+
+A further wrinkle: when fluorite's own real fluoride prediction is
+honestly included in the score (it was not, in the first pass -- a real
+bug, since fixed, where fluoride was never added to PHREEQC's own
+requested output list), the anhydrite-plus-fluorite variant gets
+noticeably *worse* (50.8 percent), showing fluorite does not actually
+explain real fluoride well on its own, while the combined variant
+(anhydrite, fluorite, and the Tick Spring end-member together) becomes
+the single best-fitting result of any tested, at 30.6 percent. The two
+hypotheses do not simply stack, and the ranking depends on which real
+chemistry is actually checked. Full figure:
+`output/figures/manuscript/sbs0001_sensitivity_comparison.png`; data:
+`data/derived/phreeqc/sbs0001_sensitivity_comparison.csv`.
+
+
 ## Known limitations and status (2026-09-06)
 
 - **Real mixing/inverse modeling is blocked on field data, not code**: the
@@ -772,6 +868,7 @@ that hasn't been seen yet.
 | 2026-09-06 | Duplicate HCO3/CO3 rows cleaned up in both NDEP ingest pathways; FIELD's own `make.names()`-mangled-join-key bug found and fixed, backfilling Alkalinity (and NO3) for all 8 real thermal samples for the first time. |
 | 2026-09-06 | `SBW_0002` PHREEQC convergence failure diagnosed (boron/alkalinity interaction at pH 9) and the boron-exclusion guard replaced with a physically-grounded, pH-aware check. `PHREEQC_Run_Failures` empty database-wide. |
 | 2026-09-06 | Gas geothermometry (D'Amore-Panichi 1980, validated against real Mariner & Janik 1995 numbers) and forward/inverse gas mixing added (`13_gas_geothermometry.R`, `14_gas_mixing.R`) -- standalone, no schema/pipeline wiring, ahead of the planned UCSB (Fischer) gas-sampling campaign. Also fixed a latent PHREEQC SO4/sulfide element-name ambiguity (bare `S` -> explicit `S(6)`) and made the PHREEQC pipeline stage auto-detect new/changed chemistry and expose mixing/inverse/gas-phase runs via toggleable config CSVs. |
+| 2026-10-27 | Database-sensitivity (resort-tank convergence failure across all six registered databases) and SBS_0001 forward-titration phase-sensitivity sections added, relocated here in full from `manuscript/00_thesis_proposal.qmd`, which now carries only a short summary pointing back to this notebook. |
 
 ::::
 ```{r cleanup-06}

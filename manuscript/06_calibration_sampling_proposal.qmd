@@ -2,6 +2,8 @@
 title: "Calibration Sampling Proposal: SBRR/SBGG Chloride-Conductivity Program"
 subtitle: "A mini-proposal, separate from the raw statistical analysis"
 date: today
+bibliography: references.bib
+csl: gsa.csl
 format:
   html:
     toc: true
@@ -71,6 +73,27 @@ Two real, complementary additions:
   Isotopes cost meaningfully more per sample than major ions and should
   be prioritized for a subset of samples (e.g. the Tier 1 intensive
   window below), not necessarily every single sample.
+
+## The proposed design at a glance
+
+The campaign is centered on the two existing conductivity-logger
+stations, **SBRR (Rhodes Road, upstream control) and SBGG (Geiger Grade,
+downstream)**, and @tbl-samplingplan summarizes what is sampled, how
+often, and why. Calibration models (linear, log-linear, and a
+generalized additive model [@wood2017], with a random forest [@breiman2001]
+as a skill benchmark) are validated with rolling-origin, time-aware
+cross-validation [@bergmeir2012] so that autocorrelation does not inflate
+apparent skill.
+
+| Site | What is sampled | Frequency / timing | Why |
+|------------------|----------------------------|------------------------|------------------------------|
+| SBRR (Rhodes Road, upstream control) | Chloride, major ions (Na, K, Ca, Mg, SO4, alkalinity), field pH/temperature/specific conductance | Daily to sub-daily for 2-4 weeks (intensive window, starting fall/winter 2026) | Establishes the calibration's short-timescale behavior and noise floor against the logger's continuous record. |
+| SBGG (Geiger Grade, downstream) | Same analyte set as SBRR | Daily to sub-daily for 2-4 weeks, concurrent with SBRR | A second, independently calibrated site tests whether one relationship serves the whole system or each site needs its own equation. |
+| SBRR and SBGG | Same analyte set | Monthly for a full annual cycle after the intensive window | Tests seasonal stability across winter baseflow, spring runoff, summer baseflow, and fall transition. |
+| SBRR and SBGG (opportunistic) | Same analyte set | Additional samples around large storms and spring snowmelt | These are the conditions most likely to break conservative mixing (dilution, flashy runoff). |
+| SBRR and SBGG (subset) | delta-18-O / delta-D isotopes | Roughly one isotope sample per season, with a regular chloride visit | Chloride alone cannot distinguish thermal/meteoric mixing from evaporative concentration; isotopes can. |
+
+: Proposed chloride sampling plan at the two conductivity-logger stations. {#tbl-samplingplan}
 
 ## Additional candidate sampling sites
 

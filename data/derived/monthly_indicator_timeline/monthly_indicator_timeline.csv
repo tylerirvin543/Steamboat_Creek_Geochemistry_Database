@@ -1,8 +1,12 @@
 month,indicator,metric,site,value,n
 2026-07-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1037.4411461630832,4657
-2026-08-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1143.6613310694192,6309
+2026-08-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1129.8895568355988,8928
+2026-09-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1115.7941555944826,8640
+2026-10-01,conductivity,mean_sc25c_uScm,"SBGG (Geiger Grade, downstream)",1123.2611249506242,2864
 2026-07-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",330.88137630944595,4637
-2026-08-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",380.75614936877713,6298
+2026-08-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",366.7632944984394,8926
+2026-09-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",316.5299480761027,8640
+2026-10-01,conductivity,mean_sc25c_uScm,"SBRR (Rhodes Road, upstream control)",298.9987642511556,2827
 2025-08-01,field_chemistry,conductivity,Boyd Domestic Well,568,1
 2025-09-01,field_chemistry,conductivity,Boyd Domestic Well,611,1
 2025-10-01,field_chemistry,conductivity,Boyd Domestic Well,553,1
@@ -123,22 +127,22 @@ month,indicator,metric,site,value,n
 2025-08-01,field_chemistry,temperature,SB2 Outlet,13.1,1
 2025-09-01,field_chemistry,temperature,SB3 Injection Outlet,39.44,1
 2025-08-01,field_chemistry,temperature,SB3 Outlet,13.5,1
-2026-05-01,field_chemistry,temperature,SBBV,74.66,1
-2026-04-01,field_chemistry,temperature,SBF_0001,191,1
-2026-05-01,field_chemistry,temperature,SBF_0001,152.6,1
+2026-05-01,field_chemistry,temperature,SBBV,23.7,1
+2026-04-01,field_chemistry,temperature,SBF_0001,88.33333333333333,1
+2026-05-01,field_chemistry,temperature,SBF_0001,67,1
 2025-09-01,field_chemistry,temperature,SBHR Injection Outlet,38.94,1
 2025-08-01,field_chemistry,temperature,SBHR Outlet,14,1
-2026-05-01,field_chemistry,temperature,SBRR,59.36,1
-2026-04-01,field_chemistry,temperature,SBS_0001,118,1
-2026-04-01,field_chemistry,temperature,SBS_0002,148,1
-2026-05-01,field_chemistry,temperature,SBS_0002,162.14,1
-2026-05-01,field_chemistry,temperature,SBS_0003,103.28,1
-2026-04-01,field_chemistry,temperature,SBS_0005,110,1
-2026-04-01,field_chemistry,temperature,SBS_0006,137,1
-2026-05-01,field_chemistry,temperature,SBS_0006,137,1
-2026-04-01,field_chemistry,temperature,SBW_0001,160,1
-2026-05-01,field_chemistry,temperature,SBW_0001,159.62,1
-2026-05-01,field_chemistry,temperature,SBW_0002,149,1
+2026-05-01,field_chemistry,temperature,SBRR,15.200000000000001,1
+2026-04-01,field_chemistry,temperature,SBS_0001,47.77777777777778,1
+2026-04-01,field_chemistry,temperature,SBS_0002,64.44444444444444,1
+2026-05-01,field_chemistry,temperature,SBS_0002,72.3,1
+2026-05-01,field_chemistry,temperature,SBS_0003,39.599999999999994,1
+2026-04-01,field_chemistry,temperature,SBS_0005,43.333333333333336,1
+2026-04-01,field_chemistry,temperature,SBS_0006,58.333333333333336,1
+2026-05-01,field_chemistry,temperature,SBS_0006,58.333333333333336,1
+2026-04-01,field_chemistry,temperature,SBW_0001,71.11111111111111,1
+2026-05-01,field_chemistry,temperature,SBW_0001,70.9,1
+2026-05-01,field_chemistry,temperature,SBW_0002,65,1
 2025-08-01,field_chemistry,temperature,Soccer Field Monitoring Well,50.7,1
 2025-09-01,field_chemistry,temperature,Soccer Field Monitoring Well,46,1
 2025-10-01,field_chemistry,temperature,Soccer Field Monitoring Well,58.6,1

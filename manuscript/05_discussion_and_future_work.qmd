@@ -104,6 +104,22 @@ always-equilibrated fluid, and motivates collecting a real time-paired
 gas/water sample (rather than two days apart, as here) as a concrete
 next step for this thread.
 
+**What the new ternary and multicomponent-equilibration checks imply.**
+The Giggenbach Na-K-sqrt(Mg) ternary confirms that the fissure, resort
+tank, and three springs/seep sit close enough to chemical equilibrium
+for their Na/K estimates to be trusted, while flagging SBW_0001's own
+estimate as the least mature of the group -- a specific, testable
+reason to weight SBW_0001's Na/K result more cautiously than the
+others in any future interpretation, not just a generic caveat. The
+multicomponent mineral-equilibration diagram's honest negative result
+(no two minerals besides quartz/chalcedony converge within 15 degrees
+Celsius at any real sample) is itself informative: it rules out a
+simple, single-temperature multicomponent equilibrium as the right
+conceptual model for this system's near-surface chemistry, and
+supports treating quartz/chalcedony specifically, rather than a wider
+candidate mineral set, as the trustworthy silica-based geothermometer
+pair going forward.
+
 
 ## A gas-informed parent fluid, traced to the creek: what it does and does not yet show
 
@@ -124,15 +140,13 @@ fluid specifically (a real PHREEQC convergence failure, reported rather
 than hidden), or any real digitized boundary between the terrace's
 degassing and seepage zones -- the conceptual figure's framing of
 discrete point-source degassing versus diffuse creek-channel seepage is
-a qualitative read of imagery already in hand, offered because it is a
-real, testable prediction worth stating now, not because the
-underlying thermal-infrared rasters have been formally digitized (they
-have not -- see the Lower Sinter Terrace mapping item above). Once
-those rasters are on file, the natural next step is to turn that
-qualitative read into an actual spatial layer (mirroring the
-`SBO_*` photo-survey-point convention already used elsewhere in this
-project) and test it directly against where the spring-remapping
-fieldwork finds active discharge versus dry ground.
+now backed by a real, calibrated thermal-infrared orthophoto (Chapter
+4), not just imagery shared informally, but it is still a qualitative,
+visual read, not a digitized layer. Turning that raster into an actual
+spatial layer (mirroring the `SBO_*` photo-survey-point convention
+already used elsewhere in this project) and testing it directly against
+where the spring-remapping fieldwork finds active discharge versus dry
+ground remains a concrete next step.
 
 **What the pH-9 database-sensitivity finding implies more broadly --
 and what it most likely means for the resort tank specifically.**
@@ -360,12 +374,13 @@ happen:
    digitizing** -- still the single blocker standing between this
    project's real well/location data and a Leapfrog model, unchanged
    by anything in this session's work.
-4. **Follow up on the NDEP and NBMG data requests** (deeper-well water
-   levels and pressures; the calibrated thermal-infrared drone
-   survey rasters) -- both already drafted asks, both still
-   outstanding, and both block real next steps described above and
-   in Chapter 4 (a field-specific potentiometric surface; the
-   thermal-infrared/mapped-feature overlay map).
+4. **Follow up on the outstanding NDEP data request** (deeper-well water
+   levels and pressures) -- still an open ask, blocking a field-specific
+   potentiometric surface. The calibrated thermal-infrared drone survey
+   rasters requested from NBMG are now on file (Chapter 4), so that
+   specific part of this item is done; turning them into a real
+   georeferenced overlay against the point layers already in the
+   database remains the concrete next step.
 5. **Revisit the inverse-modeling numerical quirk** flagged above --
    a targeted fix (excluding the specific unused redox couple) is a
    small, bounded task that could turn the current null

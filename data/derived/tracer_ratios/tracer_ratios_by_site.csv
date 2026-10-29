@@ -1454,3 +1454,6 @@ sample_id,feature,collection_time,data_source,Cl,B,Na,Li,SiO2_any,date,year,samp
 1529,Galena 2 Outlet,06/19/2024 0:48,NDEP PRR,760,34,650,6.9,240,2024-06-19,2024,background_or_other,"Background / non-thermal (NDEP, domestic wells, creeks)",22.352941176470587,0.8552631578947368,0.009078947368421053,0.3157894736842105
 1530,Galena 2 Injection Composite (TFT),7/9/2025 11:15,NDEP PRR,794,36,600,7.3,237,2025-07-09,2025,background_or_other,"Background / non-thermal (NDEP, domestic wells, creeks)",22.055555555555557,0.7556675062972292,0.009193954659949622,0.29848866498740556
 1531,Galena 2 Injection Composite (TFT),4/7/2026 17:50,NDEP PRR,682,33,600,7,247,2026-04-07,2026,background_or_other,"Background / non-thermal (NDEP, domestic wells, creeks)",20.666666666666668,0.8797653958944281,0.010263929618768328,0.3621700879765396
+1601,auger hole 4,1968-01-01,White 1964/1968,1300,NA,NA,NA,NA,1968-01-01,1968,background_or_other,"Background / non-thermal (NDEP, domestic wells, creeks)",NA,NA,NA,NA
+1602,auger hole 5,1968-01-01,White 1964/1968,1160,NA,NA,NA,NA,1968-01-01,1968,background_or_other,"Background / non-thermal (NDEP, domestic wells, creeks)",NA,NA,NA,NA
+1603,GS-1,1952-03-15,White 1964/1968,840,NA,NA,NA,NA,1952-03-15,1952,background_or_other,"Background / non-thermal (NDEP, domestic wells, creeks)",NA,NA,NA,NA

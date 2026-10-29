@@ -9118,3 +9118,13 @@ characterization (including the new hot spring), and a tone/flow pass.
   He-isotope content); DEMO database untouched; GeoPackage not
   re-exported. This session's file changes are not yet
   committed/pushed to git.
+
+## Session 61 (2026-10-27): proposal revision pass (literature, figures, sampling table)
+
+- `manuscript/00_thesis_proposal.qmd`: "Previous work" rebuilt into themed subsections plus a publication-timeline table; "from the fissure outward" scoping paragraph added to Purpose of study; injection hypothesis now has ONE combined figure (`injection_pressure_and_rate.png`, pressure + rate panels) with facility context limited to what NDOM/TFT data show (28A-32 completed 2026-08-06, i.e. after the eruption, so context only; 8 of 49 NDOM wells Shut-In; no field-wide production-decline claim, only 24-5 883->835 kph across two TFT dates); sampling-plan table (`@tbl-samplingplan`) with SBRR/SBGG named explicitly; model-form text cites Breiman 2001, Wood 2017, Bergmeir & Benitez 2012 (added to references.bib); SBBV (sample 818) added to geothermometer table and mineral-equilibration figure.
+- Fixed factual error: conductivity loggers were deployed 2026-07-15 (not "mid-2025"); corrected in 00/01/03 and the timeline figure.
+- Conductivity figure no longer implies orange points bound air exposure: field notes say loggers sat in air for at least several days before each pull, which is NOT detectable in EC (checked). Pre-retrieval days are provisional; a conservative exclusion window still needs to be chosen and Monte Carlo/calibration re-run.
+- Historical Cl/temperature figures: NDEP PRR wells were missing because `.parse_any_date_hist` didn't parse `MM/DD/YYYY H:MM`; fixed, now 17 sites (Boyd, Eich, Jeppson, Rogers, Soccer Field added; NDOT and Herz Deep have no lab Cl on file).
+- Field-chemistry figure colored by 3 site groups with legend; Table 2/publication/sampling tables given proportional widths.
+- Mirrored sampling table + statistics citations into 03_methods and 06 (06 now declares bibliography).
+- Open: SBRR/SBGG pre-retrieval exclusion window; Figure numbers shifted (old Fig 6/8/14 -> 5/7/13; old Table 2/4 -> 3/5); timeline figure panel C still has some label crowding near June 2025; not committed to git.

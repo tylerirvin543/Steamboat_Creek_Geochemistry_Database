@@ -1,0 +1,8 @@
+"Source","N","Detail","Database table(s)","In GeoPackage export?"
+"Lower Sinter Terrace field survey (SBO_* points)","51","28 seeps, 13 steaming-ground obs., 7 springs, 3 creek points","Locations table","Yes (points layer)"
+"White/Geyser Society/Mariner & Janik GIS sheet","41","32 newly created Locations, 6 existing coordinates filled, 3 flagged discrepancies","Locations table","Yes (points layer)"
+"Real chemistry samples (all sources/eras)","1603","FIELD, NDEP, NDEP PRR, Sorey & Colvard 1992, Mariner & Janik 1995, Skalbeck 2001","Samples/Lab_Analyses/Field_Measurements","Yes (major_ions, chloride_points layers)"
+"Wells with real coordinates","186","NBMG, ArcGIS digitization, NDWR well logs, NDOM permits","Wells table","Yes (wells layer)"
+"Temperature loggers (real, deployed)","12","Springs, wells, fissure trace","Temperature_Loggers/_Observations","Yes (temperature_timeseries layer)"
+"Conductivity loggers (real, deployed)","2","SBRR (upstream control), SBGG (downstream)","Conductivity_Loggers/_Observations","No dedicated layer yet"
+"Field photographs with real GPS/EXIF","3","Aug/Sep 2026 hot spring, sulfur deposit, alluvium-sinter seep","Photo_Location_Candidates (pipeline promotion pending)","Not yet promoted"

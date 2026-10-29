@@ -79,6 +79,36 @@ thermodynamic database. This project runs the real, standalone PHREEQC 3
 executable (not an R re-implementation) via `system2()`, so every result
 is exactly what the reference software itself would produce.
 
+One property of PHREEQC matters for how every result below should be
+read: it is a **batch** (zero-dimensional) geochemical model, not a
+reactive-transport model. In plain terms, it answers "if this water sits
+in contact with these minerals and this gas, what does its chemistry
+settle into?" -- it has no concept of real physical space, flow
+direction, or travel time between two points; every calculation treats a
+sample as a single, well-mixed parcel reacting as long as needed to
+reach the modeled result. A real spatial *reactive-transport* model adds
+an actual grid and a real flow field so chemistry can be tracked as it
+happens at a specific place and time while water moves through real
+rock. Such tools do exist -- including PHAST, a USGS-built pairing of
+this same PHREEQC chemistry engine with a three-dimensional flow model,
+and other established codes such as TOUGHREACT -- so the choice not to
+use one here is not a limitation of PHREEQC itself, but a decision that
+running one responsibly needs a calibrated permeability field, porosity,
+reservoir boundary conditions, and a transient pressure history, none of
+which exist for Steamboat today at the resolution it would need.
+
+That limitation does not make the results below uninformative -- it
+draws a genuinely useful, if spatially blind, distinction. A sample's
+forward-titration result (Chapter 4) saying "this much calcite and
+dolomite needed to dissolve to match the observed chemistry" is a real,
+quantitative statement about how much reaction occurred, not about
+*where* it happened or how long it took. The real chemical distinction
+already found this way (Chapter 4: SBS_0001 cannot be explained by the
+same simple model that explains a real neighboring sample only 109
+meters away) is exactly the kind of finding a batch model is built to
+deliver; explaining *why*, physically, needs the real spatial/structural
+data discussed next.
+
 Five thermodynamic databases are registered in this project
 (`scripts/phreeqc/utils_phreeqc.R`), each with different strengths, and
 one is auto-recommended per sample based on its temperature and total
@@ -129,6 +159,19 @@ which found that no single geothermometer is reliable in isolation and
 that comparing several against each other is itself diagnostic of the
 system's mixing/cooling history, not just a reservoir-temperature
 estimate.
+
+**A real check on whether Na/K is trustworthy here at all.** Every Na/K
+estimate above assumes the sampled fluid has reacted with its host rock
+long enough to approach chemical equilibrium -- an assumption tested
+directly with a Giggenbach (1988) Na-K-square-root-Mg ternary diagram.
+A second, independent ternary (Cl-SO4-HCO3, Giggenbach 1991) cross-checks
+the water-type classification already given by the Piper diagram above.
+A third test, the multicomponent mineral-equilibration diagram (Reed and
+Spycher 1984), checks whether several candidate minerals converge on a
+shared equilibration temperature at once, rather than reading the
+quartz/chalcedony pair in isolation -- using the real, already-stored
+13-step PHREEQC temperature sweep, no new modeling run required. Results
+are reported in Chapter 4.
 
 ## Two-end-member mixing and inverse modeling
 
