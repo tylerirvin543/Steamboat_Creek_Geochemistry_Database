@@ -1,0 +1,115 @@
+---
+title: "Chloride-conductance calibration: sampling plan and laboratory cost options"
+subtitle: "Steamboat Hills geothermal outflow, Steamboat Creek (SBRR and SBGG)"
+author: "Tyler Irvin, University of Nevada, Reno"
+date: today
+format:
+  pdf:
+    documentclass: scrartcl
+    geometry: [landscape, margin=0.7in]
+    fontsize: 10pt
+    colorlinks: true
+  docx: default
+execute:
+  echo: false
+  warning: false
+---
+
+```{r setup}
+library(knitr)
+
+# ---- Planning unit prices (USD per sample). EDIT THESE when the ALS quote arrives. ----
+price <- c(
+  pkg_A = 45,    # Cl by IC (EPA 300.0) + alkalinity
+  pkg_B = 135,   # A + SO4, F, Br (IC), Na, K, Ca, Mg, B, Li, Si (ICP), TDS
+  pkg_C = 225,   # B + ICP-MS trace-element suite (ME-MS14L type, as used on the 2026 field samples)
+  iso   = 40     # delta-18O / delta-D, outside stable-isotope lab (not ALS)
+)
+qa_frac <- 0.10  # field duplicates and blanks, as a fraction of routine samples
+
+tiers <- data.frame(
+  tier = c("Lean", "Recommended", "Full"),
+  intensive = c(10, 14, 28),     # daily samples, 2 sites (5, 7 or 14 days)
+  monthly   = c(10, 24, 24),     # SBRR + SBGG, 5 or 12 months
+  events    = c(0, 2, 8),        # storm / snowmelt samples, 2 sites
+  extra     = c(0, 0, 12),       # SBW_0001/0002 and fissure, quarterly
+  iso       = c(4, 8, 16),
+  stringsAsFactors = FALSE
+)
+tiers$routine <- with(tiers, intensive + monthly + events + extra)
+tiers$qa <- ceiling(tiers$routine * qa_frac)
+tiers$total <- tiers$routine + tiers$qa
+
+cost <- function(n, p, iso_n) n * p + iso_n * price[["iso"]]
+tiers$A <- cost(tiers$total, price[["pkg_A"]], tiers$iso)
+tiers$B <- cost(tiers$total, price[["pkg_B"]], tiers$iso)
+tiers$C <- cost(tiers$total, price[["pkg_C"]], tiers$iso)
+usd <- function(x) paste0("$", formatC(x, format = "d", big.mark = ","))
+```
+
+## Summary
+
+I am calibrating continuous specific conductance from two in-stream loggers (SBRR at Rhodes Road above the thermal inflow, and SBGG at Geiger Grade below it) against laboratory chloride. **Method:** paired grab samples bracket logger readings; chloride (and major ions, alkalinity, field pH/temperature/conductance) is measured at the lab, and I fit time-aware models (linear, GAM, random forest) validated with rolling-origin cross-validation. **Application:** the calibrated record gives continuous chloride flux, which is the standard tracer for thermal-water discharge at Steamboat (Sorey and Spielman 2008, 2017). It lets us ask whether the 2025 Lower Sinter Terrace eruption changed outflow, and it replaces the sparse, expensive chemistry that has limited the discharge record. **Reasoning:** a Monte Carlo test on the logger record shows daily sampling keeps reconstruction error near 5%, while biweekly sampling costs 6-13% depending on the start day, so a short intensive window followed by monthly samples across a full year captures both fast variability and seasonal stability. **Hypothesis:** one site-specific relationship between conductance and chloride holds through the year, with deviations during storms and snowmelt from dilution. **Value:** once calibrated, the loggers give a continuous chloride and thermal-discharge record for a small fraction of the cost of regular chemistry, and the same samples provide the end-member chemistry for the mixing and reactive-transport work.
+
+## Sampling plan
+
+| Phase | Sites | Cadence and timing | What is measured |
+|---|---|---|---|
+| Intensive calibration | SBRR, SBGG | Daily (or sub-daily) for 5, 7 or 14 days; start fall/winter 2026 | Cl, anions, cations, alkalinity (package set below); field pH, temperature, conductance |
+| Monthly seasonal sampling | SBRR, SBGG | Once a month for 5 or 12 months after the intensive window | Same package |
+| Storm / snowmelt | SBRR, SBGG | 1 to 4 events, 2 samples per event | Same package |
+| Extra sites (Full tier only) | SBW_0001, SBW_0002, active fissure (access permitting) | Quarterly | Same package |
+| Isotopes | SBRR, SBGG (subset) | About one sample per site per season with a regular visit | delta-18O, delta-D |
+| QA | All | 10% duplicates and blanks | Same package |
+
+```{r tiers}
+t1 <- data.frame(
+  Tier = tiers$tier,
+  `Intensive (daily)` = tiers$intensive,
+  `Monthly` = tiers$monthly,
+  `Storm / melt` = tiers$events,
+  `Extra sites` = tiers$extra,
+  `QA (10%)` = tiers$qa,
+  `Chemistry samples` = tiers$total,
+  `Isotope samples` = tiers$iso,
+  check.names = FALSE
+)
+kable(t1, align = "lrrrrrrr", caption = "Sample counts by tier.")
+```
+
+## Laboratory cost options
+
+```{r prices}
+p1 <- data.frame(
+  Package = c("A: Chloride core", "B: Major ions (recommended)", "C: Major ions plus trace elements", "Isotopes"),
+  `What it includes` = c(
+    "Chloride by IC (EPA 300.0) and alkalinity",
+    "A, plus sulfate, fluoride, bromide (IC); Na, K, Ca, Mg, B, Li, Si (ICP); TDS",
+    "B, plus an ICP-MS trace-element suite like the one used on the 2026 field samples",
+    "delta-18O and delta-D, outside stable-isotope laboratory"),
+  `Planning price per sample` = c(usd(price[["pkg_A"]]), usd(price[["pkg_B"]]), usd(price[["pkg_C"]]), usd(price[["iso"]])),
+  check.names = FALSE
+)
+kable(p1, align = "llr", caption = "Analyte packages and planning prices. These are my estimates, not ALS quotes; replace with the ALS quotation before using the totals in the proposal.")
+```
+
+```{r costs}
+c1 <- data.frame(
+  Tier = tiers$tier,
+  `Chemistry samples` = tiers$total,
+  `Isotope samples` = tiers$iso,
+  `Package A` = usd(tiers$A),
+  `Package B` = usd(tiers$B),
+  `Package C` = usd(tiers$C),
+  check.names = FALSE
+)
+kable(c1, align = "lrrrrr", caption = "Estimated total laboratory cost for one year (chemistry plus isotopes). Excludes shipping, bottles, and field time.")
+```
+
+```{r rec}
+rec <- tiers[tiers$tier == "Recommended", ]
+```
+
+**Recommended option:** the Recommended tier with package B, about `r rec$total` chemistry samples and `r rec$iso` isotope samples, roughly `r usd(rec$B)` for the year. It is the smallest design that covers a full seasonal cycle at both stations, includes the ions needed for the mixing-model cross-check, and keeps the daily window short enough to be done in the field by one person. The Lean tier gives a first calibration but no seasonal test; the Full tier adds the fissure and resort wells and a longer daily window, and depends on Ormat access.
+
+**Notes for the cost discussion.** (1) ALS lab pricing depends on method set, turnaround time and any UNR or project discount, so the totals above scale directly with the package prices in Table 2. (2) Shipping, sample bottles, filters and sampling supplies are not included. (3) Tier totals can be reduced by running packages A or B on routine samples and C only on the quarterly subset.

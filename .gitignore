@@ -113,3 +113,7 @@ docs/literature/
 
 /.quarto/
 **/*.quarto_ipynb
+
+# Regenerable NDEP PRR OCR cache and working files
+data/derived/ndep_prr_ocr/*/
+data/derived/ndep_prr_ocr/*.rds
