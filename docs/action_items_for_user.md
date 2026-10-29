@@ -900,10 +900,10 @@ Report names: **IMR1** = UNEV 2007204 IMR Jan-June 2025.pdf; **IMR2** = UNEV2007
 ### Please check (in this order)
 | # | Report and page | Question |
 |---|---|---|
-| 1 | Compiled U230 p.12 (Galena 2 Outlet, Aug 4 2025, sampling page) | The first digit of the conductivity is overwritten (2 or 3); stored 389.4. Time of sampling is also overwritten. |
-| 2 | IMR1 p.22 (Galena 2 Outlet, Jun 24 2025) | Conductivity reads "5449" (first character unclear); stored 544.9. |
-| 3 | IMR1 p.20 (facility page p.19, SB3 Outlet, Mar 30 2025) | Sampling page is a blank scan: pH, conductivity, temperature missing. Ask NDEP or Ormat for the original. |
-| 4 | SA24 p.60 (Herz Deep, Dec 13 2024 lab report) | Chloride prints "<0.5" while every other round is 600-700 mg/L. Likely a lab or sample mix-up; ask NDEP or SGS (work order 24120xxx). |
+| 1 | Compiled U230 p.12 (Galena 2 Outlet, Aug 4 2025, sampling page) | **Confirmed 2026-10-29**: conductivity reads 389.4 (user read the same). Closed. |
+| 2 | IMR1 p.22 (Galena 2 Outlet, Jun 24 2025) | **Accepted 2026-10-29**: reads 5449, stored as 544.9 (fits Dec 2024 539.7 and Aug 2025 389.4 pattern for this port). Closed. |
+| 3 | IMR1 p.20 (facility page p.19, SB3 Outlet, Mar 30 2025) | **Confirmed blank 2026-10-29**: the sampling page is blank in the PDF, so no field values exist. Open only if you ask NDEP for the original. |
+| 4 | SA24 p.60 (Herz Deep, Dec 13 2024 lab report) | **Confirmed real 2026-10-29**: the report prints chloride "<0.5". Stored as a non-detect (qualifier "<", detection limit 0.5). It is not an OCR error. Closed. |
 | 5 | All outlet forms (e.g. IMR1 pp.10-18, SA24 pp.9-31) | Field conductivity is 359-396 uS/cm at every outlet and date, but the lab reports TDS 1900-2800 mg/L and Cl 780-930 mg/L, which would normally give about 3,500 uS/cm. Confirm with Ormat which meter and scale the sampler uses. |
 | 6 | IMR2 p.306 (Eich Well, Sep 15 2025 lab report, header 10:30) | Not parsed; the field form (10:40) has no lab result attached. |
 | 7 | IMR2 lab pages for Mar 21 2025 wells are in IMR1 pp.58-63 | No field forms exist for the wells on Mar 21, Jun 24 (wells) or in Sep/Dec 2024: the well forms are not in the request. |
