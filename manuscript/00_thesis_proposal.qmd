@@ -345,15 +345,33 @@ explanation. The largest recent regional events (M4.7-4.8 on 19 and 22 April
 
 **Precipitation/recharge-driven.** A large December 2025 storm produced a
 modest water-level response at one regional monitoring well but not at a
-second, nearby well with a different completion depth, and no precipitation
-record exists on file for most of the 2022-2025 reactivation window. Collar
+second, nearby well with a different completion depth. Collar
 [@collar1990thesis] showed how this question should be tested: 1946-52 spring
 discharge tracked annual precipitation, the 1949 drought minimum (48 gpm) was
 far above the 1988 flow (3-4 gpm), and a cumulative departure from mean
 precipitation at Reno and Sky Tavern (1938-89) separated drought from the
-production signal. The same cumulative-departure analysis for 2018-2026 needs a
-longer NOAA record than the October 2025 start currently on file. Support is
-mixed and incomplete, not absent.
+production signal. The same analysis for Reno Airport (NOAA GHCN-Daily,
+water years 1938-2026, mean 187 mm per year, @fig-precipdeparture) shows two
+dry years just before the 2022 onset (water years 2020 and 2021, 100 and 77 mm)
+that returned the cumulative departure to about -220 mm, followed by a wet 2023
+(391 mm) that brought it to roughly the long-term mean, where it has stayed
+through 2026. Seep and vent development in 2023-2025 therefore occurred during
+average-to-wet conditions, not a drought; the 2022 onset followed a dry spell, but
+similar and deeper dry spells (for example 2012-2015, about -420 mm) are not known to
+have produced surface activity. This is a descriptive comparison at a station
+about 15 km north and 100 m lower than the field, not a test. Precipitation
+does not obviously explain the reactivation, and a local recharge effect cannot
+be excluded.
+
+```{r fig-precipdeparture}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/precip_cumulative_departure.png",
+  "Cumulative departure from mean water-year precipitation at Reno Airport, 1938-2026 (NOAA GHCN-Daily USW00023185; complete water years only). The shaded band marks 2022 onset to the June 2025 eruption.",
+  alt = "Line chart of cumulative precipitation departure at Reno Airport from 1938 to 2026, with a shaded band for 2022 to 2025 where the curve rises from about minus 220 millimeters to near zero.",
+  id = "fig-precipdeparture"
+)
+```
 
 None of these explanations are mutually exclusive, and this proposal's own
 calibration and remapping work (Methods, below) is designed to generate the
