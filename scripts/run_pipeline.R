@@ -726,6 +726,9 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # guessed from an NDWR cross-references bare "ORMAT" owner name) --
   # see data/raw/ndwr/well_log_document_map.csv (currently empty; no
   # confident matches established yet).
+  # 2026-10-29: private wells from Collar (1990) App. B, located at PLSS section centroids
+  source("scripts/ingest/register_collar_private_wells.R")
+  register_collar_private_wells(con)
   promote_well_log_documents(con)
   # 2026-09-05 (session 11): none of the 7 real Steamboat logs cleared
   # the bar for a confident name match after cross-checking NBMG dates
