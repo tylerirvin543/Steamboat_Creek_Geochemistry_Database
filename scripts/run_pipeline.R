@@ -699,6 +699,13 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # See scripts/ingest/ingest_well_logs.R.
   source("scripts/ingest/ingest_well_logs.R")
   ingest_well_logs(con, source_batch = "NDWR ArcGIS public well-log export, 2026-09-12")
+  # 2026-10-29: second batch -- the NDWR driller's reports reproduced in
+  # Appendix B of Collar (1990) (strat wells, private wells, spa well),
+  # each extracted to its own PDF named by NDWR log number. Their field
+  # values were read from the scans and live in the two manual CSVs below;
+  # identity mapping is in well_log_document_map.csv.
+  ingest_well_logs(con, log_dir = "data/raw/ndwr/Collar_1990_AppB_well_logs",
+                   source_batch = "Collar (1990) M.S. thesis, Appendix B (scanned NDWR driller's reports)")
   # 2026-09-26: several older (1950s-1960s) NDWR form variants have a
   # real static water level visible on the scanned image that OCR
   # simply never locates (a genuinely empty field, not a misread) --

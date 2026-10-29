@@ -43,7 +43,7 @@ source(file.path(root, "scripts", "analysis", "historical_comparison_collar1990.
 | Barometric efficiency (pp. 56-64) | Spring 6: 42% (r = 0.79); spring 12: 45% (r = 0.44); White's low-terrace vent 31n: 60-75%. |
 | Spa well, GS-1, spring 50 (pp. 81-85, 135-136, 154-155) | A pumped well near the low terrace produced weekday drawdown and weekend recovery in GS-1 and spring 50; main-terrace springs did not respond. |
 | Earthquakes (pp. 52-56); precipitation (pp. 65-79) | Response thresholds and a cumulative-departure method for testing recharge. |
-| Well logs (App. B, pp. 266-299) | About 20 scanned NDWR driller's reports for strat wells and others (not yet extracted). |
+| Well logs (App. B, pp. 266-299) | 28 scanned NDWR driller's reports (strat wells 5-8, 13, 14, Cox I-1, Steamboat No. 1, the Spa well, and private wells), extracted and ingested (section 7). |
 
 ## 2. Collar versus Sorey and Colvard: one decline, two weightings
 
@@ -127,8 +127,20 @@ pl <- read.csv(file.path(root, "data/derived/historical_comparison/plate_georefe
 kable(pl[, c("plate_label", "plate", "category", "status")])
 ```
 
+## 7. Appendix B well logs: lithology and log numbers
+
+Thesis Appendix B reproduces 28 NDWR driller's reports (pp. 266-299). Each was extracted to its own PDF in `data/raw/ndwr/Collar_1990_AppB_well_logs/` (named by NDWR log number, 27 files; the Steamboat Spa log, 26097, was already staged from the NDWR download), read from the scans, and run through the existing well-log pipeline: OCR staging, human transcriptions (`well_log_manual_transcriptions.csv`, `well_log_lithology_manual.csv`), and promotion through `well_log_document_map.csv`. Log numbers were checked against NDWR's own table by owner, depth, and section; that check corrected or filled in nine log numbers where the handwriting or scan was unclear (for example Cox I-1 is log 22781, Strat 13 is log 28479, the Spa well is 26097, and Rogers is 20142, not 26142).
+
+```{r appb}
+d <- dbGetQuery(con, "SELECT d.log_number, COALESCE(w.well_name, '(staged, not linked)') AS well, d.depth_drilled_ft AS total_depth_ft, d.static_water_level_ft AS static_wl_ft, d.slot_from_ft AS perf_top, d.slot_to_ft AS perf_bottom, (SELECT COUNT(*) FROM Well_Lithology l WHERE l.source_document_id = d.document_id) AS n_lith FROM Well_Log_Documents d LEFT JOIN Wells w USING(well_id) WHERE d.source_batch LIKE 'Collar%' OR d.log_number = '26097' ORDER BY d.log_number")
+kable(d)
+```
+
+Results: 13 wells are now linked to a confirmed log, including strat wells 5, 6, 7, 8, 13, and 14 (depth, construction, and 2-13 lithology intervals each, but still no coordinates), Cox I-1, Steinhardt, PTR-2, Herz Domestic, Peigh, and Bianco. Strat 2 and 9 are not in Appendix B. Three notes: (1) Bianco's log gives 110 ft, while Sorey and Colvard Table 3 lists 400 ft, so Table 3's Bianco may be a different well; (2) the Steamboat Spa production well (log 26097, 260 ft, 240 F, 30 gpm, 1985) is renamed from a provisional well and sits about 145 m from the SBW_0002 resort-tank sample, a strong but unconfirmed lead; (3) the Skalbeck-era meter depths for Herz Domestic and Peigh were converted to feet because the logs match them exactly. Wells still staged only (no confirmed Wells row): MacKay (2 logs), Woods, Tangen, STMGID (2), 1055 Lavender, Jeppson (2), Rogers, Boyd (1955, not the 1962 well), Curti (77 ft, not the 95-ft well on file), Steamboat No. 1 (21769, the original 21-5 hole, not the 21-5R redrill), and Towne (20106).
+
 ## Changelog
 
 | Date | Change |
 |---|---|
 | 2026-10-29 | Notebook created: Collar (1990) thesis integrated; Table 4 transcribed; discharge basis table; Rhodes Road/Geiger Grade chloride comparison; 2024 swarm and weekday tests; plate feature list. |
+| 2026-10-29 | Appendix B (29 NDWR driller's reports) extracted, transcribed, ingested; strat well lithology and log numbers added. |

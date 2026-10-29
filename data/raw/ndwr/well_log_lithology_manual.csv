@@ -10,3 +10,160 @@ log_number,depth_from_ft,depth_to_ft,description,source
 5731,120,180,Hard fractured rock,user_scan_read
 5731,180,220,Very hard fractured rock,user_scan_read
 5731,220,300,Hard rock,user_scan_read
+21795,0,30,Gravel and sand,collar1990_appendixB_read_from_scan
+21795,30,60,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21795,60,70,Gravel,collar1990_appendixB_read_from_scan
+21795,70,120,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21795,120,140,Gravel,collar1990_appendixB_read_from_scan
+21795,140,300,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21795,300,340,Gravel and sand,collar1990_appendixB_read_from_scan
+21795,340,370,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21795,370,1700,Granodiorite,collar1990_appendixB_read_from_scan
+21768,0,5,"Silt, sand and clay",collar1990_appendixB_read_from_scan
+21768,5,25,Sinter,collar1990_appendixB_read_from_scan
+21768,25,60,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21768,60,1690,Siltite and very fine-grained quartzite,collar1990_appendixB_read_from_scan
+21772,0,35,Sand and tan silt,collar1990_appendixB_read_from_scan
+21772,35,55,"Gravel, sand and tan silt",collar1990_appendixB_read_from_scan
+21772,55,100,Tan clay,collar1990_appendixB_read_from_scan
+21772,100,160,Brownish gray clay,collar1990_appendixB_read_from_scan
+21772,160,190,Gray clay,collar1990_appendixB_read_from_scan
+21772,190,215,Sand and a little gravel and silt,collar1990_appendixB_read_from_scan
+21772,215,1360,Pink to medium gray rhyolite,collar1990_appendixB_read_from_scan
+21772,1360,1460,Sand and brown to brownish gray silt,collar1990_appendixB_read_from_scan
+21772,1460,1490,Sand and gray silt and clay,collar1990_appendixB_read_from_scan
+21772,1490,1550,Sand and brownish-gray silt,collar1990_appendixB_read_from_scan
+21772,1550,1630,Dark gray siltite and very fine-grained quartzite,collar1990_appendixB_read_from_scan
+21772,1630,1660,No returns,collar1990_appendixB_read_from_scan
+21771,0,10,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21771,10,100,Tuff breccia,collar1990_appendixB_read_from_scan
+21771,100,200,No returns,collar1990_appendixB_read_from_scan
+21771,200,350,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+21771,350,1940,Siltite and very fine-grained quartzite,collar1990_appendixB_read_from_scan
+28479,0,57,Basalt,collar1990_appendixB_read_from_scan
+28479,57,1767,Metamorphosed sedimentary and volcanic rock,collar1990_appendixB_read_from_scan
+23432,0,80,"Gravel, sand and silt",collar1990_appendixB_read_from_scan
+23432,80,1632,Granodiorite,collar1990_appendixB_read_from_scan
+21769,0,70,Scoria,collar1990_appendixB_read_from_scan
+21769,70,160,No returns,collar1990_appendixB_read_from_scan
+21769,160,165,Basalt,collar1990_appendixB_read_from_scan
+21769,165,330,No returns,collar1990_appendixB_read_from_scan
+21769,330,955,Fine-grained metasediments,collar1990_appendixB_read_from_scan
+21769,955,1790,Granodiorite,collar1990_appendixB_read_from_scan
+21769,1790,2930,Fine-grained metasediments with granodiorite,collar1990_appendixB_read_from_scan
+21769,2930,3035,Granodiorite,collar1990_appendixB_read_from_scan
+21769,3035,3050,No returns,collar1990_appendixB_read_from_scan
+22781,0,48,Volcanics,collar1990_appendixB_read_from_scan
+22781,48,83,Siliceous sinter,collar1990_appendixB_read_from_scan
+22781,83,118,Decomposed granite,collar1990_appendixB_read_from_scan
+22781,118,508,Granite,collar1990_appendixB_read_from_scan
+22781,508,653,Quartzite,collar1990_appendixB_read_from_scan
+22781,653,3471,Granite,collar1990_appendixB_read_from_scan
+12365,0,4,Rocky top soil,collar1990_appendixB_read_from_scan
+12365,4,20,Decomposed granite boulders,collar1990_appendixB_read_from_scan
+12365,20,45,Sandy clay,collar1990_appendixB_read_from_scan
+12365,45,48,Boulders,collar1990_appendixB_read_from_scan
+12365,48,58,Sandy clay,collar1990_appendixB_read_from_scan
+12365,58,60,Coarse sandy clay,collar1990_appendixB_read_from_scan
+12365,60,65,"Gray clay, sandy",collar1990_appendixB_read_from_scan
+12365,65,70,Sandy clay,collar1990_appendixB_read_from_scan
+12365,70,80,Gray shale,collar1990_appendixB_read_from_scan
+12365,80,96,Light brown sandy clay,collar1990_appendixB_read_from_scan
+12365,96,97,Sand gravel,collar1990_appendixB_read_from_scan
+12365,97,105,Sandy clay,collar1990_appendixB_read_from_scan
+12365,105,110,Tight sandy clay,collar1990_appendixB_read_from_scan
+4532,0,5,Sandy clay and gravel,collar1990_appendixB_read_from_scan
+4532,5,52,"Clay, gravel and boulders",collar1990_appendixB_read_from_scan
+4532,52,55,"Coarse sand, water",collar1990_appendixB_read_from_scan
+4532,55,78,Sandy clay and gravel,collar1990_appendixB_read_from_scan
+4532,78,86,"Coarse gravel, sand, water",collar1990_appendixB_read_from_scan
+4532,86,168,"Broken rock, blue",collar1990_appendixB_read_from_scan
+4532,168,210,"Hot broken rock, grey",collar1990_appendixB_read_from_scan
+4532,210,350,"Hot broken rock, brown",collar1990_appendixB_read_from_scan
+4532,350,358,"Hot broken rock, red",collar1990_appendixB_read_from_scan
+4532,358,400,"Hot broken rock, brown",collar1990_appendixB_read_from_scan
+4532,400,414,"Hot broken rock, pink",collar1990_appendixB_read_from_scan
+4532,414,422,"Hot broken rock, brown",collar1990_appendixB_read_from_scan
+4532,422,427,Hot broken rock and clay,collar1990_appendixB_read_from_scan
+4532,427,435,Broken rock and brown clay,collar1990_appendixB_read_from_scan
+13252,0,3,Dark brown topsoil,collar1990_appendixB_read_from_scan
+13252,3,17,"Light brown sand with some clay, soft",collar1990_appendixB_read_from_scan
+13252,17,77,Gravels to 2 in with occasional cobble and coarse sand and some silt,collar1990_appendixB_read_from_scan
+9572,0,1,Topsoil and rocks,collar1990_appendixB_read_from_scan
+9572,1,17,Brown cemented gravel,collar1990_appendixB_read_from_scan
+9572,17,21,Boulders,collar1990_appendixB_read_from_scan
+9572,21,46,Brown cemented gravel,collar1990_appendixB_read_from_scan
+9572,46,69,Large boulders,collar1990_appendixB_read_from_scan
+9572,69,73,Brown cemented gravel,collar1990_appendixB_read_from_scan
+9572,73,75,Boulders,collar1990_appendixB_read_from_scan
+9572,75,114,Brown sandy clay and gravel,collar1990_appendixB_read_from_scan
+9572,114,117,Boulders,collar1990_appendixB_read_from_scan
+9572,117,126,Brown sandy clay and gravel,collar1990_appendixB_read_from_scan
+9572,126,128,Boulders,collar1990_appendixB_read_from_scan
+9572,128,143,Brown sandy clay and rocks,collar1990_appendixB_read_from_scan
+9572,143,155,Brown sandy clay and gravel,collar1990_appendixB_read_from_scan
+22665,0,140,Hard clay and boulders,collar1990_appendixB_read_from_scan
+22665,179,831,"Granite, hard brown/white with fractured intervals (handwriting partly illegible)",collar1990_appendixB_read_from_scan
+19361,0,45,Surface soil,collar1990_appendixB_read_from_scan
+19361,45,140,Clay,collar1990_appendixB_read_from_scan
+19361,140,160,Gravel (hot water),collar1990_appendixB_read_from_scan
+19361,160,199,Clay,collar1990_appendixB_read_from_scan
+19361,199,230,Volcanic (hot water),collar1990_appendixB_read_from_scan
+20363,0,2,Overburden,collar1990_appendixB_read_from_scan
+20363,2,135,Decomposed rhyolite rock (as written: 'D.G. Rilite Rock'),collar1990_appendixB_read_from_scan
+2959,0,25,"Clay and boulders, shattered rock",collar1990_appendixB_read_from_scan
+2959,25,60,Broken rock,collar1990_appendixB_read_from_scan
+2959,60,68,Basalt rock and water,collar1990_appendixB_read_from_scan
+14733,0,175,Boulders imbedded in clay,collar1990_appendixB_read_from_scan
+14733,175,208,"Fractured rock formation, brown, red and gray (water bearing, hot)",collar1990_appendixB_read_from_scan
+14733,208,265,"Rock, red, fractured streaks",collar1990_appendixB_read_from_scan
+14733,265,280,Dark brown rock,collar1990_appendixB_read_from_scan
+14733,280,303,Gray fractured rock,collar1990_appendixB_read_from_scan
+19146,0,48,Soft decayed rock,collar1990_appendixB_read_from_scan
+19146,48,110,Volcanic rock,collar1990_appendixB_read_from_scan
+8023,0,3,Soil,collar1990_appendixB_read_from_scan
+8023,3,56,Yellow clay and rock,collar1990_appendixB_read_from_scan
+8023,56,64,Brown clay,collar1990_appendixB_read_from_scan
+8023,64,67,Gravel,collar1990_appendixB_read_from_scan
+8023,67,72,Clay,collar1990_appendixB_read_from_scan
+8023,72,84,Gravel,collar1990_appendixB_read_from_scan
+8023,84,87,Clay,collar1990_appendixB_read_from_scan
+20142,0,18,"Brown clay, shale rock, medium coarse",collar1990_appendixB_read_from_scan
+20142,18,45,"Brown black shale rock, clay, medium coarse",collar1990_appendixB_read_from_scan
+20142,45,108,"Black brown rock, some with fracture, medium coarse",collar1990_appendixB_read_from_scan
+20142,108,253,"Black shale rock, fractured chips, coarse to fine",collar1990_appendixB_read_from_scan
+20142,253,300,"Black green fractured rock, 3/4 fine",collar1990_appendixB_read_from_scan
+4061,0,9,Boulders,collar1990_appendixB_read_from_scan
+4061,9,30,Sandy clay,collar1990_appendixB_read_from_scan
+4061,30,40,"Water sand, fine",collar1990_appendixB_read_from_scan
+4061,46,68,Fine sand and gravel,collar1990_appendixB_read_from_scan
+4061,68,93,Coarse gravel,collar1990_appendixB_read_from_scan
+4061,93,98,Fine sand and gravel,collar1990_appendixB_read_from_scan
+4061,98,112,"Sandy clay, yellow",collar1990_appendixB_read_from_scan
+4531,0,5,"Sandy clay, gravel",collar1990_appendixB_read_from_scan
+4531,5,52,"Clay, gravel, boulders",collar1990_appendixB_read_from_scan
+4531,52,55,"Coarse sand, water",collar1990_appendixB_read_from_scan
+4531,55,78,"Sandy clay, gravel",collar1990_appendixB_read_from_scan
+4531,78,86,"Coarse gravel, sand, water",collar1990_appendixB_read_from_scan
+4531,86,110,Coarse gravel and clay,collar1990_appendixB_read_from_scan
+4531,110,145,"Broken rock, blue",collar1990_appendixB_read_from_scan
+5916,0,6,Top soil,collar1990_appendixB_read_from_scan
+5916,6,10,"Gravel, sandy clay",collar1990_appendixB_read_from_scan
+5916,10,12,Gravel,collar1990_appendixB_read_from_scan
+5916,12,45,Sandy clay and small gravel,collar1990_appendixB_read_from_scan
+5916,45,47,Large gravel,collar1990_appendixB_read_from_scan
+5916,47,80,Coarse sand and small gravel,collar1990_appendixB_read_from_scan
+5916,80,85,"Coarse sand, large gravel",collar1990_appendixB_read_from_scan
+5916,85,95,Small gravel and sandy clay,collar1990_appendixB_read_from_scan
+5916,95,97,"Coarse sand, small and large gravel",collar1990_appendixB_read_from_scan
+5916,97,110,Clay and small gravel,collar1990_appendixB_read_from_scan
+26097,0,17,Cap rock and decomposed granite,collar1990_appendixB_read_from_scan
+26097,17,30,Fractured rock and clay,collar1990_appendixB_read_from_scan
+26097,30,50,Fractured rock,collar1990_appendixB_read_from_scan
+26097,50,200,Hard rock,collar1990_appendixB_read_from_scan
+26097,200,260,"Hard rock with fractures (major water at 170 and 210 ft, steam at 250 ft)",collar1990_appendixB_read_from_scan
+20106,0,4,"Brown rock, hard",collar1990_appendixB_read_from_scan
+20106,4,26,"Black rock, hard",collar1990_appendixB_read_from_scan
+20106,26,101,"Red rock, hard (water 1 gpm)",collar1990_appendixB_read_from_scan
+20106,101,126,"Black rock, hard",collar1990_appendixB_read_from_scan
+20106,126,200,"Gray rock, hard",collar1990_appendixB_read_from_scan

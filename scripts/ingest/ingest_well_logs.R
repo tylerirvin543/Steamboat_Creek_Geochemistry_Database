@@ -76,15 +76,12 @@
 #     confidence = 'ocr_heuristic_unvalidated' -- still not blindly
 #     trusted, but now visible/joinable instead of stranded.
 # ============================================================
-
 library(DBI)
 library(dplyr)
 library(rvest)
 library(fs)
 library(digest)
-
 source("scripts/ingest/helpers/parse_well_log_pdf.R")
-
 #' Best-effort parse of a driller's-report completion date into a clean
 #' YYYY-MM-DD, or NA if it isn't parseable. Used to decide the timestamp
 #' for the Water_Level_Observations row a well log's static water level
@@ -135,7 +132,6 @@ source("scripts/ingest/helpers/parse_well_log_pdf.R")
   if (length(yr) == 1 && nzchar(yr)) return(paste0(yr, "-01-01"))
   NA_character_
 }
-
 #' Read one NDWR WellLogQuery basin export (the same htm files parsed
 #' elsewhere in this project) into a data.frame with real column names.
 .read_ndwr_welllog_table <- function(htm_path) {
@@ -147,7 +143,6 @@ source("scripts/ingest/helpers/parse_well_log_pdf.R")
   colnames(tbl) <- as.character(unlist(tbl[hdr_row[1], ]))
   tbl[-(1:hdr_row[1]), ]
 }
-
 #' Group a directory's PDFs by NDWR log number, pairing each primary
 #' scan with its "(2)" reformatted alternate (if any) and flagging
 #' any other numbered duplicate (e.g. " (1)") as a probable re-download
@@ -162,14 +157,12 @@ source("scripts/ingest/helpers/parse_well_log_pdf.R")
   # duplicate re-download of the same log, not a distinct source.
   is_dup_suffix <- grepl("\\([0-9]+\\)$", no_ext) & !is_alt
   log_number <- gsub("\\s*\\([0-9]+\\)$", "", no_ext)
-
   data.frame(
     file = pdf_files, log_number = log_number,
     is_alt = is_alt, is_dup_suffix = is_dup_suffix,
     stringsAsFactors = FALSE
   )
 }
-
 ingest_well_logs <- function(
     con,
     log_dir = "data/raw/ndwr/Ormat_well_logs",
@@ -179,14 +172,11 @@ ingest_well_logs <- function(
     ),
     force_reprocess = FALSE,
     source_batch = NA_character_) {
-
   message("---- Ingesting well-log PDFs from ", log_dir, " ----")
-
   if (!dir_exists(log_dir)) {
     message("[ingest_well_logs] Directory not found -- skipping.")
     return(invisible(NULL))
   }
-
   # force_reprocess = TRUE re-parses files even if their (file_path,
   # file_hash) was already staged -- needed after an extraction-logic
   # change, since the PDFs themselves have not changed so their hash
@@ -198,18 +188,15 @@ ingest_well_logs <- function(
                             params = list(paste0(log_dir, "%")))
     message("[ingest_well_logs] force_reprocess = TRUE: deleted ", n_deleted, " existing staged row(s) for this directory.")
   }
-
   dbExecute(con, "
     INSERT OR IGNORE INTO Data_Sources (name, notes)
     VALUES ('NDWR Well Driller''s Reports', 'Nevada Division of Water Resources well-log PDFs (Form 4013)')
   ")
-
   pdf_files <- dir_ls(log_dir, regexp = "\\.pdf$", type = "file")
   if (length(pdf_files) == 0) {
     message("[ingest_well_logs] No PDF files found -- skipping.")
     return(invisible(NULL))
   }
-
   grouped <- .group_well_log_files(pdf_files)
   # One row per real log number: primary file (prefer a non-"(2)",
   # non-duplicate-suffix file; else the "(2)" alone if that's all there
@@ -217,33 +204,27 @@ ingest_well_logs <- function(
   # duplicate-suffix files are handled separately below via content-hash
   # dedup, not treated as their own log entry.
   log_numbers <- unique(grouped$log_number)
-
   ndwr_tables <- lapply(ndwr_htm_paths, .read_ndwr_welllog_table)
   ndwr_tables <- ndwr_tables[!sapply(ndwr_tables, is.null)]
-
   existing <- dbGetQuery(con, "SELECT document_id, file_path, file_hash, alt_file_hash FROM Well_Log_Documents")
   # All known content hashes (primary + alt), for cross-filename
   # duplicate-content detection -- catches "147778 (1).pdf" style
   # re-downloads even though their filename differs from anything
   # already ingested.
   known_hashes <- na.omit(c(existing$file_hash, existing$alt_file_hash))
-
   n_processed <- 0L
   n_skipped <- 0L
   n_dup_content <- 0L
   n_text_layer <- 0L
   n_crossref <- 0L
   n_lithology <- 0L
-
   n_logs <- length(log_numbers)
   message("[ingest_well_logs] Processing ", n_logs, " log number(s) (", length(pdf_files),
           " file(s) total) -- OCR on scanned files can take a while per file.")
   .pb <- utils::txtProgressBar(min = 0, max = n_logs, style = 3, width = 50)
-
   for (.i in seq_along(log_numbers)) {
     log_number <- log_numbers[.i]
     rows <- grouped[grouped$log_number == log_number, ]
-
     primary_candidates <- rows$file[!rows$is_alt]
     alt_candidates <- rows$file[rows$is_alt]
     primary_file <- if (length(primary_candidates) > 0) primary_candidates[1] else if (length(alt_candidates) > 0) alt_candidates[1] else NA
@@ -254,18 +235,14 @@ ingest_well_logs <- function(
     # probable duplicate re-downloads -- checked via content hash below
     # rather than assumed identical by filename alone.
     other_files <- setdiff(rows$file, c(primary_file, alt_file))
-
     if (is.na(primary_file)) { utils::setTxtProgressBar(.pb, .i); next }
-
     primary_hash <- digest(primary_file, algo = "sha256", file = TRUE)
-
     already_row <- existing[existing$file_path == primary_file & existing$file_hash == primary_hash, ]
     if (nrow(already_row) > 0) {
       n_skipped <- n_skipped + 1L
       utils::setTxtProgressBar(.pb, .i)
       next
     }
-
     if (primary_hash %in% known_hashes) {
       # Content identical to an already-ingested document under a
       # different filename -- record a lightweight duplicate note, do
@@ -284,18 +261,15 @@ ingest_well_logs <- function(
       utils::setTxtProgressBar(.pb, .i)
       next
     }
-
     .file_start_time <- Sys.time()
     message("  Processing log #", log_number, " (", basename(primary_file),
             if (!is.na(alt_file)) paste0(" + alt ", basename(alt_file)) else "", ")")
-
     parsed <- tryCatch(parse_well_log_pdf(primary_file), error = function(e) {
       warning("  -> parse_well_log_pdf failed for ", basename(primary_file), ": ", conditionMessage(e))
       NULL
     })
     has_text_layer <- !is.null(parsed)
     if (has_text_layer) n_text_layer <- n_text_layer + 1L
-
     alt_hash <- NA_character_
     alt_has_text_layer <- FALSE
     alt_parsed <- NULL
@@ -311,7 +285,6 @@ ingest_well_logs <- function(
         alt_has_text_layer <- !is.null(alt_parsed)
       }
     }
-
     # Merge: prefer the primary source's value; fill from the alt only
     # when the primary is NA. Any real disagreement between the two is
     # flagged, not silently resolved.
@@ -326,7 +299,6 @@ ingest_well_logs <- function(
         list(value = a, conflict = FALSE)
       }
     }
-
     merge_flags <- character(0)
     # Lat/lon confidence ranking (lower = more trustworthy): a primary
     # scan's lower-confidence method (e.g. an unlabeled whole-text
@@ -347,7 +319,6 @@ ingest_well_logs <- function(
     a_rank <- if (!is.na(a_method)) .latlon_rank(a_method) else Inf
     latlon_winner <- if (is.infinite(p_rank) && is.infinite(a_rank)) NULL
                       else if (a_rank < p_rank) "alt" else "primary"
-
     fields_to_merge <- c(
       "well_name", "county",
       "depth_drilled_ft", "cased_depth_ft", "static_water_level_ft",
@@ -371,16 +342,12 @@ ingest_well_logs <- function(
     } else {
       merged$latitude <- parsed$latitude; merged$longitude <- parsed$longitude; merged$latlon_method <- parsed$latlon_method
     }
-
     well_name_parsed <- if (!is.na(merged$well_name)) merged$well_name else NA_character_
     latitude <- suppressWarnings(as.numeric(merged$latitude))
     longitude <- suppressWarnings(as.numeric(merged$longitude))
-
     lat_insane <- !is.na(latitude) && (latitude < 34 || latitude > 43)
     lon_insane <- !is.na(longitude) && (longitude < -121 || longitude > -113)
-
     match_method <- if (!is.na(latitude) && !lat_insane && !lon_insane) "parsed_text" else NA_character_
-
     # Cross-reference by log number regardless of text-layer status --
     # even a machine-readable PDF's own extracted lat/lon might be OCR
     # noise, so this is a useful independent check either way.
@@ -390,14 +357,12 @@ ingest_well_logs <- function(
       if (nrow(hit) > 0) { crossref <- hit[1, ]; break }
     }
     if (!is.null(crossref)) n_crossref <- n_crossref + 1L
-
     if ((is.na(latitude) || lat_insane || is.na(longitude) || lon_insane) && !is.null(crossref)) {
       latitude <- suppressWarnings(as.numeric(crossref$latitude))
       longitude <- suppressWarnings(as.numeric(crossref$Longitude))
       match_method <- "ndwr_log_number_crossref"
       if (is.na(well_name_parsed)) well_name_parsed <- paste0(trimws(crossref$Owner), " (NDWR Log ", log_number, ")")
     }
-
     flags <- character(0)
     if (has_text_layer) flags <- c(flags, parsed$flags[!is.na(parsed$flags)])
     if (!is.null(alt_parsed)) flags <- c(flags, alt_parsed$flags[!is.na(alt_parsed$flags)])
@@ -413,9 +378,7 @@ ingest_well_logs <- function(
                                   paste(basename(novel), collapse = ", ")))
       }
     }
-
     plss_latlon_method <- if (!is.na(merged$latlon_method) && identical(merged$latlon_method, "plss_section_centroid")) "plss_section_centroid" else NA_character_
-
     dbExecute(con, "
       INSERT INTO Well_Log_Documents (
         file_path, file_hash, alt_file_path, alt_file_hash, alt_has_text_layer,
@@ -448,9 +411,7 @@ ingest_well_logs <- function(
                                        ", completed=", trimws(crossref$`Comp Date`)) else NA_character_,
       source_batch
     ))
-
     doc_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
-
     # Populate Well_Lithology from the primary parse's best-effort
     # interval extraction (never from the alt scan -- one document's
     # worth is enough, and mixing two OCR sources' guesses would only
@@ -466,22 +427,18 @@ ingest_well_logs <- function(
       }
       n_lithology <- n_lithology + nrow(lith_df)
     }
-
     n_processed <- n_processed + 1L
     known_hashes <- c(known_hashes, primary_hash, alt_hash)
-
     .file_elapsed <- round(as.numeric(difftime(Sys.time(), .file_start_time, units = "secs")), 1)
     message("    (", .file_elapsed, " sec)")
     utils::setTxtProgressBar(.pb, .i)
   }
   close(.pb)
-
   message("  -> Processed ", n_processed, " log number(s) (", n_skipped, " unchanged, skipped; ",
           n_dup_content, " skipped as duplicate content under a different filename); ",
           n_text_layer, " had an extractable primary text/OCR layer; ", n_crossref,
           " matched an NDWR log number cross-reference; ", n_lithology,
           " lithology interval(s) staged (unvalidated).")
-
   dbAppendTable(con, "Ingest_Run_Log", data.frame(
     timestamp = format(Sys.time(), "%Y-%m-%d %H:%M:%S", tz = "UTC"),
     data_source = "WELL_LOGS", script_name = "ingest_well_logs.R",
@@ -490,11 +447,9 @@ ingest_well_logs <- function(
                     " duplicate-content skipped, ", n_text_layer, " with text layer, ",
                     n_crossref, " NDWR cross-referenced, ", n_lithology, " lithology intervals staged")
   ))
-
   invisible(list(processed = n_processed, skipped = n_skipped, dup_content = n_dup_content,
                  text_layer = n_text_layer, crossref = n_crossref, lithology = n_lithology))
 }
-
 #' Apply human-transcribed static-water-level (and, optionally,
 #' completion-date) corrections to Well_Log_Documents BEFORE
 #' promote_well_log_documents()/register_provisional_well_logs() run,
@@ -521,24 +476,19 @@ ingest_well_logs <- function(
 apply_well_log_water_level_overrides <- function(
     con,
     overrides_csv = "data/raw/ndwr/well_log_water_level_overrides.csv") {
-
   message("---- Applying human-supplied well-log water-level overrides ----")
-
   if (!fs::file_exists(overrides_csv)) {
     message("[apply_well_log_water_level_overrides] No overrides file at ", overrides_csv, " -- nothing to apply.")
     return(invisible(list(applied = 0L)))
   }
-
   ov <- readr::read_csv(overrides_csv, show_col_types = FALSE,
                          col_types = readr::cols(log_number = readr::col_character())) %>%
     dplyr::mutate(log_number = trimws(log_number)) %>%
     dplyr::filter(!is.na(log_number), log_number != "", !is.na(static_water_level_ft))
-
   if (nrow(ov) == 0) {
     message("  -> Overrides file has no usable rows yet.")
     return(invisible(list(applied = 0L)))
   }
-
   n_applied <- 0L
   for (i in seq_len(nrow(ov))) {
     row <- ov[i, ]
@@ -564,12 +514,9 @@ apply_well_log_water_level_overrides <- function(
       n_applied <- n_applied + 1L
     }
   }
-
   message("  -> Applied ", n_applied, " water-level override(s).")
   invisible(list(applied = n_applied))
 }
-
-
 #' Apply a broader set of human-transcribed well-log fields (total
 #' depth, hole/casing diameter, cased-to depth, perforation interval,
 #' first-water depth, static AND pumping water level, a max-temperature
@@ -594,25 +541,21 @@ apply_well_log_manual_transcriptions <- function(
     con,
     transcriptions_csv = "data/raw/ndwr/well_log_manual_transcriptions.csv",
     lithology_csv = "data/raw/ndwr/well_log_lithology_manual.csv") {
-
   message("---- Applying human-transcribed well-log field data ----")
-
   n_fields_applied <- 0L
   n_wl_applied <- 0L
   n_lith_applied <- 0L
-
   if (fs::file_exists(transcriptions_csv)) {
     tr <- readr::read_csv(transcriptions_csv, show_col_types = FALSE,
-                           col_types = readr::cols(log_number = readr::col_character())) %>%
+                           col_types = readr::cols(log_number = readr::col_character(), completion_date = readr::col_character())) %>%
       dplyr::mutate(log_number = trimws(log_number)) %>%
       dplyr::filter(!is.na(log_number), log_number != "")
-
     for (i in seq_len(nrow(tr))) {
       row <- tr[i, ]
       doc <- dbGetQuery(con, "
         SELECT document_id, log_number, well_id, depth_drilled_ft, hole_diameter_in,
                casing_diameter_in, cased_depth_ft, slot_from_ft, slot_to_ft,
-               static_water_level_ft, latitude, longitude, notes
+               static_water_level_ft, latitude, longitude, notes, completion_date_raw
         FROM Well_Log_Documents WHERE log_number = ?
       ", params = list(row$log_number))
       if (nrow(doc) == 0) {
@@ -620,7 +563,6 @@ apply_well_log_manual_transcriptions <- function(
         next
       }
       doc <- doc[1, ]
-
       field_map <- list(
         total_depth_ft = "depth_drilled_ft",
         hole_diameter_in = "hole_diameter_in",
@@ -630,7 +572,8 @@ apply_well_log_manual_transcriptions <- function(
         perforation_bottom_ft = "slot_to_ft",
         static_water_level_ft = "static_water_level_ft",
         latitude_override = "latitude",
-        longitude_override = "longitude"
+        longitude_override = "longitude",
+        completion_date = "completion_date_raw"
       )
       for (csv_col in names(field_map)) {
         db_col <- field_map[[csv_col]]
@@ -645,7 +588,6 @@ apply_well_log_manual_transcriptions <- function(
           n_fields_applied <- n_fields_applied + 1L
         }
       }
-
       # Free-text facts with no dedicated column (first-water depth, max
       # temperature) go into notes, appended once (checked for the exact
       # marker text to stay idempotent across re-runs).
@@ -666,7 +608,6 @@ apply_well_log_manual_transcriptions <- function(
           message("  log #", row$log_number, ": appended note -- ", marker)
         }
       }
-
       # Water-level observations: static (existing convention) and, when
       # supplied, a separate pumping-level row -- distinguished by
       # `method`, not a schema change, since Water_Level_Observations.method
@@ -700,7 +641,6 @@ apply_well_log_manual_transcriptions <- function(
   } else {
     message("[apply_well_log_manual_transcriptions] No transcriptions file at ", transcriptions_csv, " -- nothing to apply.")
   }
-
   # Lithology intervals
   if (fs::file_exists(lithology_csv)) {
     lith <- readr::read_csv(lithology_csv, show_col_types = FALSE,
@@ -730,12 +670,9 @@ apply_well_log_manual_transcriptions <- function(
       }
     }
   }
-
   message("  -> Applied ", n_fields_applied, " field update(s), ", n_wl_applied, " water-level observation(s), ", n_lith_applied, " lithology interval(s).")
   invisible(list(fields = n_fields_applied, water_levels = n_wl_applied, water_levels_applied = n_wl_applied, lithology = n_lith_applied))
 }
-
-
 #' Promote Well_Log_Documents rows to Wells/Water_Level_Observations/
 #' Well_Work_Events once a human has confirmed which well a log_number
 #' corresponds to.
@@ -748,28 +685,21 @@ apply_well_log_manual_transcriptions <- function(
 promote_well_log_documents <- function(
     con,
     map_csv = "data/raw/ndwr/well_log_document_map.csv") {
-
   message("---- Promoting well-log documents to Wells ----")
-
   if (!fs::file_exists(map_csv)) {
     message("[promote_well_log_documents] No mapping file at ", map_csv, " -- nothing to promote.")
     return(invisible(NULL))
   }
-
   map <- readr::read_csv(map_csv, show_col_types = FALSE) %>%
     mutate(log_number = trimws(as.character(log_number)), well_name = trimws(well_name)) %>%
     filter(!is.na(log_number), log_number != "", !is.na(well_name), well_name != "")
-
   n_promoted <- 0L
   n_skipped_well <- character(0)
-
   for (i in seq_len(nrow(map))) {
     row <- map[i, ]
-
     doc <- dbGetQuery(con, "SELECT * FROM Well_Log_Documents WHERE log_number = ?", params = list(row$log_number))
     if (nrow(doc) == 0) next
     doc <- doc[1, ]
-
     well <- dbGetQuery(con, "SELECT well_id, top_perforation, bottom_perforation, diameter_in FROM Wells WHERE well_name = ?",
                         params = list(row$well_name))
     if (nrow(well) == 0) {
@@ -777,24 +707,29 @@ promote_well_log_documents <- function(
       next
     }
     well_id <- well$well_id[1]
-
     if (is.na(doc$well_id)) {
       dbExecute(con, "UPDATE Well_Log_Documents SET well_id = ?, match_method = 'manual' WHERE document_id = ?",
                 params = list(well_id, doc$document_id))
     }
-
     if (!is.na(doc$slot_from_ft) && !is.na(doc$slot_to_ft) && is.na(well$top_perforation[1])) {
       dbExecute(con, "UPDATE Wells SET top_perforation = ?, bottom_perforation = ? WHERE well_id = ?",
                 params = list(doc$slot_from_ft, doc$slot_to_ft, well_id))
     }
+    # 2026-10-29 (Collar App. B batch): also fill Wells.total_depth when it
+    # is currently NULL (never overwrites), and attach any lithology
+    # intervals staged for this document (well_id NULL) to the confirmed well.
+    if (!is.na(doc$depth_drilled_ft)) {
+      dbExecute(con, "UPDATE Wells SET total_depth = ? WHERE well_id = ? AND total_depth IS NULL",
+                params = list(doc$depth_drilled_ft, well_id))
+    }
+    dbExecute(con, "UPDATE Well_Lithology SET well_id = ? WHERE source_document_id = ? AND well_id IS NULL",
+              params = list(well_id, doc$document_id))
 
     diam <- if (!is.na(doc$casing_diameter_in)) doc$casing_diameter_in else doc$hole_diameter_in
     if (!is.na(diam) && is.na(well$diameter_in[1])) {
       dbExecute(con, "UPDATE Wells SET diameter_in = ? WHERE well_id = ?", params = list(diam, well_id))
     }
-
     completion_date <- .safe_completion_date(doc$completion_date_raw)
-
     # Well_Work_Events: one row per promoted document, so a well's
     # status history is a real time series (fixes the earlier
     # single-snapshot limitation).
@@ -813,7 +748,6 @@ promote_well_log_documents <- function(
         ))
       }
     }
-
     if (!is.na(doc$static_water_level_ft)) {
       if (is.na(completion_date)) {
         warning("[promote_well_log_documents] log #", doc$log_number,
@@ -841,20 +775,16 @@ promote_well_log_documents <- function(
         }
       }
     }
-
     n_promoted <- n_promoted + 1L
   }
-
   if (length(n_skipped_well) > 0) {
     warning("[promote_well_log_documents] ", length(n_skipped_well),
             " row(s) reference a well_name not found in Wells -- skipped: ",
             paste(n_skipped_well, collapse = ", "))
   }
-
   message("  -> Promoted ", n_promoted, " well-log document(s).")
   invisible(list(promoted = n_promoted, skipped_well = n_skipped_well))
 }
-
 #' Register a provisional Wells row for any Well_Log_Documents row that
 #' still has no well_id after promote_well_log_documents() -- i.e. a real
 #' log with real coordinates/construction data, but no confirmed identity
@@ -884,34 +814,27 @@ register_provisional_well_logs <- function(
     log_dir_filter = "data/raw/ndwr/Ormat_well_logs",
     lat_range = c(39.30, 39.50),
     lon_range = c(-119.85, -119.65)) {
-
   message("---- Registering provisional Wells rows for unmatched well logs ----")
-
   docs <- dbGetQuery(con, "
     SELECT * FROM Well_Log_Documents
     WHERE well_id IS NULL AND file_path LIKE ? AND match_method != 'duplicate_content_skipped'
   ", params = list(paste0(log_dir_filter, "%")))
-
   if (nrow(docs) == 0) {
     message("  -> No unmatched well-log documents to register.")
     return(invisible(list(created = 0L, out_of_scope = character(0), no_coord = character(0))))
   }
-
   n_created <- 0L
   skipped_oos <- character(0)
   skipped_nocoord <- character(0)
-
   for (i in seq_len(nrow(docs))) {
     d <- docs[i, ]
     well_name <- paste0("Unidentified Well (NDWR Log ", d$log_number, ")")
-
     already <- dbGetQuery(con, "SELECT well_id FROM Wells WHERE well_name = ?", params = list(well_name))
     if (nrow(already) > 0) {
       well_id <- already$well_id[1]
       dbExecute(con, "UPDATE Well_Log_Documents SET well_id = ? WHERE document_id = ?",
                 params = list(well_id, d$document_id))
     } else {
-
       if (is.na(d$latitude) || is.na(d$longitude)) {
         skipped_nocoord <- c(skipped_nocoord, d$log_number)
         next
@@ -921,7 +844,6 @@ register_provisional_well_logs <- function(
         skipped_oos <- c(skipped_oos, d$log_number)
         next
       }
-
       coord_source <- switch(
         as.character(d$match_method),
         "ndwr_log_number_crossref" = "ndwr_well_log_crossref",
@@ -931,14 +853,12 @@ register_provisional_well_logs <- function(
       if (identical(d$plss_latlon_method, "plss_section_centroid")) coord_source <- "well_log_plss_centroid"
       coord_uncertainty_m <- if (identical(d$match_method, "ndwr_log_number_crossref")) 200 else 150
       if (identical(coord_source, "well_log_plss_centroid")) coord_uncertainty_m <- 800
-
       notes <- paste0(
         "Provisional well, identity NOT confirmed. Created from NDWR well log #", d$log_number,
         " (Well_Log_Documents.document_id=", d$document_id, "). ",
         if (!is.na(d$notes)) paste0(d$notes, " ") else "",
         "See AGENTS.md well-log sessions for nearest-candidate matches considered and rejected."
       )
-
       dbExecute(con, "
         INSERT INTO Wells (
           well_name, latitude, longitude, total_depth, top_perforation, bottom_perforation,
@@ -950,13 +870,11 @@ register_provisional_well_logs <- function(
         if (!is.na(d$casing_diameter_in)) d$casing_diameter_in else d$hole_diameter_in,
         coord_source, coord_uncertainty_m, notes
       ))
-
       well_id <- dbGetQuery(con, "SELECT last_insert_rowid() AS id")$id[1]
       dbExecute(con, "UPDATE Well_Log_Documents SET well_id = ? WHERE document_id = ?",
                 params = list(well_id, d$document_id))
       n_created <- n_created + 1L
     }
-
     if (!is.na(d$work_type) || !is.na(d$proposed_use) || !is.na(d$hole_diameter_in) || !is.na(d$casing_diameter_in)) {
       already_event <- dbGetQuery(con, "SELECT event_id FROM Well_Work_Events WHERE source_document_id = ?", params = list(d$document_id))
       if (nrow(already_event) == 0) {
@@ -970,7 +888,6 @@ register_provisional_well_logs <- function(
         ))
       }
     }
-
     if (!is.na(d$static_water_level_ft)) {
       completion_date <- .safe_completion_date(d$completion_date_raw)
       if (is.na(completion_date)) {
@@ -994,10 +911,8 @@ register_provisional_well_logs <- function(
       }
     }
   }
-
   message("  -> Created ", n_created, " provisional Wells row(s); ",
           length(skipped_oos), " skipped (outside Steamboat bounding box -- likely Gerlach-area NVGD wells); ",
           length(skipped_nocoord), " skipped (no coordinate available).")
-
   invisible(list(created = n_created, out_of_scope = skipped_oos, no_coord = skipped_nocoord))
 }
