@@ -1,10 +1,10 @@
 "issue_type","severity","n"
 "extreme_gradient","WARN",10
-"invalid_detection_limit","ERROR",851
-"invalid_solution","WARN",1335
+"invalid_detection_limit","ERROR",854
+"invalid_solution","WARN",1328
 "missing_coordinates","ERROR",44
 "missing_field_parameters","WARN",1551
-"missing_major_ions","WARN",1210
+"missing_major_ions","WARN",1200
 "negative_value","ERROR",162
 "no_active_logger","WARN",1650
 "no_observations","WARN",1

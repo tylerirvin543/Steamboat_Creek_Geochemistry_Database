@@ -32,12 +32,13 @@ parse_sgs_ocr_text <- function(slug, root = "data/derived/ndep_prr_ocr", source_
   for (f in files) {
     page <- as.integer(gsub("[^0-9]", "", basename(f)))
     txt <- paste(readRDS(f)$text, collapse = "\n")
-    if (!grepl("Analytical\\s*Rep", txt) || grepl("Quality Control Report", txt)) next
+    # OCR sometimes spaces the title letters ("An alytical Rep ort"), so allow gaps
+    if (!grepl("A\\s?n\\s?a\\s?l\\s?y\\s?t\\s?i\\s?c\\s?a\\s?l\\s+R\\s?e\\s?p", txt) || grepl("Quality\\s*Control\\s*Rep", txt)) next
     lines <- str_trim(str_split(txt, "\n")[[1]])
     for (i in seq_along(lines)) {
       ln <- lines[i]
       if (grepl("^Laboratory ID\\s+Client Sample ID", ln) && i < length(lines)) {
-        m <- str_match(lines[i + 1], "^([0-9]{4} ?[0-9]{4}-[0-9A-Za-z]+)\\s+(.+?)\\s+([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})\\s+([0-9]{1,2}:[0-9]{2})")
+        m <- str_match(lines[i + 1], "^([0-9][0-9 ]{6,9}[0-9] ?-[0-9A-Za-z]+)\\s+(.+?)\\s+([0-9]{1,2}/[0-9]{1,2}/[0-9]{4})\\s+([0-9]{1,2}:[0-9]{2})")
         if (!is.na(m[1, 1])) cur <- list(lab_id = m[1, 2], client = m[1, 3], sampled = paste(m[1, 4], m[1, 5]))
         next
       }

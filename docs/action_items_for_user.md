@@ -884,3 +884,33 @@ Audit table: `data/derived/ndep_prr_audit.csv`. Findings:
 - **Header OCR misses** (lab id read as "2503 1228-02") had hidden the 30 Mar 2025 outlet reports and the 20 Sep 2024 and 13/19 Dec 2024 reports; those 16 lab samples are now in the database.
 - **U230 forms.** The 2024 Semi-Annual and Jan-Jun 2025 IMR PDFs contain field forms only for the six plant outlets (Sep 20 2024, Dec 19 2024, Mar 30 2025, Jun 24 2025). The well forms (water levels) for those dates are not in the request, so there are no 2024 or early-2025 well water levels to key. Entered: 23 outlet events (69 field measurements, temperatures converted from F). Not enterable: SB3 Outlet 30 Mar 2025 (sampling page is a blank scan).
 - **Please check:** (1) the Jun 24 2025 conductivities are written without a decimal point (3650-3672, G2 5449); the other rounds read about 360 for these ports, so these may be 365.0 etc. They are stored as read and flagged; (2) Aug 2025 outlet temperatures (13-14 C) disagree with every other round (114-185 F, 46-85 C); (3) Herz Deep 13 Dec 2024 chloride prints "<0.5" (all other rounds about 600-700 mg/L), which looks like a lab or sample mix-up; (4) the reports also contain pressure, temperature and flow time-series plots as images (Jan-Jun 2025 and Jul-Dec 2024), which are not extracted.
+
+## Action items by report and page (2026-10-29, after the form re-check)
+
+Report names: **IMR1** = UNEV 2007204 IMR Jan-June 2025.pdf; **IMR2** = UNEV2007204 IMR July - December 2025.pdf; **SA24** = UNEV2007204 Semi Annual Report July-December 2024.pdf; **Compiled U230** = NDEP_compiled_U230_Steamboat_reports.pdf (same forms as the U230 pages in IMR2; its sampling page comes first, then the facility page).
+
+### Resolved today (no action unless you disagree)
+| Item | Where | What I found and stored |
+|---|---|---|
+| Jun 24 2025 outlet conductivity | IMR1 pp.22, 24, 26, 28, 30, 32 (sampling pages) | No decimal point on any of the six forms. Read as xxx.x (365.0, 366.4, 365.2, 367.2, 366.7, 544.9), because every other round at the same ports reads 359-396 uS/cm. |
+| Aug 4 2025 outlet temperatures | Compiled U230 pp.1, 3, 5, 7, 9, 12 (IMR2 about pp.7-18) | The forms read 131-144 with a degree mark, i.e. deg F. They had been stored as 13-14 deg C. Corrected to 55.0-62.2 deg C. pH and conductivity re-read on the same pages (e.g. SB2 370.4, Galena 3 370.5, SB3 382.3 uS/cm). |
+| Monthly water levels, Jul-Dec 2025 | IMR2 facility pages (Page 1 of 2), "Measured Water Level" row | Only Herz Domestic, Herz Deep and NDOT are gauged. Eich, Soccer Field, Boyd, Jeppson and Rogers read N/A (or "domestic water sourced from residential home") on every form. All 16 readings are in the database (see counts below). |
+| Lab reports that the parser had missed | IMR2 pp.228-229 (NDOT, Boyd 11/21), p.263 (Soccer Field 10/24), pp.331-336 (injection 9/30), p.346 (Jeppson 12/12), p.366 (SBHR 12/10) | OCR had spaced the title or lab id; fixed and ingested (+190 lab rows). |
+
+### Please check (in this order)
+| # | Report and page | Question |
+|---|---|---|
+| 1 | Compiled U230 p.12 (Galena 2 Outlet, Aug 4 2025, sampling page) | The first digit of the conductivity is overwritten (2 or 3); stored 389.4. Time of sampling is also overwritten. |
+| 2 | IMR1 p.22 (Galena 2 Outlet, Jun 24 2025) | Conductivity reads "5449" (first character unclear); stored 544.9. |
+| 3 | IMR1 p.20 (facility page p.19, SB3 Outlet, Mar 30 2025) | Sampling page is a blank scan: pH, conductivity, temperature missing. Ask NDEP or Ormat for the original. |
+| 4 | SA24 p.60 (Herz Deep, Dec 13 2024 lab report) | Chloride prints "<0.5" while every other round is 600-700 mg/L. Likely a lab or sample mix-up; ask NDEP or SGS (work order 24120xxx). |
+| 5 | All outlet forms (e.g. IMR1 pp.10-18, SA24 pp.9-31) | Field conductivity is 359-396 uS/cm at every outlet and date, but the lab reports TDS 1900-2800 mg/L and Cl 780-930 mg/L, which would normally give about 3,500 uS/cm. Confirm with Ormat which meter and scale the sampler uses. |
+| 6 | IMR2 p.306 (Eich Well, Sep 15 2025 lab report, header 10:30) | Not parsed; the field form (10:40) has no lab result attached. |
+| 7 | IMR2 lab pages for Mar 21 2025 wells are in IMR1 pp.58-63 | No field forms exist for the wells on Mar 21, Jun 24 (wells) or in Sep/Dec 2024: the well forms are not in the request. |
+| 8 | Both IMRs and SA24 | Pressure, temperature and flow time-series plots are images (IMR1 about pp.100-165, SA24 pp.100-165). Ask NDEP for the underlying daily data. |
+| 9 | Watch list | `data/derived/ndep_prr_ocr/ocr_outlier_review.csv` rows with action "watch" are promoted but about 2x their station median; check against the scan if they matter. |
+
+### Counts now in the database (NDEP public-records request)
+- Lab chemistry: **140 samples, 2,733 results** (28 samples and about 580 results before the OCR work). New: **112 samples, about 2,150 results**, covering Sep 2024, Dec 2024, Mar 2025, Jun 2025, and monthly Aug-Dec 2025 at the 6 plant ports (outlet and injection sides) and 8 wells.
+- Field forms: **93 samples** with U230 field data; **82** have both field and lab data.
+- Water levels from the NDEP forms: **16 readings** (Herz Domestic 6, NDOT 6, Herz Deep 4; Jun 27 to Dec 12 2025). None are new this turn; all were already keyed.
