@@ -785,6 +785,12 @@ run_step(RUN_INGEST$injection_operating_history, "NDEP UIC INJECTION PRESSURE/RA
   build_injection_pressure_plot(con)
 })
 
+run_step(RUN_INGEST$historical_sorey1992, "COLLAR 1990 MAPPED STATIONS (TABLE 4)", {
+  # S10 = SBRR (crosswalk, high confidence); other stations wait for Plate 4 georeferencing
+  source("scripts/ingest/ingest_collar1990_mapped_stations.R")
+  ingest_collar1990_mapped_stations(con)
+})
+
 run_step(RUN_INGEST$historical_sorey1992, "SOREY & COLVARD 1992 HISTORICAL CHEMISTRY", {
   # Ingests the ~10 dated 1950-1991 major-ion chemistry analyses from
   # Table 1 of Sorey & Colvard (1992), USGS Administrative Report for
@@ -1393,6 +1399,9 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   export_leapfrog_geophysical_horizons(con)
   export_leapfrog_geophysical_lithology(con)
   export_leapfrog_geophysical_grid_surfaces(con)
+  # 2026-10-29: chemistry (Cl, Na, SO4, B, temperature) at screen depth and water levels as Leapfrog interval/point tables
+  source("scripts/leapfrog/export_leapfrog_chemistry.R")
+  export_leapfrog_chemistry_intervals(con)
 })
 
 # ============================================================

@@ -63,7 +63,11 @@ library(DBI); library(dplyr)
     "W", 285L, "L", 159L, "Collar 1990 Appendix B log 13252; Plate 3 (CURTI)", "Curti Domestic Well (95 ft)", "different well", "medium",
       "A 77-ft Curti well (1973), not the 95-ft Curti domestic well on file; the section centroid is only a rough position.",
     "W", 285L, "L", 160L, "Collar 1990 Appendix B log 13252; Plate 3 (CURTI)", "Curti Barn Well (geothermal)", "different well", "medium",
-      "The 77-ft domestic-use Curti log is not the 260-ft geothermal Curti barn well.")
+      "The 77-ft domestic-use Curti log is not the 260-ft geothermal Curti barn well.",
+    "L", 220L, NA, NA, "Sorey & Colvard 1992 Fig. 26 (Herz-2 geothermal well)", "Herz-2 (geothermal)", "same well", "high",
+      "Fig. 26 shows chloride 325-375 mg/L and depth to water 49-53 ft from 1984-1990; Skalbeck Table B-2 Herz Geothermal has chloride 325-380 mg/L (n=48) and median depth about 51 ft over 1985-1989. Series match, not a row-by-row comparison.",
+    "L", 151L, "W", 287L, "Sorey & Colvard 1992 Table 3 / Fig. 23 (Boyd well)", "Boyd well, 110 ft (digitized water levels)", "different or unconfirmed", "lead",
+      "Sorey's Boyd well is 110 ft deep with water at 38-43 ft; the NDEP Boyd Domestic Well (NDWR log 8188) is 56 ft deep, and the 1955 Boyd well is 68 ft. Identity not established.")
 }
 
 build_historical_name_crosswalk <- function(con,

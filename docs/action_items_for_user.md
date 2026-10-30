@@ -914,3 +914,10 @@ Report names: **IMR1** = UNEV 2007204 IMR Jan-June 2025.pdf; **IMR2** = UNEV2007
 - Lab chemistry: **140 samples, 2,733 results** (28 samples and about 580 results before the OCR work). New: **112 samples, about 2,150 results**, covering Sep 2024, Dec 2024, Mar 2025, Jun 2025, and monthly Aug-Dec 2025 at the 6 plant ports (outlet and injection sides) and 8 wells.
 - Field forms: **93 samples** with U230 field data; **82** have both field and lab data.
 - Water levels from the NDEP forms: **16 readings** (Herz Domestic 6, NDOT 6, Herz Deep 4; Jun 27 to Dec 12 2025). None are new this turn; all were already keyed.
+
+## Update 2026-10-29: Collar data in plots, Leapfrog chemistry tables, Sorey & Colvard figure data
+
+- Collar (1990): Table 4 station S10 (= SBRR) is now in the database (Cl 17.2 and 23.8 mg/L, 1988-89) and in the chloride plot; the other 62 stations wait for Plate 4 georeferencing. Collar Appendix B drilling-time water levels are shown in `water_level_drilling_time.png`.
+- Sorey & Colvard (1992) has **no** chloride for Boyd, Jeppson or Rogers: Table 3 lists Boyd with chloride "nm", and Jeppson and Rogers appear only in the Table 10 monitoring list. Boyd water levels (Fig. 23) were digitized (about +/-1 ft) onto a new provisional well, "Boyd well (Sorey & Colvard 1992, Fig. 23)", which is 110 ft deep and is NOT matched to the NDEP Boyd Domestic Well (56 ft). Jeppson and Rogers baselines still need another source.
+- Sorey's Herz-2 (Fig. 26) matches the Skalbeck Herz Geothermal series (Cl 325-380 mg/L, depth to water about 51 ft), so Herz-2 = Herz Geothermal (high confidence by series match). Herz Deep (NDEP) is still a different, unmatched well.
+- Leapfrog: `chemistry_intervals_*.csv` and `water_levels.csv` now exist. Of 31 wells with chemistry, 6 have a screen interval and only 3 also have a collar (elevation missing for the rest). Adding elevations (for example from USGS 3DEP) would place most of the rest.
