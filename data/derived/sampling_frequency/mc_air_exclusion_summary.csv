@@ -1,0 +1,41 @@
+"site","frequency_days","scenario","n_readings","pct_mean","pct_p05","pct_p95"
+"SBGG",1,"Earlier version (QC-flagged readings only removed)",24996,2.84697346759123,2.38606948724339,5.00020873774584
+"SBGG",2,"Earlier version (QC-flagged readings only removed)",24996,3.85446877422376,3.18416532890215,4.20399714701123
+"SBGG",3,"Earlier version (QC-flagged readings only removed)",24996,4.90647815201358,4.08357878608448,5.50655714049807
+"SBGG",7,"Earlier version (QC-flagged readings only removed)",24996,7.08993093374985,6.13278625003865,8.94544315278242
+"SBGG",14,"Earlier version (QC-flagged readings only removed)",24996,7.90314961725055,6.68127221432725,12.683682997119
+"SBRR",1,"Earlier version (QC-flagged readings only removed)",24919,3.55330702089349,3.15246087669734,3.88007881149566
+"SBRR",2,"Earlier version (QC-flagged readings only removed)",24919,4.21772541316144,3.82259373543739,4.67271859386775
+"SBRR",3,"Earlier version (QC-flagged readings only removed)",24919,4.68783026368797,4.2300545705323,5.19125199470007
+"SBRR",7,"Earlier version (QC-flagged readings only removed)",24919,6.54114493638358,5.484634362455,7.60855705325246
+"SBRR",14,"Earlier version (QC-flagged readings only removed)",24919,9.10647281126319,7.21143592646335,10.7316686924158
+"SBGG",1,"Final: 3 days before each retrieval, SBGG air from 29 Sep",20708,3.06634238042171,2.60299867990821,5.01564672722435
+"SBGG",2,"Final: 3 days before each retrieval, SBGG air from 29 Sep",20708,4.13875002805387,3.34187911939593,5.00574490488177
+"SBGG",3,"Final: 3 days before each retrieval, SBGG air from 29 Sep",20708,5.44005721490009,4.51887154015796,6.12221071199095
+"SBGG",7,"Final: 3 days before each retrieval, SBGG air from 29 Sep",20708,7.77598070408431,6.48346695336035,9.83266829925502
+"SBGG",14,"Final: 3 days before each retrieval, SBGG air from 29 Sep",20708,8.45597870564225,7.36111101231532,13.1561936389039
+"SBRR",1,"Final: 3 days before each retrieval, SBGG air from 29 Sep",23192,3.63396994477841,3.1987452967197,3.97757600227152
+"SBRR",2,"Final: 3 days before each retrieval, SBGG air from 29 Sep",23192,4.32927789975465,3.83515442110933,4.77299830289514
+"SBRR",3,"Final: 3 days before each retrieval, SBGG air from 29 Sep",23192,4.85404029471981,4.33768739883859,5.3459849860995
+"SBRR",7,"Final: 3 days before each retrieval, SBGG air from 29 Sep",23192,6.91111271574261,6.26072425136545,7.71831990642969
+"SBRR",14,"Final: 3 days before each retrieval, SBGG air from 29 Sep",23192,9.50101525485254,7.79405547902498,12.0662458325814
+"SBGG",1,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",18415,3.3082595327732,2.77710343035538,5.43240854395771
+"SBGG",2,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",18415,4.41000970010121,3.66149592960046,5.34334520332988
+"SBGG",3,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",18415,5.5234044582762,4.64301655756583,6.78644390642649
+"SBGG",7,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",18415,8.12196067564087,7.10989670910716,10.1780577257177
+"SBGG",14,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",18415,8.62855662383615,7.14911527415632,12.3307728256447
+"SBRR",1,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",20894,3.61909247393104,3.19551167371484,3.9413676942157
+"SBRR",2,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",20894,4.29913980872442,3.83710847866306,4.81121955939549
+"SBRR",3,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",20894,4.72147871885102,4.28747179208107,5.50019113623614
+"SBRR",7,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",20894,6.54101645454154,4.94435520033999,8.08101359667061
+"SBRR",14,"Sensitivity: 7 days before retrieval, SBGG air from 25 Sep",20894,9.93778594281303,7.42303045288712,12.0721183336493
+"SBGG",1,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",21568,3.00569438693261,2.55152280261173,4.9158937417782
+"SBGG",2,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",21568,4.0566918629239,3.27595765812706,4.90599272006354
+"SBGG",3,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",21568,5.33184941143155,4.42918978914799,6.0004132258243
+"SBGG",7,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",21568,7.60531291321129,6.29325632799104,9.56410082642558
+"SBGG",14,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",21568,8.26126201802894,7.02417674386871,12.9479830245082
+"SBRR",1,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",23192,3.63396994477841,3.1987452967197,3.97757600227152
+"SBRR",2,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",23192,4.32927789975465,3.83515442110933,4.77299830289514
+"SBRR",3,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",23192,4.85404029471981,4.33768739883859,5.3459849860995
+"SBRR",7,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",23192,6.91111271574261,6.26072425136545,7.71831990642969
+"SBRR",14,"Sensitivity: 3 days before retrieval, SBGG air from 2 Oct",23192,9.50101525485254,7.79405547902498,12.0662458325814

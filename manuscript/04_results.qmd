@@ -557,15 +557,15 @@ assumptions.
 
 ```{r sampfreq-fig}
 #| echo: false
-#| fig-cap: "Monte Carlo reconstruction-error curve for candidate chemistry-sampling intervals, computed from the real ~5-week 2026 SBRR/SBGG specific-conductance record (see `notebooks/09`)."
+#| fig-cap: "Monte Carlo reconstruction-error curve for candidate chemistry-sampling intervals, computed from the real 2026 SBRR/SBGG specific-conductance record with air-exposure days removed (see `notebooks/09`)."
 knitr::include_graphics("../output/figures/manuscript/sampling_frequency_error_curve.png")
 ```
 
 This result answers this thesis's second objective directly, using
 specific conductance as a stand-in dense proxy since no dense real
 chloride series exists yet. Daily sampling keeps reconstruction error
-under roughly 5% of the mean at both logger sites; weekly sampling
-costs roughly 6-8%; the error grows smoothly rather than showing a
+to roughly 3-4% of the mean at both logger sites (air-exposure days removed); weekly sampling
+costs roughly 7-8%; the error grows smoothly rather than showing a
 sharp cliff at any one interval. This result is what motivates the
 two-tier calibration-sampling recommendation in Chapter 6: a short,
 intensive daily-to-sub-daily window, followed by a lower-frequency,

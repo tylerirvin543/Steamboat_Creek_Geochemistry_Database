@@ -150,8 +150,8 @@ snowmelt, when the relationship is most likely to break down. A Monte
 Carlo subsampling analysis on the existing conductivity record
 (Chapter 4) supports the underlying sampling-frequency logic
 quantitatively: reconstructing the mean specific conductance from
-daily sampling keeps error under about 5%, while weekly sampling costs
-6-8%, with the error growing smoothly rather than showing a sharp
+daily sampling gives about 3-4% error, while weekly sampling costs
+about 7-8% (after removing the days the loggers sat in open air), with the error growing smoothly rather than showing a sharp
 cliff at any particular interval -- though that analysis still only
 has a roughly twelve-week, summer-to-early-fall record to draw on, which a full year of
 monthly sampling is specifically meant to extend. Every calibration

@@ -256,6 +256,29 @@ would sharpen the proxy calibration there too, not just this chapter's
 own results.
 
 
+**Limits of the PHREEQC modelling.** The modelling in this proposal is a
+screening tool, not a calibrated predictive model, and its results should be
+read that way. Four constraints matter most. First, the mixing end-members are
+representative samples (a fissure sample and SBRR), not samples collected at
+the same time as the targets, so the fitted mixing fractions describe the
+system on average, not on a given day. Second, results depend on the
+thermodynamic database: the resort tank's pH of 9 failed to converge on all
+six registered databases, and the explanation for that (forced degassing by the
+air-lift pump) means its reconstructed parent fluid is not used. Third, the
+fits are loose: the inverse model becomes feasible only at about 12%
+input uncertainty, the forward reaction-path fits leave 23-45% residual error
+on the terrace springs and the SBW_0001 well, and no phase set tried reconciles
+the SBS_0001 spring. Fourth, analytical uncertainty is not propagated through
+any step. What the modelling does provide is a consistent mixing framework tied
+to the same chloride tracer as the conductivity proxy, two independent methods
+(inverse and forward) that agree on net carbonate dissolution of a few times
+1e-4 mol, a clear separation of SBW_0001 from the three terrace springs even
+though it lies 109 m from SBS_0001, and a chemistry-first way to decide which
+samples are credible end-members before a flow model is built. It shows which
+explanations are consistent with the chemistry and which are not; it does not
+prove a mechanism, and it is not a substitute for the hydraulic data this
+proposal identifies as still missing.
+
 ## What Collar's 1990 thesis adds to the interpretation
 
 Collar [@collar1990thesis] and Sorey and Colvard [@sorey1992] studied the same

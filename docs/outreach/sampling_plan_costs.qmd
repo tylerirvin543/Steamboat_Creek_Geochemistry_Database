@@ -50,7 +50,7 @@ usd <- function(x) paste0("$", formatC(x, format = "d", big.mark = ","))
 
 ## Summary
 
-I am calibrating continuous specific conductance from two in-stream loggers (SBRR at Rhodes Road above the thermal inflow, and SBGG at Geiger Grade below it) against laboratory chloride. **Method:** paired grab samples bracket logger readings; chloride (and major ions, alkalinity, field pH/temperature/conductance) is measured at the lab, and I fit time-aware models (linear, GAM, random forest) validated with rolling-origin cross-validation. **Application:** the calibrated record gives continuous chloride flux, which is the standard tracer for thermal-water discharge at Steamboat (Sorey and Spielman 2008, 2017). It lets us ask whether the 2025 Lower Sinter Terrace eruption changed outflow, and it replaces the sparse, expensive chemistry that has limited the discharge record. **Reasoning:** a Monte Carlo test on the logger record shows daily sampling keeps reconstruction error near 5%, while biweekly sampling costs 6-13% depending on the start day, so a short intensive window followed by monthly samples across a full year captures both fast variability and seasonal stability. **Hypothesis:** one site-specific relationship between conductance and chloride holds through the year, with deviations during storms and snowmelt from dilution. **Value:** once calibrated, the loggers give a continuous chloride and thermal-discharge record for a small fraction of the cost of regular chemistry, and the same samples provide the end-member chemistry for the mixing and reactive-transport work.
+I am calibrating continuous specific conductance from two in-stream loggers (SBRR at Rhodes Road above the thermal inflow, and SBGG at Geiger Grade below it) against laboratory chloride. **Method:** paired grab samples bracket logger readings; chloride (and major ions, alkalinity, field pH/temperature/conductance) is measured at the lab, and I fit time-aware models (linear, GAM, random forest) validated with rolling-origin cross-validation. **Application:** the calibrated record gives continuous chloride flux, which is the standard tracer for thermal-water discharge at Steamboat (Sorey and Spielman 2008, 2017). It lets us ask whether the 2025 Lower Sinter Terrace eruption changed outflow, and it replaces the sparse, expensive chemistry that has limited the discharge record. **Reasoning:** a Monte Carlo test on the real logger record (with the days the loggers sat in open air removed) shows daily sampling gives a reconstruction error of about 3-4% of mean conductance, while biweekly sampling gives about 8-10%, and 7-13% depending on the start day, so a short intensive window followed by monthly samples across a full year captures both fast variability and seasonal stability. **Hypothesis:** one site-specific relationship between conductance and chloride holds through the year, with deviations during storms and snowmelt from dilution. **Value:** once calibrated, the loggers give a continuous chloride and thermal-discharge record for a small fraction of the cost of regular chemistry, and the same samples provide the end-member chemistry for the mixing and reactive-transport work.
 
 ## Sampling plan
 
@@ -161,19 +161,26 @@ ec$use <- ifelse(is.na(ec$qc_flag), "Used in Monte Carlo", "QC-flagged, excluded
 
 ```{r fig-record}
 #| fig-width: 9
-#| fig-height: 5
-ggplot(ec, aes(timestamp, sc_25c)) +
-  geom_line(data = subset(ec, use == "Used in Monte Carlo"), aes(color = use), linewidth = 0.35) +
-  geom_point(data = subset(ec, use != "Used in Monte Carlo"), aes(color = use), size = 0.7) +
-  facet_wrap(~site, ncol = 1, scales = "free_y") +
-  scale_color_manual(NULL, values = c("Used in Monte Carlo" = "#0072B2", "QC-flagged, excluded" = "#D55E00")) +
-  labs(x = NULL, y = "Specific conductance (uS/cm, 25 C)",
-       title = "Logger record used for the Monte Carlo sampling-interval test",
-       subtitle = paste0(format(min(ec$timestamp), "%Y-%m-%d"), " to ", format(max(ec$timestamp), "%Y-%m-%d"),
-                         ": ", format(sum(ec$use == "Used in Monte Carlo"), big.mark = ","), " readings used, ",
-                         sum(ec$use != "Used in Monte Carlo"), " QC-flagged readings excluded"),
-       caption = "The Monte Carlo test subsamples this dense record at 1, 2, 3, 7 and 14 days and rebuilds it by interpolation (equation 3).") +
-  theme_minimal(base_size = 10) + theme(legend.position = "bottom", plot.caption = element_text(hjust = 0))
+#| fig-height: 5.5
+old_wd <- setwd(root); suppressMessages(source('scripts/analysis/sampling_frequency/06_monte_carlo_air_exclusion.R')); setwd(old_wd)
+raw <- get_sc_record(con)
+rt <- retrieval_times(raw)
+ec <- raw
+ec$class <- ifelse(!is.na(ec$qc_flag), 'QC-flagged, excluded', 'Used in Monte Carlo')
+for (i in seq_len(nrow(rt))) ec$class[ec$site == rt$site[i] & is.na(ec$qc_flag) & ec$timestamp >= rt$t[i] - 3*86400 & ec$timestamp <= rt$t[i] + 3600] <- 'Open-air days, excluded'
+ec$class[ec$site == 'SBGG' & is.na(ec$qc_flag) & ec$timestamp >= as.POSIXct('2026-09-29', tz = 'UTC')] <- 'Open-air days, excluded'
+ec$class <- factor(ec$class, c('Used in Monte Carlo', 'Open-air days, excluded', 'QC-flagged, excluded'))
+ec$site <- factor(ec$site, c('SBRR','SBGG'), c('SBRR (Rhodes Road, upstream)', 'SBGG (Geiger Grade, downstream)'))
+cols <- c('Used in Monte Carlo' = '#0072B2', 'Open-air days, excluded' = '#999999', 'QC-flagged, excluded' = '#D55E00')
+ggplot(ec, aes(timestamp, sc_25c, color = class)) +
+  geom_point(size = 0.25, alpha = 0.8) +
+  facet_wrap(~site, ncol = 1, scales = 'free_y') +
+  scale_color_manual(NULL, values = cols) + guides(color = guide_legend(override.aes = list(size = 2, alpha = 1))) +
+  labs(x = NULL, y = 'Specific conductance (uS/cm, 25 C)',
+       title = 'Logger record used for the Monte Carlo sampling-interval test',
+       subtitle = paste0(format(sum(ec$class == 'Used in Monte Carlo'), big.mark = ','), ' readings used; ', format(sum(ec$class == 'Open-air days, excluded'), big.mark = ','), ' open-air readings and ', sum(ec$class == 'QC-flagged, excluded'), ' QC-flagged readings excluded'),
+       caption = 'Open-air days: the 3 days before each retrieval (both loggers) and SBGG from 2026-09-29, when it began to be exposed to air\n(daily temperature range rises from about 5 to 7-8 C). The Monte Carlo test subsamples the blue record at 1, 2, 3, 7 and 14 days\nand rebuilds it by interpolation (equation 3).') +
+  theme_minimal(base_size = 10) + theme(legend.position = 'bottom', plot.caption = element_text(hjust = 0))
 ```
 
 ```{r fig-pairs}
@@ -204,5 +211,15 @@ dbDisconnect(con)
 ```{r err-curve}
 #| results: asis
 f <- normalizePath(file.path(root, "output/figures/manuscript/sampling_frequency_error_curve.png"), winslash = "/")
-cat(sprintf("![Reconstruction error of the conductance record against the candidate interval between samples, SBRR and SBGG (200 random start days per interval, QC-flagged readings excluded). Error rises from about 3-4%% of mean conductance with daily samples to about 8-9%% at 14 days; a longer interval is cheaper but leaves a larger error in the calibrated record.](%s)\n", f))
+cat(sprintf("![Reconstruction error of the conductance record against the candidate interval between samples, SBRR and SBGG (200 random start days per interval; QC-flagged readings, open-air days before retrieval, and SBGG after 2026-09-29 excluded). Mean error rises from about 3-4%% of mean conductance with daily samples to about 8-10%% at 14 days.](%s)\n", f))
 ```
+
+## What the GAM has and has not been run on
+
+The sampling interval in this plan comes from the Monte Carlo test on the **real** logger record (Figures 1 and 3). The chloride models themselves, including the GAM, have **not** been fitted to real paired data, because no chloride sample yet overlaps the logger record (zero pairs). They have been run only as a code test on a simulated data set (`simulate_synthetic_pairs()` in `03_chloride_models.R`): 60 samples every three days from 1 May 2026, with
+
+$$SC = 300 + 40\sin\!\left(\tfrac{2\pi d}{365}\right) + \mathrm{N}(0,15),\quad T = 15 + 8\sin\!\left(\tfrac{2\pi (d-60)}{365}\right) + \mathrm{N}(0,1.5),$$
+
+$$\mathrm{Cl} = 1 + 0.071\,SC_{\text{lag}} + 0.1\,T_{\text{lag}} + \mathrm{N}(0,1.5),$$
+
+where the lag is six days. The slope 0.071 comes from the single real SBRR pair (Cl 17.1 mg/L at 241 uS/cm on 2026-05-01), so the simulated chloride stays in a realistic range; every other value is made up. Because the data were generated from a known linear rule, the exercise shows only that the fitting and cross-validation code runs and recovers a known relationship. It does not show how well a GAM will perform on Steamboat Creek, and it did not influence the sampling interval. The only real fit is the linear regression on 181 historical NDEP pairs in Figure 2, which predates the loggers. The calibration samples proposed in this document supply the first real pairs for the GAM.

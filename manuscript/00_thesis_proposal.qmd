@@ -2682,35 +2682,55 @@ than reporting one number that might just reflect a lucky or unlucky start
 day: shown directly in @fig-mcspread, which plots the full spread of all
 two hundred draws per interval rather than only their mean.
 
-**The corrected result, with a retrieval-artifact correction applied.**
-Re-running this analysis against the conductance record with the
-already-documented ambient-air-exposure retrieval artifacts (the `qc_flag =
-'field_visit_disturbance'`/`'spike'` rows flagged elsewhere in this
-proposal) excluded (those rows are instrument artifacts, not signal, and
-including them would inflate the reconstruction error in a way unrelated to
-the real sampling-frequency question) daily sampling keeps reconstruction
-error under roughly 4% of the mean specific conductance at both logger
-sites; every-other-day sampling rises to 4-4.5%; weekly sampling reaches
-6.5-7%; biweekly sampling reaches 8-9%. The degradation is smooth, not a
-sharp cliff, which means the choice of interval is a genuine
-precision-versus-cost trade-off rather than a hard threshold. A specific
-tiered comparison makes this concrete: at SBRR, mean reconstruction error
-rises from 3.6% under daily sampling to 4.2% under every-other-day sampling
-(a modest increase in the typical case) while the worst-case error (the
-95th percentile across the 200 simulated campaigns) rises from 3.9% to
-4.7%. At SBGG the mean rises the same way, from 2.8% to 3.9%, but the
-worst-case (95th percentile) is not perfectly monotonic: it is 5.0% at
-daily sampling, drops to 4.2% at every-other-day, then climbs steadily to
-9.0% at weekly and 12.7% at biweekly. That one non-monotonic step is
-reported honestly, not smoothed into a cleaner-looking story: with only 200
-draws per interval, an unusually rough patch in the real record can
-occasionally make daily sampling's own worst case look worse than
-every-other-day's by chance, visible directly in @fig-mcspread's wider,
-more outlier-prone boxes for SBGG at every interval. In plain terms,
-relaxing from daily to every-other-day chemistry sampling costs relatively
-little in the typical case but meaningfully widens how bad a single unlucky
-field campaign's result could be: a direct, quantitative basis for the
-sampling-design recommendation below.
+**The corrected result, with air-exposure days removed.** The analysis was
+re-run against the conductance record after removing (1) the readings the QC
+detector flagged as retrieval artifacts or spikes, (2) the three days before
+each logger retrieval, because field notes show the loggers sat in open air
+for at least several days before each pull, and (3) the SBGG record from
+29 September 2026 onward, when SBGG began to be exposed to open air (its
+logger temperature range rises from about 5 C to 7-8 C on that date, in line
+with the field observation of late-September to early-October exposure). Those
+readings are instrument artifacts, not signal, and including them would inflate
+the reconstruction error in a way unrelated to the sampling-frequency question.
+The three-day pre-retrieval window is a stated choice, because the air
+exposure is not visible in conductivity itself; widening it to seven days and
+moving the SBGG onset to 25 September or 2 October changes the mean error by
+no more than about 0.6 percentage points (`data/derived/sampling_frequency/
+mc_air_exclusion_summary.csv`). With the exclusions, daily sampling gives a
+mean reconstruction error of 3.6% of mean specific conductance at SBRR and
+3.1% at SBGG; every-other-day sampling gives 4.3% and 4.1%; weekly sampling
+6.9% and 7.8%; and biweekly sampling 9.5% and 8.5%. The degradation is smooth,
+not a sharp cliff, so the choice of interval is a precision-versus-cost
+trade-off rather than a hard threshold. The worst case, the 95th percentile
+across the 200 simulated campaigns, widens faster than the mean: at SBRR it
+rises from 4.0% (daily) to 4.8% (every other day), 7.7% (weekly) and 12.1%
+(biweekly); at SBGG it is 5.0% for both daily and every-other-day sampling,
+then 9.8% (weekly) and 13.2% (biweekly). Relaxing from daily to every-other-day
+sampling therefore costs little in the typical case, while a weekly or
+biweekly schedule could land well above the mean depending on which day the
+campaign started. This is a quantitative basis for the sampling design below.
+
+**What the chloride models have been run on so far: synthetic data.** The
+Monte Carlo result above is the only quantity that has been computed on the
+real record, and it is the only analysis used to choose the sampling
+frequency. The linear, GAM and random-forest chloride models have not been
+fitted to real paired samples, because no chloride sample yet overlaps the
+logger record (zero pairs). They have been run only as a code test on a
+simulated data set made by `simulate_synthetic_pairs()` in
+`03_chloride_models.R`: 60 samples every three days from 1 May 2026, with
+$SC = 300 + 40\sin(2\pi d/365) + \mathrm{N}(0,15)$,
+$T = 15 + 8\sin(2\pi (d-60)/365) + \mathrm{N}(0,1.5)$ and
+$\mathrm{Cl} = 1 + 0.071\,SC_{lag} + 0.1\,T_{lag} + \mathrm{N}(0,1.5)$, where the
+lag is six days. The slope 0.071 is taken from the single real SBRR pair
+(Cl 17.1 mg/L at 241 uS/cm, 2026-05-01), so the simulated chloride stays in a
+realistic range; every other number is made up. Because the data were
+generated from a known linear rule, the exercise shows only that the fitting
+and cross-validation code runs and recovers a known relationship; it says
+nothing about how well a GAM would perform on Steamboat Creek, and it did not
+influence the choice of sampling interval. The same is true of the only real
+fit available, a linear regression on 181 historical NDEP pairs at Rhodes Road
+(1987-2025; $R^2 = 0.65$), which predates the loggers. The calibration campaign
+proposed below supplies the first real pairs for the GAM.
 
 **Proposed sampling design.** This proposal explicitly proposes a real
 chloride sampling campaign at the two existing conductivity-logger
@@ -2776,7 +2796,7 @@ interval: it hides how much a single real field campaign's result could
 vary just from which day it happened to start on. Plotting the full
 distribution of draws, shown in @fig-mcspread, makes that spread directly
 visible: the boxes widen noticeably at longer intervals, and a real
-biweekly campaign could plausibly land anywhere from roughly 6% to 13%
+biweekly campaign could plausibly land anywhere from roughly 7% to 13%
 reconstruction error depending purely on which day it started, while daily
 and every-other-day sampling keep nearly every draw in a tight band near
 the mean. This is the concrete, quantified reason the intensive
