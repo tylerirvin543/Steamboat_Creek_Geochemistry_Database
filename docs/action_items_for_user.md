@@ -99,6 +99,33 @@ A depth within about 3 ft of a log, with the same casing size, is a good match; 
 have changed since drilling, so do not use it to match. Record the result in `Well_Identity_Leads.status`
 (confirmed or rejected) and the measurements in `Wells` for SBW_0003. Give me the numbers and I will update the database.
 
+### Field task: find where the resort discharge goes, and measure it
+
+Goal: put a real number on the resort's pumped discharge so it can be separated from natural spring and
+seep inflow in the SBRR-SBBV chloride budget (`docs/resort_discharge_budget_notes.md`). Until then the
+resort share is only a sensitivity range (about 1-17% of the thermal inflow for 1-10 L/s; historical
+60 gpm average = 6.7%, 155 gpm peak = 17.3%).
+
+1. **Find the discharge location.** Walk the tank overflow and drain from the resort holding tanks
+   (the bright pads at the SBW_0002 logger in the thermal image) to where the water leaves the property or
+   enters the creek or a ditch. GPS the overflow, any culvert or drain, and the point of entry to the creek.
+   Note whether it flows continuously, or only when the air-lift pump runs. This also tells us whether the
+   long straight bright line in the thermal image is a drain or a road edge.
+2. **Ask the resort** (and check the NDWR Permit Search by owner: Towne, Steamboat Hot Springs, current owner)
+   for the pump capacity, the typical hours it runs, and any permitted rate or annual duty.
+3. **Real-time measurement, if you want a measured number.** At the overflow, take a timed bucket or
+   container fill (volume / seconds) or a portable flow meter, with temperature and field conductivity
+   at the same time. Repeat once while the pump is running and once after it has stopped, since the
+   discharge is intermittent. Sample for chloride once so the resort's chloride flux is measured directly.
+4. **Optional, only if the difference matters:** the pumped resort water versus natural spring and seep
+   capture along the creek. If you want that difference, add a conductivity and chloride sample just
+   above and just below the resort's creek entry point on the same day. Those two points, plus the
+   overflow measurement, would let the Cl-conductivity creek calibration be corrected for the resort
+   input. If you only care about total thermal inflow, skip this step.
+
+Give me the GPS points, flow, temperature, conductivity and chloride, and I will add them to the
+discharge-budget notes and update the table.
+
 ### B. Decisions for you
 
 1. **Jeppson**: I linked log 17004 (121 ft, Collar's water-level well) to the NDEP
@@ -1061,3 +1088,21 @@ Report names: **IMR1** = UNEV 2007204 IMR Jan-June 2025.pdf; **IMR2** = UNEV2007
 - Sorey & Colvard (1992) has **no** chloride for Boyd, Jeppson or Rogers: Table 3 lists Boyd with chloride "nm", and Jeppson and Rogers appear only in the Table 10 monitoring list. Boyd water levels (Fig. 23) were digitized (about +/-1 ft) onto a new provisional well, "Boyd well (Sorey & Colvard 1992, Fig. 23)", which is 110 ft deep and is NOT matched to the NDEP Boyd Domestic Well (56 ft). Jeppson and Rogers baselines still need another source.
 - Sorey's Herz-2 (Fig. 26) matches the Skalbeck Herz Geothermal series (Cl 325-380 mg/L, depth to water about 51 ft), so Herz-2 = Herz Geothermal (high confidence by series match). Herz Deep (NDEP) is still a different, unmatched well.
 - Leapfrog: `chemistry_intervals_*.csv` and `water_levels.csv` now exist. Of 31 wells with chemistry, 6 have a screen interval and only 3 also have a collar (elevation missing for the rest). Adding elevations (for example from USGS 3DEP) would place most of the rest.
+
+
+## Added 2026-11-08 (permit file, Lindsey chemistry, thermal imagery)
+1. **Confirm or reject the 13 held permit rows** (`data/derived/nbmg_steamboat_well_matching.csv`, review_flag starts with HOLD): 87-29 and 23-33 are ~10 km from our points (likely a coordinate error in one source); 83B-6 (1.4 km), 46-28-2 (0.8 km), 34-32 (0.7 km), 21B-5, 14-33, 16-28, GS-2, GS-8, Obs Well 2.
+2. **Alias candidates (not written):** permit 0298 (36-28) is recorded as "PW-2-4, IW-6"; permits 0288/0289/0290/0291 (16-28, 26-28, 25-28-2, 25-28-1) were Steamboat Development Corporation wells 1-16, 2-16, 3-25, 4-25.
+3. **Apply or reject** the four elevation/coordinate proposals in `data/derived/well_elevation_coordinate_proposals.csv` (83B-6R, 83C-6ST1, 13-5R, STMGID MW1).
+4. **NAD83-labelled permit rows:** NDOM, not the NBMG ArcGIS layer, is right for 41-5 and 21-32; our stored coordinates for those two came from ArcGIS and are probably ~200 m off.
+5. **Thermal imagery:** the PDF carries no georeference. Provide 3+ control points (pixel position plus lon/lat) in `data/raw/arcgis/thermal_infrared/tir_control_points.csv`, or ask Cary Lindsey for the radiometric GeoTIFF, then run `run_tir_polygons(con)`. Survey dates assumed 7-8 July 2025 (zoom-in); cutoffs 20/30/40 C.
+6. **Lindsey chemistry:** ask for delta-18O/delta-D, sample temperatures and exact dates for SBG001/SBG002 (isotopes not entered; Fig. 8 not digitized).
+
+## 20. Proposal items for you (2026-11-08)
+
+1. Fill in the courses-and-credits table (`tbl-credits` in `manuscript/00_thesis_proposal.qmd`, section 'Program of study') and confirm the course numbers.
+2. Supply or adapt figure slots F1, F3, F4, F5, F7 and F8 (see `tbl-figslots` and `docs/proposal_overview_and_micander_crosswalk.md`).
+3. Confirm whether logger A009 sits where the July 2025 resort-tank logger in Lindsey and others sat; the 2025 trace reads about 10 C cooler.
+4. Decide whether to approach Christopher Kratt about resistivity lines (needs property permission) and whether to approach Ormat.
+5. Ask NBMG (Cary Lindsey, Owen Callahan) for the flight date of `thermalmap_lowersinterter.tif`, the six TGCP surface-temperature readings, and the single-band temperature raster.
+6. The resort's pumping rate and water-right records are still the number that sets its share of the thermal inflow (1.8 percent at 1 L/s to 17.7 percent at 10 L/s); see the field task in section 0.

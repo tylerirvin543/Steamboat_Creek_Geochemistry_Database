@@ -1,1 +1,5 @@
-well_id,well_name,current_latitude,current_longitude,coordinate_source,satellite_check_status,suggested_latitude,suggested_longitude,reviewed_by,reviewed_date,notes
+"well_id","well_name","current_latitude","current_longitude","coordinate_source","satellite_check_status","suggested_latitude","suggested_longitude","reviewed_by","reviewed_date","notes"
+NA,"34-32","39.3832301343289","-119.765354349134","ndom_permit_data","not_checked",NA,NA,"user decision 2026-11-08","2026-11-08","moved from NBMG ArcGIS (39.38046, -119.75974)"
+NA,"41-5","39.3739789938087","-119.763805146777","ndom_permit_data","not_checked",NA,NA,"user decision 2026-11-08","2026-11-08","moved from NBMG ArcGIS (39.37526, -119.76480)"
+NA,"21-32","39.3882146267067","-119.767513234198","ndom_permit_data","not_checked",NA,NA,"user decision 2026-11-08","2026-11-08","moved from NBMG ArcGIS (39.38993, -119.76858)"
+NA,"83C-6ST1","39.37132","-119.7726","parent_pad_83A-6_83B-6R","not_checked",NA,NA,"user decision 2026-11-08","2026-11-08","moved from NDOM (39.37149, -119.77245)"

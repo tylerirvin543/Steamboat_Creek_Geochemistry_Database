@@ -458,6 +458,18 @@ happen:
    isolation.
 
 
+## What the thermal map implies for the chloride and heat budgets
+
+The thermal map and the chloride balance answer different questions. The map says where heat reaches the surface and over how much ground; the balance says how much thermal water the creek receives. Area is not discharge: the resort tanks hold 23 percent of the hot area but would carry only 2 to 18 percent of the chloride, because hot tank surfaces and pipes shed heat from a small volume of water, while diffuse inflow along the creek moves more water through cooler ground. The map is therefore most useful as a guide to which sources to measure, and wherever a source's flow is measured its share can be subtracted from the 58.65 L/s to leave the natural discharge.
+
+The surface hot ground is a small part of the heat budget. The 480 m^2^ of polygons loses an estimated 0.2-0.4 MW to the air, against 11-28 MW carried above creek temperature by the thermal inflow, so the surface accounts for roughly 1-3 percent. A creek energy balance on 1 May 2026 implies the thermal water entered at about 77 degrees Celsius (73-81), close to the temperatures measured in the resort tank and at the terrace features, which supports the chloride-based discharge and its end-member assumption. These are exploratory, order-of-magnitude checks resting on one date, on a ramp that saturates at 44 degrees Celsius, and on an unconfirmed flight date for the thermal map; they are not a heat budget.
+
+## Resort pumping, the creek signal, and what to ask collaborators
+
+The resort tank record shows daily operation through September 2026, with the same cycle in each month and no weekday-only pattern, so the 1989 schedule Collar described does not describe the current well. The tank ran about 1 degree Celsius cooler in September with larger swings, which fits cooler nights or less hot inflow, not a different schedule. The creek does not show the resort cycle clearly: the daily conductance difference between SBGG and SBRR is only about 4 percent of the mean difference, and the hour-by-hour correlation with the tank is 0.07. The pumping rate itself is still unknown, and it is the number that sets the resort's share (1.8 percent at 1 L/s to 17.7 percent at 10 L/s).
+
+The next steps that follow are practical. Walk the resort overflow and measure its flow, temperature, conductivity and chloride, with creek samples above and below its entry point, and retrieve the resort's water-right and pumping records. Ask Phil Busick and Gene Savoy for the history and logs of the Lower Terrace wells and the capped pipe. If the owners agree, ask Christopher Kratt (UNR) to run resistivity lines across the fissure zone and along the creek corridor, which would give the Leapfrog model fault and cap geometry between wells. Ask Ormat only for what bears on the Lower Terrace, and repeat the calibrated thermal flights each season, so that the 488 m^2^ baseline becomes a change metric.
+
 ## Closing
 
 This proposal argues that Steamboat's thermal-water chemistry has not

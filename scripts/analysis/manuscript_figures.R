@@ -624,5 +624,9 @@ build_manuscript_figures <- function(con) {
   build_conductivity_timeseries_figure(con)
   source("scripts/analysis/lst_phreeqc_illustration_figures.R")
   build_lst_phreeqc_illustration_figures(con)
+  # Thermal map overlays and the A009 resort-tank profile (needs Thermal_Areas; see
+  # scripts/analysis/thermal_tif_polygons.R and thermal_overlay_maps.R).
+  tryCatch({ source("scripts/analysis/thermal_overlay_maps.R"); build_thermal_overlay_maps(con) },
+           error = function(e) warning("thermal overlay maps skipped: ", conditionMessage(e)))
   invisible(TRUE)
 }

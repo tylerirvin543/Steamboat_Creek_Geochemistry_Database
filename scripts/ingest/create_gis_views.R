@@ -42,6 +42,17 @@ create_gis_views <- function(con) {
     latitude,
     longitude,
     elevation_m,
+    -- feature_group: well class of a linked Wells row (Wells.location_id), else the site_type
+    COALESCE((SELECT CASE
+      WHEN w.well_use = 'eruption_pipe' THEN 'eruption_pipe'
+      WHEN w.well_use = 'resort_spa' THEN 'resort_spa'
+      WHEN w.well_use = 'abandoned_unmarked' OR w.well_status_std IN ('plugged_abandoned','abandoned_unplugged') THEN 'abandoned'
+      WHEN w.well_use = 'production' THEN 'production'
+      WHEN w.well_use = 'injection' THEN 'injection'
+      WHEN w.well_use IN ('observation','thermal_gradient','stratigraphic_test') THEN 'monitoring'
+      WHEN w.well_use = 'domestic' THEN 'domestic'
+      WHEN w.well_use = 'historical_exploration' THEN 'historical_exploration'
+      END FROM Wells w WHERE w.location_id = Locations.location_id ORDER BY w.well_id LIMIT 1), site_type) AS feature_group,
     'POINT(' || longitude || ' ' || latitude || ')' AS geom_wkt
   FROM Locations
   WHERE latitude IS NOT NULL

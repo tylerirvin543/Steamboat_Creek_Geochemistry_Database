@@ -29,3 +29,8 @@ drop a column constraint via `ALTER TABLE`).
 | `15_well_deviation_surveys_schema.R` | `Well_Deviation_Surveys` (self-seeds 4 real rows for well 83C-6ST1 from Akerley et al. 2021). |
 | `lab_analyte_map.R` | Not a schema file -- the raw-lab-parameter-name -> standard-analyte-code mapping table (`charge`, `molar_mass`, `phreeqc_name`, `conversion_factor` per analyte) used by `ingest_lab.R` and `build_phreeqc_solutions()`. |
 | `ndep_analyte_map.R` | Same role as `lab_analyte_map.R`, specific to NDEP's own raw parameter-name conventions (`CHARACTERISTICNAME`), including the CaCO3-vs-HCO3-basis `conversion_factor` fix from Session 15. |
+
+
+| 28_well_classes_schema.R | `Wells.well_use`, `Wells.well_status_std` (fill-only seeding) |
+| 29_nbmg_compilation_schema.R | `NBMG_Compilation_Records` staging of the NBMG permit compilation |
+| 30_thermal_areas_schema.R | `Thermal_Areas` threshold polygons (empty until imagery is georeferenced) |

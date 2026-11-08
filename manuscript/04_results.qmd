@@ -623,6 +623,189 @@ hand-flagged row exactly, while also catching a short relaunch dip
 and the full width of the 2026-10-10 retrieval excursion that a
 simple point-outlier check would have missed on its own.
 
+## The thermal layer, the Lower Terrace sources, and the resort's share of the thermal inflow
+
+**Data and method.** The thermal map used here is a georeferenced layout export
+of the 2025 survey (O. Callahan, NBMG, unpublished imagery), in NAD83 / UTM zone 11N
+(EPSG:26911), 16,907 by 4,477 pixels at about 0.17 by 0.10 m. A semi-transparent
+temperature layer lies over a hillshade, with analyst annotations (yellow ellipses
+and 13.5 m circles, outlines) drawn into the pixels. Each pixel was matched to the
+nearest color of the 7-44 degree Celsius ramp in the calibrated legend (the TIFF has
+no legend of its own, so the same stretch is assumed), keeping pixels within a fixed
+color distance of the ramp and excluding the annotation colors. The mask was closed
+over about 0.5 m, because the layer is speckled at pixel scale, and polygonized into
+the database table `Thermal_Areas`. The ramp saturates at 44 degrees Celsius.
+
+**How much surface is hot.** A pixel-by-pixel count gives 488 m^2^ at or above 30
+degrees Celsius; the 67 polygons total 480 m^2^ (@tbl-thermalareas). Grouped by the source
+each polygon marks (@tbl-thermalsources and @fig-thermalsources), the Lower Terrace channel
+holds the most (161 m^2^, 34 percent), followed by the resort tanks, pipe and pavement
+(109 m^2^, 23 percent), the fissure zone (99 m^2^, 21 percent) and the creek-corridor springs
+and seeps (49 m^2^, 10 percent, spread over 17 small polygons along the creek). A 13 m^2^
+streak at the end of the resort pipe line is uncertain, and the annotated 13.5 m circles
+(34 m^2^) are ambiguous. The annotation ellipses are an analyst's judgment, not a verified
+geothermal boundary, and a pixel at 30 degrees Celsius is not necessarily geothermal.
+
+| Class | Polygons | Area at or above 30 C (m^2^) |
+|---------------------------------|---------|------------------|
+| Inside the 10 large ellipses (geothermal anomalies) | 29 | 321 |
+| Resort infrastructure (tanks, pipe, pavement) | 12 | 109 |
+| Inside the 13.5 m circles (ambiguous) | 10 | 34 |
+| Outside every outline | 14 | 12 |
+| Other small | 2 | 3 |
+
+: Polygons at or above 30 degrees Celsius from the georeferenced thermal map, by class. {#tbl-thermalareas}
+
+| Source | Polygons | Area (m^2^) | Share | Mean temperature (C) |
+|----------------------------|---------|---------|--------|--------------|
+| Lower Terrace channel (northwest-southeast) | 5 | 161 | 34% | 40.2 |
+| Resort tanks, pipe and pavement | 12 | 109 | 23% | 42.4 |
+| Fissure zone (Fissures 42-44) | 4 | 99 | 21% | 40.0 |
+| Creek-corridor springs and seeps | 17 | 49 | 10% | 36.9 |
+| Annotated 13.5 m circles (ambiguous) | 10 | 34 | 7% | 38.3 |
+| Streak at the pipe end near the resort (uncertain) | 3 | 13 | 3% | 36.2 |
+| Outside every outline | 16 | 15 | 3% | 39.7 |
+
+: Area at or above 30 C by source (polygon area; mean temperature is area-weighted, and the ramp saturates at 44 C). {#tbl-thermalsources}
+
+```{r fig-thermalsources}
+#| echo: false
+#| fig-cap: "Area at or above 30 degrees Celsius by source. Left: the terrace and creek corridor in EPSG:26911, with polygons drawn 4 m wider for visibility and colored by source. Right: area by source."
+#| fig-alt: "Map of the terrace with colored polygon outlines beside a bar chart of hot area for each source: channel, resort, fissure zone, creek springs, circles, pipe-end streak and other."
+knitr::include_graphics("../output/figures/manuscript/thermal_area_attribution.png")
+```
+
+**Alignment with mapped structure.** About 35 percent of the hot area lies within 5 m
+of a mapped fissure and 61 percent within 15 m; 42 percent lies within 15 m of a mapped
+fault. The hot streak of the fissure zone lies 0.8-1.6 m from mapped Fissures 42, 43
+and 44, and within 5-7 m of White's historical "closed fissure 25" and "spring 25s"
+[@white1968c], so features White recorded in the 1960s are thermally active again
+along the same traces. The streak follows the trend of the Low Terrace Fault, and the
+resort tanks sit about 8 m from the same fault. That alignment is a hypothesis, since
+fault traces carry digitizing uncertainty, but it would fit White's observation that
+discharge from the spa wells affected springs on the low terrace [@collar1990thesis;
+@sorey1992]. Only 7 of the 53 mapped fissure traces have 1 m^2^ or more at or above 30
+degrees Celsius within 3 m; the layer name marks them as closed, and what "closed"
+means has not been confirmed.
+
+```{r fig-map-fissure}
+#| echo: false
+#| fig-cap: "Fissure zone in a common coordinate system (EPSG:26911): thermal map with polygons at or above 30 degrees Celsius (colored by class), mapped fissures (white), faults (dashed blue), the project's points (cyan), temperature loggers (green triangles), NV26-1 (magenta), and historical White and Collar features (yellow diamonds)."
+#| fig-alt: "Map of the fissure zone showing a hot streak lying along mapped fissures with SBF_0001, SBF_0002, SBW_0003 and NV26-1 clustered on it and historical spring names along it."
+knitr::include_graphics("../output/figures/manuscript/map_fissure_zone.png")
+```
+
+**Checking our own points against the layer.** Overlaying the points showed that the
+stored position of SBF_0001 was about 50 m from the hot streak although its logger read
+up to 88 degrees Celsius, and that SBW_0003 (the capped eruption pipe) had only a
+provisional position. Positions placed in ArcGIS on the imagery now replace them:
+SBF_0001 (moved about 50 m), SBF_0002 (4 m), SBW_0003 (61 m), SBS_0002 (141 m) and
+SBO_00006 (3 m, set to the same spring area). The four fumarole and pipe points and
+the NV26-1 gas-sample position now fall within 0.2-3.4 m of a hot pixel and about 1 m
+of Fissure 42, and SBS_0002 within 1.5 m. Loggers at SBS_0006, SBS_0001, SBW_0002 and
+SBF_0002 were already within about 1-2 m of hot pixels and SBW_0001 within 4 m.
+SBS_0003 sits where the surface shows no thermal anomaly, and SBS_0004, destroyed, is
+off the thermal map. Seven of the project's points lie within 10 m of a White or Collar
+feature and now carry nine such names as aliases, among them the SBF_0001 and SBF_0002 fumaroles
+renamed 25ss" and "spring 25ss"), SBO_00017 and SBO_00018 (spring 45), SBO_00020
+(spring 46), SBO_00015 (spring 44e) and SBO_00011 (spring 50n), now carry those names as
+aliases; the matches rest on proximity, not on a field-confirmed identity.
+
+**The resort's contribution.** The A009 logger sits 7 m from the bright tank pads, so
+the pads are the resort tanks (@fig-map-resort). Resort infrastructure accounts for 109
+m^2^ (23 percent) of the area at or above 30 degrees Celsius, and the tank-adjacent
+patches hold about 205 m^2^ at or above 20 degrees Celsius, about half of it at or above
+30. No continuous path at or above 20 degrees Celsius connects the tanks to the creek:
+the long diagonal band beside them, probably a road, ditch or paved edge, reads 15-20
+and the creek 13-15 degrees Celsius, so any discharge band is cooler than the threshold
+and cannot be separated from pavement and water. The route of the discharge is therefore
+not mapped, and a field walk of the overflow is planned.
+
+```{r fig-map-resort}
+#| echo: false
+#| fig-cap: "Resort tanks (SBW_0002 and logger A009) and the south-west anomaly cluster in EPSG:26911, with the same layers as the previous map. Resort infrastructure polygons are red."
+#| fig-alt: "Map of the resort tank area showing bright tank pads with a pipe line, a diagonal warm band beside them, and a separate hot channel to the southwest."
+knitr::include_graphics("../output/figures/manuscript/map_resort_sw_cluster.png")
+```
+
+The chloride budget bounds the resort's share. On 1 May 2026 the creek chloride fluxes
+between SBRR and SBBV differ by 48.1 g/s, which at the 820 mg/L thermal end-member is a
+thermal inflow of 58.65 L/s, and the resort tank sample of the same day carried 849 mg/L.
+Any resort water that reaches the creek between the two stations is counted in that
+inflow. The pumping rate is not known, so @tbl-resortshare gives the share for a range of
+rates, including the historical spa-well rates: an average of 60 gpm and a peak of 155 gpm
+in 1945-52 [@white1968c; @collar1990thesis], about 60 gpm at its peak in 1989
+[@collar1990thesis; @sorey1992], and 30 gpm from the 1985 driller's test, which is a test
+yield and not an operating rate.
+
+| Resort discharge reaching the creek | Chloride flux (g/s) | Share of 58.65 L/s | Remainder (L/s) |
+|-------------------------------|-----------|-----------|-----------|
+| 0.5 L/s | 0.42 | 0.9% | 58.1 |
+| 1.0 L/s | 0.85 | 1.8% | 57.6 |
+| 1.9 L/s (30 gpm, 1985 test) | 1.61 | 3.3% | 56.7 |
+| 3.8 L/s (60 gpm, historical average) | 3.21 | 6.7% | 54.7 |
+| 5 L/s | 4.25 | 8.8% | 53.5 |
+| 9.8 L/s (155 gpm, historical peak) | 8.30 | 17.3% | 48.5 |
+| 10 L/s | 8.49 | 17.7% | 48.3 |
+| 20 L/s | 16.98 | 35.3% | 38.0 |
+
+: Share of the 1 May 2026 thermal inflow that would be resort water, by discharge rate (resort tank chloride 849 mg/L; thermal end-member 820 mg/L). {#tbl-resortshare}
+
+The A009 record shows how the resort operates now. Over 95 complete days from April to
+September 2026 the tank temperature follows a smooth daily cycle: it cools from midnight
+to a sharp minimum near 09:00, warms through the day, and plateaus near 75.9 degrees
+Celsius from about 18:00 to midnight (@fig-a009). Variability between 5-minute readings is
+0.2-0.3 degrees Celsius at every hour, so there is no pump-pulse signature, and weekdays
+and weekends differ little (daily range 2.4 versus 3.1 degrees Celsius; p = 0.11 to 0.44
+across the measures tested). Weekends show the same daytime warming, so operation is
+daily, not the weekday-only pattern Collar recorded in 1989 [@collar1990thesis]. Because
+air temperature cannot reheat a 75 degree tank, the warming phase is read as hot inflow,
+and the tank is warming or at its plateau about 58 percent of the day (about 14 hours).
+That fraction is an inference from the heat balance, not a flow measurement; scaled by
+the historical rates it would put the time-averaged resort share at roughly 2 to 10 percent
+of the thermal inflow.
+
+```{r fig-a009}
+#| echo: false
+#| fig-cap: "Mean temperature of the resort holding tank (logger A009) by hour of day, April to September 2026, for weekdays and weekends."
+#| fig-alt: "Line plot of tank temperature falling from midnight to a minimum near 9 AM, rising through the day, and flattening in the evening, with weekday and weekend curves close together."
+knitr::include_graphics("../output/figures/manuscript/a009_hourly_profile.png")
+```
+
+**What the thermal estimate does to the chloride and heat budgets.** The thermal map and the chloride balance measure different things: the map says where heat reaches the surface and over how much ground, and the balance says how much thermal water the creek receives. They connect in three ways. First, attribution: area is not discharge. The resort tanks hold 23 percent of the hot area but would carry 2 to 18 percent of the chloride (@tbl-resortshare), because hot tank surfaces and pipes shed heat from a small volume of water, while diffuse inflow along the creek moves more water through cooler ground. The map therefore says which sources to measure, and where a source's flow is measured its share is subtracted from the 58.65 L/s and the rest is natural discharge. Second, heat: the 480 m^2^ of polygons loses an estimated 0.2-0.4 MW to the air (@tbl-heatbudget), against 11-28 MW carried above creek temperature by 58.65 L/s of water at 60-130 degrees Celsius, so surface hot ground is only about 1-3 percent of the heat. The heat budget is dominated by water leaving through the subsurface toward the creek, which the surface map cannot see and the chloride balance can. Third, a creek energy balance on 1 May 2026 (SBRR 15.2 degrees Celsius at 0.317 m^3^/s, SBBV 23.7 at 0.425) implies a total inflow of 108 L/s at about 49 degrees Celsius. If 58.65 L/s of that is thermal water and the rest is at 10-20 degrees Celsius, the thermal water entered at about 77 degrees Celsius (73-81), close to the 75 degree resort tank and the 65-72 degree terrace features. That is a consistency check on the chloride-based discharge and the end-member assumption, not a heat budget: it rests on one date and instantaneous thermometer readings and neglects heat lost to the air, so it is a lower bound.
+
+| Quantity (columns follow the order of the values listed) | Low | Mid | High |
+|----------------------------------|--------|--------|--------|
+| Surface heat loss from polygons at or above 30 C, MW (convective coefficient 10, 15, 25 W/m^2^/K) | 0.23 | 0.30 | 0.44 |
+| Heat carried above creek temperature by the thermal inflow, MW (thermal water at 60, 90, 130 C) | 10.98 | 18.34 | 28.15 |
+| Surface loss as a share of the heat carried, % (60, 90, 130 C) | 2.7 | 1.6 | 1.1 |
+| Implied temperature of the thermal inflow, C (non-thermal inflow at 10, 15.2, 20 C) | 81.1 | 76.8 | 72.8 |
+
+: Order-of-magnitude heat estimates. Emissivity 0.95, ambient 10 C, creek water 15.2 C, thermal inflow 58.65 L/s. {#tbl-heatbudget}
+
+**Is the resort still pumping on the same schedule?** By month, the A009 daily cycle persists with the same shape. The median hour of the daily minimum runs from about 09:30 in May and 09:25 in July to 09:00 in August and 08:15 in September, and the tank is warming or at its plateau for about half to two-thirds of the day in every month (0.48 to 0.65 of the hourly steps). From August to September the tank runs about 1 degree Celsius cooler (mean 75.4 to 74.8) with larger swings (daily range 2.6 to 3.0), which fits cooler nights or slightly less hot inflow, not a different schedule; the record cannot say which. @fig-resort-curve puts the pumping rate in context: at the historical average of 60 gpm the resort share is 6.7 percent if pumped continuously and 3.9 percent scaled by the 58 percent duty cycle.
+
+Two limits apply. The July 2025 resort-tank trace in Lindsey and others [@lindsey2026] reads 61-68 degrees Celsius with multi-day dips, about 10 degrees cooler and less regular than A009 in 2026, and the loggers may not sit in the same place in the tank, so the 2025 and 2026 schedules cannot be compared directly. And the creek shows little sign of the resort cycle. The hourly conductance difference between SBGG and SBRR has a daily range of about 30 uS/cm, roughly 4 percent of the mean difference of about 740 uS/cm. Its mean daily shape resembles the tank's (r = 0.50 over the 24 hourly means on weekdays and 0.87 on weekends), but hour by hour over 73 overlapping days the correlation is only 0.07. A shared daily driver such as creek temperature or evapotranspiration cannot be excluded, so the resort is not shown to control the creek's conductance difference.
+
+```{r fig-resort-curve}
+#| echo: false
+#| fig-cap: "Share of the 1 May 2026 thermal inflow that would be resort water against the discharge rate while pumping, if pumped continuously and scaled by the A009 duty cycle (58 percent of the day), with the historical spa-well rates marked."
+#| fig-alt: "Two straight lines rising with discharge rate, one for continuous pumping and a lower one scaled by the duty cycle, with dashed vertical lines at 30, 60 and 155 gallons per minute."
+knitr::include_graphics("../output/figures/manuscript/resort_share_curve.png")
+```
+
+**What the thermal layer cannot show.** Lindsey and others tuned the imagery to ground-control
+targets, but this project has not independently checked the exported TIFF against logger
+data: no logger record overlaps the flight windows, and loggers sit in water or fumaroles
+while the camera sees the surface skin. Where the TIFF has temperature data at a logger
+site it reads far below the logger (the resort tank about 43 degrees Celsius, at the ramp's
+cap, against 62-66 in July; SBS_0006 about 14 against 66), as expected for a surface
+measurement with a 44 degree ceiling. The flight date of the TIFF is not recorded, the
+polygons are the area of hot surface and not the area of discharge, and the ellipse and
+circle annotations are an analyst's choices. The GeoPackage export carries the polygons and
+the alias groupings (as points and as lines to the matched historical features) so that all
+of this can be checked against the imagery in ArcGIS.
+
 ## What these results do not yet show
 
 Stated plainly, for scope: a naive chloride-versus-year regression

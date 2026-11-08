@@ -1,0 +1,181 @@
+depth_from_ft,depth_to_ft,description,well_id,source,well_name,formation_unit,basis,status
+0,125,"Sinter, clay",121,27-031-90025,Observation Well No. 1,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+125,320,Andesite,121,27-031-90025,Observation Well No. 1,Tv,lithology_text_mapping,already_loaded
+320,626,Granodiorite,121,27-031-90025,Observation Well No. 1,Kgd,lithology_text_mapping,already_loaded
+0,220,"Sinter, clay, sandstone",123,27-031-90027,Observation Well No. 3,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+220,450,Andesite,123,27-031-90027,Observation Well No. 3,Tv,lithology_text_mapping,already_loaded
+450,966,Granodiorite,123,27-031-90027,Observation Well No. 3,Kgd,lithology_text_mapping,already_loaded
+0,115,Alluvium,124,27-031-90031,Observation Well No. 4,Qal,lithology_text_mapping,already_loaded
+115,165,Sinter,124,27-031-90031,Observation Well No. 4,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+165,635,Andesite,124,27-031-90031,Observation Well No. 4,Tv,lithology_text_mapping,already_loaded
+635,1640,Granodiorite,124,27-031-90031,Observation Well No. 4,Kgd,lithology_text_mapping,already_loaded
+0,40,Opaline sinter,80,27-031-90039,Production Well No. 2,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+40,70,Chalcedonic sinter,80,27-031-90039,Production Well No. 2,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+70,130,Sedimentary deposits,80,27-031-90039,Production Well No. 2,unknown,lithology_text_mapping,already_loaded
+130,221,Chalcedonic sinter,80,27-031-90039,Production Well No. 2,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+221,489,Andesite tuff breccia,80,27-031-90039,Production Well No. 2,Tv,lithology_text_mapping,already_loaded
+489,530,Granodiorite,80,27-031-90039,Production Well No. 2,Kgd,lithology_text_mapping,already_loaded
+350,357,"""Caved material""",292,27-031-90045,Domestic,unknown,lithology_text_mapping,already_loaded
+357,460,fractured shale,292,27-031-90045,Domestic,unknown,lithology_text_mapping,already_loaded
+0,48,volcanics,190,27-031-90051,Cox I-1,Tv,lithology_text_mapping,skipped_existing_lithology
+48,83,siliceous sinter,190,27-031-90051,Cox I-1,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,skipped_existing_lithology
+83,508,granite,190,27-031-90051,Cox I-1,Kgd,lithology_text_mapping_permit_fallback_granite,skipped_existing_lithology
+508,683,quartzite,190,27-031-90051,Cox I-1,AltKgdpKm,lithology_text_mapping,skipped_existing_lithology
+683,3471,granite,190,27-031-90051,Cox I-1,Kgd,lithology_text_mapping_permit_fallback_granite,skipped_existing_lithology
+75,185,Scoria,125,27-031-90052,Well No. 28-32,unknown,lithology_text_mapping,skipped_existing_lithology
+185,3031,Granodiorite,125,27-031-90052,Well No. 28-32,Kgd,lithology_text_mapping,skipped_existing_lithology
+1300,2944,Metasediments,238,27-031-90053,Well No. 32-5,unknown,lithology_text_mapping,skipped_existing_lithology
+0,38,"Cobbles, sand",293,27-031-90054,Domestic,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+38,42,Granite boulders,293,27-031-90054,Domestic,Kgd,lithology_text_mapping_permit_fallback_granite,already_loaded
+42,173,"Cobbles, granodiorite, sands",293,27-031-90054,Domestic,Kgd,lithology_text_mapping,already_loaded
+2275,2410,Meta-sedimentary rock,189,27-031-90080,Well No. 83A-6,unknown,lithology_text_mapping,already_loaded
+2410,2450,Granodiorite,189,27-031-90080,Well No. 83A-6,Kgd,lithology_text_mapping,already_loaded
+2450,2535,Meta-sedimentary rock,189,27-031-90080,Well No. 83A-6,unknown,lithology_text_mapping,already_loaded
+2535,2545,Granodiorite,189,27-031-90080,Well No. 83A-6,Kgd,lithology_text_mapping,already_loaded
+2545,2615,Meta-sedimentary rock,189,27-031-90080,Well No. 83A-6,unknown,lithology_text_mapping,already_loaded
+2615,2630,Granodiorite,189,27-031-90080,Well No. 83A-6,Kgd,lithology_text_mapping,already_loaded
+2630,2670,Meta-sedimentary rock,189,27-031-90080,Well No. 83A-6,unknown,lithology_text_mapping,already_loaded
+2670,2681,Granodiorite,189,27-031-90080,Well No. 83A-6,Kgd,lithology_text_mapping,already_loaded
+1880,1930,Metasediments,94,27-031-90094,Well No. 21-5,unknown,lithology_text_mapping,skipped_existing_lithology
+1930,2000,Granodiorite,94,27-031-90094,Well No. 21-5,Kgd,lithology_text_mapping,skipped_existing_lithology
+2000,2540,Medasediments,94,27-031-90094,Well No. 21-5,unknown,lithology_text_mapping,skipped_existing_lithology
+2540,3073,Granodiorite,94,27-031-90094,Well No. 21-5,Kgd,lithology_text_mapping,skipped_existing_lithology
+50,100,tuff,126,27-031-90110,Well No. 13-5,Tv,lithology_text_mapping,already_loaded
+100,2400,"quartzite, schist, hornfels",126,27-031-90110,Well No. 13-5,AltKgdpKm,lithology_text_mapping,already_loaded
+2400,2450,metatuff,126,27-031-90110,Well No. 13-5,Tv,lithology_text_mapping,already_loaded
+2450,3228,schist and hornfels,126,27-031-90110,Well No. 13-5,AltKgdpKm,lithology_text_mapping,already_loaded
+0,50,"Silicified alluvium, hot springs deposits",127,27-031-90124,Production Well 87-29 (Hot Air Well No. 4),Qal,lithology_text_mapping,already_loaded
+50,240,Volcanics,127,27-031-90124,Production Well 87-29 (Hot Air Well No. 4),Tv,lithology_text_mapping,already_loaded
+240,700,Granodiorite,127,27-031-90124,Production Well 87-29 (Hot Air Well No. 4),Kgd,lithology_text_mapping,already_loaded
+700,729,Fractured granodiorite,127,27-031-90124,Production Well 87-29 (Hot Air Well No. 4),Kgd,lithology_text_mapping,already_loaded
+0,240,"Alluvium, sinter",134,27-031-90141,Well No. 36-28,Qal,lithology_text_mapping,already_loaded
+240,450,Volcanics,134,27-031-90141,Well No. 36-28,Tv,lithology_text_mapping,already_loaded
+450,1059,Granodiorite,134,27-031-90141,Well No. 36-28,Kgd,lithology_text_mapping,already_loaded
+0,100,Alluvium,75,27-031-90142,Well No. 35-28,Qal,lithology_text_mapping,already_loaded
+100,752,Volcanics,75,27-031-90142,Well No. 35-28,Tv,lithology_text_mapping,already_loaded
+752,1797,Granodiorite,75,27-031-90142,Well No. 35-28,Kgd,lithology_text_mapping,already_loaded
+0,65,Alluvium,74,27-031-90143,Well No. 45-28,Qal,lithology_text_mapping,already_loaded
+65,775,Volcanics,74,27-031-90143,Well No. 45-28,Tv,lithology_text_mapping,already_loaded
+775,1506,Granodiorite,74,27-031-90143,Well No. 45-28,Kgd,lithology_text_mapping,already_loaded
+0,140,"Alluvium, sinter",135,27-031-90144,Well No. 37-28-2,Qal,lithology_text_mapping,already_loaded
+140,260,Volcanics,135,27-031-90144,Well No. 37-28-2,Tv,lithology_text_mapping,already_loaded
+260,847,Granodiorite,135,27-031-90144,Well No. 37-28-2,Kgd,lithology_text_mapping,already_loaded
+0,138,"Alluvium, sinter",136,27-031-90149,Well No. 37-28-1,Qal,lithology_text_mapping,already_loaded
+138,300,Volcanics,136,27-031-90149,Well No. 37-28-1,Tv,lithology_text_mapping,already_loaded
+300,1301,Granodiorite,136,27-031-90149,Well No. 37-28-1,Kgd,lithology_text_mapping,already_loaded
+0,178,"Alluvium, sinter",137,27-031-90150,Well No. 47-28,Qal,lithology_text_mapping,already_loaded
+178,370,Volcanics,137,27-031-90150,Well No. 47-28,Tv,lithology_text_mapping,already_loaded
+370,2000,Granodiorite,137,27-031-90150,Well No. 47-28,Kgd,lithology_text_mapping,already_loaded
+0,4,soil and cobbles,298,27-031-90151,Domestic,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+4,157,clay,298,27-031-90151,Domestic,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+157,309,volcanic rock,298,27-031-90151,Domestic,Tv,lithology_text_mapping,already_loaded
+0,100,tuff,93,27-031-90155,Well No. 13-5,Tv,lithology_text_mapping,already_loaded
+100,350,"schist, hornfels, metatuff",93,27-031-90155,Well No. 13-5,Tv,lithology_text_mapping,already_loaded
+350,500,metagraywacke,93,27-031-90155,Well No. 13-5,unknown,lithology_text_mapping,already_loaded
+500,850,"schist, hornfels, metatuff",93,27-031-90155,Well No. 13-5,Tv,lithology_text_mapping,already_loaded
+850,900,metagraywacke,93,27-031-90155,Well No. 13-5,unknown,lithology_text_mapping,already_loaded
+900,1050,"schist, hornfles",93,27-031-90155,Well No. 13-5,AltKgdpKm,lithology_text_mapping,already_loaded
+1050,3228,"quartzite, schist, hornsfels",93,27-031-90155,Well No. 13-5,AltKgdpKm,lithology_text_mapping,already_loaded
+0,18,sand and clay,299,27-031-90170,Well No. 21-33,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+18,31,silica sinter,299,27-031-90170,Well No. 21-33,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+31,710,granodiorite,299,27-031-90170,Well No. 21-33,Kgd,lithology_text_mapping,already_loaded
+0,130,Sinter,139,27-031-90199,Production Well No. 12-21,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+130,355,Andesite tuff breccia,139,27-031-90199,Production Well No. 12-21,Tv,lithology_text_mapping,already_loaded
+355,627,Grtanodiorite,139,27-031-90199,Production Well No. 12-21,unknown,lithology_text_mapping,already_loaded
+0,200,clay and sand,300,27-031-90200,Domestic,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+200,350,pebbly sand,300,27-031-90200,Domestic,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,600,brown sandy clay,301,27-031-90203,Well No. M1,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+600,700,gray sandy clay,301,27-031-90203,Well No. M1,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,105,clay and sand,302,27-031-90212,Domestic Well,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+105,145,gravel,302,27-031-90212,Domestic Well,Qal,lithology_text_mapping,already_loaded
+145,205,sand and clay,302,27-031-90212,Domestic Well,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+205,385,clay,302,27-031-90212,Domestic Well,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+385,405,clay and shale,302,27-031-90212,Domestic Well,unknown,lithology_text_mapping,already_loaded
+405,454,snad and gravel,302,27-031-90212,Domestic Well,Qal,lithology_text_mapping,already_loaded
+0,1427,Cretaceous Granite,303,27-031-90220,Well No. 64-32,Kgd,lithology_text_mapping_permit_fallback_granite,already_loaded
+53,140,lithic tuff,108,27-031-90226,Industrial Injection Well 64A-32,Tv,lithology_text_mapping,already_loaded
+140,1994,granodiorite,108,27-031-90226,Industrial Injection Well 64A-32,Kgd,lithology_text_mapping,already_loaded
+48,140,sinter,142,27-031-90229,Industrial Production Well 38B-28,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+140,672,granodiorite,142,27-031-90229,Industrial Production Well 38B-28,Kgd,lithology_text_mapping,already_loaded
+53,1105,granodiorite,304,27-031-90230,Industrial Injection Well No. 42-32,Kgd,lithology_text_mapping,already_loaded
+31,90,volcaniclastic rock,91,27-031-90232,Industrial Production Well No. 44-32,Tv,lithology_text_mapping,already_loaded
+90,110,granitic wash,91,27-031-90232,Industrial Production Well No. 44-32,unknown,lithology_text_mapping,already_loaded
+110,1116,granodiorite,91,27-031-90232,Industrial Production Well No. 44-32,Kgd,lithology_text_mapping,already_loaded
+30,70,basalt,96,27-031-90037,Industrial Production Well No. 23-5,unknown,lithology_text_mapping,skipped_existing_lithology
+70,2870,metasedimentary rock,96,27-031-90037,Industrial Production Well No. 23-5,unknown,lithology_text_mapping,skipped_existing_lithology
+2870,3022,metavolcanic rock,96,27-031-90037,Industrial Production Well No. 23-5,Tv,lithology_text_mapping,skipped_existing_lithology
+0,10,alluvium,305,27-031-80075,ST-8,Qal,lithology_text_mapping,already_loaded
+10,200,volcanic rock,305,27-031-80075,ST-8,Tv,lithology_text_mapping,already_loaded
+200,1940,weathered metasedimentary rocks,305,27-031-80075,ST-8,unknown,lithology_text_mapping,already_loaded
+0,166,"Pre-Lake Lahontan alluvium, sinter",308,27-031-80001,Rodeo Well,Qal,lithology_text_mapping,already_loaded
+166,282,Granodiorite,308,27-031-80001,Rodeo Well,Kgd,lithology_text_mapping,already_loaded
+0,135,"White, red, and black rock",310,27-031-80011,Test Well,unknown,lithology_text_mapping,already_loaded
+135,300,Clay,310,27-031-80011,Test Well,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,74,Pre-Lake Lahontan alluvium,311,27-031-80012,Harold Herz 1,Qal,lithology_text_mapping,already_loaded
+74,155,Pre-Lousetown alluvium,311,27-031-80012,Harold Herz 1,Qal,lithology_text_mapping,already_loaded
+0,186,clay,314,27-031-80015,Mt. Rose Hot Springs Well,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+186,237,blue rock,314,27-031-80015,Mt. Rose Hot Springs Well,unknown,lithology_text_mapping,already_loaded
+0,75,Pre-Lake Lahontan alluvium,316,27-031-80017,Mt. Rose Well No. 2,Qal,lithology_text_mapping,already_loaded
+75,160,Pre-Lousetown alluvium,316,27-031-80017,Mt. Rose Well No. 2,Qal,lithology_text_mapping,already_loaded
+0,370,"gravel, sand, and silt",236,27-031-80023,ST-5,Qal,lithology_text_mapping,skipped_existing_lithology
+370,1700,granodiorite,236,27-031-80023,ST-5,Kgd,lithology_text_mapping,skipped_existing_lithology
+0,5,alluvium,237,27-031-80024,ST-6,Qal,lithology_text_mapping,skipped_existing_lithology
+5,25,sinter,237,27-031-80024,ST-6,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,skipped_existing_lithology
+25,1990,metasedimentary rock,237,27-031-80024,ST-6,unknown,lithology_text_mapping,skipped_existing_lithology
+0,57,basaltic andesite,248,27-031-80026,ST-13,Tv,lithology_text_mapping,skipped_existing_lithology
+57,110,metamorphosed basalt and tuff,248,27-031-80026,ST-13,Tv,lithology_text_mapping,skipped_existing_lithology
+110,1767,"siltite, quartzite, schist, and metavolcanic rock",248,27-031-80026,ST-13,Tv,lithology_text_mapping,skipped_existing_lithology
+0,68,"Pre-Lake Lahontan alluvium, sinter",324,27-031-80030,Steamboat No. 4,Qal,lithology_text_mapping,already_loaded
+68,225,Pre-Lousetown alluvium,324,27-031-80030,Steamboat No. 4,Qal,lithology_text_mapping,already_loaded
+0,63,"Pre-Lake Lahontan alluvium, sinter",325,27-031-80031,South Steamboat Well,Qal,lithology_text_mapping,already_loaded
+63,275,Pre-Lousetown alluvium,325,27-031-80031,South Steamboat Well,Qal,lithology_text_mapping,already_loaded
+0,9,Pre-Lake Lousetown alluvium,327,27-031-80037,Auger Hole No. 1,Qal,lithology_text_mapping,already_loaded
+0,7,Pre-Lake Lousetown alluvium,328,27-031-80038,Auger Hole No. 2,Qal,lithology_text_mapping,already_loaded
+0,1,Sinter,329,27-031-80039,Auger Hole No. 3,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,8,"Silt, gravel",330,27-031-80040,Auger Hole No. 4,Qal,lithology_text_mapping,already_loaded
+0,9,Gravel,331,27-031-80041,Auger Hole No. 5,Qal,lithology_text_mapping,already_loaded
+0,10,Sinter,332,27-031-80042,Auger Hole No. 6,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,4,Sinter,333,27-031-80043,Auger Hole No. 7,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,2,Sand,334,27-031-80044,Auger Hole No. 8,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+2,6,Gravel,334,27-031-80044,Auger Hole No. 8,Qal,lithology_text_mapping,already_loaded
+6,12,Silt,334,27-031-80044,Auger Hole No. 8,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+12,14,Clay,334,27-031-80044,Auger Hole No. 8,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,14,Clay,335,27-031-80045,Auger Hole No. 9,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,2,Clay,336,27-031-80046,Auger Hole No. 10a,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,4,"Clay, opal",337,27-031-80047,Auger Hole No. 10b,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+0,13,"Clay, sand, gravel",338,27-031-80048,Auger Hole No. 11,Qal,lithology_text_mapping,already_loaded
+0,18,"Clay, sand, gravel",339,27-031-80049,Auger Hole No. 12,Qal,lithology_text_mapping,already_loaded
+0,11,"Clay, sand, gravel",340,27-031-80050,Auger Hole No. 13,Qal,lithology_text_mapping,already_loaded
+0,7,Sinter,254,27-031-80051,GS-1,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+7,13,Pre-Lake Lahontan alluvium,254,27-031-80051,GS-1,Qal,lithology_text_mapping,already_loaded
+13,43,Granodiorite,254,27-031-80051,GS-1,Kgd,lithology_text_mapping,already_loaded
+43,209,Kate Peak Fm.,254,27-031-80051,GS-1,unknown,lithology_text_mapping,already_loaded
+209,399,"Granodiorite, minor Kate Peak Fm",254,27-031-80051,GS-1,Kgd,lithology_text_mapping,already_loaded
+0,51,Pre-Lake Lahontan alluvium,253,27-031-80053,GS-3,Qal,lithology_text_mapping,already_loaded
+51,686,Granodiorite,253,27-031-80053,GS-3,Kgd,lithology_text_mapping,already_loaded
+0,51,Sinter,252,27-031-80054,GS-4,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,already_loaded
+51,149,Pre-Lake Lahontan alluvium,252,27-031-80054,GS-4,Qal,lithology_text_mapping,already_loaded
+149,505,Granodiorite,252,27-031-80054,GS-4,Kgd,lithology_text_mapping,already_loaded
+0,84,Sinter,191,27-031-80055,GS-5,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,skipped_existing_lithology
+84,135,Pre-Lake Lahontan alluvium,191,27-031-80055,GS-5,Qal,lithology_text_mapping,skipped_existing_lithology
+135,154,Kate Peak Fm.,191,27-031-80055,GS-5,unknown,lithology_text_mapping,skipped_existing_lithology
+154,465,Granodiorite,191,27-031-80055,GS-5,Kgd,lithology_text_mapping,skipped_existing_lithology
+465,525,Kate Peak Fm.,191,27-031-80055,GS-5,unknown,lithology_text_mapping,skipped_existing_lithology
+525,546,Alta Fm.,191,27-031-80055,GS-5,unknown,lithology_text_mapping,skipped_existing_lithology
+546,575,"Granodiorite, minor Kate Peak Fm",191,27-031-80055,GS-5,Kgd,lithology_text_mapping,skipped_existing_lithology
+0,50,Sinter,250,27-031-80056,GS-6,Qal,lithology_text_mapping_permit_fallback_unconsolidated_or_sinter,skipped_existing_lithology
+50,91,Pre-Lake Lahontan alluvium,250,27-031-80056,GS-6,Qal,lithology_text_mapping,skipped_existing_lithology
+91,133,Lousetown Fm.,250,27-031-80056,GS-6,unknown,lithology_text_mapping,skipped_existing_lithology
+133,160,Pre-Lousetown alluvium,250,27-031-80056,GS-6,Qal,lithology_text_mapping,skipped_existing_lithology
+160,170,Alta Fm.,250,27-031-80056,GS-6,unknown,lithology_text_mapping,skipped_existing_lithology
+170,177,"Silt, sand, gravel",250,27-031-80056,GS-6,Qal,lithology_text_mapping,skipped_existing_lithology
+177,212,Granodiorite,250,27-031-80056,GS-6,Kgd,lithology_text_mapping,skipped_existing_lithology
+0,253,Granodiorite,249,27-031-80057,GS-7,Kgd,lithology_text_mapping,skipped_existing_lithology
+253,329,Kate Peak Fm.,249,27-031-80057,GS-7,unknown,lithology_text_mapping,skipped_existing_lithology
+329,410,Granodiorite,249,27-031-80057,GS-7,Kgd,lithology_text_mapping,skipped_existing_lithology
+0,160,scoria,351,27-031-80064,ST-3,unknown,lithology_text_mapping,already_loaded
+160,330,basalt,351,27-031-80064,ST-3,unknown,lithology_text_mapping,already_loaded
+330,955,metasedimentary rock,351,27-031-80064,ST-3,unknown,lithology_text_mapping,already_loaded
+955,1790,granodiorite,351,27-031-80064,ST-3,Kgd,lithology_text_mapping,already_loaded
+1790,2930,metasedimentary rock,351,27-031-80064,ST-3,unknown,lithology_text_mapping,already_loaded
+2930,3050,granodiorite,351,27-031-80064,ST-3,Kgd,lithology_text_mapping,already_loaded

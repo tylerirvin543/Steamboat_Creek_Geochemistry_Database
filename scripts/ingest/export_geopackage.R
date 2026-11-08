@@ -183,7 +183,21 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # selectable in ArcGIS without digging through the generic
     # 'locations' layer.
     gas_analyses = "SELECT g.gas_analysis_id, g.sample_label, g.location_id, l.name AS location_name, l.latitude, l.longitude, g.collection_date, g.field_temp_c, g.co2_mol_pct, g.he_mol_pct, g.h2_mol_pct, g.ar_mol_pct, g.o2_mol_pct, g.n2_mol_pct, g.ch4_mol_pct, g.co_mol_pct, g.h2s_mol_pct, g.total_mol_pct, g.data_quality_flag, g.lab, g.collected_by, g.source, g.notes FROM Gas_Analyses g JOIN Locations l ON g.location_id = l.location_id WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL",
-    spring_observations = "SELECT obs_id, spring_id, terrace, obs_date, source_code, status, temperature_c, depth_to_water_ft, depth_basis, flow_lpm, raw_text, location_name, latitude, longitude FROM vw_spring_observations_gis"
+    spring_observations = "SELECT obs_id, spring_id, terrace, obs_date, source_code, status, temperature_c, depth_to_water_ft, depth_basis, flow_lpm, raw_text, location_name, latitude, longitude FROM vw_spring_observations_gis",
+
+    # Temperature-threshold polygons (added 2026-11-08): >=30 C areas from the
+    # georeferenced Callahan thermal map (Thermal_Areas), with the annotation-ring
+    # class parsed from `method`. Polygons are EPSG:4326 here; the source was EPSG:26911.
+    thermal_areas = "SELECT thermal_area_id, feature_key, substr(method, instr(method, 'class = ') + 8) AS class, cutoff_c, ROUND(area_m2, 2) AS area_m2, survey_date, source_file, geom_wkt FROM Thermal_Areas WHERE geom_wkt IS NOT NULL",
+
+    # Alias groupings (added 2026-11-08): one point per canonical Location that has
+    # aliases, with all alias names joined, so the groups can be selected in ArcGIS.
+    location_alias_groups = "SELECT l.location_id, l.name AS canonical_name, l.site_type, COUNT(a.alias_id) AS n_aliases, group_concat(a.alias, '; ') AS aliases, l.latitude, l.longitude FROM Locations l JOIN Location_Aliases a ON a.location_id = l.location_id WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL GROUP BY l.location_id",
+
+    # Lines from each canonical Location to the other Location row(s) whose name equals
+    # one of its aliases (e.g. our SBO_00018 to White's 'spring 45', SBRR to NDEP SB5).
+    # An alias with no matching Location (e.g. NV26-1) has no line. Distance is approximate.
+    location_alias_links = "SELECT c.name AS canonical_name, a.alias, h.name AS linked_location, h.external_station_code AS linked_code, a.alias_type, ROUND(111320 * sqrt(power(c.latitude - h.latitude, 2) + power((c.longitude - h.longitude) * 0.7773, 2)), 1) AS distance_m, 'LINESTRING(' || c.longitude || ' ' || c.latitude || ', ' || h.longitude || ' ' || h.latitude || ')' AS geom_wkt FROM Location_Aliases a JOIN Locations c ON c.location_id = a.location_id JOIN Locations h ON (lower(h.name) = lower(a.alias) OR lower(h.external_station_code) = lower(a.alias)) AND h.location_id != c.location_id WHERE c.latitude IS NOT NULL AND h.latitude IS NOT NULL"
   )
   
   # ============================================================
@@ -191,7 +205,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # ============================================================
   
   requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow",
-                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points", gas_analyses = "Gas_Analyses", spring_observations = "Spring_Observations")
+                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points", gas_analyses = "Gas_Analyses", spring_observations = "Spring_Observations", thermal_areas = "Thermal_Areas", location_alias_groups = "Location_Aliases", location_alias_links = "Location_Aliases")
 
   for (layer_name in names(layers)) {
     

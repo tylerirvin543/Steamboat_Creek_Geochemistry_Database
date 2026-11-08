@@ -42,3 +42,7 @@ raw file.
 - Neither file is committed to git (large, statewide, and not this
   project's own data) — re-download from the ArcGIS Open Data URL
   above if missing after a fresh clone.
+
+
+## Steamboat permit compilation (added 2026-11-08)
+`GEOTHERM06102019.csv` UTM columns are NAD27 zone 11 unless the row says NAD 83 (3 Steamboat rows). `scripts/ingest/ingest_nbmg_compilation.R` stages every Steamboat-area row in `NBMG_Compilation_Records` and adds real wells fill-only; expired/not-permitted permits and project areas stay in staging. See `data/derived/nbmg_steamboat_well_matching.csv` for the match report.

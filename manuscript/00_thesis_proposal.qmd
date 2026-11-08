@@ -124,6 +124,36 @@ show_fig <- function(path, caption, alt, id, width = NULL) {
 }
 ```
 
+# Acknowledgments {.unnumbered}
+
+I thank Rachel Micander (Nevada Bureau of Mines and Geology) first and most. She shared her draft thesis proposal and her term paper on the Steamboat Hills structural framework, and the NBMG field timeline of the 2022-2025 events that anchors the chronology below. The way her proposal is organized (geologic background, guiding questions, methods by data source, work completed to date, and a semester-by-semester plan with a courses-and-credits table) shaped the layout of this one, and her compilations of existing mapping, well data and conceptual models informed the methods that follow. I thank Cary Lindsey (NBMG) for the drone thermal surveys, the logger data and the 2026 poster we wrote together, and Owen Callahan (NBMG) for the thermal imagery. I thank Phil Busick and Gene Savoy (Steamboat Hot Springs Resort) for access to the properties and for their continuing help with the history of the Lower Sinter Terrace, and Keith Hayes (Nevada Division of Minerals) for the permitted-well records. I thank my advisor, Wendy Calvin, and my committee members, Alex Lutz and Jim Faulds, for their guidance.
+
+# Project overview and roadmap {.unnumbered}
+
+**What this thesis does.** In June 2025 a capped pipe at the Lower Sinter Terrace erupted, and discharge has since moved to new vents, springs and seeps across the terrace. The thesis asks whether a continuous specific-conductance record can stand in for chloride in Steamboat Creek, and uses that proxy to ask whether thermal outflow has changed. The Lower Sinter Terrace is where the question is sharpest, so the work is scoped from the fissure outward: first the terrace's own discharge points, then Steamboat Creek, then the regional monitoring network of production, injection, monitoring and domestic wells.
+
+**Guiding questions.**
+
+1. How stable is the chloride-conductivity relationship through time and across site types (RQ1)?
+2. What is the minimum chloride-sampling frequency that keeps a conductivity-based flux estimate defensible (RQ2)?
+3. Is conductance driven by conservative mixing or by reactions that decouple it from chloride (RQ3)?
+4. Has geothermal outflow changed since the eruption (RQ4)?
+5. Where does heat reach the surface at the terrace, which discharge points share a source, and how much of the creek's thermal inflow is pumped resort water?
+
+**Approach, by data source.**
+
+- *Monitoring field.* NDEP chemistry and field forms at the production-side ports and the monitoring and domestic wells, water levels, 11 temperature-logger sites, two conductivity loggers (SBRR upstream, SBGG downstream, since 15 July 2026), and the USGS gauge, all in one relational database.
+- *Lower Sinter Terrace mapping.* A georeferenced thermal map turned into polygons at or above 30 degrees Celsius, mapped fissures and faults, springs and seeps with White and Collar names attached as aliases, and a source-stratified sampling frame.
+- *Chloride-conductivity proxy.* Paired chloride and conductance samples across a full annual cycle, tested against the chloride mass balance, with the Monte Carlo subsampling analysis setting the sampling frequency.
+- *PHREEQC and 1-D mixing models.* Speciation and saturation indices for 404 samples, two-end-member conservative mixing, forward reaction-path titrations, gas geothermometry, and a principal-component analysis of the resulting chemistry.
+- *3-D geologic modeling (bounded extension).* A Leapfrog model of wells, lithology, faults and fissures used to define compartments, mixing pathways and candidate reactions for PHREEQC, not a flow model.
+- *Geophysics, if access allows.* Electrical resistivity lines with Christopher Kratt (UNR), conditional on property permission.
+- *Collaborators and data.* Cary Lindsey, Owen Callahan and Rachel Micander (NBMG); Phil Busick and Gene Savoy for historical Lower Terrace information, logs and access; Ormat for well and operations data if an agreement is possible; NDEP, NDOM and NDWR records.
+
+**Work completed to date.** The database holds 1,600 or more samples and several hundred located wells and springs. PHREEQC speciation is done for 404 samples, with mixing, reaction-path and gas results for the terrace flowpath. Three fissure gas samples have been air-corrected and compared with Mariner and Janik's 1995 gas data. The chloride balance for 1 May 2026 gives 58.65 L/s of thermal inflow. The thermal map gives 488 m^2^ at or above 30 degrees Celsius, attributed to resort infrastructure, the fissure zone, the Lower Terrace channel and creek-corridor springs. The resort tank logger (A009) shows daily operation. Leapfrog input files exist for 110 wells with collars, depths and elevations, and 27 historical well logs from Collar's thesis have been ingested. The Monte Carlo test is run on the real conductance record.
+
+**How the rest of the document is organized.** The Introduction gives the setting, a chronology and the research questions. The Background chapter covers the chemistry the proxy depends on. Previous Work follows the literature from White (1964, 1968) to Lindsey and others (2026). Methods and Plan of Action holds the preliminary results, the sampling plan, the proposed 3-D model and the schedule; the figure slots and the program-of-study table follow it.
+
 # Introduction
 
 ## Study area and setting
@@ -899,6 +929,25 @@ average of 60 L/s, and it concluded that the evidence favored
 redistribution within an existing conduit network over a new source.
 This proposal turns that one-time estimate into a repeatable,
 database-grounded one and tests the conclusion against more data.
+
+The same account carries the thermal-infrared work that this proposal builds on.
+Lindsey and others flew visible-light and thermal drones over the same 67 acres
+of the terrace and creek in July and October 2025, with persistent
+GPS-surveyed ground-control points, and tuned the thermograms against six
+high-emissivity ground-control targets [@lindsey2026]. The calibrated mosaics
+agree with the target temperatures to within 1.3 degrees Celsius (1.0 for the
+low-altitude flight), although a small near-boiling vent reads only 59-78
+degrees Celsius against 80-90 measured, because a centimeter-scale source is
+averaged across a 7 cm pixel, and creek water reads several degrees warmer in
+the mosaics than in the loggers. The surveys identified steaming fissures
+at the eruptive area, warm ground and springs near Steamboat Hot Springs
+Resort, and warm seeps and hot springs along both banks of Steamboat Creek,
+including previously unmarked springs on the east bank (about 60 degrees
+Celsius, confirmed in the field). Differencing the two flights showed a large
+area of warm ground near the resort up to 15 degrees Celsius cooler in
+October than in July. That calibration is what allows this proposal to treat
+the imagery quantitatively; the subsection "The thermal layer and the
+database on one map" below measures it against the project's own points.
 
 | Year | Work | What it established | Use in this proposal |
 |--------|------------------------|------------------------------------|--------------------------------|
@@ -2127,7 +2176,7 @@ digitized layer (turning either image into a real `Fault_Traces`-style
 georeferenced layer (per this project's own established "ArcGIS out, ArcGIS
 back in" workflow, already used for other literature figures) remains a
 concrete next step, not yet done here), but it is now a real, visually
-confirmed observation rather than one based on images shared informally.
+confirmed observation rather than one based on images shared informally. The next subsection puts a georeferenced version of this imagery on the same map as the database points and quantifies it.
 
 ```{r fig-tirbroad}
 #| results: asis
@@ -2255,6 +2304,209 @@ show_fig(
   id = "fig-gasphase"
 )
 ```
+
+## The thermal layer and the database on one map
+
+**Data and method.** The thermal map used here is a georeferenced layout export
+of the 2025 survey (O. Callahan, NBMG, unpublished imagery), in NAD83 / UTM zone 11N
+(EPSG:26911), 16,907 by 4,477 pixels at about 0.17 by 0.10 m. A semi-transparent
+temperature layer lies over a hillshade, with analyst annotations (yellow ellipses
+and 13.5 m circles, outlines) drawn into the pixels. Each pixel was matched to the
+nearest color of the 7-44 degree Celsius ramp in the calibrated legend (the TIFF has
+no legend of its own, so the same stretch is assumed), keeping pixels within a fixed
+color distance of the ramp and excluding the annotation colors. The mask was closed
+over about 0.5 m, because the layer is speckled at pixel scale, and polygonized into
+the database table `Thermal_Areas`. The ramp saturates at 44 degrees Celsius.
+
+**How much surface is hot.** A pixel-by-pixel count gives 488 m^2^ at or above 30
+degrees Celsius; the 67 polygons total 480 m^2^ (@tbl-thermalareas). Grouped by the source
+each polygon marks (@tbl-thermalsources and @fig-thermalsources), the Lower Terrace channel
+holds the most (161 m^2^, 34 percent), followed by the resort tanks, pipe and pavement
+(109 m^2^, 23 percent), the fissure zone (99 m^2^, 21 percent) and the creek-corridor springs
+and seeps (49 m^2^, 10 percent, spread over 17 small polygons along the creek). A 13 m^2^
+streak at the end of the resort pipe line is uncertain, and the annotated 13.5 m circles
+(34 m^2^) are ambiguous. The annotation ellipses are an analyst's judgment, not a verified
+geothermal boundary, and a pixel at 30 degrees Celsius is not necessarily geothermal.
+
+| Class | Polygons | Area at or above 30 C (m^2^) |
+|---------------------------------|---------|------------------|
+| Inside the 10 large ellipses (geothermal anomalies) | 29 | 321 |
+| Resort infrastructure (tanks, pipe, pavement) | 12 | 109 |
+| Inside the 13.5 m circles (ambiguous) | 10 | 34 |
+| Outside every outline | 14 | 12 |
+| Other small | 2 | 3 |
+
+: Polygons at or above 30 degrees Celsius from the georeferenced thermal map, by class. {#tbl-thermalareas}
+
+| Source | Polygons | Area (m^2^) | Share | Mean temperature (C) |
+|----------------------------|---------|---------|--------|--------------|
+| Lower Terrace channel (northwest-southeast) | 5 | 161 | 34% | 40.2 |
+| Resort tanks, pipe and pavement | 12 | 109 | 23% | 42.4 |
+| Fissure zone (Fissures 42-44) | 4 | 99 | 21% | 40.0 |
+| Creek-corridor springs and seeps | 17 | 49 | 10% | 36.9 |
+| Annotated 13.5 m circles (ambiguous) | 10 | 34 | 7% | 38.3 |
+| Streak at the pipe end near the resort (uncertain) | 3 | 13 | 3% | 36.2 |
+| Outside every outline | 16 | 15 | 3% | 39.7 |
+
+: Area at or above 30 C by source (polygon area; mean temperature is area-weighted, and the ramp saturates at 44 C). {#tbl-thermalsources}
+
+```{r fig-thermalsources}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/thermal_area_attribution.png",
+  "Area at or above 30 degrees Celsius by source. Left: the terrace and creek corridor in EPSG:26911, with polygons drawn 4 m wider for visibility and colored by source. Right: area by source.",
+  alt = "Map of the terrace with colored polygon outlines beside a bar chart of hot area for each source: channel, resort, fissure zone, creek springs, circles, pipe-end streak and other.",
+  id = "fig-thermalsources",
+  width = "95%"
+)
+```
+
+**Alignment with mapped structure.** About 35 percent of the hot area lies within 5 m
+of a mapped fissure and 61 percent within 15 m; 42 percent lies within 15 m of a mapped
+fault. The hot streak of the fissure zone lies 0.8-1.6 m from mapped Fissures 42, 43
+and 44, and within 5-7 m of White's historical "closed fissure 25" and "spring 25s"
+[@white1968c], so features White recorded in the 1960s are thermally active again
+along the same traces. The streak follows the trend of the Low Terrace Fault, and the
+resort tanks sit about 8 m from the same fault. That alignment is a hypothesis, since
+fault traces carry digitizing uncertainty, but it would fit White's observation that
+discharge from the spa wells affected springs on the low terrace [@collar1990thesis;
+@sorey1992]. Only 7 of the 53 mapped fissure traces have 1 m^2^ or more at or above 30
+degrees Celsius within 3 m; the layer name marks them as closed, and what "closed"
+means has not been confirmed.
+
+```{r fig-map-fissure}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/map_fissure_zone.png",
+  "Fissure zone in a common coordinate system (EPSG:26911): thermal map with polygons at or above 30 degrees Celsius (colored by class), mapped fissures (white), faults (dashed blue), the project's points (cyan), temperature loggers (green triangles), NV26-1 (magenta), and historical White and Collar features (yellow diamonds).",
+  alt = "Map of the fissure zone showing a hot streak lying along mapped fissures with SBF_0001, SBF_0002, SBW_0003 and NV26-1 clustered on it and historical spring names along it.",
+  id = "fig-map-fissure",
+  width = "80%"
+)
+```
+
+**Checking our own points against the layer.** Overlaying the points showed that the
+stored position of SBF_0001 was about 50 m from the hot streak although its logger read
+up to 88 degrees Celsius, and that SBW_0003 (the capped eruption pipe) had only a
+provisional position. Positions placed in ArcGIS on the imagery now replace them:
+SBF_0001 (moved about 50 m), SBF_0002 (4 m), SBW_0003 (61 m), SBS_0002 (141 m) and
+SBO_00006 (3 m, set to the same spring area). The four fumarole and pipe points and
+the NV26-1 gas-sample position now fall within 0.2-3.4 m of a hot pixel and about 1 m
+of Fissure 42, and SBS_0002 within 1.5 m. Loggers at SBS_0006, SBS_0001, SBW_0002 and
+SBF_0002 were already within about 1-2 m of hot pixels and SBW_0001 within 4 m.
+SBS_0003 sits where the surface shows no thermal anomaly, and SBS_0004, destroyed, is
+off the thermal map. Seven of the project's points lie within 10 m of a White or Collar
+feature and now carry nine such names as aliases, among them the SBF_0001 and SBF_0002 fumaroles
+renamed 25ss" and "spring 25ss"), SBO_00017 and SBO_00018 (spring 45), SBO_00020
+(spring 46), SBO_00015 (spring 44e) and SBO_00011 (spring 50n), now carry those names as
+aliases; the matches rest on proximity, not on a field-confirmed identity.
+
+**The resort's contribution.** The A009 logger sits 7 m from the bright tank pads, so
+the pads are the resort tanks (@fig-map-resort). Resort infrastructure accounts for 109
+m^2^ (23 percent) of the area at or above 30 degrees Celsius, and the tank-adjacent
+patches hold about 205 m^2^ at or above 20 degrees Celsius, about half of it at or above
+30. No continuous path at or above 20 degrees Celsius connects the tanks to the creek:
+the long diagonal band beside them, probably a road, ditch or paved edge, reads 15-20
+and the creek 13-15 degrees Celsius, so any discharge band is cooler than the threshold
+and cannot be separated from pavement and water. The route of the discharge is therefore
+not mapped, and a field walk of the overflow is planned.
+
+```{r fig-map-resort}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/map_resort_sw_cluster.png",
+  "Resort tanks (SBW_0002 and logger A009) and the south-west anomaly cluster in EPSG:26911, with the same layers as the previous map. Resort infrastructure polygons are red.",
+  alt = "Map of the resort tank area showing bright tank pads with a pipe line, a diagonal warm band beside them, and a separate hot channel to the southwest.",
+  id = "fig-map-resort",
+  width = "80%"
+)
+```
+
+The chloride budget bounds the resort's share. On 1 May 2026 the creek chloride fluxes
+between SBRR and SBBV differ by 48.1 g/s, which at the 820 mg/L thermal end-member is a
+thermal inflow of 58.65 L/s, and the resort tank sample of the same day carried 849 mg/L.
+Any resort water that reaches the creek between the two stations is counted in that
+inflow. The pumping rate is not known, so @tbl-resortshare gives the share for a range of
+rates, including the historical spa-well rates: an average of 60 gpm and a peak of 155 gpm
+in 1945-52 [@white1968c; @collar1990thesis], about 60 gpm at its peak in 1989
+[@collar1990thesis; @sorey1992], and 30 gpm from the 1985 driller's test, which is a test
+yield and not an operating rate.
+
+| Resort discharge reaching the creek | Chloride flux (g/s) | Share of 58.65 L/s | Remainder (L/s) |
+|-------------------------------|-----------|-----------|-----------|
+| 0.5 L/s | 0.42 | 0.9% | 58.1 |
+| 1.0 L/s | 0.85 | 1.8% | 57.6 |
+| 1.9 L/s (30 gpm, 1985 test) | 1.61 | 3.3% | 56.7 |
+| 3.8 L/s (60 gpm, historical average) | 3.21 | 6.7% | 54.7 |
+| 5 L/s | 4.25 | 8.8% | 53.5 |
+| 9.8 L/s (155 gpm, historical peak) | 8.30 | 17.3% | 48.5 |
+| 10 L/s | 8.49 | 17.7% | 48.3 |
+| 20 L/s | 16.98 | 35.3% | 38.0 |
+
+: Share of the 1 May 2026 thermal inflow that would be resort water, by discharge rate (resort tank chloride 849 mg/L; thermal end-member 820 mg/L). {#tbl-resortshare}
+
+The A009 record shows how the resort operates now. Over 95 complete days from April to
+September 2026 the tank temperature follows a smooth daily cycle: it cools from midnight
+to a sharp minimum near 09:00, warms through the day, and plateaus near 75.9 degrees
+Celsius from about 18:00 to midnight (@fig-a009). Variability between 5-minute readings is
+0.2-0.3 degrees Celsius at every hour, so there is no pump-pulse signature, and weekdays
+and weekends differ little (daily range 2.4 versus 3.1 degrees Celsius; p = 0.11 to 0.44
+across the measures tested). Weekends show the same daytime warming, so operation is
+daily, not the weekday-only pattern Collar recorded in 1989 [@collar1990thesis]. Because
+air temperature cannot reheat a 75 degree tank, the warming phase is read as hot inflow,
+and the tank is warming or at its plateau about 58 percent of the day (about 14 hours).
+That fraction is an inference from the heat balance, not a flow measurement; scaled by
+the historical rates it would put the time-averaged resort share at roughly 2 to 10 percent
+of the thermal inflow.
+
+```{r fig-a009}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/a009_hourly_profile.png",
+  "Mean temperature of the resort holding tank (logger A009) by hour of day, April to September 2026, for weekdays and weekends.",
+  alt = "Line plot of tank temperature falling from midnight to a minimum near 9 AM, rising through the day, and flattening in the evening, with weekday and weekend curves close together.",
+  id = "fig-a009",
+  width = "60%"
+)
+```
+
+**What the thermal estimate does to the chloride and heat budgets.** The thermal map and the chloride balance measure different things: the map says where heat reaches the surface and over how much ground, and the balance says how much thermal water the creek receives. They connect in three ways. First, attribution: area is not discharge. The resort tanks hold 23 percent of the hot area but would carry 2 to 18 percent of the chloride (@tbl-resortshare), because hot tank surfaces and pipes shed heat from a small volume of water, while diffuse inflow along the creek moves more water through cooler ground. The map therefore says which sources to measure, and where a source's flow is measured its share is subtracted from the 58.65 L/s and the rest is natural discharge. Second, heat: the 480 m^2^ of polygons loses an estimated 0.2-0.4 MW to the air (@tbl-heatbudget), against 11-28 MW carried above creek temperature by 58.65 L/s of water at 60-130 degrees Celsius, so surface hot ground is only about 1-3 percent of the heat. The heat budget is dominated by water leaving through the subsurface toward the creek, which the surface map cannot see and the chloride balance can. Third, a creek energy balance on 1 May 2026 (SBRR 15.2 degrees Celsius at 0.317 m^3^/s, SBBV 23.7 at 0.425) implies a total inflow of 108 L/s at about 49 degrees Celsius. If 58.65 L/s of that is thermal water and the rest is at 10-20 degrees Celsius, the thermal water entered at about 77 degrees Celsius (73-81), close to the 75 degree resort tank and the 65-72 degree terrace features. That is a consistency check on the chloride-based discharge and the end-member assumption, not a heat budget: it rests on one date and instantaneous thermometer readings and neglects heat lost to the air, so it is a lower bound.
+
+| Quantity (columns follow the order of the values listed) | Low | Mid | High |
+|----------------------------------|--------|--------|--------|
+| Surface heat loss from polygons at or above 30 C, MW (convective coefficient 10, 15, 25 W/m^2^/K) | 0.23 | 0.30 | 0.44 |
+| Heat carried above creek temperature by the thermal inflow, MW (thermal water at 60, 90, 130 C) | 10.98 | 18.34 | 28.15 |
+| Surface loss as a share of the heat carried, % (60, 90, 130 C) | 2.7 | 1.6 | 1.1 |
+| Implied temperature of the thermal inflow, C (non-thermal inflow at 10, 15.2, 20 C) | 81.1 | 76.8 | 72.8 |
+
+: Order-of-magnitude heat estimates. Emissivity 0.95, ambient 10 C, creek water 15.2 C, thermal inflow 58.65 L/s. {#tbl-heatbudget}
+
+**Is the resort still pumping on the same schedule?** By month, the A009 daily cycle persists with the same shape. The median hour of the daily minimum runs from about 09:30 in May and 09:25 in July to 09:00 in August and 08:15 in September, and the tank is warming or at its plateau for about half to two-thirds of the day in every month (0.48 to 0.65 of the hourly steps). From August to September the tank runs about 1 degree Celsius cooler (mean 75.4 to 74.8) with larger swings (daily range 2.6 to 3.0), which fits cooler nights or slightly less hot inflow, not a different schedule; the record cannot say which. @fig-resort-curve puts the pumping rate in context: at the historical average of 60 gpm the resort share is 6.7 percent if pumped continuously and 3.9 percent scaled by the 58 percent duty cycle.
+
+Two limits apply. The July 2025 resort-tank trace in Lindsey and others [@lindsey2026] reads 61-68 degrees Celsius with multi-day dips, about 10 degrees cooler and less regular than A009 in 2026, and the loggers may not sit in the same place in the tank, so the 2025 and 2026 schedules cannot be compared directly. And the creek shows little sign of the resort cycle. The hourly conductance difference between SBGG and SBRR has a daily range of about 30 uS/cm, roughly 4 percent of the mean difference of about 740 uS/cm. Its mean daily shape resembles the tank's (r = 0.50 over the 24 hourly means on weekdays and 0.87 on weekends), but hour by hour over 73 overlapping days the correlation is only 0.07. A shared daily driver such as creek temperature or evapotranspiration cannot be excluded, so the resort is not shown to control the creek's conductance difference.
+
+```{r fig-resort-curve}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/resort_share_curve.png",
+  "Share of the 1 May 2026 thermal inflow that would be resort water against the discharge rate while pumping, if pumped continuously and scaled by the A009 duty cycle (58 percent of the day), with the historical spa-well rates marked.",
+  alt = "Two straight lines rising with discharge rate, one for continuous pumping and a lower one scaled by the duty cycle, with dashed vertical lines at 30, 60 and 155 gallons per minute.",
+  id = "fig-resort-curve",
+  width = "70%"
+)
+```
+
+**What the thermal layer cannot show.** Lindsey and others tuned the imagery to ground-control
+targets, but this project has not independently checked the exported TIFF against logger
+data: no logger record overlaps the flight windows, and loggers sit in water or fumaroles
+while the camera sees the surface skin. Where the TIFF has temperature data at a logger
+site it reads far below the logger (the resort tank about 43 degrees Celsius, at the ramp's
+cap, against 62-66 in July; SBS_0006 about 14 against 66), as expected for a surface
+measurement with a 44 degree ceiling. The flight date of the TIFF is not recorded, the
+polygons are the area of hot surface and not the area of discharge, and the ellipse and
+circle annotations are an analyst's choices. The GeoPackage export carries the polygons and
+the alias groupings (as points and as lines to the matched historical features) so that all
+of this can be checked against the imagery in ArcGIS.
 
 ## A baseline chemical-evolution characterization of the flowpath
 
@@ -2860,9 +3112,75 @@ parameter at the same well, a pattern that cautions against treating any
 single field parameter as a universal proxy for thermal fraction across the
 whole system.
 
+## The sampling plan in depth: calibration pairs, the Monte Carlo design, and Lower Terrace mapping
+
+Sampling serves three purposes in this thesis, and the plan is built so that one visit serves all three: pairing chloride with conductance for the calibration (RQ1), setting how often chloride must be measured (RQ2), and characterizing the discharge points of the Lower Sinter Terrace so that the thermal map can be tied to chemistry (RQ3 and RQ4).
+
+**What the Monte Carlo test establishes, and what it does not.** The test draws 200 random start days for each candidate interval, subsamples the real conductance record at that interval, interpolates between the samples, and compares the reconstruction with the full record (the procedure is given above). @tbl-mcsummary gives the result with air-exposure days removed. Daily and every-other-day sampling reconstruct the record to within about 3-5 percent of its mean; weekly sampling to 7-8 percent, with a worst case near 10 percent; biweekly sampling to 9-10 percent, with a worst case of 12-13 percent. The test covers the concentration signal only, not mass flux, because no discharge record overlaps the loggers, and it is a statement about conductance, not chloride, until the calibration pairs exist. The daily swing in conductance is only 9-12 uS/cm at either station, so time of day matters little for the schedule. The test will be re-run on chloride once paired samples exist, and with discharge once a discharge series overlaps the loggers.
+
+| Sampling interval | SBRR mean (%) | SBRR 95th percentile (%) | SBGG mean (%) | SBGG 95th percentile (%) |
+|-----------------|-----------|-----------|-----------|-----------|
+| Daily | 3.6 | 4.0 | 3.1 | 5.0 |
+| Every other day | 4.3 | 4.8 | 4.1 | 5.0 |
+| Weekly | 6.9 | 7.7 | 7.8 | 9.8 |
+| Biweekly | 9.5 | 12.1 | 8.5 | 13.2 |
+
+: Reconstruction error of the conductance record as a percent of its mean, over 200 random campaigns per interval, with air-exposure days removed. {#tbl-mcsummary}
+
+**Calibration pairs.** The design is an intensive daily-to-sub-daily window followed by monthly sampling across a full annual cycle (@tbl-samplingplan). A reasoned minimum is 15-20 pairs for a stable regression and 30-40 for a seasonally defensible one, and a tier of about 40 analyses is recommended for a one-person thesis. This is a reasoned count, not a power analysis, because no real chloride-conductance pairs exist yet to compute one against. Pairing chloride with the major ions lets the mixing model be checked in the same samples, and about one isotope sample per season at the two creek stations is the only way to separate evaporation from conservative mixing.
+
+**Mapping the Lower Terrace.** @tbl-lstsampling lists proposed sampling by source, with the sources taken from the thermal map. The counts are a starting point to be fitted to the laboratory budget and to site access, and they come in addition to the roughly 40 calibration analyses.
+
+| Source (from the thermal map) | Why | Proposed samples per year | Measurements |
+|-------------------|-----------------------|---------------|---------------------|
+| Fissure zone (SBF_0001, SBF_0002, NV26-1) | Deep-source end-member; gas repeat | 4 water (quarterly), 2 gas | Major ions, boron, lithium, silica, 2 isotope samples; gas composition |
+| Lower Terrace channel (largest anomaly, 161 m^2^) | Whether it shares the fissure's source | 4 (quarterly), access permitting | Major ions, silica, field temperature, pH, conductance |
+| Creek-corridor springs and seeps (17 polygons; SBS_0001, SBS_0002, SBS_0006; springs 45, 46, 44e and 50n by alias) | Diffuse thermal inflow to the creek | 12 (6 springs, 2 seasons) | Chloride, major ions, field parameters |
+| Resort tank and overflow, with the creek above and below the entry point | Resort share of the thermal inflow | 12 (4 dates, 3 points) | Chloride, conductance, temperature, flow |
+| Capped eruption pipe (SBW_0003), if accessible | The 2025 eruption pipe | 2 | Major ions, temperature, water level |
+
+: Proposed Lower Terrace sampling by source, in addition to the calibration analyses. {#tbl-lstsampling}
+
+**Repeat thermal surveys.** The 488 m^2^ at or above 30 degrees Celsius is a baseline. If NBMG can repeat the calibrated drone flights each season, the same pixel-to-polygon method gives a change metric (area by source and season) at no laboratory cost, and a repeat of the October 2025 flight would show whether the creek-corridor springs and the fissure zone are growing, shrinking or moving.
+
+**Decision rules.** After the first full cycle, residuals are compared by season and site type. A single calibration is kept only if its error is acceptable against a threshold set explicitly with the committee (the recommendation script takes the threshold as an input and has no default); otherwise site-specific equations are reported with their uncertainty, as RQ1's deliverable states.
+
+## Proposed extension: a Leapfrog geologic model to inform mixing pathways and reaction paths
+
+Rachel Micander's proposal builds a 3-D structural model in Leapfrog and ArcGIS from well collars, directional surveys, mud logs, well chips, borehole-image logs and geophysical products, to show fluid pathways, structure and the distribution of sinter and other rock below the surface. This proposal borrows that workflow at a smaller scope and for a different purpose. The model is not meant to explain structure or to simulate flow. It gives the chemistry a geometry.
+
+**What the model would do.** It has four jobs. First, compartments: grouping samples by lithology and fault block, so that end-members and mixing pairs are chosen within and across compartments on stated geologic grounds. Second, pathways: giving path lengths and orientations for the 1-D mixing models along the fissure-to-creek flowpath, so that mixing fraction can be plotted against distance. Third, reaction paths: showing which rock the water meets (altered alluvium, volcanics, altered granodiorite, sinter), so that the phases supplied to the PHREEQC reaction-path titration are chosen from the geology and not by trial; the calcium-alkalinity tension at SBS_0001, which no simple phase set resolved, is the open question this targets. Fourth, a check on the chemistry: comparing the principal components of the PHREEQC output by compartment.
+
+**Data on hand.** Collars, depths and elevations for 110 wells (elevations from the 1 m DEM unless a permit or survey value exists); 140 lithology intervals from the NBMG permit compilation and 158 from the 27 well logs in Collar's thesis (86 linked to wells); Skalbeck's cross-sections and 241 point depths to the units Qal, Tv, AltKgdpKm and Kgd; 9 faults, 53 fissure traces and the sinter-terrace outline; and the thermal polygons. All are exported in UTM zone 11N with Z from the DEM. The limits are that every hole is treated as vertical except 83C-6ST1, which has a deviation survey, that lithology quality varies, and that no permeability data exist.
+
+**Workflow.** The database is exported to Leapfrog (fault network, lithologic units, intersections with the wells); compartment labels are written back to the database; the PHREEQC and mixing runs are grouped by compartment; the principal-component analysis is repeated by compartment. The fault traces digitized in ArcGIS are the main dependency, and nine are on file.
+
+**A principal-component analysis of the PHREEQC output.** @fig-phreeqc-pca shows a first version: 381 samples and 17 variables (log activities of the major ions, saturation indices of calcite, aragonite, dolomite, gypsum, anhydrite, halite, quartz and chalcedony, pH and ionic strength). The first component, 49.5 percent of the variance, is salinity: ionic strength, sodium, chloride, sulfate and the halite and gypsum saturation indices. It separates the creek waters from the thermal-influenced wells and outlets. The second, 28.1 percent, is pH and carbonate saturation. The analysis will be repeated with the Leapfrog compartment as the grouping variable and on the terrace flowpath alone.
+
+```{r fig-phreeqc-pca}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/phreeqc_pca.png",
+  "Principal components of the PHREEQC speciation output for 381 samples (17 variables), colored by the database's site type, with variable loadings. The first component is salinity and the second is pH and carbonate saturation.",
+  alt = "Scatter plot of two principal components with creek samples to the left and well and outlet samples to the right, and arrows for ionic strength, sodium, chloride, pH and carbonate saturation indices.",
+  id = "fig-phreeqc-pca",
+  width = "75%"
+)
+```
+
+## Resistivity, collaborators, and data access
+
+**Resistivity.** Christopher Kratt (UNR geophysicist) may be able to run electrical-resistivity lines across the fissure zone, the terrace and the creek if the property owners give permission. Resistivity would add what chemistry and logs cannot: the extent of a conductive, clay-altered cap, the depth of the fissure zone, and the lateral extent of saline water between wells, which would give the Leapfrog model fault and cap geometry in the gaps. White and others carried out resistivity surveys at Steamboat in the 1960s [@white1964b], so the method has precedent at this site. Two lines are proposed as a first step: one across the fissure zone and the Low Terrace Fault, and one along the creek corridor through the resort. Whether this happens depends on access, equipment and schedule, so it is not a deliverable of this proposal.
+
+**Historical Lower Terrace information and logs.** Phil Busick and Gene Savoy hold much of the history of the Lower Sinter Terrace properties. The requests to them are: records and any drilling or construction information for the capped eruption pipe (ten candidate identities are on file); well logs and permits for the resort and spa wells, including NDWR log 26097; water-right and pumping information for the resort well; their observations of when springs and fissures changed; and access for sampling, for a field measurement of the capped pipe, for a walk of the resort overflow, and for any geophysics. Rachel Micander and NBMG hold the 2022-2025 timeline and field observations.
+
+**Ormat.** Following the list in Rachel Micander's proposal (well collars, directional surveys, mud logs, borehole-image logs and geophysical products), a request to Ormat would be limited to what bears on the Lower Terrace: Lower Steamboat production and injection well logs, water levels and pressures. Any release would need an agreement, and nothing in this proposal depends on it.
+
+**Public records.** NDEP (UIC permits, U230 field forms and chemistry; a request for deeper-well water levels is pending), NDOM (permitted-well records) and NDWR (well logs; the resort's water-right records have not yet been retrieved).
+
 ## Geologic and hydraulic context: explicitly out of scope beyond what already exists
 
-Three further steps would eventually let this project's chemistry be tested
+Beyond the bounded Leapfrog model proposed above, three further steps would eventually let this project's chemistry be tested
 against real subsurface structure and real flow paths, rather than inferred
 from chemistry and proximity alone: a digitized fault geometry, a full
 three-dimensional Leapfrog geologic model built on top of it, and a MODFLOW
@@ -2913,21 +3231,13 @@ figure. It requires the paired chloride-and-conductance samples the
 sampling plan above is designed to collect, and cannot be produced from
 the current, unpaired records.
 
-**A monitoring-network map and a thermal-infrared/mapped-feature overlay
-map** both wait on the same real blocker (digitized fault geometry) and are
-described together rather than as two separate commitments. A
-monitoring-network map (production, injection, and monitoring wells over
-mapped structure and lithology) would give the geologic context described
-above a real figure once that geometry exists. A thermal-infrared overlay
-would test whether the current surface thermal signature (two real
-calibrated drone surveys, now on file and already shown above as
-@fig-tirbroad/@fig-tirzoom, closing the earlier "not on disk" gap) lines up
-with historically documented features or has migrated to new ground, by
-overlaying it against three real, already-mappable point layers: the 32
-White/Geyser Society points, the 51 `SBO_*` field-survey points, and any
-other dated field observation with a real coordinate. Neither map is built
-yet; both are concrete, bounded GIS tasks for whoever digitizes the fault
-map next, not open-ended modeling work.
+**A monitoring-network map over mapped structure and lithology** is the one map
+that is not yet built. The thermal-infrared overlay it was once grouped with now exists
+(@fig-map-fissure and @fig-map-resort, built from the georeferenced thermal map, the 53
+mapped fissures, the 9 mapped faults and the project's own points), and the fault and
+fissure traces are in the database. What the monitoring-network map still lacks is
+subsurface lithology for most wells; it is a bounded GIS task once that exists, not an
+open-ended modeling effort.
 
 **A final conceptual model** of the Lower Sinter Terrace system,
 synthesizing the chemical, discharge, and geologic evidence into a single
@@ -2948,6 +3258,24 @@ their EXIF metadata no longer carries a capture date or GPS fix (confirmed
 directly via exiftool, not assumed): both await the same ingestion-pipeline
 promotion once a real coordinate and date are recovered or re-recorded.
 
+
+## Figure slots for the author
+
+Rachel Micander's proposal carries six figures: a regional fault map with the study area outlined, a map of existing 1:24,000 faults with the proposed mapping boundary, a map of existing geologic mapping coverage, a lidar-coverage map, an annotated field panorama, and a correlation chart of map units. Her term paper adds conceptual cross sections and the play-fairway workflow. @tbl-figslots lists the equivalent figures for this thesis, who would make each, and what exists already. Figures marked "slot" are for the author to supply or adapt; the layers behind the Lower Terrace map are already in the GeoPackage.
+
+| Slot | Figure | Source data | Made by | Modeled on | Status |
+|------|-------------------------|-----------------------|-----------|--------------|--------------|
+| F1 | Regional setting: Truckee Meadows, Steamboat Hills and the Walker Lane, with Quaternary faults and the study area outlined | NBMG and USGS fault data, DEM | Author, ArcGIS | Her regional fault map | Slot |
+| F2 | Lower Sinter Terrace map: thermal polygons by source, fissures, faults, springs, wells, loggers and alias links | GeoPackage layers `thermal_areas`, `fissure_traces`, `fault_traces`, `locations`, `location_alias_links` | Author, ArcGIS (layers ready) | Her fault and field-area maps | Draft in @fig-map-fissure and @fig-map-resort |
+| F3 | Conceptual cross section: upflow along the fault zone, outflow to the terrace and creek, the resort well | Dhakal and others, Mariner and Janik, Klein and others, well logs | Author, redrawn from Leapfrog sections | Her Ormat and Mariner and Janik sections | Slot |
+| F4 | Leapfrog 3-D view: wells, lithology, faults and fissures | Leapfrog input files from the database | Author, Leapfrog | Her 3-D model | Slot, inputs ready |
+| F5 | Correlation chart of the geologic units used (Qal, Tv, AltKgdpKm, Kgd, sinter) and their older names | Skalbeck, White and others, Carlson and others | Author, adapted from hers | Her unit correlation chart | Slot |
+| F6 | Data-sources table with resolution: 1 m DEM, 0.17 by 0.10 m thermal map, 7 cm thermal and 2 cm visible drone products, 5-minute loggers | Data sections of this proposal | Assistant | Her lidar quality-level table | Can be built |
+| F7 | Resistivity line map, if access allows | C. Kratt, property maps | Author with C. Kratt | none | Conditional |
+| F8 | Annotated panorama of the terrace naming the features | Author's photographs | Author | Her annotated panorama | Slot |
+| F9 | Data-availability and schedule chart | `data_availability_timeline.png`, schedule table | Assistant | Her semester timeline | Can be built |
+
+: Figure slots for this thesis, modeled on Rachel Micander's figures. {#tbl-figslots}
 
 # Preliminary schedule
 
@@ -2987,6 +3315,21 @@ schedule failure.
 | Nov 2027 | Finalize the geologic-context framework; begin the full thesis-writing push. |
 | Dec 2027 | Complete thesis writing, defend, and submit. |
 
+## Program of study: courses and credits
+
+The table below follows the layout of Rachel Micander's proposal (semester, course credits, seminar, comprehensive exam, thesis credits and a degree total). The entries are for the author to fill in, and the course numbers should be confirmed against the graduate program.
+
+| Semester | Course credits | GEOL 790 (seminar) | GEOL 795 (exam) | GEOL 797 (thesis) | Degree total |
+|-----------------|----------|----------|----------|----------|----------|
+| Fall 2025 | | | | | |
+| Spring 2026 | | | | | |
+| Fall 2026 | | | | | |
+| Spring 2027 | | | | | |
+| Fall 2027 | | | | | |
+| **Total** | | | | | |
+
+: Courses and credits by semester through the planned December 2027 defense (to be completed by the author). {#tbl-credits}
+
 # Expected products
 
 - A real chloride-to-specific-conductance calibration equation, or set of
@@ -3003,6 +3346,7 @@ at Steamboat Hills* (targeting *Geothermics* or *Geothermal Energy*), and
 historical-comparison results above). - A three-dimensional conceptual
 geologic framework for the monitored wells and springs, explicitly scoped
 as context rather than a flow model.
+ - A source-by-source map of surface heat and a resort-share estimate for the Lower Sinter Terrace, and a bounded Leapfrog compartment model used to group the chemistry.
 
 # Conclusion
 

@@ -7,9 +7,22 @@ ingest_isotopes <- function(con) {
   
   message("---- Starting Isotope Ingest ----")
   
-  file <- "data/raw/isotopes/Isotope_Data_Steamboat_05_26.xlsx"
-  
-  iso <- read_excel(file, skip = 2)
+  # Every .xlsx under data/raw/isotopes/ is read; header row is the one containing "Sample #"
+  # (files differ in how many title rows precede it). Rows are combined.
+  iso_files <- list.files("data/raw/isotopes", pattern = "\\.xlsx$", full.names = TRUE)
+  read_iso_file <- function(file) {
+    raw <- suppressMessages(read_excel(file, col_names = FALSE))
+    hdr <- which(apply(raw, 1, function(r) any(trimws(as.character(r)) == "Sample #")))[1]
+    if (is.na(hdr)) { warning("No 'Sample #' header in ", basename(file), "; skipped"); return(NULL) }
+    d <- raw[(hdr + 1):nrow(raw), ]; names(d) <- trimws(as.character(unlist(raw[hdr, ])))
+    d <- d[, !is.na(names(d)) & names(d) != "NA"]
+    d$d18O_raw <- d[["d18OVSMOW (‰)"]]; d$dD_raw <- d[["dDVSMOW (‰)"]]
+    d[["d18OVSMOW (‰)"]] <- suppressWarnings(as.numeric(d$d18O_raw)); d[["dDVSMOW (‰)"]] <- suppressWarnings(as.numeric(d$dD_raw))
+    d$d18O_raw <- NULL; d$dD_raw <- NULL
+    message("  ", basename(file), ": ", sum(!is.na(d[["Sample #"]])), " row(s)")
+    d
+  }
+  iso <- dplyr::bind_rows(lapply(iso_files, read_iso_file))
   
   # --------------------------------------------------
   # CLEAN COLUMNS (ASSUMES ALREADY MATCHED SCHEMA)
@@ -52,6 +65,7 @@ ingest_isotopes <- function(con) {
   FROM Samples
 ") %>%
     mutate(
+      base_code = sub("^LINDSEY2026_([^_]+)_.*$", "\\1", base_code),
       sample_date = ifelse(
         grepl("^\\d{4}-\\d{2}-\\d{2}$", sample_date),
         sample_date,

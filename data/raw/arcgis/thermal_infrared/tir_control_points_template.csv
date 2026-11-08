@@ -1,0 +1,3 @@
+pixel_x,pixel_y,lon,lat,label,note
+# pixel_x/pixel_y: position in the 300 dpi render of fissure_system_zoomin_calibrated_july2025.pdf (3300 x 5100, origin top-left)
+# Add at least 3 (ideally 5+) well-spread points identifiable in both the image and the field (TGCPs, building corners, pipe, fissure vents).

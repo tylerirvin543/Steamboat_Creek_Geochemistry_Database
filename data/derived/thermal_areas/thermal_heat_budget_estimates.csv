@@ -1,0 +1,5 @@
+"item","low","mid","high","assumption"
+"Surface heat loss from polygons at or above 30 C (MW)",0.23,0.3,0.44,"Convective coefficient 10 / 15 / 25 W/m2/K, emissivity 0.95, ambient 10 C, surface = polygon mean temperature (ramp saturates at 44 C, so a lower bound)"
+"Heat carried by the 58.7 L/s thermal inflow above creek temperature (MW), thermal water at 60 / 90 / 130 C",10.98,18.34,28.15,"Creek water 15.2 C; heat capacity 4.18 kJ/kg/K"
+"Implied temperature of the thermal inflow (C), non-thermal inflow at 10 / 15.2 / 20 C",81.09,76.76,72.75,"Energy balance between SBRR (0.317 m3/s, 15.2 C) and SBBV (0.425 m3/s, 23.7 C) on 2026-05-01; total inflow 108 L/s at a mixed 48.8 C; no heat loss to air (so a lower bound)"
+"Surface heat loss as a share of the advected heat (%), mid surface loss over the 60 / 90 / 130 C cases",2.72,1.63,1.06,"Mid convective coefficient (15 W/m2/K)"

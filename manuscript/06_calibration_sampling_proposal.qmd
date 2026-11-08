@@ -138,3 +138,4 @@ requirement.
 - `manuscript/02_geochemical_background.qmd` -- background on why Cl,
   major ions, and isotopes each carry distinct information.
 - `docs/outreach/ormat_data_request.qmd` -- the fissure-access ask.
+- `manuscript/00_thesis_proposal.qmd`, section "The sampling plan in depth: calibration pairs, the Monte Carlo design, and Lower Terrace mapping" -- the same plan inside the proposal, extended with a source-stratified Lower Terrace sampling table built from the thermal map. Keep the two in step when either changes.

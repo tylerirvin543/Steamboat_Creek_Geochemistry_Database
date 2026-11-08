@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE, nbmg_compilation = TRUE, lindsey2026_chemistry = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE, nbmg_compilation = TRUE, lindsey2026_chemistry = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE, collar_spring_observations = FALSE, digitized_features = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE, collar_spring_observations = FALSE, digitized_features = FALSE, nbmg_compilation = FALSE, lindsey2026_chemistry = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -203,6 +203,7 @@ if (is.null(RUN_ANALYSIS$phreeqc_inverse)) RUN_ANALYSIS$phreeqc_inverse <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_reaction_path)) RUN_ANALYSIS$phreeqc_reaction_path <- FALSE
 if (is.null(RUN_ANALYSIS$phreeqc_gas_phase)) RUN_ANALYSIS$phreeqc_gas_phase <- FALSE
 if (is.null(RUN_ANALYSIS$leapfrog_export)) RUN_ANALYSIS$leapfrog_export <- FALSE
+if (is.null(RUN_ANALYSIS$tir_polygons)) RUN_ANALYSIS$tir_polygons <- FALSE
 if (is.null(RUN_ANALYSIS$facies_clusters)) RUN_ANALYSIS$facies_clusters <- FALSE
 if (is.null(RUN_ANALYSIS$aquifer_classification)) RUN_ANALYSIS$aquifer_classification <- FALSE
 if (is.null(RUN_ANALYSIS$diagnostic_figures)) RUN_ANALYSIS$diagnostic_figures <- FALSE
@@ -241,6 +242,8 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     earthquakes = "USGS regional earthquake catalog",
     collar_spring_observations = "Collar (1990) Appendix A hot-spring observations (1977-1988)",
     digitized_features = "Digitized fissure lines and sinter/study-area polygons (ArcGIS)",
+    nbmg_compilation = "NBMG permit/well compilation (Steamboat rows): staging + new wells, fill-only",
+    lindsey2026_chemistry = "Lindsey et al. (2026) Table 5 samples (pipe on SBW_0003, runoff on SBF_0001) + comparison with our samples",
     fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)",
     injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)",
     fischer_gas = "Fischer/Ruprecht UCSB fissure gas samples (NV26-1/2/3, April 2026)",
@@ -254,6 +257,7 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     phreeqc_reaction_path = "Real forward PHREEQC REACTION-path titrations from .../reaction_path_config.csv",
     phreeqc_gas_phase = "Real PHREEQC gas-phase runs from .../gas_phase_config.csv",
     leapfrog_export = "Export well collar/survey/interval/lithology CSVs for Leapfrog",
+    tir_polygons = "Thermal-infrared threshold polygons (local metres; placed on the map only with tir_control_points.csv)",
     facies_clusters = "Persist hydrochemical facies clustering to the database",
     aquifer_classification = "Derive Wells.aquifer_type from real barometric efficiency",
     diagnostic_figures = "Re-save facies/mixing/SI diagnostic PNGs from current data",
@@ -325,6 +329,9 @@ source("database/schema/24_fix_field_temperature_units_schema.R")
 source("database/schema/25_spring_observations_schema.R")
 source("database/schema/26_well_identity_leads_schema.R")
 source("database/schema/27_digitized_features_schema.R")
+source("database/schema/28_well_classes_schema.R")
+source("database/schema/29_nbmg_compilation_schema.R")
+source("database/schema/30_thermal_areas_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
@@ -429,6 +436,9 @@ source("database/schema/24_fix_field_temperature_units_schema.R")
 source("database/schema/25_spring_observations_schema.R")
 source("database/schema/26_well_identity_leads_schema.R")
 source("database/schema/27_digitized_features_schema.R")
+source("database/schema/28_well_classes_schema.R")
+source("database/schema/29_nbmg_compilation_schema.R")
+source("database/schema/30_thermal_areas_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 }
 
@@ -498,6 +508,15 @@ run_step(RUN_INGEST$ndep, "LOCATION ALIASES (SBRR/SB5/SB6/STBT02Steamboat-2a)", 
   # data/raw/locations/location_aliases.csv.
   source("scripts/ingest/register_location_aliases.R")
   register_location_aliases(con)
+})
+
+run_step(RUN_INGEST$ndep, "LOCATION COORDINATE CORRECTIONS", {
+  # Re-applies human-reviewed coordinate corrections (e.g. SBF_0001, moved onto
+  # the thermal-imagery fissure streak at the NV26-1 GPS fix) after field ingest
+  # re-creates the original coordinate. Guarded and idempotent. See
+  # data/raw/field/location_coordinate_corrections.csv.
+  source("scripts/ingest/apply_location_coordinate_corrections.R")
+  apply_location_coordinate_corrections(con)
 })
 
 run_step(TRUE, "LOCATION/WELL COORDINATE-PROXIMITY AUDIT", {
@@ -701,6 +720,24 @@ run_step(RUN_INGEST$digitized_features, "DIGITIZED FISSURES AND POLYGONS (ARCGIS
   # Fissure lines and sinter polygons digitized in ArcGIS; each source layer replaces its rows if it changed.
   source("scripts/ingest/ingest_digitized_features.R")
   ingest_digitized_features(con)
+})
+
+run_step(RUN_INGEST$nbmg_compilation, "NBMG PERMIT COMPILATION (STEAMBOAT WELLS)", {
+  # Staging of every Steamboat-area permit row; real wells added fill-only; permit-only rows stay staged.
+  source("scripts/ingest/ingest_nbmg_compilation.R")
+  ingest_nbmg_compilation(con)
+  source("scripts/ingest/ingest_nbmg_lithology.R")
+  ingest_nbmg_lithology(con)
+  source("scripts/ingest/annotate_sbw0003_geyser_lead.R")
+  annotate_sbw0003_geyser_lead(con)
+  source("database/schema/28_well_classes_schema.R")
+})
+
+run_step(RUN_INGEST$lindsey2026_chemistry, "LINDSEY ET AL. (2026) CHEMISTRY", {
+  source("scripts/ingest/ingest_lindsey2026_chemistry.R")
+  ingest_lindsey2026_chemistry(con)
+  source("scripts/analysis/lindsey2026_vs_field_comparison.R")
+  lindsey_vs_field(con)
 })
 # 2026-09-06 bug fix: this run_step() call was previously left nested
 # *inside* the "DHAKAL WELL/PORT FLOW NETWORK" run_step() block above
@@ -1405,6 +1442,11 @@ create_gis_views(con)
 
 message("\n[EXPORT] Writing GeoPackage")
 export_geopackage(con, mode = MODE)
+
+run_step(RUN_ANALYSIS$tir_polygons, "THERMAL-INFRARED THRESHOLD POLYGONS", {
+  source("scripts/analysis/thermal_threshold_polygons.R")
+  run_tir_polygons(con)
+})
 
 run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   # Optional, separate export of well collar/survey/completion-interval

@@ -121,6 +121,18 @@ WHERE hydraulic_head IS NOT NULL
     CASE WHEN EXISTS (
       SELECT 1 FROM Well_Work_Events e WHERE e.well_id = w.well_id AND e.work_type = 'abandonment'
     ) THEN 'plugged_abandoned' ELSE w.well_role END AS display_status,
+    w.well_use,
+    w.well_status_std,
+    CASE
+      WHEN w.well_use = 'eruption_pipe' THEN 'eruption_pipe'
+      WHEN w.well_use = 'resort_spa' THEN 'resort_spa'
+      WHEN w.well_use = 'abandoned_unmarked' OR w.well_status_std IN ('plugged_abandoned','abandoned_unplugged') THEN 'abandoned'
+      WHEN w.well_use = 'production' THEN 'production'
+      WHEN w.well_use = 'injection' THEN 'injection'
+      WHEN w.well_use IN ('observation','thermal_gradient','stratigraphic_test') THEN 'monitoring'
+      WHEN w.well_use = 'domestic' THEN 'domestic'
+      WHEN w.well_use = 'historical_exploration' THEN 'historical_exploration'
+      ELSE 'unknown' END AS feature_group,
     'POINT(' || w.longitude || ' ' || w.latitude || ')' AS geom_wkt
   FROM Wells w
   WHERE w.latitude IS NOT NULL AND w.longitude IS NOT NULL
