@@ -182,7 +182,8 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     # composition (mol%, air-fraction diagnostic) is directly
     # selectable in ArcGIS without digging through the generic
     # 'locations' layer.
-    gas_analyses = "SELECT g.gas_analysis_id, g.sample_label, g.location_id, l.name AS location_name, l.latitude, l.longitude, g.collection_date, g.field_temp_c, g.co2_mol_pct, g.he_mol_pct, g.h2_mol_pct, g.ar_mol_pct, g.o2_mol_pct, g.n2_mol_pct, g.ch4_mol_pct, g.co_mol_pct, g.h2s_mol_pct, g.total_mol_pct, g.data_quality_flag, g.lab, g.collected_by, g.source, g.notes FROM Gas_Analyses g JOIN Locations l ON g.location_id = l.location_id WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL"
+    gas_analyses = "SELECT g.gas_analysis_id, g.sample_label, g.location_id, l.name AS location_name, l.latitude, l.longitude, g.collection_date, g.field_temp_c, g.co2_mol_pct, g.he_mol_pct, g.h2_mol_pct, g.ar_mol_pct, g.o2_mol_pct, g.n2_mol_pct, g.ch4_mol_pct, g.co_mol_pct, g.h2s_mol_pct, g.total_mol_pct, g.data_quality_flag, g.lab, g.collected_by, g.source, g.notes FROM Gas_Analyses g JOIN Locations l ON g.location_id = l.location_id WHERE l.latitude IS NOT NULL AND l.longitude IS NOT NULL",
+    spring_observations = "SELECT obs_id, spring_id, terrace, obs_date, source_code, status, temperature_c, depth_to_water_ft, depth_basis, flow_lpm, raw_text, location_name, latitude, longitude FROM vw_spring_observations_gis"
   )
   
   # ============================================================
@@ -190,7 +191,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
   # ============================================================
   
   requires_table <- list(sample_flow = "sample_flux", temp_flow = "temp_flow",
-                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points", gas_analyses = "Gas_Analyses")
+                          well_log_documents = "Well_Log_Documents", well_work_events = "Well_Work_Events", facies_clusters = "Facies_Cluster_Assignments", geophysical_depth_points = "Geophysical_Depth_Model_Points", gas_analyses = "Gas_Analyses", spring_observations = "Spring_Observations")
 
   for (layer_name in names(layers)) {
     
@@ -270,6 +271,44 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     }, error = function(e) {
       warning("[EXPORT] facility_areas export failed -> ", e$message)
     })
+  }
+
+  message("\n[EXPORT] Processing: fault_traces")
+  if (!("Fault_Traces" %in% dbListTables(con))) {
+    message("[EXPORT] Fault_Traces table does not exist yet -- skipping.")
+  } else {
+    tryCatch({
+      ft_df <- dbGetQuery(con, "SELECT fault_id, fault_name, fault_type, confidence, dip_direction, digitizing_uncertainty_m, source, notes, geom_wkt FROM Fault_Traces")
+      if (nrow(ft_df) == 0) {
+        message("[EXPORT] No fault traces to write")
+      } else {
+        ft_sf <- st_as_sf(ft_df, wkt = "geom_wkt", crs = 4326)
+        st_write(ft_sf, gpkg_path, layer = "fault_traces", delete_layer = TRUE, quiet = TRUE)
+        message("[EXPORT] \u2705 fault_traces (", nrow(ft_sf), " rows)")
+      }
+    }, error = function(e) {
+      warning("[EXPORT] fault_traces export failed -> ", e$message)
+    })
+  }
+
+  if ("Fissure_Traces" %in% dbListTables(con)) {
+    tryCatch({
+      d <- dbGetQuery(con, "SELECT fissure_id, fissure_name, status_label, length_m, digitizing_uncertainty_m, source_layer, notes, geom_wkt FROM Fissure_Traces")
+      if (nrow(d) > 0) {
+        x <- st_as_sf(d, wkt = "geom_wkt", crs = 4326); st_write(x, gpkg_path, layer = "fissure_traces", delete_layer = TRUE, quiet = TRUE)
+        message("[EXPORT] \u2705 fissure_traces (", nrow(x), " rows)")
+      }
+    }, error = function(e) warning("[EXPORT] fissure_traces export failed -> ", e$message))
+  }
+
+  if ("Mapped_Polygons" %in% dbListTables(con)) {
+    tryCatch({
+      d <- dbGetQuery(con, "SELECT polygon_id, polygon_name, feature_type, area_m2, digitizing_uncertainty_m, source_layer, geom_wkt FROM Mapped_Polygons")
+      if (nrow(d) > 0) {
+        x <- st_as_sf(d, wkt = "geom_wkt", crs = 4326); st_write(x, gpkg_path, layer = "mapped_polygons", delete_layer = TRUE, quiet = TRUE)
+        message("[EXPORT] \u2705 mapped_polygons (", nrow(x), " rows)")
+      }
+    }, error = function(e) warning("[EXPORT] mapped_polygons export failed -> ", e$message))
   }
 
   message("\n[EXPORT] Processing: source_arcgis_power_plant_locations / source_arcgis_wells_dhakal")

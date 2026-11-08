@@ -3,7 +3,153 @@
 A personal working checklist of things that need *your* action — field
 work, external data requests, ArcGIS digitizing, or a judgment call —
 rather than more pipeline code. Not part of the rendered website or
-report. Updated 2026-09-25/26.
+report. Updated 2026-09-25/26; priorities and discrepancy items rewritten 2026-10-30.
+
+## 0. Current priorities (rewritten 2026-10-30)
+
+Replaces the older "pending your judgment" lists in item 3. Items 1-2 and 4-18
+below are still valid unless crossed out here.
+
+### A. ArcGIS work, in suggested order
+
+1. ~~**Ingest your new Plate 3 / Plate 1 points**~~ **Done 2026-10-30.** 21 new Locations (Low Terrace
+   springs 25, 25s, 25ss, 26, 26nw, 30/30n/30s, 31/31n/31s, 32e, 32se, 44, 44e, 44ne, 50n; wells 47,
+   32 "Well" and the abandoned well). Spring 54 was compared with the White-sheet point (12 m, kept).
+   The 1977 observation from Collar Appendix A is in each spring's notes. `current 2026 Steamboat well`
+   is the SBW_0002 wellhead: the Wells row now sits at the wellhead, while the SBW_0002 Location and
+   logger stay at the spa tank. Still open: wells 47 and 32 and the abandoned well have no depth or identity.
+
+2. **Pairs on Plate 3** (Boyd, Rogers, Jeppson, MacKay): the plate uses one dot
+   symbol, so which dot is which cannot be read off the map. Collar's hydrographs
+   (Figs 74-78) give the roles by depth: MacKay 300 ft = chemistry, 110 ft = water
+   level; Jeppson 87 ft pumped = chemistry, 121 ft = water level; Rogers 300 ft
+   pumped = chemistry (the water-level well has no log); Boyd 68 ft = water level
+   (the chemistry well is a pumped well with no log in the appendix). If you know the
+   field layout, label each dot (`role`, `depth_ft`) in the spreadsheet; otherwise
+   field-check by depth or by which well has a pump.
+3. **Georeference Collar Plate 1** (spring locations). It carries every spring
+   number used in Appendix A (~115 IDs, ~1,590 dated observations, 1977-1988). Only 13
+   IDs have a coordinate, covering 46% of the observation lines. Springs 4, 6, 8, 11,
+   12, 16, 42, 50, 53, 54 already have coordinates and make good control points. Main
+   Terrace springs with many observations and no coordinate: 10, 23n, 39, 24, 40, 41s,
+   13, 7, 2, 3, 43. Then I can parse Appendix A into a spring-observation table.
+4. **Lines and polygons** (see the layer table below).
+5. **Collar Plate 4** (stream gauging stations): georeference so the other 62 Table 4
+   stations can be ingested for the chloride plot.
+
+### Which lines and polygons to save, and how
+
+Yes, save them, one layer per feature type, in `data/raw/arcgis/<layer>/`. Any CRS is
+fine (the ingest reprojects to EPSG:4326). Keep these fields on every layer so nothing
+has to be guessed later: `name`, `type`, `source` (plate/figure/field date),
+`confidence`, `uncertainty_m`, `date_digitized`, plus a stable `feature_id`.
+
+| Layer | Geometry | Source | Table today | Notes |
+|---|---|---|---|---|
+| faults | line | Collar Plate 3, White 1964 Pl. 1, Dhakal Fig. 1 | `Fault_Traces` (ingest ready) | Keep solid/dashed/dotted distinct as `mapped_fault_inferred`, `mapped_fault_concealed`, `air_photo_lineament`. A plain "located" fault has no type value yet; I will add one. Record dip where the plate shows it (MacKay fault has an 80 degree dip tick). |
+| fissures | line | Busick sketch map (2025-06-06), TIR imagery, your field traces | none yet | Needs a small new table (active, dry, inactive, date observed). Save it anyway. |
+| thermal areas | polygon | TIR thresholds, steaming ground, sinter surface | `Alteration_Zones` is the nearest fit; a `Thermal_Areas` table is cleaner | Record the temperature threshold or date used to draw each outline. |
+| sinter / surface geology | polygon | Collar Plate 2 (Qs, Qal, Qat, granodiorite, metamorphics), White 1964 Pl. 1 | none yet | Most useful for Leapfrog as a surface geology map; also bounds the sinter that the springs sit on. |
+| springs, seeps, wells | point | Plates 1 and 3 | `Locations` / `Wells` (ingest ready) | Keep going. |
+| stream stations | point | Plate 4 | `Locations` | After georeferencing. |
+
+### Using ArcGIS Field Maps to confirm in the field
+
+That workflow is sound. Suggestions so the check is measurable instead of overwriting history:
+
+- Keep two layers: a frozen `plate_digitized` layer (never edited) and a `field_verified`
+  layer where you move or add points. The distance between them is then the real error of
+  the plate, and my comparison CSV can report it per feature (as it already does for
+  `data/derived/collar_plate3_coordinate_comparison.csv`).
+- Give every feature the same `feature_id` in both layers, and add `gps_accuracy_m`,
+  `device`, `date_visited` and `status` (confirmed, moved, not found, new).
+- Use coded-value domains for `type` and `confidence` so entries stay consistent.
+- Phone GPS is typically 5-10 m; Plate 3 is good to a few tens of meters. Treat field points
+  within about 30 m of a plate point as confirmations, not moves.
+- Record the RMS error of each plate georeference (Plate 3 used a first-order polynomial).
+- Export the field layer back to a shapefile or GeoPackage in `data/raw/arcgis/` when done.
+
+### Field task: measure the capped eruption pipe (SBW_0003)
+
+Goal: identify the pipe that erupted next to the fissure in June 2025 by matching it to one of the
+candidate records in `Well_Identity_Leads` (10 candidates; leading lead is Boyd well 1962, log 8188).
+Do this when the cap can be opened safely (the pipe discharged boiling water; check temperature first).
+
+Measure and record, with the date and time:
+
+1. **Position**: GPS point at the pipe (note the accuracy) and a photo with a scale. Replaces the provisional point at the fissure (+/-100 m).
+2. **Casing**: outside diameter with calipers or a tape around the pipe (divide the circumference by pi), and inside diameter if the cap is off; material (steel or PVC); height of the top above ground.
+3. **Depth to bottom**: weighted tape or a weighted line with a temperature sensor. Note the reference point (top of casing) and the length of stick-up so the depth can be converted to depth below ground.
+4. **Water level**: electric tape or a chalked tape, from the same reference point, plus the temperature of the water at the top. Repeat once after 10 minutes to see whether it is rising or falling.
+5. **Perforations or screen**, if a camera or a tape can find a change in diameter or obstruction (the Boyd log has perforations at 32-52 ft).
+6. **Any tag, stamp, or paint** on the casing, and any note from the owner about who drilled it and when.
+
+How the numbers match a lead:
+
+| Result | Points to |
+|---|---|
+| 6 in casing, bottom near 56 ft (17 m), perforations 32-52 ft | Boyd 1962 (log 8188) |
+| 6 in casing, bottom near 48 ft (14.6 m) | Towne 5711 (1958) |
+| bottom near 43 ft (13 m), hot, old steel casing | NBMG No. 32 Geyser Well (1945) |
+| 6 in casing, bottom near 40 ft (12 m) | Towne 10940 (1970) |
+| bottom near 74 ft (22.6 m) | Towne 5713 (1958) |
+| none of these | an undocumented well; keep the measurements as the well's own record |
+
+A depth within about 3 ft of a log, with the same casing size, is a good match; static water level will
+have changed since drilling, so do not use it to match. Record the result in `Well_Identity_Leads.status`
+(confirmed or rejected) and the measurements in `Wells` for SBW_0003. Give me the numbers and I will update the database.
+
+### B. Decisions for you
+
+1. **Jeppson**: I linked log 17004 (121 ft, Collar's water-level well) to the NDEP
+   Jeppson well because its coordinate is nearest. Collar's pumped chemistry well is log
+   8023 (87 ft), and the NDEP tap is probably the pumped well. Switch to 8023? Neither
+   matches the 60 ft in the well-data table.
+2. **Boyd**: the NDEP Boyd Location (from log 8188, 1962, 56 ft) is about 1.3 km from the
+   Plate 3 Boyd points and from the NBMG point, which sit near the 1955 well (68 ft). Which
+   well did NDEP actually sample?
+3. **Coordinate disagreements** between Plate 3 and existing points
+   (`collar_plate3_coordinate_comparison.csv`): Curti Domestic 1.17 km (existing point is
+   NDWR/PLSS based, so I lean toward Plate 3), Peigh Domestic 731 m, Cox I-1 506 m,
+   OW-2 296 m, Herz Domestic 239 m, spa well 152 m. Pick which to trust, or confirm in
+   the field.
+4. **Left as stored by your decision**: Pine Tree Ranch-2 screen (open bottom on the figure)
+   and the Peigh Pool screen.
+5. **Herz Geothermal = Herz 2** (matched by series): merge the two well rows so chemistry
+   sits on one hole.
+
+### C. Data checks
+
+- Herz Deep Cl = 1500 mg/L on 2025-11-21 looks like an OCR error (B is 38, as usual). Check
+  the scan; it is excluded from the Cl-B figure.
+- Herz Domestic conductivity of 9,933 uS/cm on 2025-10-24 (item 4b).
+- Field conductivity (~360) versus lab TDS (~2,200) at the outlets implies a ~10x scale
+  difference; check the units.
+- Spring 25ss temperature is unreadable in the OCR of Appendix A; read it from the page.
+- Appendix A OCR variants: `3ln`/`3ls` are 31n/31s, `4ls` is 41s.
+
+### D. Leapfrog export: what still blocks a clean import
+
+- No total depth: Boyd and SBW_0001 (their chemistry is in `chemistry_unplaced.csv`).
+- No coordinate: about 15 older chemistry wells (GS-series, Herz Geothermal, Flame,
+  Pine Tree Ranch-1 until placed, NDOT, Herz Deep and others).
+- Strat 2 and strat 9 have a coordinate but no depth.
+- Only 6 of 31 chemistry wells have a real screen interval; the rest are drawn open to
+  total depth and flagged. 154 of 155 holes are assumed vertical.
+- Some Skalbeck-era depths may still be in meters (Curti, Herz Geothermal, Pine Tree
+  Ranch-1, Flame).
+- Faults, fissures and surface geology (section A) would add the structural context.
+
+### E. Resolved since the older lists (no action unless you disagree)
+
+- ~~Jeppson and Rogers had no well record~~: registered, and Collar logs 17004 and 20142 linked (Jeppson link under review above).
+- ~~SBW_0002 had no depth~~: 260 ft from the spa-well log, per your judgment.
+- ~~Herz-2 ambiguous~~: matched to the Skalbeck Herz Geothermal series; Plate 3 gives Herz 1 and Herz 2 coordinates.
+- ~~MacKay, Woods, Bianco, Lavender, Otten, Towne located only by section centroid~~: replaced with Plate 3 points; elevations refreshed from 3DEP.
+- ~~Strat wells, GS-2/3/4/7/8, E/W Reno, PW-1, Pine Tree Ranch 1-2, Flame had no coordinate~~: filled from Plate 3.
+- ~~Wells without elevation~~: 3DEP elevations added; collar-ready wells went from about 110 to 173.
+- ~~Collar Appendix B logs~~: all ingested.
+- ~~Collar Appendix A (springs through time) not parsed~~: **done 2026-10-30.** 1,714 observations from 148 dated visits (Jun 1977 - Apr 1988), 101 spring IDs, in `Spring_Observations`; 770 observations at 30 IDs are linked to a spring location (`vw_spring_observations_gis`, GeoPackage layer `spring_observations`). Still unlocated: Main Terrace springs 10, 24, 23n, 39, 40, 41s, 13, 7, 2, 3, 43, 14 and others (see `data/derived/collar_appendixA_spring_coverage.csv`). Collar Appendix C (hydrographs) is still not digitized.
 
 ## 1. NDEP data requests (what / where / when)
 
@@ -56,6 +202,11 @@ or a follow-up is due, the concrete asks are:
 
 ## 2. Fault digitization (you mentioned this is next)
 
+**Update 2026-11-07: first fault layer ingested.** Your `Fault_Traces_Dhakal` layer (9 traces, 11 features with 2 empty; faults mainly at the Lower Sinter Terrace, from Dhakal et al.'s fault figure) was read from `Steamboat.gdb`, copied to `data/raw/arcgis/faults/Fault_Traces_Dhakal.gpkg`, and ingested into `Fault_Traces` with its confidence class (Observed / Approximate / Inferred). The 1 m DEM is copied to `data/raw/dem/`. Leapfrog files: `output/leapfrog/fault_traces.csv` (vertices with Z from the DEM) and `topography_dem_5m.tif`. The GeoPackage has a `fault_traces` layer.
+Still to do for faults: set `fault_type` where you know it (mapped, concealed, lineament), fill `dip_dir` where known, and add the Collar Plate 3 lineaments. A 200 m digitizing uncertainty is assumed for all traces; edit it if you trust some more.
+**Update 2026-11-07 (later):** the 53 closed-fissure lines, 8 sinter-mound and 14 sinter-ridge polygons, the sinter-terrace outline and the study-area rectangle from `Steamboat.gdb` are now ingested (`Fissure_Traces`, `Mapped_Polygons`) and exported for Leapfrog with Z from the DEM. The fissure layer name says 'closed'; tell me what that means (sealed, healed, inactive) so the status can be stored properly.
+
+
 - Recommended source: **Collar & Huntley (1990) Figure 1** — a real
   fault + air-photo-lineament map with ~10 already-coordinated wells
   visible on it, making it easier to georeference than the Dhakal flow
@@ -90,25 +241,14 @@ or a follow-up is due, the concrete asks are:
   review: the long-known 146403/Gerlach case (confirmed not a Steamboat
   well, no action needed) and log 80672 ("Greg Street Well" candidate,
   4.5 km away — flagged "keep unresolved," not a real match).
-- **Herz-2**: still ambiguous between two NBMG "Harold Herz Geothermal
-  Well 1/2" candidates ~1.3 km apart — Sorey & Colvard's own Table 3 OCR
-  for this well is garbled across multiple rows and couldn't be
-  disentangled from the text alone.
-- **PTR-1/PTR-2, STMGID MW-3/MW-4**: no NDWR or NBMG match found under
-  any name tried — NBMG's only STMGID-named record is a production well
-  (Shadowridge #4), not this monitor pair.
-- **Brown School's real chloride range**: Sorey & Colvard's Table 3 OCR
-  row-position for a "16-22 mg/L" range most likely actually belongs to
-  Brown School rather than Steinhardt (the Steinhardt fix moved a
-  300→140 mg/L decline to Steinhardt based on the report's narrative
-  text) — Brown School's own number is still unconfirmed.
-- Several other long-open names remain unresolved and unchanged since
-  earlier sessions: `Steinhardt`'s exact well vs. domestic-use
-  distinction, `NDOT`'s specific identity (a 2007 well-log lead near
-  Herz was checked and ruled out — real NDOT sits ~2.5 km north, per
-  Klein 2007 Figure 1), `MacKay`, `Woods`, `Tangen`, `Bianco` (only a
-  tentative PLSS-centroid match, depth mismatch flagged), and the
-  stratigraphic/GS-numbered wells beyond what's already resolved.
+- ~~**Herz-2**~~: resolved; see section 0.
+- **PTR-1/PTR-2, STMGID MW-3/MW-4**: Pine Tree Ranch 1/2 and Flame now have Plate 3
+  coordinates. STMGID MW-3/MW-4 still have no NDWR or NBMG match (NBMG's only STMGID
+  record is a production well).
+- **Brown School's chloride range**: still unconfirmed (the Table 3 row position is unreliable).
+- **NDOT**: still no coordinate; the real NDOT sits about 2.5 km north, per Klein 2007 Figure 1.
+- ~~MacKay, Woods, Tangen, Bianco~~: located from Plate 3, except Tangen (still a section
+  centroid); Bianco's depth mismatch (110 ft log versus 400 ft in Sorey & Colvard) remains.
 
 ## 4. Water-level data is genuinely thin right now
 

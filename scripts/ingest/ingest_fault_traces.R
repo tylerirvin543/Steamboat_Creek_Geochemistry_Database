@@ -49,7 +49,7 @@ library(DBI)
 library(sf)
 
 .find_fault_shapefiles <- function(shapefile_dir) {
-  list.files(shapefile_dir, pattern = "\\.shp$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
+  list.files(shapefile_dir, pattern = "\\.(shp|gpkg)$", recursive = TRUE, full.names = TRUE, ignore.case = TRUE)
 }
 
 .match_col <- function(names_lower, candidates) {
@@ -80,7 +80,7 @@ ingest_fault_traces <- function(con, shapefile_dir = "data/raw/arcgis/faults",
   n_inserted <- 0L
 
   for (shp in shps) {
-    fl <- sf::st_read(shp, quiet = TRUE)
+    fl <- sf::st_read(shp, quiet = TRUE); fl <- fl[!sf::st_is_empty(fl), ]; fl <- sf::st_zm(fl)
     fl <- sf::st_transform(fl, 4326)
     names_lower <- tolower(names(fl))
 
@@ -88,6 +88,9 @@ ingest_fault_traces <- function(con, shapefile_dir = "data/raw/arcgis/faults",
     type_col <- .match_col(names_lower, c("type", "fault_type"))
     src_col <- .match_col(names_lower, c("source", "src"))
     unc_col <- .match_col(names_lower, c("uncertainty", "digitizing_uncertainty_m", "accuracy_m"))
+    conf_col <- .match_col(names_lower, c("confidence"))
+    dip_col <- .match_col(names_lower, c("dip_dir", "dip_direction"))
+    notes_col <- .match_col(names_lower, c("notes", "note", "comment"))
 
     valid_types <- c("mapped_fault_inferred", "mapped_fault_concealed", "air_photo_lineament", "unknown")
 
@@ -109,13 +112,15 @@ ingest_fault_traces <- function(con, shapefile_dir = "data/raw/arcgis/faults",
       uncertainty_val <- if (!is.na(unc_col)) suppressWarnings(as.numeric(row[[names(fl)[names_lower == unc_col][1]]])) else default_uncertainty_m
       if (is.na(uncertainty_val)) uncertainty_val <- default_uncertainty_m
 
+      .get <- function(col) if (is.na(col)) NA_character_ else { v <- as.character(row[[names(fl)[names_lower == col][1]]]); if (length(v) == 0 || is.na(v) || v == "") NA_character_ else v }
+      conf_val <- .get(conf_col); dip_val <- .get(dip_col); note_in <- .get(notes_col)
       wkt <- sf::st_as_text(sf::st_geometry(row)[[1]])
 
       dbExecute(con, "
-        INSERT INTO Fault_Traces (fault_name, fault_type, geom_wkt, crs, digitizing_uncertainty_m, source, notes)
-        VALUES (?, ?, ?, 'EPSG:4326', ?, ?, ?)
+        INSERT INTO Fault_Traces (fault_name, fault_type, geom_wkt, crs, digitizing_uncertainty_m, source, notes, confidence, dip_direction)
+        VALUES (?, ?, ?, 'EPSG:4326', ?, ?, ?, ?, ?)
       ", params = list(fault_name, fault_type, wkt, uncertainty_val, source_val,
-                        paste0("Digitized in ArcGIS, imported from ", basename(shp))))
+                        paste0("Digitized in ArcGIS, imported from ", basename(shp), if (!is.na(note_in)) paste0(". ", note_in) else ""), conf_val, dip_val))
       n_inserted <- n_inserted + 1L
       existing <- c(existing, fault_name)
     }

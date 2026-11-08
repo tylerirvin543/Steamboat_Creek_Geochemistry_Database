@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE, collar_spring_observations = FALSE, digitized_features = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -239,6 +239,8 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     skalbeck2001 = "Skalbeck (2001) UNR dissertation: depth-to-bedrock points + well completions",
     barometric_pressure = "Hourly Reno Airport barometric pressure (IEM ASOS)",
     earthquakes = "USGS regional earthquake catalog",
+    collar_spring_observations = "Collar (1990) Appendix A hot-spring observations (1977-1988)",
+    digitized_features = "Digitized fissure lines and sinter/study-area polygons (ArcGIS)",
     fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)",
     injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)",
     fischer_gas = "Fischer/Ruprecht UCSB fissure gas samples (NV26-1/2/3, April 2026)",
@@ -320,6 +322,9 @@ source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/23_reaction_path_schema.R")
 source("database/schema/24_fix_field_temperature_units_schema.R")
+source("database/schema/25_spring_observations_schema.R")
+source("database/schema/26_well_identity_leads_schema.R")
+source("database/schema/27_digitized_features_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
@@ -421,6 +426,9 @@ source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/23_reaction_path_schema.R")
 source("database/schema/24_fix_field_temperature_units_schema.R")
+source("database/schema/25_spring_observations_schema.R")
+source("database/schema/26_well_identity_leads_schema.R")
+source("database/schema/27_digitized_features_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 }
 
@@ -606,6 +614,12 @@ run_step(RUN_INGEST$barometric_pressure, "BAROMETRIC PRESSURE (RENO AIRPORT, IEM
   ingest_barometric_pressure(con)
 })
 
+run_step(RUN_INGEST$collar_spring_observations, "COLLAR 1990 APPENDIX A SPRING OBSERVATIONS", {
+  # Dated hot-spring observations joined to spring Locations by spring number.
+  source("scripts/ingest/ingest_collar_spring_observations.R")
+  ingest_collar_spring_observations(con)
+})
+
 run_step(RUN_INGEST$earthquakes, "EARTHQUAKE CATALOG (USGS)", {
   # Real local seismicity catalog -- checks whether nearby events
   # coincide with detectable anomalies in water level/temperature/
@@ -680,7 +694,13 @@ run_step(RUN_INGEST$fault_traces, "FAULT TRACES (USER-DIGITIZED, ARCGIS)", {
   # data/raw/arcgis/faults/ -- see scripts/ingest/ingest_fault_traces.R's
   # header for the full 'ArcGIS out, ArcGIS back in' workflow.
   source("scripts/ingest/ingest_fault_traces.R")
-  ingest_fault_traces(con)
+  ingest_fault_traces(con, source_citation = "Dhakal et al. (2025) fault figure, digitized in ArcGIS")
+})
+
+run_step(RUN_INGEST$digitized_features, "DIGITIZED FISSURES AND POLYGONS (ARCGIS)", {
+  # Fissure lines and sinter polygons digitized in ArcGIS; each source layer replaces its rows if it changed.
+  source("scripts/ingest/ingest_digitized_features.R")
+  ingest_digitized_features(con)
 })
 # 2026-09-06 bug fix: this run_step() call was previously left nested
 # *inside* the "DHAKAL WELL/PORT FLOW NETWORK" run_step() block above
@@ -1394,6 +1414,16 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   # 3D geologic model export" section for the full design and open
   # items (Fault_Traces/Alteration_Zones still structure-only, no real
   # digitized data yet).
+  source("scripts/ingest/ingest_collar_plate3_locations.R")
+  ingest_collar_plate3_locations(con)
+  source("scripts/ingest/register_sbw0003_and_boyd_fix.R")
+  register_sbw0003_and_boyd_fix(con)
+  source("scripts/ingest/link_collar_logs_to_wells.R")
+  link_collar_logs_to_wells(con)
+  source("scripts/ingest/fill_well_collar_from_locations_3dep.R")
+  fill_well_collar_from_locations_3dep(con)
+  source("scripts/leapfrog/dem_helpers.R")
+  refresh_dem_elevations(con)
   source("scripts/leapfrog/export_leapfrog.R")
   export_leapfrog_wells(con)
   export_leapfrog_geophysical_horizons(con)
@@ -1402,6 +1432,8 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   # 2026-10-29: chemistry (Cl, Na, SO4, B, temperature) at screen depth and water levels as Leapfrog interval/point tables
   source("scripts/leapfrog/export_leapfrog_chemistry.R")
   export_leapfrog_chemistry_intervals(con)
+  source("scripts/leapfrog/export_leapfrog_structure.R")
+  export_leapfrog_structure_all(con)
 })
 
 # ============================================================

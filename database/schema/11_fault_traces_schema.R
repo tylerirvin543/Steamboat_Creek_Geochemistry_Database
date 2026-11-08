@@ -82,4 +82,10 @@ CREATE TABLE IF NOT EXISTS Alteration_Zones (
 );
 ")
 
+# 2026-11-07: Dhakal fault layer carries a confidence class (Observed / Approximate / Inferred) and a dip direction.
+# These are kept as their own columns; fault_type stays 'unknown' unless the source says mapped/concealed/lineament.
+ft_cols <- dbListFields(con, "Fault_Traces")
+if (!("confidence" %in% ft_cols)) dbExecute(con, "ALTER TABLE Fault_Traces ADD COLUMN confidence TEXT")
+if (!("dip_direction" %in% ft_cols)) dbExecute(con, "ALTER TABLE Fault_Traces ADD COLUMN dip_direction TEXT")
+
 message("[SCHEMA] Fault traces / alteration zones schema ready (Fault_Traces, Alteration_Zones -- both structure-only, no real digitized data yet).")

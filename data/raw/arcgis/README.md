@@ -39,6 +39,19 @@ created it; don't "fix" it, ingest scripts reference the exact path).
   already-coordinated similarly-named Locations to
   `data/derived/white_geyser_coordinate_discrepancies.csv`.
 
+## Fault layer (2026-11-07)
+
+`faults/Fault_Traces_Dhakal.gpkg`: faults digitized from Dhakal et al.'s fault figure (9 traces, UTM 11N, fields `fault_name`, `confidence`, `fault_type`, `dip_dir`, `notes`), exported from the layer `Fault_Traces_Dhakal` in `C:/Projects/Steamboat/Steamboat_ArcGIS/Steamboat/Steamboat.gdb`. `Fault_Traces_Dhakal.lyrx` in `dhakal .shp/` is only the ArcGIS symbology file, not data. Ingested by `ingest_fault_traces.R`.
+
+## Planned layers (2026-10-30)
+
+Besides `faults/`, save one folder per feature type: `fissures/` (lines), `thermal_areas/`
+(polygons), `surface_geology/` (polygons from Collar Plate 2), `stream_stations/` (points,
+Collar Plate 4). Keep a `feature_id`, `name`, `type`, `source`, `confidence`, `uncertainty_m` and
+`date_digitized` field on each. Only `faults/` has an ingest script today; fissures and thermal
+areas need a small schema addition first. The layer table and the Field Maps workflow are in
+`docs/action_items_for_user.md` section 0.
+
 ## Planned: `faults/` subfolder
 
 `scripts/ingest/ingest_fault_traces.R` is built and wired into

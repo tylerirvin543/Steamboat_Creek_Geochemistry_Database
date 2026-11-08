@@ -54,6 +54,7 @@ library(dplyr)
 library(sf)
 library(readr)
 library(fs)
+source("scripts/leapfrog/dem_helpers.R")
 
 FT_TO_M <- 0.3048
 
@@ -68,14 +69,24 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
     FROM Wells
   ")
 
-  complete <- wells %>%
-    filter(!is.na(latitude), !is.na(longitude), !is.na(elevation_m), !is.na(total_depth))
+  # Coordinates in NAD83 / UTM zone 11N (EPSG:26911). Z is the DEM elevation at the current X, Y
+  # (scripts/leapfrog/dem_helpers.R), falling back to the stored elevation only outside the DEM.
+  wells$X <- NA_real_; wells$Y <- NA_real_
+  hasll <- !is.na(wells$latitude) & !is.na(wells$longitude)
+  if (any(hasll)) {
+    u <- st_coordinates(st_transform(st_as_sf(wells[hasll, ], coords = c("longitude", "latitude"), crs = 4326, remove = FALSE), 26911))
+    wells$X[hasll] <- u[, 1]; wells$Y[hasll] <- u[, 2]
+  }
+  wells$Z_dem <- dem_z(wells$X, wells$Y)
+  wells$Z <- dplyr::coalesce(wells$Z_dem, wells$elevation_m)
+
+  complete <- wells %>% filter(hasll, !is.na(Z), !is.na(total_depth))
 
   incomplete <- wells %>%
-    filter(is.na(latitude) | is.na(longitude) | is.na(elevation_m) | is.na(total_depth)) %>%
+    filter(!(hasll & !is.na(Z) & !is.na(total_depth))) %>%
     mutate(
       missing_latlon = is.na(latitude) | is.na(longitude),
-      missing_elevation = is.na(elevation_m),
+      missing_elevation = is.na(Z),
       missing_total_depth = is.na(total_depth)
     )
 
@@ -85,24 +96,17 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
   }
 
   # ------------------------------------------------------------
-  # Reproject lat/lon (EPSG:4326) -> UTM Zone 11N (EPSG:26911)
-  # ------------------------------------------------------------
-  pts <- st_as_sf(complete, coords = c("longitude", "latitude"), crs = 4326) %>%
-    st_transform(26911)
-  coords_utm <- st_coordinates(pts)
-  complete$X <- coords_utm[, 1]
-  complete$Y <- coords_utm[, 2]
-
-  # ------------------------------------------------------------
-  # COLLAR TABLE
+  # COLLAR TABLE  (X, Y, Z all NAD83 / UTM 11N metres; Z from the DEM)
   # ------------------------------------------------------------
   collar <- complete %>%
     transmute(
       HoleID = well_name,
       X = round(X, 2),
       Y = round(Y, 2),
-      Z = round(elevation_m, 2),
-      MaxDepth = round(total_depth * FT_TO_M, 2)
+      Z = round(Z, 2),
+      MaxDepth = round(total_depth * FT_TO_M, 2),
+      Z_Source = ifelse(is.na(Z_dem), "stored elevation (outside DEM)", "DEM"),
+      Z_Reported = round(elevation_m, 2)
     )
   write_csv(collar, path(out_dir, "collar.csv"))
 
@@ -283,13 +287,14 @@ export_leapfrog_geophysical_horizons <- function(con, out_dir = "output/leapfrog
   add_horizon <- function(name, depth_col) {
     d <- pts[!is.na(pts[[depth_col]]), ]
     if (nrow(d) == 0) return(NULL)
+    dem_se <- dem_z(d$utm_e, d$utm_n); se <- dplyr::coalesce(dem_se, d$surface_elevation_m)
     data.frame(
       PointID = d$point_id, UTM_E = d$utm_e, UTM_N = d$utm_n,
       Latitude = d$latitude, Longitude = d$longitude,
       Horizon = name, DepthBelowSurface_m = d[[depth_col]],
-      SurfaceElevation_m = d$surface_elevation_m,
-      Elevation_m = ifelse(is.na(d$surface_elevation_m), NA_real_, d$surface_elevation_m - d[[depth_col]]),
-      ElevationSource = d$elevation_source
+      SurfaceElevation_m = se,
+      Elevation_m = ifelse(is.na(se), NA_real_, se - d[[depth_col]]),
+      ElevationSource = ifelse(is.na(dem_se), d$elevation_source, "DEM (USGS 3DEP 1 m tile) at the point's UTM position")
     )
   }
   horizons[["qal_base"]] <- add_horizon("base_of_Qal_alluvium", "qal_thickness_m")
@@ -470,6 +475,8 @@ export_leapfrog_geophysical_grid_surfaces <- function(con, out_dir = "output/lea
   # point cloud -- clipped to 0, not reported as a negative depth,
   # since a below-ground formation can't start above ground surface.
   out$Depth_m <- pmax(out$Depth_m, 0)
+  out$SurfaceElevation_m <- dem_z(out$UTM_E, out$UTM_N)
+  out$Elevation_m <- round(out$SurfaceElevation_m - out$Depth_m, 2)
 
   dir.create(out_dir, showWarnings = FALSE, recursive = TRUE)
   write_csv(out, fs::path(out_dir, "geophysical_grid_surfaces.csv"))

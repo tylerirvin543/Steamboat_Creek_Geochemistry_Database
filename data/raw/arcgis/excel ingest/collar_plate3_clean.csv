@@ -1,0 +1,91 @@
+"row","feature","feature_display","latitude","longitude","match_type","match_name","site_type","external_station_code","notes"
+1,"Curti Dom","Curti Dom",39.4047328,-119.7417847,"well","Curti Domestic Well","spring",,
+2,"Curti Barn","Curti Barn",39.4051614,-119.7426878,"well","Curti Barn Well (geothermal)","spring",,
+3,"Bianco (Trans Sierra 4)","Bianco (Trans Sierra 4)",39.4010182,-119.7369837,"well","Bianco","well",,
+4,"1055 Lavendar","1055 Lavendar",39.3876425,-119.7317727,"well","Lavender Well (NDWR Log 19361)","well",,
+5,"Seep","Seep",39.3849166,-119.733783,"new",,"seep","COLLAR1990_P3_05_seep",
+6,"Spring 50","Spring 50",39.3818924,-119.7397126,"location","spring 50","spring",,"also on white plates"
+7,"ols steamboat well","ols steamboat well",39.379689,-119.7413597,"new",,"well","COLLAR1990_P3_07_ols_steamboat_well",
+8,"Steamboat spa well","Steamboat spa well",39.379761,-119.7417559,"well","Steamboat Spa Production Well (NDWR Log 26097)","spring",,
+9,"gs-1","gs-1",39.3787716,-119.7428775,"well","GS-1","spring",,
+10,"south steamboat well","south steamboat well",39.3777821,-119.7436111,"location","South Steamboat Well","well",,
+11,"Gerold","Gerold",39.3768249,-119.7440957,"new",,"well","COLLAR1990_P3_11_gerold",
+12,"Boyd","Boyd (plate 3 point 1)",39.3731476,-119.7475279,"new",,"well","COLLAR1990_P3_12_boyd",
+13,"Boyd","Boyd (plate 3 point 2)",39.373039,-119.7473505,"new",,"well","COLLAR1990_P3_13_boyd",
+14,"Strat 6","Strat 6",39.3707306,-119.7568264,"well","strat 6","spring",,
+15,"Rogers","Rogers (plate 3 point 1)",39.364669,-119.7662412,"new",,"well","COLLAR1990_P3_15_rogers",
+16,"Rogers","Rogers (plate 3 point 2)",39.364458,-119.7663115,"new",,"well","COLLAR1990_P3_16_rogers",
+17,"Jeppson","Jeppson (plate 3 point 1)",39.3607238,-119.7700638,"new",,"well","COLLAR1990_P3_17_jeppson",
+18,"Jeppson","Jeppson (plate 3 point 2)",39.3599974,-119.7698537,"new",,"well","COLLAR1990_P3_18_jeppson",
+19,"Strat 7","Strat 7",39.3576404,-119.7811055,"well","strat 7","spring",,
+20,"Strat 8","Strat 8",39.3696328,-119.779061,"well","strat 8","spring",,
+21,"Strat 13","Strat 13",39.3700764,-119.7666574,"well","strat 13","spring",,
+22,"23-5","23-5",39.3699986,-119.767153,"well","23-5","spring",,
+23,"83a-6","83a-6",39.3713621,-119.7727266,"well","83A-6","spring",,
+24,"21-5","21-5",39.3743022,-119.7688956,"well","21-5R","spring",,
+25,"28-32","28-32",39.3765381,-119.7683319,"well","28-32","spring",,
+26,"strat 14","strat 14",39.3805474,-119.7702574,"well","strat 14","spring",,
+27,"Strat 5","Strat 5",39.3852978,-119.7807399,"well","strat 5","spring",,
+28,"STMGID","STMGID",39.3948044,-119.7893344,"new",,"well","COLLAR1990_P3_28_stmgid",
+29,"Otten","Otten",39.3947193,-119.7889696,"well","STMGID Well, Otten (NDWR Log 22455)","spring",,
+30,"Woods","Woods",39.4011767,-119.7700309,"well","Woods Well (NDWR Log 9572)","spring",,
+31,"Peigh Domestic","Peigh Domestic",39.4025238,-119.7666237,"well","Peigh","spring",,
+32,"Pine Tree Ranch 1","Pine Tree Ranch 1",39.4021139,-119.7591546,"well","Pine Tree Ranch-1","spring",,
+33,"Pine Tree Ranch 2","Pine Tree Ranch 2",39.4021243,-119.7588355,"well","Pine Tree Ranch-2","spring",,
+34,"Flame","Flame",39.4017974,-119.7586254,"well","Flame","spring",,
+35,"herz domestic","herz domestic",39.4070795,-119.75511,"well","Herz Domestic Well","spring",,
+36,"Brown School","Brown School",39.4081125,-119.748279,"well","Brown School Geothermal Well","spring",,
+37,"Herz 2","Herz 2",39.4030252,-119.7504112,"well","Herz 2","spring",,
+38,"Herz 1","Herz 1",39.4029198,-119.7507922,"well","Herz 1","spring",,
+39,"OW-3","OW-3",39.3964866,-119.7530582,"new","OW-3","well","COLLAR1990_P3_39_ow_3",
+40,"IW-3","IW-3",39.3963326,-119.7530744,"well","IW-3","spring",,
+41,"IW-2","IW-2",39.3961421,-119.7525799,"well","IW-2","spring",,
+42,"PW-1","PW-1",39.3953516,-119.7524704,"well","PW-1","spring",,
+43,"GS-2","GS-2",39.3948084,-119.7524988,"well","GS-2","spring",,
+44,"OW-1","OW-1",39.3944882,-119.752592,"well","Obs Well 1","spring",,
+45,"Towne","Towne",39.3939693,-119.7522029,"well","Towne Well (NDWR Log 20106)","spring",,
+46,"OW-2","OW-2",39.3938315,-119.7528272,"well","OW-2","spring",,
+47,"PW-3","PW-3",39.394022,-119.7527501,"well","PW-3","spring",,
+48,"Strat 2","Strat 2",39.3890047,-119.7607475,"well","strat 2","spring",,
+49,"Mackay","Mackay (plate 3 point 1)",39.3947816,-119.7616106,"new",,"well","COLLAR1990_P3_49_mackay",
+50,"Mackay","Mackay (plate 3 point 2)",39.3941075,-119.7616189,"new",,"well","COLLAR1990_P3_50_mackay",
+51,"cox I-1","cox I-1",39.3819056,-119.7590293,"well","Cox I-1","spring",,
+52,"GS-7","GS-7",39.38118,-119.7608939,"well","GS-7","spring",,
+53,"Strat 9","Strat 9",39.3814314,-119.7585023,"well","strat 9","spring",,
+54,"Byers","Byers",39.3875605,-119.7443307,"new",,"well","COLLAR1990_P3_54_byers",
+55,"GS-3","GS-3",39.3876051,-119.7441645,"well","GS-3","spring",,
+56,"GS-4","GS-4",39.387747,-119.7430943,"well","GS-4","spring",,
+57,"GS-8","GS-8",39.3877915,-119.7420769,"well","GS-8","spring",,
+58,"nevada thermal no.1","nevada thermal no.1",39.3893482,-119.7406581,"location","Nevada Thermal No.1","spring",,
+59,"spring 16","spring 16",39.3896279,-119.7433375,"new",,"spring","COLLAR1990_P3_59_spring_16",
+60,"spring 11","spring 11",39.3888212,-119.7430011,"new",,"spring","COLLAR1990_P3_60_spring_11",
+61,"spring 12, 12sw","spring 12, 12sw",39.3893117,-119.7431065,"new",,"spring","COLLAR1990_P3_61_spring_12_12sw",
+62,"spring 42, 42w","spring 42, 42w",39.3891455,-119.743143,"new",,"spring","COLLAR1990_P3_62_spring_42_42w",
+63,"spring 8, 8nw","spring 8, 8nw",39.3884685,-119.7427498,"new",,"spring","COLLAR1990_P3_63_spring_8_8nw",
+64,"Spring 6","Spring 6",39.3875159,-119.7424336,"location","Hot spring 6, main terrace ACEC","spring",,
+65,"Spring 4","Spring 4",39.3863092,-119.7426209,"new",,"spring","COLLAR1990_P3_65_spring_4",
+66,"Spring 53","Spring 53",39.3965599,-119.7440142,"new",,"spring","COLLAR1990_P3_66_spring_53",
+67,"East Reno","East Reno",39.3971283,-119.7445865,"well","E Reno","spring",,
+68,"West Reno","West Reno",39.3967974,-119.7466226,"well","W Reno","spring",,
+69,"30N","spring 30n",39.3806458,-119.7407653,"new",,"spring","COLLAR1990_P3_69_spring_30n","Collar (1990) App. A, NA (Nehring): dry."
+70,"30","spring 30",39.3806305,-119.7407997,"new",,"spring","COLLAR1990_P3_70_spring_30","Collar (1990) App. A, NA (Nehring): dry."
+71,"30S","spring 30s",39.3805922,-119.7408878,"new",,"spring","COLLAR1990_P3_71_spring_30s","Collar (1990) App. A, NA (Nehring): dry."
+72,"31N","spring 31n",39.3805016,-119.741023,"new",,"spring","COLLAR1990_P3_72_spring_31n","Collar (1990) App. A, NA (Nehring): dry."
+73,"31","spring 31",39.3804508,-119.7411022,"new",,"spring","COLLAR1990_P3_73_spring_31","Collar (1990) App. A, NA (Nehring): dry."
+74,"31S","spring 31s",39.3803957,-119.7411463,"new",,"spring","COLLAR1990_P3_74_spring_31s","Collar (1990) App. A, NA (Nehring): dry."
+75,"32E","spring 32e",39.3804141,-119.741155,"new",,"spring","COLLAR1990_P3_75_spring_32e","Collar (1990) App. A, NA (Nehring): dry."
+76,"32SE","spring 32se",39.3803496,-119.7412252,"new",,"spring","COLLAR1990_P3_76_spring_32se","Collar (1990) App. A, NA (Nehring): dry."
+77,"32 ""Well""","32 ""Well""",39.3804515,-119.7412282,"new",,"well","COLLAR1990_P3_77_32_well_","Lower Sinter Terrace well read from Collar plates / ArcGIS overlay; no depth or identity beyond the label."
+78,"an abandoned well","an abandoned well",39.3801888,-119.7416174,"new",,"well","COLLAR1990_P3_78_an_abandoned_well","Lower Sinter Terrace well read from Collar plates / ArcGIS overlay; no depth or identity beyond the label."
+79,"well 47","well 47",39.3799717,-119.7416687,"new",,"well","COLLAR1990_P3_79_well_47","Lower Sinter Terrace well read from Collar plates / ArcGIS overlay; no depth or identity beyond the label."
+80,"current 2026 steamboat well","current 2026 Steamboat well (SBW_0002 wellhead)",39.379866,-119.7419175,"new",,"well","COLLAR1990_P3_80_current_2026_steamboat_well_sbw_0002_wellhead_","Wellhead; fluids are SBW_0002's. The SBW_0002 Location and logger are at the spa tank that holds this well's fluid."
+81,"25ss","spring 25ss",39.3822107,-119.7405001,"new",,"spring","COLLAR1990_P3_81_spring_25ss","Collar (1990) App. A, NA (Nehring): flowing, 1 lpm (est.); ss · c."
+82,"25s","spring 25s",39.3825157,-119.7403726,"new",,"spring","COLLAR1990_P3_82_spring_25s","Collar (1990) App. A, NA (Nehring): flowing, 2 lpm (est.); 76 · c."
+83,"25","spring 25",39.3825632,-119.7403388,"new",,"spring","COLLAR1990_P3_83_spring_25","Collar (1990) App. A, NA (Nehring): flowing, 0.25 lpm (est.); 93 ·c."
+84,"26","spring 26",39.3826708,-119.7403001,"new",,"spring","COLLAR1990_P3_84_spring_26","Collar (1990) App. A, NA (Nehring): flowing, 2 lpm (est.); 95.5 · c."
+85,"26NW","spring 26nw",39.3827208,-119.7403663,"new",,"spring","COLLAR1990_P3_85_spring_26nw","Collar (1990) App. A, NA (Nehring): flowing, 1 lpm (est.); 92.5·c."
+86,"spring 44","spring 44",39.3834471,-119.740115,"new",,"spring","COLLAR1990_P3_86_spring_44","Collar (1990) App. A, NA (Nehring): marshy seep."
+87,"spring 44ne","spring 44ne",39.3836434,-119.7398063,"new",,"spring","COLLAR1990_P3_87_spring_44ne","Collar (1990) App. A, NA (Nehring): flowing, 4 lpm (est.), 45 ·c; several seeps nearby."
+88,"spring 44e","spring 44e",39.3833546,-119.7397137,"new",,"spring","COLLAR1990_P3_88_spring_44e","Collar (1990) App. A, NA (Nehring): dry?."
+89,"spring 54","spring 54",39.3815599,-119.73985,"location","spring 54","spring",,"Collar (1990) App. A, NA (Nehring): marshy seep."
+90,"spring 50n","spring 50n",39.3819512,-119.7396356,"new",,"spring","COLLAR1990_P3_90_spring_50n","Collar (1990) App. A, NA (Nehring): dry."
