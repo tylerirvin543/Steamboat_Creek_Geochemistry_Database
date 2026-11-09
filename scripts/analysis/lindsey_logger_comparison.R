@@ -31,10 +31,10 @@ build_lindsey_logger_comparison <- function(con,
          title = "Lindsey et al. (2026) logger traces vs. this project's loggers",
          caption = paste(strwrap(paste("Lindsey values digitized by eye from her Fig. 3 (about +/-1 C); the fissure line is the daily mean,",
                          "which oscillates about +/-2.5 C. Different years and windows; sensor positions may differ.\n",
-                         "Her uncapped-well trace (89-90 C) has no counterpart in this project."), 95), collapse = "
+                         "Her uncapped-well trace (89-90 C) has no counterpart in this project."), 120), collapse = "
 ")) +
-    theme_minimal(base_size = 11) + theme(legend.position = "bottom", legend.direction = "vertical")
-  ggsave(out_png, p, width = 8, height = 7, dpi = 200)
+    theme_minimal(base_size = 11) + theme(legend.position = "bottom", legend.direction = "horizontal") + guides(colour = guide_legend(nrow = 2))
+  ggsave(out_png, p, width = 8, height = 5.6, dpi = 200)
   s <- d |> group_by(site, source) |> summarise(median = median(temp_c), min = min(temp_c), max = max(temp_c), .groups = "drop")
   write_csv(s, "data/derived/lindsey_vs_our_loggers_summary.csv")
   list(plot = p, summary = s)

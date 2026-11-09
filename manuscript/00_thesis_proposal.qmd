@@ -2542,10 +2542,10 @@ Two limits apply. The July 2025 resort-tank trace in Lindsey and others [@lindse
 #| results: asis
 show_fig(
   "output/figures/manuscript/lindsey_vs_our_loggers.png",
-  "Logger traces from Lindsey and others (2026, Figure 3; 1-8 July 2025, digitized by eye, about 1 degree Celsius) compared with this project's A009 (resort tank) and A005 (fumarole) loggers, 16-24 July 2026. Sensor positions in the two studies may differ, and her fissure line is a daily mean.",
+  "Logger traces from Lindsey and others (2026, Figure 3; 1-8 July 2025) compared with this project's A009 (resort tank) and A005 (fumarole) loggers, 16-24 July 2026.",
   alt = "Two panels. Top, fissure or fumarole: a flat line near 76 degrees from 2025 above a strongly oscillating line from 35 to 72 degrees from 2026. Bottom, resort tank: a line between 61 and 68 degrees from 2025 below a steady line near 76 degrees from 2026.",
   id = "fig-lindsey-loggers",
-  width = "80%"
+  width = "85%"
 )
 ```
 
