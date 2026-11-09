@@ -2536,6 +2536,19 @@ show_fig(
 
 Two limits apply. The July 2025 resort-tank trace in Lindsey and others [@lindsey2026] reads 61-68 degrees Celsius with multi-day dips, about 10 degrees cooler and less regular than A009 in 2026, and the loggers may not sit in the same place in the tank, so the 2025 and 2026 schedules cannot be compared directly. And the creek shows little sign of the resort cycle. The hourly conductance difference between SBGG and SBRR has a daily range of about 30 uS/cm, roughly 4 percent of the mean difference of about 740 uS/cm. Its mean daily shape resembles the tank's (r = 0.50 over the 24 hourly means on weekdays and 0.87 on weekends), but hour by hour over 73 overlapping days the correlation is only 0.07. A shared daily driver such as creek temperature or evapotranspiration cannot be excluded, so the resort is not shown to control the creek's conductance difference.
 
+@fig-lindsey-loggers sets the logger traces read from Lindsey and others' Figure 3 (1-8 July 2025, digitized by eye to about 1 degree Celsius) beside A009 and A005 over an 8-day window in July 2026. The comparison is limited by sensor position and by the different years. A009 sits near 76 degrees Celsius with a swing under 3 degrees, while the 2025 tank trace has a median near 67 and dips to 61. Her main-fissure logger, shown as a daily mean of about 76 degrees Celsius (the trace itself swings about 2.5 degrees each day), is not known to be at the same point as A005 at SBF_0001, which ranged from 35 to 72 degrees Celsius with a median near 48 in the window shown, so the fissure difference should not be read as change through time. Her uncapped-well trace (89-90 degrees Celsius) has no counterpart in this project and is not plotted.
+
+```{r fig-lindsey-loggers}
+#| results: asis
+show_fig(
+  "output/figures/manuscript/lindsey_vs_our_loggers.png",
+  "Logger traces from Lindsey and others (2026, Figure 3; 1-8 July 2025, digitized by eye, about 1 degree Celsius) compared with this project's A009 (resort tank) and A005 (fumarole) loggers, 16-24 July 2026. Sensor positions in the two studies may differ, and her fissure line is a daily mean.",
+  alt = "Two panels. Top, fissure or fumarole: a flat line near 76 degrees from 2025 above a strongly oscillating line from 35 to 72 degrees from 2026. Bottom, resort tank: a line between 61 and 68 degrees from 2025 below a steady line near 76 degrees from 2026.",
+  id = "fig-lindsey-loggers",
+  width = "80%"
+)
+```
+
 ```{r fig-resort-curve}
 #| results: asis
 show_fig(
