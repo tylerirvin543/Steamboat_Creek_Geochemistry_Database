@@ -87,5 +87,8 @@ CREATE TABLE IF NOT EXISTS Alteration_Zones (
 ft_cols <- dbListFields(con, "Fault_Traces")
 if (!("confidence" %in% ft_cols)) dbExecute(con, "ALTER TABLE Fault_Traces ADD COLUMN confidence TEXT")
 if (!("dip_direction" %in% ft_cols)) dbExecute(con, "ALTER TABLE Fault_Traces ADD COLUMN dip_direction TEXT")
-
+# 2026-11-08: stated dip angle with its basis and source (zone-level literature values; the digitized layer has none)
+dip_cols <- c(dip_angle_deg = "REAL", dip_angle_basis = "TEXT", dip_assignment = "TEXT", dip_source = "TEXT", dip_note = "TEXT")
+for (nm in names(dip_cols))
+  if (!(nm %in% dbListFields(con, "Fault_Traces"))) dbExecute(con, sprintf("ALTER TABLE Fault_Traces ADD COLUMN %s %s", nm, dip_cols[[nm]]))
 message("[SCHEMA] Fault traces / alteration zones schema ready (Fault_Traces, Alteration_Zones -- both structure-only, no real digitized data yet).")

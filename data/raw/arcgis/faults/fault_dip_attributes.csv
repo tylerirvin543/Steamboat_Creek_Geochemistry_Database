@@ -1,0 +1,8 @@
+fault_name,dip_direction,dip_angle_deg,dip_angle_basis,dip_assignment,dip_source,dip_note
+Main Terrace Fault,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Steamboat Springs fault zone (Low and Main Terraces): east-dipping normal faults favored over a west-dipping thrust; minimum dip 50 deg from drill-hole relations on section B-B' (p. B50); the GS-5 log (Table 3) records a brecciated fault contact dipping 50 deg. Applied to the whole zone, not measured on this individual trace."
+Main Terrace Fault 2,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Same zone-level dip as Main Terrace Fault."
+Main Terrace Fault 3,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Same zone-level dip as Main Terrace Fault."
+Low Terrace Fault,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Same zone-level dip as Main Terrace Fault."
+Inferred Low Terrace Fault 1,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Same zone-level dip as Main Terrace Fault; trace itself is inferred."
+Inferred Low Terrace Fault 2,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Same zone-level dip as Main Terrace Fault; trace itself is inferred."
+Approximate Low Terrace Fault,E,50,minimum,zone-level,"White et al. (1964) USGS PP 458-B, pp. B48-B50","Same zone-level dip as Main Terrace Fault; trace position is approximate."

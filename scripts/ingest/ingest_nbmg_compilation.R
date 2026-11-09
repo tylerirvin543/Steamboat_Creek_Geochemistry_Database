@@ -24,9 +24,10 @@ source("scripts/qc/nbmg_steamboat_matching_report.R")
 .parse_nbmg_date <- function(x) {
   x <- trimws(x)
   if (is.na(x) || !nzchar(x)) return(NA_character_)
-  d <- suppressWarnings(as.Date(x, format = "%d %b %y"))
-  if (is.na(d)) d <- suppressWarnings(as.Date(x, format = "%d %b %Y"))
+  d <- suppressWarnings(as.Date(x, format = if (grepl("[0-9]{4}$", x)) "%d %b %Y" else "%d %b %y"))
   if (is.na(d)) return(NA_character_)
+  # %y reads 00-68 as 20xx; NBMG dates here are 1946-1968 as well, so anything in the future is a century early
+  if (d > Sys.Date()) d <- seq(d, by = "-100 years", length.out = 2)[2]
   format(d, "%Y-%m-%d")
 }
 .num_commas <- function(x) suppressWarnings(as.numeric(gsub(",", "", x)))

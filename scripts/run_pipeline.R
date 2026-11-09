@@ -100,15 +100,15 @@ profile_presets <- list(
   `1` = list(ndep = TRUE, field = TRUE, logger = TRUE, conductivity = TRUE, ndwr = TRUE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = TRUE, usgs_historic_chem = TRUE,
              noaa_weather = TRUE, image_locations = TRUE, ndep_prr = TRUE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE, nbmg_compilation = TRUE, lindsey2026_chemistry = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE, nbmg_compilation = TRUE, white_gs_logs = TRUE, nvgeowel = TRUE, ndwr_sec27 = TRUE, lindsey2026_chemistry = TRUE),
   `2` = list(ndep = TRUE, field = TRUE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = TRUE, isotope = TRUE, flux = TRUE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE, nbmg_compilation = TRUE, lindsey2026_chemistry = TRUE),
+             monitor_well_locations = TRUE, promote_ndep_staged = TRUE, well_network = TRUE, well_logs = TRUE, ndom_wells = TRUE, ndwr_stream_flow = TRUE, historical_sorey1992 = TRUE, mariner_janik_1995 = TRUE, skalbeck2001 = TRUE, barometric_pressure = TRUE, earthquakes = TRUE, fault_traces = TRUE, injection_operating_history = TRUE, fischer_gas = TRUE, white_geyser_features = TRUE, collar_spring_observations = TRUE, digitized_features = TRUE, nbmg_compilation = TRUE, white_gs_logs = TRUE, nvgeowel = TRUE, ndwr_sec27 = TRUE, lindsey2026_chemistry = TRUE),
   `3` = list(ndep = FALSE, field = FALSE, logger = FALSE, conductivity = FALSE, ndwr = FALSE,
              lab = FALSE, isotope = FALSE, flux = FALSE, usgs = FALSE, usgs_historic_chem = FALSE,
              noaa_weather = FALSE, image_locations = FALSE, ndep_prr = FALSE,
-             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE, collar_spring_observations = FALSE, digitized_features = FALSE, nbmg_compilation = FALSE, lindsey2026_chemistry = FALSE)
+             monitor_well_locations = FALSE, promote_ndep_staged = FALSE, well_network = FALSE, well_logs = FALSE, ndom_wells = FALSE, ndwr_stream_flow = FALSE, historical_sorey1992 = FALSE, mariner_janik_1995 = FALSE, skalbeck2001 = FALSE, barometric_pressure = FALSE, earthquakes = FALSE, fault_traces = FALSE, injection_operating_history = FALSE, fischer_gas = FALSE, white_geyser_features = FALSE, collar_spring_observations = FALSE, digitized_features = FALSE, nbmg_compilation = FALSE, white_gs_logs = FALSE, nvgeowel = FALSE, ndwr_sec27 = FALSE, lindsey2026_chemistry = FALSE)
 )
 
 if (!exists("MODE") || !exists("RUN_INGEST") || !exists("BUILD_WEBSITE")) {
@@ -243,6 +243,9 @@ print_pipeline_help <- function(run_ingest, run_analysis) {
     collar_spring_observations = "Collar (1990) Appendix A hot-spring observations (1977-1988)",
     digitized_features = "Digitized fissure lines and sinter/study-area polygons (ArcGIS)",
     nbmg_compilation = "NBMG permit/well compilation (Steamboat rows): staging + new wells, fill-only",
+    white_gs_logs = "White (1964) Table 3 drill-hole logs into Well_Lithology (GS-6; replaces the coarser NBMG TOPS version)",
+    nvgeowel = "NBMG NVGEOWEL 2009 well list (hand-transcribed): cross-reference to the 2019 compilation and Wells, source tracking",
+    ndwr_sec27 = "NDWR well logs for T18N R20E Sec 27: index table, index-only wells, static water levels",
     lindsey2026_chemistry = "Lindsey et al. (2026) Table 5 samples (pipe on SBW_0003, runoff on SBF_0001) + comparison with our samples",
     fault_traces = "Digitized fault/lineament traces (no-op until a shapefile exists)",
     injection_operating_history = "NDEP UIC permit injection pressure/rate history (per-document snapshots)",
@@ -322,6 +325,7 @@ source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
+source("database/schema/20_injection_operations_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/23_reaction_path_schema.R")
@@ -332,6 +336,7 @@ source("database/schema/27_digitized_features_schema.R")
 source("database/schema/28_well_classes_schema.R")
 source("database/schema/29_nbmg_compilation_schema.R")
 source("database/schema/30_thermal_areas_schema.R")
+source("database/schema/31_nvgeowel_ndwr_index_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 
 source("scripts/ingest/helpers/parse_datetime.R")
@@ -406,6 +411,8 @@ if (MODE == "DEMO") {
   
   dbDisconnect(con)
   unlink(DB_PATH)
+  # unlink() fails silently on Windows while any R connection or other process still holds the file; continuing would "rebuild" on stale data
+  if (file.exists(DB_PATH)) stop("[RESET] Could not delete ", DB_PATH, " (still open elsewhere?). Close other connections (e.g. dbDisconnect(con), or restart R) and rerun.")
   
   con <- dbConnect(SQLite(), DB_PATH)
   dbExecute(con, "PRAGMA foreign_keys = ON;")
@@ -429,6 +436,7 @@ source("database/schema/16_geophysical_depth_points_schema.R")
 source("database/schema/17_formation_unit_schema.R")
 source("database/schema/18_logger_uncertainty_schema.R")
 source("database/schema/19_location_aliases_schema.R")
+source("database/schema/20_injection_operations_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 source("database/schema/22_gas_analyses_schema.R")
 source("database/schema/23_reaction_path_schema.R")
@@ -439,6 +447,7 @@ source("database/schema/27_digitized_features_schema.R")
 source("database/schema/28_well_classes_schema.R")
 source("database/schema/29_nbmg_compilation_schema.R")
 source("database/schema/30_thermal_areas_schema.R")
+source("database/schema/31_nvgeowel_ndwr_index_schema.R")
 source("database/schema/21_well_production_history_schema.R")
 }
 
@@ -714,6 +723,9 @@ run_step(RUN_INGEST$fault_traces, "FAULT TRACES (USER-DIGITIZED, ARCGIS)", {
   # header for the full 'ArcGIS out, ArcGIS back in' workflow.
   source("scripts/ingest/ingest_fault_traces.R")
   ingest_fault_traces(con, source_citation = "Dhakal et al. (2025) fault figure, digitized in ArcGIS")
+  # 2026-11-08: dip direction and stated dip angle from the literature (zone-level), from a hand-maintained table
+  source("scripts/ingest/apply_fault_dip_attributes.R")
+  apply_fault_dip_attributes(con)
 })
 
 run_step(RUN_INGEST$digitized_features, "DIGITIZED FISSURES AND POLYGONS (ARCGIS)", {
@@ -726,6 +738,14 @@ run_step(RUN_INGEST$nbmg_compilation, "NBMG PERMIT COMPILATION (STEAMBOAT WELLS)
   # Staging of every Steamboat-area permit row; real wells added fill-only; permit-only rows stay staged.
   source("scripts/ingest/ingest_nbmg_compilation.R")
   ingest_nbmg_compilation(con)
+  # 2026-11-08: held rows (identity exact, NBMG coordinate far from the stored one) resolved from a hand-made decision file
+  source("scripts/ingest/resolve_nbmg_held.R")
+  resolve_nbmg_held(con)
+  if (isTRUE(RUN_INGEST$white_gs_logs)) {
+    # 2026-11-08: White (1964) Table 3 logs go in before the NBMG TOPS summary of the same logs, which they replace
+    source("scripts/ingest/ingest_white1964_gs_logs.R")
+    ingest_white1964_gs_logs(con)
+  }
   source("scripts/ingest/ingest_nbmg_lithology.R")
   ingest_nbmg_lithology(con)
   source("scripts/ingest/annotate_sbw0003_geyser_lead.R")
@@ -733,7 +753,16 @@ run_step(RUN_INGEST$nbmg_compilation, "NBMG PERMIT COMPILATION (STEAMBOAT WELLS)
   source("database/schema/28_well_classes_schema.R")
 })
 
+run_step(RUN_INGEST$nvgeowel, "NBMG NVGEOWEL 2009 WELL LIST (CROSS-REFERENCE)", {
+  # Hand-transcribed list rows matched to the 2019 compilation and Wells; adds only real wells found nowhere else
+  source("scripts/ingest/ingest_nvgeowel.R")
+  ingest_nvgeowel(con)
+})
+
 run_step(RUN_INGEST$lindsey2026_chemistry, "LINDSEY ET AL. (2026) CHEMISTRY", {
+  # SBW_0003 (the eruption pipe) is where the SBG001 sample goes; it is otherwise only registered later, in the Leapfrog step
+  source("scripts/ingest/register_sbw0003_and_boyd_fix.R")
+  register_sbw0003_and_boyd_fix(con)
   source("scripts/ingest/ingest_lindsey2026_chemistry.R")
   ingest_lindsey2026_chemistry(con)
   source("scripts/analysis/lindsey2026_vs_field_comparison.R")
@@ -802,6 +831,12 @@ run_step(RUN_INGEST$well_logs, "WELL LOG PDFs", {
   # well_log_document_map.csv. Never auto-matches.
   source("scripts/qc/qc_well_log_matches.R")
   qc_well_log_matches(con)
+})
+
+run_step(RUN_INGEST$ndwr_sec27, "NDWR WELL LOGS, T18N R20E SECTION 27 (INDEX ONLY)", {
+  # Runs after the well-log PDFs so logs that already have a document well (126275, 126301) are linked, not duplicated
+  source("scripts/ingest/ingest_ndwr_sec27_index.R")
+  ingest_ndwr_sec27_index(con)
 })
 
 run_step(RUN_INGEST$ndom_wells, "NDOM WELL-PERMIT DATA", {
@@ -968,6 +1003,12 @@ run_step(RUN_INGEST$skalbeck2001, "SKALBECK (2001) HYDROGEOLOGIC DISSERTATION", 
   # exports can report true Z instead of only depth-below-surface.
   # Idempotent -- only queries points still missing an elevation.
   fetch_skalbeck2001_point_elevations(con)
+})
+
+run_step(RUN_INGEST$white_gs_logs, "WHITE (1964) GS HOLE CORRECTIONS (STATED DEPTH, ALTITUDE, POSITION)", {
+  # Must follow the Skalbeck ingest: it attaches its own GS-5/6/7 values and GS-6 interval by well name, which these stated values replace
+  source("scripts/ingest/apply_white_gs_hole_corrections.R")
+  apply_white_gs_hole_corrections(con)
 })
 
 # ============================================================
@@ -1464,6 +1505,12 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   link_collar_logs_to_wells(con)
   source("scripts/ingest/fill_well_collar_from_locations_3dep.R")
   fill_well_collar_from_locations_3dep(con)
+  # 2026-11-08: USGS GS holes reconciled with White (1964, 1968): stated depths/altitudes, GS-6 position, Skalbeck GS-6 split
+  source("scripts/ingest/apply_white_gs_hole_corrections.R")
+  apply_white_gs_hole_corrections(con)
+  # 2026-11-08: Trans Sierra Water logs (Sec 27) as unconfirmed candidates for the Bianco well
+  source("scripts/ingest/register_trans_sierra_leads.R")
+  register_trans_sierra_leads(con)
   source("scripts/leapfrog/dem_helpers.R")
   refresh_dem_elevations(con)
   source("scripts/leapfrog/export_leapfrog.R")
@@ -1476,6 +1523,9 @@ run_step(RUN_ANALYSIS$leapfrog_export, "LEAPFROG WELL EXPORT", {
   export_leapfrog_chemistry_intervals(con)
   source("scripts/leapfrog/export_leapfrog_structure.R")
   export_leapfrog_structure_all(con)
+  # 2026-11-08: drill holes drawn on White (1968) Plate 2 (collar/bottom elevations from the section, stated depths as checks)
+  source("scripts/leapfrog/export_leapfrog_white_plate2.R")
+  export_leapfrog_white_plate2(con)
 })
 
 # ============================================================

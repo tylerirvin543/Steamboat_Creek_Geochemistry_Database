@@ -141,6 +141,8 @@ stage_sgs_ocr <- function(slug, source_file, ...) {
 #' but still promoted.
 hold_ocr_outliers <- function(con, raw_source_files, threshold = 4, watch = 1.8,
                               out_csv = "data/derived/ndep_prr_ocr/ocr_outlier_review.csv") {
+  # a freshly rebuilt database has no staging_id column yet (promote_staged_ndep.R adds it later), so add it before it is used
+  if (!"staging_id" %in% DBI::dbListFields(con, "Staging_NDEP_WQ")) DBI::dbExecute(con, "ALTER TABLE Staging_NDEP_WQ ADD COLUMN staging_id INTEGER")
   # newly appended rows have a NULL staging_id until promotion backfills it
   DBI::dbExecute(con, "UPDATE Staging_NDEP_WQ SET staging_id = rowid WHERE staging_id IS NULL")
   st <- DBI::dbGetQuery(con, "SELECT staging_id, station_name, sample_date, analyte, value, units, detection_limit, raw_source_file, promoted_at FROM Staging_NDEP_WQ")

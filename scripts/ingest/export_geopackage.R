@@ -292,7 +292,7 @@ export_geopackage <- function(con, mode = "OPERATIONAL") {
     message("[EXPORT] Fault_Traces table does not exist yet -- skipping.")
   } else {
     tryCatch({
-      ft_df <- dbGetQuery(con, "SELECT fault_id, fault_name, fault_type, confidence, dip_direction, digitizing_uncertainty_m, source, notes, geom_wkt FROM Fault_Traces")
+      ft_df <- dbGetQuery(con, "SELECT fault_id, fault_name, fault_type, confidence, dip_direction, dip_angle_deg, dip_angle_basis, dip_assignment, dip_source, digitizing_uncertainty_m, source, notes, geom_wkt FROM Fault_Traces")
       if (nrow(ft_df) == 0) {
         message("[EXPORT] No fault traces to write")
       } else {

@@ -194,8 +194,13 @@ ingest_lab <- function(con) {
     
     # Validate match
     if (any(is.na(lab_long$sample_id))) {
-      print(lab_long %>% filter(is.na(sample_id)) %>% distinct(sample_code))
-      stop("Sample mismatch detected.")
+      unmatched <- lab_long %>% filter(is.na(sample_id)) %>% distinct(sample_code)
+      print(unmatched)
+      # 2026-11-08: reported and left out instead of aborting the whole step, so a file for samples that are not in the
+      # Samples table (e.g. the Lindsey et al. SBG001/SBG002 reports) cannot block the files that do match
+      warning("[ingest_lab] ", basename(file), ": ", nrow(unmatched), " sample code(s) not in the Samples table were skipped: ", paste(unmatched$sample_code, collapse = ", "), call. = FALSE)
+      lab_long <- lab_long %>% filter(!is.na(sample_id))
+      if (nrow(lab_long) == 0) next
     }
     
     # --------------------------------------------------

@@ -1,0 +1,146 @@
+screenshot,twn,rng,sec,qtrqtr,county,permit,operator,well_name,date_text,status_class,td_ft,remarks
+S1,17N,20E,05,"NE/4, NW/4",Washoe,079,"Yankee/Caithness Joint Venture, LP","Well No. 32-5","08 NOV 87","Shut-in",2944,"Range: 55F at 0' to 415F at 2500'"
+S1,17N,20E,05,"NE/4, NW/4",Washoe,178,"Yankee/Caithness Joint Venture, LP","Well No. 24-5",,"Expired",,
+S1,17N,20E,05,"NW/4",Washoe,592,"Steamboat Hills, LLC","Industrial Production Well No. 23-5","07 AUG 85","Production",3022,"Average 362-396F"
+S1,17N,20E,05,"NW/4, NW/4",Washoe,525,"Yankee/Caithness Joint Venture, LP","Industrial Production Well 21B-5","03 JUL 03","Drilled",470,
+S1,17N,20E,05,"NW/4, NW/4",Washoe,DWR-34917,"Phillips Petroleum Company","ST-3","14 JUL 79",,3050,"Hot"
+S1,17N,20E,05,"NW/4, NW/4",Washoe,150,"Yankee/Caithness Joint Venture, LP","Well No. 32-5 ST","08 NOV 87","Strat Test",2806,"198F between 2473'-2478'"
+S1,17N,20E,05,"NW/4, NW/4",Washoe,177,"Yankee/Caithness Joint Venture, LP","Well No. 21-5","16 DEC 87","Production",3073,"Range: 195F between 2430'-2473' to 355F at 2803'"
+S1,17N,20E,05,"SE/4, NW/4",Washoe,340,"Yankee/Caithness Joint Venture, LP","Well No. 13-5","27 JUL 93","Production",3228,
+S1,17N,20E,05,"SE/4, NW/4",Washoe,151,"Caithness Power, Inc.","Well No. 43-5",,"Expired",,
+S1,17N,20E,05,"SW/4, NW/4",Washoe,,"Phillips Petroleum Company","ST-13","17 SEP 81",,1767,"Hot"
+S1,17N,20E,05,"SW/4, NW/4",Washoe,205,"Yankee/Caithness Joint Venture, LP","Well No. 13-5","25 JUL 93","Strat Test",3228,
+S1,17N,20E,06,"NE/4, NE/4",Washoe,561,"Steamboat Hills, LP","Industrial Production Well 83B-6",,"Drilled",,
+S1,17N,20E,06,"SE/4, NE/4",Washoe,138,"Yankee/Caithness Joint Venture, LP","Well No. 83-6","29 AUG 87","P&A",3060,"Range: 178F at 500' to 338F at 2463'"
+S1,17N,20E,06,"SE/4; NE/4",Washoe,147,"Yankee/Caithness Joint Venture, LP","Well No. 83A-6","15 OCT 87","Production",2681,"Range: 210F at 400' to 430F at 2681'"
+S1,17N,20E,06,"SW/4, NE/4",Washoe,593,"Steamboat Hills, LLC","ST-8","07 MAR 80",,1940,
+S1,17N,20E,07,"NE/4, NW/4",Washoe,,"Phillips Petroleum Company","ST-7","16 FEB 80",,1660,
+S2,18N,19E,01,"NW/4, NE/4",Washoe,459,"Shellbird Inc.'s Domestic Well","Domestic well",,,,
+S2,18N,19E,02,"SE/4, NE/4",Washoe,248,"Berman, Steve","Domestic","26 MAY 90","Not in use",150,"65F"
+S2,18N,19E,02,"SW/4; SE/4",Washoe,761,"Ownes, Travis","Domestic",,,,
+S2,18N,19E,12,"NW/4, SW/4",Washoe,373,"Parsons, Reg S.","Domestic",,"Expired",,
+S2,18N,20E,,,Washoe,458PA,"SB Geo, Inc.","Project Area",,,,
+S2,18N,20E,,,Washoe,522,"Weigel, Robert","Domestic","MAR 94","Domestic",,
+S2,18N,20E,05,"SE/4, NW/4",Washoe,,"Phillips Petroleum Company","ST-6","01 FEB 80",,1990,
+S2,18N,20E,14,"SW/4, SW/4",Washoe,544,"Miller, Russell and Phyllis","Domestic well","ABT. 1976","Domestic",,"Well head: 104"
+S2,18N,20E,17,"NE/4, SW/4",Washoe,489,"Diocese of Reno","Well No. M1",,,,
+S2,18N,20E,20,"NE/4",Washoe,221,"Bridges, Royce","Domestic",,"Expired",,
+S2,18N,20E,21,"NE/4, SW/4",Washoe,775,"Salcedo, Fidel","Domestic","31 DEC 82","Domestic",190,"200F"
+S2,18N,20E,21,"SW/4, NE/4",Washoe,,"Phillips Petroleum Company","ST-1","13 APR 77",,1966,"Warm"
+S2,18N,20E,23,"NW/4; NW/4",Washoe,838,"Goldberg, Steven/Connor, Lisa","Domestic","09 JUN 97","Domestic",90,"130F(?)"
+S2,18N,20E,23,"SW/4; NW/4",Washoe,DWR-35499,"Rilite Aggregate Co.","Industrial Well","03 JAN 79","Drilled",147,"113F"
+S2,18N,20E,27,"NW/4, NW/4",Washoe,220,"Washoe County School District","Well No. 41-27",,"Expired",,
+S2,18N,20E,28,,Washoe,226,"Towne, Dorothy","Domestic",,"Expired",,
+S2,18N,20E,28,,Washoe,227,"Towne, Dorothy","Domestic",,"Expired",,
+S2,18N,20E,28,,Washoe,,"Mt. Rose Hot Springs","Mt. Rose Hot Springs Well","29 MAY 50",,237,"Scalding"
+S2,18N,20E,28,"NE/4, NW/4",Washoe,,"Mt. Rose Resort","Mt. Rose Well No. 3","1947","???",133,"119C at TD"
+S2,18N,20E,28,"NE/4, NW/4",Washoe,,"Mt. Rose Resort","Mt. Rose Well No. 1","1947","???",110,"121C at TD"
+S2,18N,20E,28,"NE/4, NW/4",Washoe,,"Mt. Rose Resort","Mt. Rose Well No. 2","1947","???",160,"Range: 86C at 54' to 133C at TD"
+S2,18N,20E,28,"NE/4, SE/4",Washoe,,"Senges(?)","Senges Well","1949","???",177,"Range: 96C at 31' to 146C at 177'"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,288,"SB Geo, Inc.","Well No. 16-28","20 FEB 92","Production",990,"330F at 617'-625' from 900 gpm"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,290,"SB Geo, Inc.","Well No. 25-28-2","07 MAR 92","Production",1062,"330F at 690' at 1200 gpm"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,300,"SB Geo, Inc.","Well No. 45-28","28 MAR 92","Injection",1506,"About 330F at 1506'"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,289,"SB Geo, Inc.","Well No. 26-28","15 MAR 92","Production",1505,"330F at 642' 600 gpm"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,298,"SB Geo, Inc.","Well No. 36-28","20 MAR 92","Observation",1059,"330F at 1059'"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,299,"SB Geo, Inc.","Well No. 35-28","20 MAR 92","Injection",1797,"About 330F at 1767'"
+S2,18N,20E,28,"NE/4, SW/4",Washoe,291,"SB Geo, Inc.","Well No. 25-28-1","31 MAR 92","Production",590,"335F at 576' 1450 gpm"
+S2,18N,20E,28,"NW/4, NE/4",Washoe,,"Nevada Thermal Power Company","Steamboat No. 1","1954",,1830,"About 330F at 200 gpm at 870'-875' and 1100 gpm at 1020'-1080'"
+S2,18N,20E,28,"NW/4, NE/4, SW/4",Washoe,341,"SB Geo, Inc.","Well No. 46-28-2","30 SEP 92","Injection",1080,"About 330F at 200 gpm at 870'-875' and 1100 gpm at 1020'-1080'"
+S2,18N,20E,28,"NW/4, NW/4",Washoe,,"Herz, Harold","Harold Herz 1","30 MAY 47","Production(?)",155,"Range: 23C at 14' to 52C at 155'"
+S2,18N,20E,28,"NW/4, NW/4",Washoe,,"Herz, Harold","Harold Herz 2","1947",,153,"193F"
+S2,18N,20E,28,"NW/4, NW/4",Washoe,249,"SB Geo, Inc.","Well No. 12-28",,"Expired",,
+S2,18N,20E,28,"NW/4, SW/4",Washoe,274,"SB Geo, Inc.","TG No. 2","05 AUG 91","Thermal Grad",861,
+S2,18N,20E,28,"NW/4, SW/4",Washoe,275,"SB Geo, Inc.","TG No. 3","01 AUG 91","Thermal Grad",910,
+S2,18N,20E,28,"NW/4, SW/4",Washoe,DWR-17909,"Nevada Ore Refining Company","Well (1952)","30 APR 52",,300,"70 - 360F"
+S2,18N,20E,28,"SE/4, NW/4",Washoe,,"Reno Resort","East Reno Well","APR 40",,172,"280F"
+S2,18N,20E,28,"SE/4, NW/4",Washoe,,"Reno Resort","West Reno Well","1939",,186,"280F"
+S2,18N,20E,28,"SE/4, SW/4",Washoe,301,"SB Geo, Inc.","Well No. 37-28-2","12 APR 92","Observation",847,"About 330F at 664'"
+S3,18N,20E,28,"SE/4, SW/4",Washoe,306,"SB Geo, Inc.","Well No. 37-28-1","29 APR 92","Observation",1301,"About 330F at 583'"
+S3,18N,20E,28,"SE/4, SW/4",Washoe,305,"SB Geo, Inc.","Well No. 38-28-1","11 MAY 92","Observation",745,"About 330F at 696'"
+S3,18N,20E,28,"SE/4, SW/4",Washoe,,"Nevada Thermal Power Company","Steamboat No. 2","1959","???",964,
+S3,18N,20E,28,"SE/4, SW/4",Washoe,307,"SB Geo, Inc.","Well No. 47-28","30 APR 92","Observation",2000,"About 330F at 654'"
+S3,18N,20E,28,"SE/4, SW/4",Washoe,,"Unknown","Rodeo Well","26 MAY 50",,282,"Range: 60C at 13' to 169C at 282'"
+S3,18N,20E,28,"SE/4, SW/4",Washoe,273,"SB Geo, Inc.","TG No. 1","24 JUL 91","Thermal Grad",894,
+S3,18N,20E,28,"SW/4, NE/4",Washoe,,"Murray(?)","Murray Well","1946",,680,"37C at 63'"
+S3,18N,20E,28,"SW/4, NW/4",Washoe,541,"Reno Retail Co.","Observation Well 24-28",,,,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,387,"SB Geo, Inc.","Well No. 76-29",,"Expired",,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,DWR-47367,"SB Geo, Inc.","Production Well No. 3","02 AUG 86","Production",574,"Range: 45C at 0' to 172C at 550'"
+S3,18N,20E,29,"NE/4, SE/4",Washoe,385,"SB Geo, Inc.","Well No. 75-29",,"Expired",,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,,"Nevada Ore Minerals(?)","Nevada Ore Minerals Well","1955",,,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,DWR-47368,"SB Geo, Inc.","Production Well No. 1","28 JAN 86","Production",627,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,003,"SB Geo, Inc.","Observation Well No. 2","24 DEC 86","Observation",570,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,004,"SB Geo, Inc.","Observation Well No. 3","19 JAN 86","Observation",966,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,,"U. S. Geological Survey","GS-2","18 AUG 50",,398,"Range: 78C at 86' to 95C at TD"
+S3,18N,20E,29,"NE/4, SE/4",Washoe,DWR-47366,"Far West Energy Fund, LP","Injection Well No. 2","03 DEC 85","Injection",1414,
+S3,18N,20E,29,"NE/4, SE/4",Washoe,036,"SB Geo, Inc.","Production Well No. 2","13 DEC 85","Production",530,
+S3,18N,20E,29,"NW/4, NW/4",Washoe,456,"Dorostkar, Dr. M.","Domestic","NOV 97","Drilled",,
+S3,18N,20E,29,"SE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 2","1949","Abandoned",7,"Range: 77C at 1' to 96C at 7'"
+S3,18N,20E,29,"SE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 1","1949","Abandoned",9,"Range: 76C at 2' to 96C at 9'"
+S3,18N,20E,29,"SE/4, NE/4",Washoe,014,"SB Geo, Inc.","Observation Well No. 4","06 AUG 85","Observation",1640,"Range: 120 F at 0' to 285F at 1640'"
+S3,18N,20E,29,"SE/4, NE/4",Washoe,034,"SB Geo, Inc.","Injection Well No. 3","08 AUG 86","Injection",517,
+S3,18N,20E,29,"SE/4, NE/4, SE/4",Washoe,002,"SB Geo, Inc.","Observation Well No. 1","25 MAR 85","Observation",626,
+S3,18N,20E,29,"SE/4, SE/4",Washoe,386,"SB Geo, Inc.","Well No. 77-29",,"Expired",,
+S3,18N,20E,29,"SE/4, SE/4",Washoe,,"U. S. Geological Survey","GS-6","27 NOV 50",,212,"Range: 69C at 70' to 103C at 208'"
+S3,18N,20E,29,"SE/4, SE/4",Washoe,237,"SB Geo, Inc.","Hot Air Well No. 4","12 Feb 90","Industrial",729,"About 320F between 700'-729'"
+S3,18N,20E,29,"SE/4, SE/4",Washoe,302,"SB Geo, Inc.","Well No. 77-29",,"Expired",,
+S3,18N,20E,29,"SE/4, SE/4",Washoe,304,"SB Geo, Inc.","Well No. 88-29",,"Expired",,
+S4,18N,20E,29,"SE/4, SE/4",Washoe,563,"ORNI 7, LLC","Production Well 78-29",,,,
+S4,18N,20E,29,"SE/4, SE/4",Washoe,DWR-41826,"Guisti, Peter G.","Hot Water Well No. 6",,"Domestic",,
+S4,18N,20E,29,"SE/4, SE/4",Washoe,303,"SB Geo, Inc.","Well No. 78-29",,"Expired",,
+S4,18N,20E,29,"SE/4, SE/4",Washoe,363,"SB Geo, Inc.","Well No. 87-29","11 Sep 93","Drilled",,
+S4,18N,20E,29,"SE/4, SE/4",Washoe,,"Guisti, Peter G.","Test Well","08 MAY 81","Test",300,"Hot"
+S4,18N,20E,29,"SW/4, SE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 7","1949","Abandoned",4,"TD 48C"
+S4,18N,20E,29,"SW/4, SE/4",Washoe,,"Nevada Ore Refining Company","Well (1953)","26 FEB 53",,295,"Hot"
+S4,18N,20E,29,"SW/4, SW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 8","1949","Abandoned",14,"Range: 49C at 1' to 95C at 14'"
+S4,18N,20E,30,"SE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 9","1949","Abandoned",14,"Range: 28C at 8' to 34C at 14'"
+S4,18N,20E,31,,Washoe,,"Magma Power Company","Well No. 2","03 SEP 59",,475,
+S4,18N,20E,31,"SE/4, NW/4",Washoe,,"Phillips Petroleum Company","ST-5","02 APR 78",,1700,
+S4,18N,20E,32,"NE/4, NW/4",Washoe,,"Nevada Thermal Power Company","Steamboat No. 4","1960",,720,"Range: 67C at 36' to 186C at 726'"
+S4,18N,20E,32,"NE/4, NW/4",Washoe,575,"Steamboat Hills, LLC","Industrial Injection Well No. 42-32","19 JUL 05","Drilled",,
+S4,18N,20E,32,"NW/4, NE/4",Washoe,285,"Yankee/Caithness Joint Venture, LP","Well No. 62-32",,"Expired",,
+S4,18N,20E,32,"NW/4, NE/4",Washoe,,"Nevada Thermal Power Company","Steamboat No. 3","1960","???",1263,
+S4,18N,20E,32,"NW/4, NW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 10a","1949","Abandoned",2,"Range: 32C at 1' to 39C at 2'"
+S4,18N,20E,32,"NW/4, NW/4",Washoe,,"Nevada Thermal Power Company","Steamboat No. 6","1961","???",716,"Range: 71C at 20' to 178C at 653'"
+S4,18N,20E,32,"NW/4, NW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 10b","1949","Abandoned",4,"Range: 40C at 3' to 52C at 4'"
+S4,18N,20E,32,"NW/4, NW/4",Washoe,,"Nevada Thermal Power Company","Steamboat No. 5","15 JUL 61",,826,"Range: 60C at 53' to 175C at 684'"
+S4,18N,20E,32,"NW/4, SE/4",Washoe,215,"Yankee/Caithness Joint Venture, LP","Well No. 65-32",,"Expired",,
+S4,18N,20E,32,"NW/4, SE/4",Washoe,066,"Yankee/Caithness Joint Venture, LP","Cox I-1","07 MAY 81","Injection",3471,"Range: 153F between 923'-1302' to 275F between 2735'-3162'"
+S4,18N,20E,32,"NW/4, SE/4",Washoe,560,"Steamboat Hills","Industrial Injection Well 64A-32",,,,
+S4,18N,20E,32,"NW/4, SE/4",Washoe,,"U. S. Geological Survey","GS-7","05 JAN 51",,410,"Range: 21C at 20' to 161C at 408'"
+S4,18N,20E,32,"NW/4, SW/4",Washoe,188,"Yankee/Caithness Joint Venture, LP","Well No. 65-32",,"Expired",,
+S4,18N,20E,32,"NW/4, SW/4",Washoe,576,"Steamboat Hills, LLC","Industrial Production Well 66-32",,,,
+S4,18N,20E,32,"NW/4, SW/4",Washoe,229,"Yankee/Caithness Joint Venture, LP","ST-14","25 OCT 81","Expired",1632,"Hot"
+S5,18N,20E,32,"SE/4, NW/4",Washoe,577,"Steamboat Hills, LLC","Industrial Production Well No. 44-32","17 AUG 05","Drilled",,
+S5,18N,20E,32,"SE/4, NW/4",Washoe,668,"Ormat Nevada, Inc.","Industrial Production Well 44A-32","09 JUL 07","Drilled",,
+S5,18N,20E,32,"SE/4, NW/4",Washoe,578,"Steamboat Hills, LLC","Industrial Production Well No. 34-32","19 SEP 05","Drilled",,
+S5,18N,20E,32,"SW/4, NE/4",Washoe,530,"Yankee/Caithness Joint Venture, LP","Well No. 64-32",,,,
+S5,18N,20E,32,"SW/4, SE/4",Washoe,149,"Caithness Power, Inc.","Well No. 67-32",,"Expired",,
+S5,18N,20E,32,"SW/4, SW/4",Washoe,067,"Yankee/Caithness Joint Venture, LP","Well No. 28-32","02 MAY 86","Production",3031,"Range: 110C between 2377'-2456' to 275C between 2896'-2914'"
+S5,18N,20E,33,,Washoe,201,"Towne, Dorothy","Domestic",,"Expired",,
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","GS-4","27 JAN 51","???",505,"Range: 103C at 60' to 171C at TD"
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 13","1949","Abandoned",11,"Range: 18C at 5' to 35C at 11'"
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 11","1949","Abandoned",13,"TD 25C"
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","GS-5","22 OCT 51","???",575,"Range: 70C at 37' to 170C at TD"
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 6","1949","Abandoned",10,"TD 44C"
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 12","1949","Abandoned",18,"Range: 29C at 16' to 32C at 18'"
+S5,18N,20E,33,"NE/4, NW/4",Washoe,,"U. S. Geological Survey","GS-3","27 JAN 51",,686,"Range: 50C at 45' to 74C at TD"
+S5,18N,20E,33,"NW/4, NE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 3","1949","Abandoned",1,
+S5,18N,20E,33,"NW/4, NE/4",Washoe,,"U. S. Geological Survey","GS-8","03 FEB 51","???",130,"Range: 75C at 41' to 129C at 130'"
+S5,18N,20E,33,"NW/4, NE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 4","1949","Abandoned",8,"TD 29C"
+S5,18N,20E,33,"NW/4, NE/4",Washoe,,"U. S. Geological Survey","Auger Hole No. 5","1949","Abandoned",9,"TD 34C"
+S5,18N,20E,33,"NW/4, NW/4",Washoe,384,"Ormat Nevada, Inc.","Well No. 21-33","23 JAN 94","P&A",710,"325F at 350'"
+S5,18N,20E,33,"NW/4, NW/4",Washoe,388,"SB Geo, Inc.","Well No. 12-33",,"Expired",,
+S5,18N,20E,33,"NW/4, SE/4",Washoe,,"U. S. Geological Survey","GS-1","12 SEP 50",,399,"Range: 58C at 30' to 157C at TD"
+S5,18N,20E,33,"NW/4, SE/4",Washoe,,"Steamboat Resort(?)","No. 32 Geyser Well","1945","Abandoned",43,"TD: 115C"
+S5,18N,20E,33,"NW/4, SE/4",Washoe,,"Steamboat Resort","Steamboat No. 2","MAR 45","Abandoned",120,
+S5,18N,20E,33,"NW/4, SE/4",Washoe,,"Steamboat Resort","Steamboat No. 4","24 MAR 48","Abandoned",225,"Range: 83C at 19' to 155C at 184'"
+S5,18N,20E,33,"SE/4, NW/4",Washoe,669,"Ormat Nevada, Inc.","Industrial Production Well 33-33","10 DEC 07","Drilled",,
+S5,18N,20E,33,"SE/4, NW/4",Washoe,670,"Ormat Nevada, Inc.","Industrial Production Well 43-33","25 SEP 07","Drilled",,
+S5,18N,20E,33,"SE/4, SW/4",Washoe,,"Steamboat Resort","South Steamboat Well","03 FEB 47",,275,"Range: 15C at 6' to 74C at 275'"
+S5,18N,20E,33,"SE/4, SW/4",Washoe,047,"Gerold, George","Domestic","15 DEC 85","Domestic",460,"146F at 30 gpm"
+S5,18N,20E,33,"SW/4, NW/4",Washoe,718,"Ormat Nevada, Inc.","Industrial Production Well 12-33",,,,
+S5,18N,20E,33,"SW/4, NW/4",Washoe,710,"Ormat Nevada, Inc.","Industrial Injection Well 23-33",,,,
+S5,18N,20E,33,"SW/4, NW/4",Washoe,708,"Ormat Nevada, Inc.","Industrial Injection Well 14-33",,,,
+S5,18N,20E,33,"SW/4, NW/4",Washoe,494,"SB Geo, Inc.","Observation Well MTH 12-33",,,,
+S5,18N,20E,33,"SW/4; NW/4",Washoe,493,"SB Geo, Inc.","Observation Well MTH 24-33",,,,
+S5,18N,20E,34,"NW/4, NW/4",Washoe,311,"MacKay, R. Bruce","Domestic","08 SEP 93","Drilled",309,"265F"

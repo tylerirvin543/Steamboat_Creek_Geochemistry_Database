@@ -34,3 +34,4 @@ drop a column constraint via `ALTER TABLE`).
 | 28_well_classes_schema.R | `Wells.well_use`, `Wells.well_status_std` (fill-only seeding) |
 | 29_nbmg_compilation_schema.R | `NBMG_Compilation_Records` staging of the NBMG permit compilation |
 | 30_thermal_areas_schema.R | `Thermal_Areas` threshold polygons (empty until imagery is georeferenced) |
+| 31_nvgeowel_ndwr_index_schema.R | `NVGEOWEL_Records` (rows of the NBMG 2009 well list with their match and disposition) and `NDWR_WellLog_Index` (NDWR well logs for T18N R20E Sec 27); both carry `source_id` -> `Data_Sources` |

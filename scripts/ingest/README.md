@@ -161,3 +161,10 @@ After ingestion completes successfully (via `run_pipeline.R`):
 - QC checks run automatically (`scripts/qc/`, see that folder’s README)
 - Analysis views/derived products build automatically
 - The website and GeoPackage export run if requested
+
+| `ingest_nvgeowel.R` | NBMG NVGEOWEL 2009 well list (hand-transcribed CSV) | `NVGEOWEL_Records`, `Data_Sources`; new `Wells` only for real wells found nowhere else | cross-reference to `NBMG_Compilation_Records` and `Wells`; disagreements go to `flags`; `RUN_INGEST$nvgeowel` |
+| `ingest_white1964_gs_logs.R` | `data/raw/historical/white1964_table3_gs_logs.csv` (White et al. 1964 Table 3) | `Well_Lithology` | GS-6 first; replaces `NBMG TOPS` rows of the same log; runs before `ingest_nbmg_lithology.R`; `RUN_INGEST$white_gs_logs` |
+| `ingest_ndwr_sec27_index.R` | NDWR Truckee Meadows well-log table (T18N R20E Sec 27) | `NDWR_WellLog_Index`, index-only `Wells`, `Water_Level_Observations`, `Well_Work_Events` | NDWR lat/lon are PLSS/parcel-assigned (800 m); `RUN_INGEST$ndwr_sec27` |
+| `register_trans_sierra_leads.R` | `NDWR_WellLog_Index` Trans Sierra Water logs | `Well_Identity_Leads` | candidates for the Bianco well, unconfirmed |
+| `apply_white_gs_hole_corrections.R` | `data/raw/wells/white_gs_hole_corrections.csv` | `Wells` | stated depth/altitude/position for the USGS GS holes; splits Skalbeck's GS-6 row |
+| `apply_fault_dip_attributes.R` | `data/raw/arcgis/faults/fault_dip_attributes.csv` | `Fault_Traces` | literature dip direction/angle with source, zone-level |

@@ -58,13 +58,13 @@ source("scripts/leapfrog/dem_helpers.R")
 
 FT_TO_M <- 0.3048
 
-export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
+export_leapfrog_wells <- function(con, out_dir = "output/leapfrog", max_coord_uncertainty_m = 300) {
 
   message("---- Exporting Leapfrog-ready well layers ----")
   dir_create(out_dir)
 
   wells <- dbGetQuery(con, "
-    SELECT well_id, well_name, latitude, longitude, elevation_m,
+    SELECT well_id, well_name, latitude, longitude, elevation_m, coordinate_uncertainty_m,
            total_depth, top_perforation, bottom_perforation, well_role
     FROM Wells
   ")
@@ -81,13 +81,19 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
   wells$Z <- dplyr::coalesce(wells$Z_dem, wells$elevation_m)
 
   complete <- wells %>% filter(hasll, !is.na(Z), !is.na(total_depth))
+  # A collar is a precise point: wells whose coordinate is only known to a section, quarter-section or PLSS/parcel
+  # assignment (uncertainty over the limit) are listed in collar_incomplete.csv instead of being exported as collars.
+  uncertain_ids <- complete$well_id[!is.na(complete$coordinate_uncertainty_m) & complete$coordinate_uncertainty_m > max_coord_uncertainty_m]
+  complete <- complete %>% filter(!(well_id %in% uncertain_ids))
+  if (length(uncertain_ids)) message('[leapfrog] ', length(uncertain_ids), ' well(s) with coordinate uncertainty over ', max_coord_uncertainty_m, ' m left out of collar.csv (see collar_incomplete.csv)')
 
   incomplete <- wells %>%
-    filter(!(hasll & !is.na(Z) & !is.na(total_depth))) %>%
+    filter(!(hasll & !is.na(Z) & !is.na(total_depth)) | well_id %in% uncertain_ids) %>%
     mutate(
       missing_latlon = is.na(latitude) | is.na(longitude),
       missing_elevation = is.na(Z),
-      missing_total_depth = is.na(total_depth)
+      missing_total_depth = is.na(total_depth),
+      coordinate_uncertainty_excluded = well_id %in% uncertain_ids
     )
 
   if (nrow(complete) == 0) {
@@ -106,7 +112,8 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
       Z = round(Z, 2),
       MaxDepth = round(total_depth * FT_TO_M, 2),
       Z_Source = ifelse(is.na(Z_dem), "stored elevation (outside DEM)", "DEM"),
-      Z_Reported = round(elevation_m, 2)
+      Z_Reported = round(elevation_m, 2),
+      CoordUncertainty_m = coordinate_uncertainty_m
     )
   write_csv(collar, path(out_dir, "collar.csv"))
 
@@ -119,7 +126,7 @@ export_leapfrog_wells <- function(con, out_dir = "output/leapfrog") {
         HoleID = well_name,
         latitude, longitude, elevation_m,
         total_depth_ft = total_depth,
-        missing_latlon, missing_elevation, missing_total_depth
+        missing_latlon, missing_elevation, missing_total_depth, coordinate_uncertainty_m, coordinate_uncertainty_excluded
       )
     write_csv(collar_incomplete, path(out_dir, "collar_incomplete.csv"))
   }

@@ -1,0 +1,35 @@
+"log_number","owner","comp_date","drill_depth_ft","static_water_level_ft","proposed_use","latitude","longitude","coord_shared_by","disposition","loaded_well_id"
+"10947","TRANS SIERRA WATER",NA,188,65,"municipal_public_supply",39.394364,-119.726029,3,"created_well",382
+"11230","E D R RANCH INC",NA,90,NA,"domestic",39.396028,-119.723531,11,"created_well",383
+"3551","RAYMER, JOHN C","1956-10-05",195,90,"domestic",39.394361,-119.726031,3,"created_well",354
+"5902","STATE MORTGAGE CO","1959-05-27",112,60,"municipal_public_supply",39.397972,-119.730476,3,"created_well",355
+"4849","RAYMER, JOHN C","1959-08-13",255,NA,"domestic",39.394361,-119.726031,3,"deepening_of_log_3551",354
+"6591","NEVADA LAND SALES & DEVELOPMENT CORP","1962-05-19",183,NA,"domestic",39.396028,-119.723531,11,"created_well",356
+"6592","NEVADA LAND SALES & DVLPMNT CORP","1962-05-25",176,152,"domestic",39.396028,-119.723531,11,"created_well",357
+"6593","NEVADA LAND SALES & DVLPMNT CORP","1962-06-06",204,171,"domestic",39.396028,-119.723531,11,"created_well",358
+"6733","VAN GUILDER, CALVIN D","1962-06-29",140,45,"domestic",39.396028,-119.723531,11,"created_well",359
+"7801","WHITTAKER, ED","1963-04-15",260,80,"domestic",39.39075,-119.721309,6,"created_well",360
+"11196","EXECUTIVE DISTRIBUTORS RETREAT","1970-08-25",102,75,"domestic",39.39075,-119.726031,2,"created_well",361
+"11246","TRANS SIERRA WATER","1970-10-09",108,58,"industrial",39.397973,-119.730478,3,"created_well",362
+"17309","TRANS SIERRA WATER","1970-10-09",108,58,"other_see_remarks",39.397972,-119.730476,3,"duplicate_of_log_11246",362
+"11298","E D R RANCH INC","1970-10-30",165,NA,"domestic",39.39075,-119.726031,2,"created_well",363
+"11791","BALLARD & DIXON","1971-04-27",105,65,"municipal_public_supply",39.396028,-119.723531,11,"created_well",364
+"11639","GOTT, F","1971-06-25",99,15,"domestic",39.396028,-119.723531,11,"created_well",365
+"11910","CHEVALLEY, LEON","1971-08-19",196,60,"domestic",39.39075,-119.716864,2,"created_well",366
+"12904","HALE, LEE","1972-12-05",202,45,"domestic",39.396028,-119.723531,11,"created_well",367
+"13239","HARPER, MR FRANK H","1973-06-22",214,72,"domestic",39.39075,-119.721309,6,"created_well",368
+"13431","DOMINGUEZ, LORRAINE","1973-09-07",215,172,"domestic",39.396028,-119.723531,11,"created_well",369
+"14361","HALE, LEE","1973-10-09",302,130,"domestic",39.39075,-119.721309,6,"created_well",370
+"17206","GOULD, CLIFFORD","1977-07-10",210,NA,"domestic",39.396028,-119.723531,11,"created_well",371
+"19563","GRIFFEY, ROBERT","1979-03-22",340,115,"domestic",39.39075,-119.721309,6,"created_well",372
+"20820","GOMES, EDWARD T.","1979-09-17",130,82,"domestic",39.396028,-119.723531,11,"created_well",373
+"20415","KRAUSSE, JIM","1979-10-18",325,125,"domestic",39.39075,-119.721309,6,"created_well",374
+"22983","HILL, NANCY J","1981-06-09",109,50,"domestic",39.401583,-119.725753,1,"created_well",375
+"25357","SOUTH HILLS CHRISTIAN ASSEMBLY","1984-05-16",285,105,"municipal_public_supply",39.39075,-119.716864,2,"created_well",376
+"46055","U S GEOLOGICAL SURVEY","1994-06-10",78,62,"test_well",39.401583,-119.730754,1,"created_well",377
+"49793","REESE, DONNA","1995-10-13",177,82,"other_see_remarks",39.39075,-119.717142,1,"created_well",378
+"95565","RENO, LENNAR","2004-09-21",140,42,"other_see_remarks",39.401583,-119.730476,1,"created_well",379
+"98063","SURVIVORS TRUST","2005-07-12",256,88,"other_see_remarks",39.39075,-119.721309,6,"created_well",380
+"126275","TRUCKEE MEADOWS WATER AUTHORITY","2016-08-17",98,79.1,"industrial_cooling",39.398619,-119.733632,1,"already_has_document_well",147
+"126302","TRUCKEE MEADOWS WATER AUTHORITY","2016-08-17",108,78.6,"municipal_public_supply",39.399922,-119.73263,2,"created_well",381
+"126301","TRUCKEE MEADOWS WATER AUTHORITY","2016-09-01",188,80,"municipal_public_supply",39.399922,-119.73263,2,"already_has_document_well",148

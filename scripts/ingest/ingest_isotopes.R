@@ -86,8 +86,12 @@ ingest_isotopes <- function(con) {
   # VALIDATION
   # --------------------------------------------------
   if (any(is.na(iso$sample_id))) {
-    print(iso %>% filter(is.na(sample_id)))
-    stop("Isotope samples did not match Samples table")
+    unmatched <- iso %>% filter(is.na(sample_id))
+    print(unmatched)
+    # 2026-11-08: reported and left out instead of aborting, so isotope rows for samples that are not in the Samples table do not block the rest
+    warning("[ingest_isotopes] ", nrow(unmatched), " isotope sample(s) not in the Samples table were skipped: ", paste(unmatched$sample_code, collapse = ", "), call. = FALSE)
+    iso <- iso %>% filter(!is.na(sample_id))
+    if (nrow(iso) == 0) return(invisible(NULL))
   }
   
   # --------------------------------------------------
