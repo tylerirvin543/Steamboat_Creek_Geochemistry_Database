@@ -468,6 +468,15 @@ The surface hot ground is a small part of the heat budget. The 480 m^2^ of polyg
 
 The resort tank record shows daily operation through September 2026, with the same cycle in each month and no weekday-only pattern, so the 1989 schedule Collar described does not describe the current well. The tank ran about 1 degree Celsius cooler in September with larger swings, which fits cooler nights or less hot inflow, not a different schedule. The creek does not show the resort cycle clearly: the daily conductance difference between SBGG and SBRR is only about 4 percent of the mean difference, and the hour-by-hour correlation with the tank is 0.07. The pumping rate itself is still unknown, and it is the number that sets the resort's share (1.8 percent at 1 L/s to 17.7 percent at 10 L/s).
 
+The 2025 and 2026 resort-tank records cannot be joined into one history, because the sensors may not sit in the same place. @fig-lindsey-loggers shows the July 2025 traces read from Lindsey and others' Figure 3 (digitized by eye, about 1 degree Celsius) beside A009 and A005 in July 2026. A009 sits near 76 degrees Celsius with a swing under 3 degrees, while the 2025 tank trace has a median near 67 and dips to 61. Her main-fissure logger is not known to be at the same point as A005 at SBF_0001, so the fissure difference should not be read as change through time. Matching sensor positions with the people who installed the 2025 loggers is a low-cost step that would make the two records comparable.
+
+```{r fig-lindsey-loggers}
+#| echo: false
+#| fig-cap: "Logger traces from Lindsey and others (2026, Figure 3; 1-8 July 2025, digitized by eye, about 1 degree Celsius) compared with this project's A009 (resort tank) and A005 (fumarole) loggers, 16-24 July 2026. Sensor positions in the two studies may differ, and her fissure line is a daily mean."
+#| fig-alt: "Two panels. Top, fissure or fumarole: a flat line near 76 degrees from 2025 above a strongly oscillating line from 35 to 72 degrees from 2026. Bottom, resort tank: a line between 61 and 68 degrees from 2025 below a steady line near 76 degrees from 2026."
+knitr::include_graphics("../output/figures/manuscript/lindsey_vs_our_loggers.png")
+```
+
 The next steps that follow are practical. Walk the resort overflow and measure its flow, temperature, conductivity and chloride, with creek samples above and below its entry point, and retrieve the resort's water-right and pumping records. Ask Phil Busick and Gene Savoy for the history and logs of the Lower Terrace wells and the capped pipe. If the owners agree, ask Christopher Kratt (UNR) to run resistivity lines across the fissure zone and along the creek corridor, which would give the Leapfrog model fault and cap geometry between wells. Ask Ormat only for what bears on the Lower Terrace, and repeat the calibrated thermal flights each season, so that the 488 m^2^ baseline becomes a change metric.
 
 ## Closing
