@@ -129,7 +129,7 @@ show_fig <- function(path, caption, alt, id, width = NULL) {
 
 # Acknowledgments {.unnumbered}
 
-I thank Rachel Micander (Nevada Bureau of Mines and Geology) first and most. She shared her draft thesis proposal and her term paper on the Steamboat Hills structural framework, and the NBMG field timeline of the 2022-2025 events that anchors the chronology below. The way her proposal is organized (geologic background, guiding questions, methods by data source, work completed to date, and a semester-by-semester plan with a courses-and-credits table) shaped the layout of this one, and her compilations of existing mapping, well data and conceptual models informed the methods that follow. I thank Cary Lindsey (NBMG) for the drone thermal surveys, the logger data and the 2026 poster we wrote together, and Owen Callahan (NBMG) for the thermal imagery. I thank Phil Busick and Gene Savoy (Steamboat Hot Springs Resort) for access to the properties and for their continuing help with the history of the Lower Sinter Terrace, and Keith Hayes (Nevada Division of Minerals) for the permitted-well records. I thank my advisor, Wendy Calvin, and my committee members, Alex Lutz and Jim Faulds, for their guidance.
+I thank Rachel Micander (Nevada Bureau of Mines and Geology) first and most. She shared her draft thesis proposal and her term paper on the Steamboat Hills structural framework, and the NBMG field timeline of the 2022-2025 events that anchors the chronology below. The way her proposal is organized (geologic background, guiding questions, methods by data source, work completed to date, and a semester by semester plan with a courses and credits table) shaped the layout of this one, and her compilations of existing mapping, well data and conceptual models informed the methods that follow. I thank Cary Lindsey (NBMG) for the drone thermal surveys, the logger data and the 2026 poster we wrote together, and Owen Callahan (NBMG) for the thermal imagery. I thank Phil Busick and Gene Savoy (Steamboat Hot Springs Resort) for access to the properties and for their continuing help with the history of the Lower Sinter Terrace, and Keith Hayes (Nevada Division of Minerals) for the permitted-well records. I thank my advisor, Wendy Calvin, and my committee members, Alex Lutz and Jim Faulds, for their guidance.
 
 # Project overview and roadmap {.unnumbered}
 
@@ -148,7 +148,7 @@ I thank Rachel Micander (Nevada Bureau of Mines and Geology) first and most. She
 - *Monitoring field.* NDEP chemistry and field forms at the production-side ports and the monitoring and domestic wells, water levels, 11 temperature-logger sites, two conductivity loggers (SBRR upstream, SBGG downstream, since 15 July 2026), and the USGS gauge, all in one relational database.
 - *Lower Sinter Terrace mapping.* A georeferenced thermal map turned into polygons at or above 30 degrees Celsius, mapped fissures and faults, springs and seeps with White and Collar names attached as aliases, and a source-stratified sampling frame.
 - *Chloride-conductivity proxy.* Paired chloride and conductance samples across a full annual cycle, tested against the chloride mass balance, with the Monte Carlo subsampling analysis setting the sampling frequency.
-- *PHREEQC and 1-D mixing models.* Speciation and saturation indices for 404 samples, two-end-member conservative mixing, forward reaction-path titrations, gas geothermometry, and a principal-component analysis of the resulting chemistry.
+- *PHREEQC and 1-D mixing models.* Speciation and saturation indices for 404 samples, two end-member conservative mixing, forward reaction-path titrations, gas geothermometry, and a principal-component analysis of the resulting chemistry.
 - *3-D geologic modeling (bounded extension).* A Leapfrog model of wells, lithology, faults and fissures used to define compartments, mixing pathways and candidate reactions for PHREEQC, not a flow model.
 - *Geophysics, if access allows.* Electrical resistivity lines with Christopher Kratt (UNR), conditional on property permission.
 - *Collaborators and data.* Cary Lindsey, Owen Callahan and Rachel Micander (NBMG); Phil Busick and Gene Savoy for historical Lower Terrace information, logs and access; Ormat for well and operations data if an agreement is possible; NDEP, NDOM and NDWR records.
@@ -170,7 +170,7 @@ I thank Rachel Micander (Nevada Bureau of Mines and Geology) first and most. She
 
 **Work completed to date.** The database holds 1,600 or more samples and several hundred located wells and springs. PHREEQC speciation is done for 404 samples, with mixing, reaction-path and gas results for the terrace flowpath. Three fissure gas samples have been air-corrected and compared with Mariner and Janik's 1995 gas data. The chloride balance for 1 May 2026 gives 58.65 L/s of thermal inflow. The thermal map gives 488 m^2^ at or above 30 degrees Celsius, attributed to resort infrastructure, the fissure zone, the Lower Terrace channel and creek-corridor springs. The resort tank logger (A009) shows daily operation. Leapfrog input files exist for 110 wells with collars, depths and elevations, and 27 historical well logs from Collar's thesis have been ingested. The Monte Carlo test is run on the measured conductance record.
 
-**How the rest of the document is organized.** The Introduction gives the setting, a chronology and the research questions. The Background chapter covers the chemistry the proxy depends on, thermal imaging, and the three mass balances. Previous Work follows the literature from White (1964, 1968) to Lindsey and others (2026). Methods and Plan of Action holds the preliminary results, the uncertainty in the discharge estimate, the sampling plan, the proposed 3-D model, the schedule with its costs, and the figure slots and program-of-study table.
+**How the rest of the document is organized.** The Introduction gives the setting, a chronology and the research questions. The Background chapter covers the chemistry the proxy depends on, thermal imaging, and the three mass balances. Previous Work follows the literature from White (1964, 1968) to Lindsey and others (2026). Methods and Plan of Action holds the preliminary results, the uncertainty in the discharge estimate, the sampling plan, the proposed 3-D model, the schedule with its costs, and the figure slots and program of study table.
 
 # Introduction
 
@@ -291,7 +291,7 @@ document's reported current pressures sit below the prior allowable
 ceiling at most wells, so whether injection pressure or rate rose
 *before* the eruption, rather than only becoming newly permitted, cannot
 be resolved from this one document. @fig-injpressure shows its
-well-by-well snapshot: most injection wells were already running close
+well by well snapshot: most injection wells were already running close
 to their own pressure-limited physical maximum at full production
 (77-90 percent of the maximum flow each well can sustain at its allowable pressure, at IW-5, IW-6, and
 42A-32, for example), so the headroom any single well had to inject
@@ -321,7 +321,7 @@ The injection question sits inside a longer history of change at the
 facility, which the data on file document only partly. Ormat operates
 Steamboat as a binary, fully reinjected system [@dhakal2025], and the
 Nevada Division of Minerals permit record for Ormat's Steamboat wells
-(49 wells, ingested into this project's database) shows continuing
+(49 wells, added to this project's database) shows continuing
 drilling and well-status change across the field rather than a static
 configuration: injection well 21-32 was completed in 2014, 42A-32 in
 2018, and production well 41-5 in 2012 (now recorded Shut-In); eight of
@@ -338,7 +338,7 @@ do not show it: the only repeat production readings available are two
 NDEP tracer-test reports (July 2025 and April 2026), in which the one
 production well reported, 24-5, fell from 883 to 835 kph (about 5
 percent) over nine months, a single well over a short window. Testing
-this hypothesis properly needs dated, well-by-well injection and
+this hypothesis properly needs dated, well by well injection and
 production histories spanning 2022-2025, which this project has requested
 from NDEP (and plans to request them from Ormat) and does not yet
 have.
@@ -406,7 +406,7 @@ dry years just before the 2022 onset (water years 2020 and 2021, 100 and 77 mm)
 that returned the cumulative departure to about -220 mm, followed by a wet 2023
 (391 mm) that brought it to roughly the long-term mean, where it has stayed
 through 2026. Seep and vent development in 2023-2025 therefore occurred during
-average-to-wet conditions, not a drought; the 2022 onset followed a dry spell, but
+average to wet conditions, not a drought; the 2022 onset followed a dry spell, but
 similar and deeper dry spells (for example 2012-2015, about -420 mm) are not known to
 have produced surface activity. This is a descriptive comparison at a station
 about 15 km north and 100 m lower than the field, not a test. Precipitation
@@ -508,7 +508,7 @@ its own deliverable.
 and across site types?** Does a single calibration apply everywhere, or do
 outlet, creek, monitoring-well, and spring waters each require their own
 relationship, and how much uncertainty results from seasonal and temporal
-variation? *Deliverable:* one or more chloride-to-conductance
+variation? *Deliverable:* one or more chloride to conductance
 calibration equations, with stated uncertainty.
 
 **RQ2: What is the minimum chloride-sampling frequency required to maintain
@@ -534,7 +534,7 @@ discharge record Sorey and others established.
 question is: (RQ1) a single calibration will not fit every site type
 equally well, since outlet, creek, monitoring-well, and spring waters
 are exposed to different near-surface conditions, but the relationship
-should hold within a given site type; (RQ2) daily-to-weekly chloride
+should hold within a given site type; (RQ2) daily to weekly chloride
 sampling should be sufficient to keep a conductivity-based estimate
 defensible, with the open question being exactly where that
 breaks down, not whether a workable frequency exists; (RQ3) chloride
@@ -600,7 +600,7 @@ tests that substitution directly; it does not assume the answer in advance.
 | Sulfate | Also strongly correlated with chloride, sodium, and potassium here (a secondary conservative-ish tracer, though sulfate can be affected by anhydrite/gypsum equilibria at high enough concentration). |
 | Calcium, magnesium | Behave oppositely to the chloride/sodium/potassium group; track a more dilute, rock-reacted water-rock interaction signature. |
 | Alkalinity | Drives carbonate mineral saturation (calcite, dolomite, aragonite). |
-| Boron, lithium, fluoride | Minor conservative-ish tracers used for independent cross-checks, such as the chloride-to-boron ratio discussed below. |
+| Boron, lithium, fluoride | Minor conservative-ish tracers used for independent cross-checks, such as the chloride to boron ratio discussed below. |
 | Silica | The basis of quartz/chalcedony geothermometry; behaves less conservatively than sodium/potassium on the ascent-to-discharge path at Steamboat. |
 
 ## Charge balance and mineral saturation
@@ -656,7 +656,7 @@ equilibrates toward ambient conditions faster than the sodium/
 potassium ratio does as water cools and dilutes on its way to
 discharge, so the two geothermometers are expected to diverge exactly
 this way along a single cooling, diluting flow path. This
-divergence-as-evidence approach follows Shevenell and De Rocher's
+divergence as evidence approach follows Shevenell and De Rocher's
 [@shevenell2005] own evaluation of multiple geothermometers across
 several Nevada geothermal power plants, which found that no single
 geothermometer is reliable in isolation and that comparing several
@@ -740,7 +740,7 @@ dissolution of roughly one-tenth of a millimole of calcite and dolomite,
 that is a quantitative statement about how much carbonate chemistry
 needed to be added or removed to match the sample: it is not a statement
 about *where* that dissolution happened, over what distance, or how long it
-took. Likewise, a two-end-member mixing fraction says what proportion of
+took. Likewise, a two end-member mixing fraction says what proportion of
 two chemically distinct waters would explain a sample's chloride; it says
 nothing about the physical flow path the water actually followed to arrive
 there.
@@ -750,7 +750,7 @@ the point of being uninformative: they draw a useful, if
 spatially blind, distinction, and the clearest example is already in hand.
 A batch model with no spatial information at all is still able to show that
 SBS_0001's chemistry cannot be explained by the same simple
-mixing-plus-carbonate-reaction model that explains its four
+mixing plus carbonate reaction model that explains its four
 downgradient neighbors (Chapter 4), even though SBS_0001 and one of those
 neighbors sit only 109 meters apart. That is exactly the kind of specific
 finding a batch geochemical model is built to deliver (a chemical
@@ -770,7 +770,7 @@ throughout the Methods section below.
 
 A thermal camera records infrared radiance, which is converted to surface temperature using the emissivity of the target. Water, wet ground and rock have emissivities near 0.95, so a calibrated thermogram is a good measure of the temperature of the skin of the surface and a poor measure of the temperature just below it. Lindsey and others [@lindsey2026] tune their thermograms against high-emissivity ground-control targets and report agreement within 1.3 degrees Celsius, but they also show where the method fails: a centimeter-scale vent near boiling reads 59-78 degrees Celsius because it is averaged across a 7 cm pixel, creek water reads several degrees warm, and ground a few centimeters down is warmer than the surface. Flights before dawn limit solar heating, which matters here because a sunlit road or roof can reach 30 degrees Celsius with no geothermal input at all.
 
-Two consequences shape how the imagery is used in this thesis. First, the temperature ramp of the map used here ends at 44 degrees Celsius, so the hottest vents are recorded only as "at least 44" and areas above 30 degrees Celsius are a lower bound on how much ground is warm. Second, the area of warm surface is not the same as discharge. A small, hot vent and a broad, slightly warm seepage face can carry the same flow, and a hot tank surface says nothing about how much water passed through it. The surface temperature can be turned into a rough heat loss to the air (convection plus radiation, which is several hundred watts per square meter for ground 30 degrees warmer than the air), and that heat can be compared with the heat carried by the water, but only as an order-of-magnitude check.
+Two consequences shape how the imagery is used in this thesis. First, the temperature ramp of the map used here ends at 44 degrees Celsius, so the hottest vents are recorded only as "at least 44" and areas above 30 degrees Celsius are a lower bound on how much ground is warm. Second, the area of warm surface is not the same as discharge. A small, hot vent and a broad, slightly warm seepage face can carry the same flow, and a hot tank surface says nothing about how much water passed through it. The surface temperature can be turned into a rough heat loss to the air (convection plus radiation, which is several hundred watts per square meter for ground 30 degrees warmer than the air), and that heat can be compared with the heat carried by the water, but only as an order of magnitude check.
 
 ## Mass balances: chloride, heat and water
 
@@ -804,7 +804,7 @@ least 100,000 years, with "no new magma... directly involved" and
 volcanic steam contributing under five percent of total system water
 [@white1964b]) frames Steamboat as a persistent, long-lived convective
 system rather than one newly activated by fresh input, which bears
-directly on this proposal's redistribution-versus-new-source question.
+directly on this proposal's redistribution versus new source question.
 Arehart and others [@arehart2003] and Johnson and Hulen [@johnsonhulen2006]
 later brought trace-element and gas evidence for a magmatic heat source,
 a partly differing view that agrees on the point that matters here: the
@@ -864,7 +864,7 @@ it, and is treated in detail below. Sorey [@sorey2000]
 found that groundwater levels had recovered by 2000 while spring flow
 had not resumed, the critical observation that recovery alone did not
 reactivate the terrace. Sorey and Spielman [@sorey2008; @sorey2017]
-refined the chloride-mass-balance method at two Steamboat Creek gauging
+refined the chloride mass balance method at two Steamboat Creek gauging
 sites, Rhodes Road (SBRR) and Bella Vista (SBBV), reporting 730-1,214
 gallons per minute for 2007-08 and an average of 60 liters per second
 (range 45-90 L/s) across 24 sampling events from 2008 to 2016. Cohen and
@@ -896,7 +896,7 @@ disagree on how much of the head loss was caused by production, which is
 exactly the kind of attribution question that a pressure or injection
 change would raise again, and it remains unresolved.
 
-Collar's creek work uses the same two-end-member chloride balance as this
+Collar's creek work uses the same two end-member chloride balance as this
 proposal (thermal water 820 mg/L, nonthermal 4 mg/L), with explicit
 equations for gaining and losing reaches, and divides the creek at Virginia
 City Highway (Geiger Grade) into a "geothermal area" reach and a South
@@ -1183,7 +1183,7 @@ well outside the terrace itself: some outlets swing by more than 1,500
 microsiemens per centimeter across the five rounds, while others (the
 shallow domestic wells) stay comparatively flat. Water levels tell a
 related story, shown in @fig-wlstandardized: standardizing each well's own
-depth-to-water to its own mean and standard deviation over the same
+depth to water to its own mean and standard deviation over the same
 window shows Herz Domestic Well tracking STMGID MW3 closely (r roughly
 0.94, p roughly 0.005, n=6), but not STMGID MW10 (r roughly -0.57, not
 significant): consistent with MW3's much shorter, shallower screened
@@ -1278,7 +1278,7 @@ full range of conditions in the network: Eich (530-590 mg/L) and Soccer
 Field (470-570 mg/L) carry a clear thermal chloride signature, Boyd (39-45
 mg/L) is dilute, and Jeppson (11 mg/L) and Rogers (7 mg/L) are
 background-like. Two samples in four months cannot show a trend, so these
-points locate each well on the thermal-to-dilute spectrum today rather than
+points locate each well on the thermal to dilute spectrum today rather than
 testing drift. NDOT and Herz Deep, sampled for field parameters in 2025,
 have no laboratory chloride on file yet and are not plotted; the NDEP data
 request is aimed at closing that gap.
@@ -1292,7 +1292,7 @@ asymmetry is itself an argument for the ongoing spring and well
 remapping and the proposed sampling plan above: without a comparable
 multi-year record at the terrace itself, there is no way yet to tell
 whether its own springs would show the same kind of multi-year
-rise-and-fall several of these historically-documented wells do, or would
+rise and fall several of these historically-documented wells do, or would
 instead track the thermal end-member's own apparent stability: a 
 open, and directly testable question this proposal's monitoring plan is
 positioned to answer going forward.
@@ -1440,7 +1440,7 @@ eras constitutes evidence about source-fluid stability (see the
 preliminary Cl/B result in @fig-clb below) rather than folded into
 one pooled average that would hide exactly that question.
 
-**Mixing and inverse modeling.** A two-end-member conservative-mixing
+**Mixing and inverse modeling.** A two end-member conservative-mixing
 fraction is computed directly from chloride, then used to build a
 a PHREEQC mixing step combining the two end-member solutions at that fraction
 and comparing PHREEQC's own predicted speciation against the sample's
@@ -1489,7 +1489,7 @@ stated here since they bear directly on how much weight the
 results below can carry. First, every candidate phase supplied to a given
 run is titrated by the identical reaction-progress amount at each step:
 there is no constraint, chemical or otherwise, that the system actually
-dissolves or precipitates two phases in a one-to-one ratio; a result is
+dissolves or precipitates two phases in a one to one ratio; a result is
 only as good as that simplifying choice. Second, a single mixing fraction
 is held fixed for the whole titration, computed once from chloride before
 the reaction is explored: the two are not jointly fit, so a sample
@@ -1518,7 +1518,7 @@ seventy-year record. A modeling result that doesn't actually bear on
 one of those three questions isn't reported here just because it's
 available.
 
-**Chloride-to-boron ratio across seven decades.** A two-sample comparison
+**Chloride to boron ratio across seven decades.** A two-sample comparison
 of the curated thermal end-member (seven historical samples from Sorey and
 Colvard [@sorey1992]; six modern samples from this project's own field
 campaign) finds the ratio is similar in magnitude but not statistically
@@ -1602,7 +1602,7 @@ show_fig(
 ```
 
 **Does a multicomponent equilibrium exist, or only the
-quartz/chalcedony pair already reported?** The quartz-versus-Na/K
+quartz/chalcedony pair already reported?** The quartz versus Na/K
 divergence already described above only ever compares two minerals at a
 time. The test for a shared equilibration temperature (Reed and Spycher
 1980) is whether several candidate minerals' saturation indices cross zero
@@ -1617,7 +1617,7 @@ almost the entire explored range, and anhydrite and fluorite stay
 undersaturated throughout. At no sample do two or more minerals
 besides the quartz/chalcedony pair itself converge within 15 degrees
 Celsius of one another (confirmed directly, not assumed, for every sample
-in @tbl-geotherm). This does not undermine the quartz-versus-Na/K story
+in @tbl-geotherm). This does not undermine the quartz versus Na/K story
 already told throughout this proposal; it sharpens it, by confirming that
 quartz/chalcedony's own apparent agreement is real and not an artifact of
 only checking two minerals while ignoring others that might have told a
@@ -1746,7 +1746,7 @@ fluid forward through the system to the downstream creek:
    lithium, bromide, fluoride, strontium, and alkalinity are scaled back
    by (1 - steam-loss fraction): boiling concentrates the residual liquid,
    so the parent values are lower than measured, not higher.
-4. **Gas add-back.** NV26-1's air-corrected carbon dioxide-to-hydrogen
+4. **Gas add-back.** NV26-1's air-corrected carbon dioxide to hydrogen
    sulfide ratio is used to seed a PHREEQC gas-phase equilibration at
    the reservoir's own saturation pressure (several atmospheres, not 1
    atmosphere), re-setting pH and carbonate speciation to a plausible
@@ -1823,7 +1823,7 @@ failure is reported, not hidden (see Results).
 
 The reconstructed parent fluid, the as-measured fissure and resort-tank
 fluids, a nearby Lower Sinter Terrace well (SBW_0001), and this project's
-two Steamboat Creek chloride-mass-balance stations (SBRR, near-field; SBBV,
+two Steamboat Creek chloride mass balance stations (SBRR, near-field; SBBV,
 downstream: the same two stations used in the chloride mass balance)
 are assembled into one flowpath table and figure, tracking chloride,
 sodium, sulfate, silica, boron, pH, calcite and quartz saturation indices,
@@ -1895,7 +1895,7 @@ on that step.
 
 **A note on the field-temperature correction.** A field-temperature unit
 bug (the project's Fluke field thermometer reports Fahrenheit, mislabeled
-as Celsius downstream of ingestion) was found and fixed after these
+as Celsius when entered into the database) was found and fixed after these
 reconstructions were first run, and every number above reflects the
 corrected temperatures. The steam-loss fractions and reconstructed parent
 chloride changed materially (the fissure's steam-loss fraction moved from
@@ -1932,7 +1932,7 @@ Running this project's existing PHREEQC inverse-modeling framework
 tank's, for the reasons given above) and the meteoric reference well;
 candidate phases: calcite, quartz, chalcedony) against the two target
 samples with complete chemistry (SBW_0001, SBW_0002, both used as-measured)
-finds zero feasible mixing-plus-mineral-transfer solutions for either
+finds zero feasible mixing plus mineral transfer solutions for either
 target. This is not read as a geochemical rejection of the parent-fluid
 end-member: the raw PHREEQC output traces the failure to the same tiny (on
 the order of 1e-9), numerically spurious residual on an unused trace redox
@@ -1958,9 +1958,9 @@ dolomite. At 15 percent uncertainty a second feasible solution is found
 with a somewhat different mixture (65.8/34.2 percent) and similar net
 dissolution. This is a quantitative point of agreement with the
 forward titration result below: both methods independently converge on net
-calcite-plus-dolomite *dissolution* on the order of a few times 1e-4 mol
+calcite plus dolomite *dissolution* on the order of a few times 1e-4 mol
 along this flowpath, not precipitation. Read together, a feasible
-two-end-member-plus-carbonate model for SBW_0001 exists, but only once the
+two end member plus carbonate model for SBW_0001 exists, but only once the
 uncertainty allowed on the underlying chemical analyses is relaxed beyond
 this project's usual 5 percent default: consistent with analytical
 uncertainty on these samples' major-ion measurements being larger than
@@ -1986,7 +1986,7 @@ its observed value anywhere in the titrated range. Chloride stays exactly
 conservative across every step, confirming the titration moves only the
 carbonate system, as intended. Read together, the inverse and forward
 results now reinforce each other on both the sign and the rough magnitude
-of the needed correction: net calcite-plus-dolomite dissolution, not
+of the needed correction: net calcite plus dolomite dissolution, not
 precipitation, order 1e-4 mol. The inverse search needs a looser
 uncertainty tolerance to call this feasible in a strict least-squares
 sense; the forward titration shows the same direction and size of
@@ -2134,7 +2134,7 @@ show_fig(
 **Tracing the flowpath from parent fluid to the downstream creek.** Putting
 the two reconstructed parent fluids, the as-measured fissure and
 resort-tank chemistry, a nearby Lower Sinter Terrace well (SBW_0001), and
-the two Steamboat Creek chloride-mass-balance stations (SBRR, then
+the two Steamboat Creek chloride mass balance stations (SBRR, then
 downstream SBBV) on one flowpath, shown in @fig-evolution, gives a
 coherent, data-supported picture: chloride, sodium, silica, and boron all
 decline in the same order along the flowpath (parent/fissure/resort-tank
@@ -2181,7 +2181,7 @@ percent coefficient of variation. Three points is too few for a formally
 powered statistical test, rather than dressed up with an
 inappropriate p-value, but a spread this tight relative to the 50-100
 degree Celsius divergence this project's own
-geothermometer-vs-measured-temperature comparison already documents across
+geothermometer vs measured temperature comparison already documents across
 its full sample set is a specific piece of evidence consistent with
 these three points sharing one deep source, not three independent ones.
 
@@ -2222,7 +2222,7 @@ thermal-infrared survey, shown in @fig-tirbroad, overlays the full Lower
 Sinter Terrace against satellite imagery, with labeled ground-control
 points, a visible warm channel tracking Steamboat Creek, and the resort
 well/pools area. A calibrated, zoomed-in thermal orthophoto of the fissure
-area, shown in @fig-tirzoom, makes the two-discharge-style claim concrete
+area, shown in @fig-tirzoom, makes the two-discharge claim concrete
 rather than only described in prose: discrete, bright point sources cluster
 along the terrace's western margin (plausible active degassing/boiling
 vents), while a broader, more diffuse warm signature tracks the creek
@@ -2279,10 +2279,10 @@ show_fig(
 the full flowpath as a schematic: deep parent fluid, degassing, the
 three measured discharge points, shallow meteoric mixing,
 Steamboat Creek at SBRR, White's [-@white1968c] own documented
-approximately 100 gallon-per-minute "unseen" Lower Sinter Terrace
+approximately 100 gallon per minute "unseen" Lower Sinter Terrace
 thermal inflow between SBRR and SBBV (notebook section 4.7), Steamboat
 Creek at SBBV, and the downstream conductivity logger/United States
-Geological Survey gauge, consistent with the two-discharge-style
+Geological Survey gauge, consistent with the two-discharge
 picture the thermal-infrared imagery above now confirms directly:
 the system appears to have at least two physically distinct discharge
 styles operating side by side on the same terrace, which is itself a
@@ -2372,7 +2372,7 @@ color distance of the ramp and excluding the annotation colors. The mask was clo
 over about 0.5 m, because the layer is speckled at pixel scale, and polygonized into
 a table of thermal areas in the project database. The ramp saturates at 44 degrees Celsius.
 
-**How much surface is hot.** A pixel-by-pixel count gives 488 m^2^ at or above 30
+**How much surface is hot.** A pixel by pixel count gives 488 m^2^ at or above 30
 degrees Celsius; the 67 polygons total 480 m^2^ (@tbl-thermalareas). Grouped by the source
 each polygon marks (@tbl-thermalsources and @fig-thermalsources), the Lower Terrace channel
 holds the most (161 m^2^, 34 percent), followed by the resort tanks, pipe and pavement
@@ -2533,7 +2533,7 @@ show_fig(
 | Surface loss as a share of the heat carried, % (60, 90, 130 C) | 2.7 | 1.6 | 1.1 |
 | Implied temperature of the thermal inflow, C (non-thermal inflow at 10, 15.2, 20 C) | 81.1 | 76.8 | 72.8 |
 
-: Order-of-magnitude heat estimates. Emissivity 0.95, ambient 10 C, creek water 15.2 C, thermal inflow 58.65 L/s. {#tbl-heatbudget}
+: Order of magnitude heat estimates. Emissivity 0.95, ambient 10 C, creek water 15.2 C, thermal inflow 58.65 L/s. {#tbl-heatbudget}
 
 **Is the resort still pumping on the same schedule?** By month, the A009 daily cycle persists with the same shape. The median hour of the daily minimum runs from about 09:30 in May and 09:25 in July to 09:00 in August and 08:15 in September, and the tank is warming or at its plateau for about half to two-thirds of the day in every month (0.48 to 0.65 of the hourly steps). From August to September the tank runs about 1 degree Celsius cooler (mean 75.4 to 74.8) with larger swings (daily range 2.6 to 3.0), which fits cooler nights or slightly less hot inflow, not a different schedule; the record cannot say which. @fig-resort-curve puts the pumping rate in context: at the historical average of 60 gpm the resort share is 6.7 percent if pumped continuously and 3.9 percent scaled by the 58 percent duty cycle.
 
@@ -2591,7 +2591,7 @@ sampling round proposed in Chapter 5, not pursued further here.
 
 This baseline does two things for the rest of the proposal. First, it
 connects the fissure-specific geochemistry above directly to the
-creek-scale conductivity-as-proxy work in Chapter 4: both are, at bottom,
+creek-scale conductivity proxy work in Chapter 4: both are, at bottom,
 asking how far, and in what chemical form, the same thermal signal travels
 from its source, and the mixing fractions below are the quantitative link
 between the two. Second, it gives a chemical baseline for the Lower Sinter
@@ -2618,9 +2618,9 @@ documented as a finding, not an error). SBRR itself anchors the dilute end
 by definition; its downstream partner SBBV, several kilometers further down
 Steamboat Creek, still implies about 14 percent fissure-strength fluid by
 chloride alone: the same signal, at a much smaller concentration, that
-the 58.7 liter-per-second thermal-discharge
+the 58.7 liter per second thermal-discharge
 estimate is built on. This is the direct link between the fissure-specific
-chemistry above and the creek-scale conductivity-as-proxy work: the same
+chemistry above and the creek-scale conductivity proxy work: the same
 conservative mixing framework explains both.
 
 ```{r fig-mixingfraction}
@@ -2703,7 +2703,7 @@ clean "no, not connected": the Na/K reservoir-temperature agreement
 (173-190 degrees Celsius across every thermal feature, not just the
 three used for the formal agreement test above) is consistent with one
 shared deep source feeding wells, springs, and the seep alike. But the
-sulfate, alkalinity, and quartz-versus-measured-temperature patterns above
+sulfate, alkalinity, and quartz versus measured temperature patterns above
 show that **springs and wells diverge systematically in near-surface
 process**, not randomly: springs and the seep show more cooling below their
 own quartz-equilibration temperature and a consistent sulfate-gain/
@@ -2739,7 +2739,7 @@ same time we noted two other changes: a native-sulfur deposit
 (@fig-sulfur) that has visibly grown and still looks fresh rather than
 weathered, and a seep (@fig-seep) discharging from the alluvial cover
 directly onto the underlying hard sinter bedrock, an example of the
-alluvium-to-bedrock contact the spring and well remapping below is designed
+alluvium to bedrock contact the spring and well remapping below is designed
 to document systematically rather than just stumbling across. Taken
 together, these three observations support the poster's own conclusion
 (fluids are still redistributing within an existing shallow conduit system
@@ -2778,10 +2778,10 @@ show_fig(
 ```
 
 This same seep location was also photographed on an earlier visit,
-shown side-by-side with the September 27, 2026 photo above in
+shown side by side with the September 27, 2026 photo above in
 @fig-seep-compare. The two visits document the same bare,
-white-crusted alluvium-on-sinter feature over time rather than two
-separate points, giving an informal before-and-after view of
+white-crusted alluvium on sinter feature over time rather than two
+separate points, giving an informal before and after view of
 how this specific discharge point looks across repeat visits.
 
 ```{r fig-seep-compare}
@@ -2801,8 +2801,8 @@ major-ion chemistry (157 samples as of this writing) is assigned to a
 hydrochemical facies using unsupervised clustering, cross-checked by
 principal component analysis and an independent statistical classification
 method, and compared against PHREEQC's own fluid-type classification. The
-thermal end-member's chemistry (specifically its chloride-to-boron,
-sodium-to-chloride, lithium-to-chloride, and silica-to-chloride ratios) is
+thermal end-member's chemistry (specifically its chloride to boron,
+sodium to chloride, lithium to chloride, and silica to chloride ratios) is
 then tracked across the 1950s, 1990s, and present eras to test whether the
 source fluid's composition, and separately its modeled equilibrium state,
 have remained stable over more than seventy years.
@@ -2886,7 +2886,7 @@ stated reason rather than just "trying everything":
   by the highest-concentration samples and can predict a nonsensical
   negative chloride value at the dilute end, which a log transform avoids.
 - A **generalized additive model** (GAM, fit with the mgcv package for R,
-  following @wood2017), which allows the chloride-versus-conductance curve
+  following @wood2017), which allows the chloride versus conductance curve
   to bend where the data demands it, rather than assuming in advance
   that the relationship is a straight line (or a straight line in log
   space). In plain terms, a GAM replaces the single slope $\beta_1$ above
@@ -2923,7 +2923,7 @@ actually be applied going forward (predicting ahead, never predicting a
 date the model has already effectively "seen" through a neighboring
 sample). This is implemented twice, once as a purpose-written routine and once with a
 standard resampling package. Reported skill is the cross-validated
-root-mean-square error (RMSE, the typical size of a prediction's error, in
+root mean square error (RMSE, the typical size of a prediction's error, in
 the same units as chloride itself) and mean absolute error averaged across
 folds, not a single in-sample fit statistic that would overstate how well
 the model generalizes to a new, unseen sample.
@@ -2940,7 +2940,7 @@ Information Criterion (AIC) and a likelihood-ratio test are reported as a
 secondary check, since both are only meaningful for nested models fit by
 maximum likelihood and would be misleading if applied across model
 families. A site-specific model is adopted over the global model only if it
-improves cross-validated RMSE by a margin larger than the fold-to-fold
+improves cross-validated RMSE by a margin larger than the fold to fold
 variability in that RMSE, not from a marginal or single-fold improvement
 alone.
 
@@ -2983,7 +2983,7 @@ interval: 1, 2, 3, 7, and 14 days:
    approximation of the full continuous record, exactly as if the sparse
    samples were all the information available.
 4. Compare the reconstruction to the full-resolution record point by
-   point (root-mean-square error, as a percent of the mean).
+   point (root mean square error, as a percent of the mean).
 5. Repeat steps 1-4 two hundred times per candidate interval, each with a
    new random start day.
 
@@ -3012,14 +3012,14 @@ exposure is not visible in conductivity itself; widening it to seven days and
 moving the SBGG onset to 25 September or 2 October changes the mean error by
 no more than about 0.6 percentage points (sensitivity runs archived with the analysis). With the exclusions, daily sampling gives a
 mean reconstruction error of 3.6% of mean specific conductance at SBRR and
-3.1% at SBGG; every-other-day sampling gives 4.3% and 4.1%; weekly sampling
+3.1% at SBGG; every other day sampling gives 4.3% and 4.1%; weekly sampling
 6.9% and 7.8%; and biweekly sampling 9.5% and 8.5%. The degradation is smooth,
-not a sharp cliff, so the choice of interval is a precision-versus-cost
+not a sharp cliff, so the choice of interval is a precision versus cost
 trade-off rather than a hard threshold. The worst case, the 95th percentile
 across the 200 simulated campaigns, widens faster than the mean: at SBRR it
 rises from 4.0% (daily) to 4.8% (every other day), 7.7% (weekly) and 12.1%
-(biweekly); at SBGG it is 5.0% for both daily and every-other-day sampling,
-then 9.8% (weekly) and 13.2% (biweekly). Relaxing from daily to every-other-day
+(biweekly); at SBGG it is 5.0% for both daily and every other day sampling,
+then 9.8% (weekly) and 13.2% (biweekly). Relaxing from daily to every other day
 sampling therefore costs little in the typical case, while a weekly or
 biweekly schedule could land well above the mean depending on which day the
 campaign started. This is a quantitative basis for the sampling design below.
@@ -3051,8 +3051,8 @@ stations, **SBRR (Rhodes Road, upstream control) and SBGG (Geiger Grade,
 downstream)**, because those are the only two points where a chloride
 measurement can be directly paired against an already-running, continuous
 conductance record. Because no chloride sample yet overlaps that
-deployment, the highest-priority field task is a short, two-to-four-week,
-daily-to-sub-daily intensive sampling campaign at both SBRR and SBGG: and,
+deployment, the highest-priority field task is a short, two to four week,
+daily to sub-daily intensive sampling campaign at both SBRR and SBGG: and,
 given that the loggers have already been running since mid-July 2026, there is
 no reason to wait for a conventional spring/summer field season to start
 it. This proposal now plans to begin that intensive window as soon as
@@ -3061,20 +3061,20 @@ follow-through sampling can begin right away rather than months from now.
 Following the intensive window, chloride sampling should continue at
 roughly monthly intervals at both SBRR and SBGG for a full annual cycle
 (not just "the remainder of the year," but a complete
-winter-low-flow-to-spring-runoff-to-summer-baseflow-to-fall-transition
+winter low flow to spring runoff to summer baseflow to fall transition
 loop) with additional samples timed around large storms and
 spring snowmelt, when the relationship is most likely to break down.
 Starting earlier and running a full year of monthly pairs turns RQ1's
 seasonal-stability question from a stated hypothesis into something this
 proposal can actually test with data, rather than extrapolating from
-the roughly twelve-week, summer-to-early-fall conductance record the Monte Carlo
+the roughly twelve-week, summer to early fall conductance record the Monte Carlo
 analysis above currently has to work with. Every calibration sample should
 also carry major-ion chemistry, and a subset should carry
 delta-18-O/delta-D isotopes, since chloride alone cannot distinguish simple
 mixing from evaporative concentration. A conventional practical minimum of
 15-20 paired samples would support a stable regression across the sampled
 range; a full year of monthly sampling plus the intensive
-daily-to-sub-daily window comfortably clears the more defensible 30-40-pair
+daily to sub-daily window comfortably clears the more defensible 30-40-pair
 target without relying on a single season's data. @tbl-samplingplan lays
 out this same design as a single table: site, analyte set, frequency, and
 the reasoning behind each row.
@@ -3111,9 +3111,9 @@ distribution of draws, shown in @fig-mcspread, makes that spread directly
 visible: the boxes widen noticeably at longer intervals, and a
 biweekly campaign could plausibly land anywhere from roughly 7% to 13%
 reconstruction error depending purely on which day it started, while daily
-and every-other-day sampling keep nearly every draw in a tight band near
+and every other day sampling keep nearly every draw in a tight band near
 the mean. This is the quantified reason the intensive
-daily-to-sub-daily calibration window proposed above is recommended over a
+daily to sub-daily calibration window proposed above is recommended over a
 coarser interval: not only is the *average* error lower, the *worst-case*
 outcome from an unlucky start day is far less severe.
 
@@ -3177,7 +3177,7 @@ where $Q$ is stream discharge, $C$ is chloride concentration, the subscripts mar
 
 Sampling serves three purposes in this thesis, and the plan is built so that one visit serves all three: pairing chloride with conductance for the calibration (RQ1), setting how often chloride must be measured (RQ2), and characterizing the discharge points of the Lower Sinter Terrace so that the thermal map can be tied to chemistry (RQ3 and RQ4).
 
-**What the Monte Carlo test establishes, and what it does not.** The test draws 200 random start days for each candidate interval, subsamples the conductance record at that interval, interpolates between the samples, and compares the reconstruction with the full record (the procedure is given above). @tbl-mcsummary gives the result with air-exposure days removed. Daily and every-other-day sampling reconstruct the record to within about 3-5 percent of its mean; weekly sampling to 7-8 percent, with a worst case near 10 percent; biweekly sampling to 9-10 percent, with a worst case of 12-13 percent. The test covers the concentration signal only, not mass flux, because no discharge record overlaps the loggers, and it is a statement about conductance, not chloride, until the calibration pairs exist. The daily swing in conductance is only 9-12 uS/cm at either station, so time of day matters little for the schedule. The test will be re-run on chloride once paired samples exist, and with discharge once a discharge series overlaps the loggers.
+**What the Monte Carlo test establishes, and what it does not.** The test draws 200 random start days for each candidate interval, subsamples the conductance record at that interval, interpolates between the samples, and compares the reconstruction with the full record (the procedure is given above). @tbl-mcsummary gives the result with air-exposure days removed. Daily and every other day sampling reconstruct the record to within about 3-5 percent of its mean; weekly sampling to 7-8 percent, with a worst case near 10 percent; biweekly sampling to 9-10 percent, with a worst case of 12-13 percent. The test covers the concentration signal only, not mass flux, because no discharge record overlaps the loggers, and it is a statement about conductance, not chloride, until the calibration pairs exist. The daily swing in conductance is only 9-12 uS/cm at either station, so time of day matters little for the schedule. The test will be re-run on chloride once paired samples exist, and with discharge once a discharge series overlaps the loggers.
 
 | Sampling interval | SBRR mean (%) | SBRR 95th percentile (%) | SBGG mean (%) | SBGG 95th percentile (%) |
 |-----------------|-----------|-----------|-----------|-----------|
@@ -3188,7 +3188,7 @@ Sampling serves three purposes in this thesis, and the plan is built so that one
 
 : Reconstruction error of the conductance record as a percent of its mean, over 200 random campaigns per interval, with air-exposure days removed. {#tbl-mcsummary}
 
-**Calibration pairs.** The design is an intensive daily-to-sub-daily window followed by monthly sampling across a full annual cycle (@tbl-samplingplan). A reasoned minimum is 15-20 pairs for a stable regression and 30-40 for a seasonally defensible one, and a tier of about 40 analyses is recommended for a one-person thesis. This is a reasoned count, not a power analysis, because no chloride-conductance pairs exist yet to compute one against. Pairing chloride with the major ions lets the mixing model be checked in the same samples, and about one isotope sample per season at the two creek stations is the only way to separate evaporation from conservative mixing.
+**Calibration pairs.** The design is an intensive daily to sub-daily window followed by monthly sampling across a full annual cycle (@tbl-samplingplan). A reasoned minimum is 15-20 pairs for a stable regression and 30-40 for a seasonally defensible one, and a tier of about 40 analyses is recommended for a one-person thesis. This is a reasoned count, not a power analysis, because no chloride-conductance pairs exist yet to compute one against. Pairing chloride with the major ions lets the mixing model be checked in the same samples, and about one isotope sample per season at the two creek stations is the only way to separate evaporation from conservative mixing.
 
 **Mapping the Lower Terrace.** @tbl-lstsampling lists proposed sampling by source, with the sources taken from the thermal map. The counts are a starting point to be fitted to the laboratory budget and to site access, and they come in addition to the roughly 40 calibration analyses.
 
@@ -3202,15 +3202,15 @@ Sampling serves three purposes in this thesis, and the plan is built so that one
 
 : Proposed Lower Terrace sampling by source, in addition to the calibration analyses. {#tbl-lstsampling}
 
-**Repeat thermal surveys.** The 488 m^2^ at or above 30 degrees Celsius is a baseline. If NBMG can repeat the calibrated drone flights each season, the same pixel-to-polygon method gives a change metric (area by source and season) at no laboratory cost, and a repeat of the October 2025 flight would show whether the creek-corridor springs and the fissure zone are growing, shrinking or moving.
+**Repeat thermal surveys.** The 488 m^2^ at or above 30 degrees Celsius is a baseline. If NBMG can repeat the calibrated drone flights each season, the same pixel to polygon method gives a change metric (area by source and season) at no laboratory cost, and a repeat of the October 2025 flight would show whether the creek-corridor springs and the fissure zone are growing, shrinking or moving.
 
-**Decision rules.** After the first full cycle, residuals are compared by season and site type. A single calibration is kept only if its error is acceptable against a threshold set explicitly with the committee (the recommendation script takes the threshold as an input and has no default); otherwise site-specific equations are reported with their uncertainty, as RQ1's deliverable states.
+**Decision rules.** After the first full cycle, residuals are compared by season and site type. A single calibration is kept only if its error is acceptable against a threshold set explicitly with the committee (no default threshold is assumed); otherwise site-specific equations are reported with their uncertainty, as RQ1's deliverable states.
 
 ## Proposed extension: a Leapfrog geologic model to inform mixing pathways and reaction paths
 
 Rachel Micander's proposal builds a 3-D structural model in Leapfrog and ArcGIS from well collars, directional surveys, mud logs, well chips, borehole-image logs and geophysical products, to show fluid pathways, structure and the distribution of sinter and other rock below the surface. This proposal borrows that workflow at a smaller scope and for a different purpose. The model is not meant to explain structure or to simulate flow. It gives the chemistry a geometry.
 
-**What the model would do.** It has four jobs. First, compartments: grouping samples by lithology and fault block, so that end-members and mixing pairs are chosen within and across compartments on stated geologic grounds. Second, pathways: giving path lengths and orientations for the 1-D mixing models along the fissure-to-creek flowpath, so that mixing fraction can be plotted against distance. Third, reaction paths: showing which rock the water meets (altered alluvium, volcanics, altered granodiorite, sinter), so that the phases supplied to the PHREEQC reaction-path titration are chosen from the geology and not by trial; the calcium-alkalinity tension at SBS_0001, which no simple phase set resolved, is the open question this targets. Fourth, a check on the chemistry: comparing the principal components of the PHREEQC output by compartment.
+**What the model would do.** It has four jobs. First, compartments: grouping samples by lithology and fault block, so that end-members and mixing pairs are chosen within and across compartments on stated geologic grounds. Second, pathways: giving path lengths and orientations for the 1-D mixing models along the fissure to creek flowpath, so that mixing fraction can be plotted against distance. Third, reaction paths: showing which rock the water meets (altered alluvium, volcanics, altered granodiorite, sinter), so that the phases supplied to the PHREEQC reaction-path titration are chosen from the geology and not by trial; the calcium-alkalinity tension at SBS_0001, which no simple phase set resolved, is the open question this targets. Fourth, a check on the chemistry: comparing the principal components of the PHREEQC output by compartment.
 
 **Data on hand.** Collars, depths and elevations for 110 wells (elevations from the 1 m DEM unless a permit or survey value exists); 140 lithology intervals from the NBMG permit compilation and 158 from the 27 well logs in Collar's thesis (86 linked to wells); Skalbeck's cross-sections and 241 point depths to the units Qal, Tv, AltKgdpKm and Kgd; 9 faults, 53 fissure traces and the sinter-terrace outline; and the thermal polygons. All are exported in UTM zone 11N with Z from the DEM. The limits are that every hole is treated as vertical except 83C-6ST1, which has a deviation survey, that lithology quality varies, and that no permeability data exist.
 
@@ -3288,7 +3288,7 @@ unrepresentative result.
 **A chloride-conductivity calibration plot** (chloride
 concentration versus specific conductance, with a fitted regression
 line and confidence band, by site type) will be the thesis's central
-figure. It requires the paired chloride-and-conductance samples the
+figure. It requires the paired chloride and conductance samples the
 sampling plan above is designed to collect, and cannot be produced from
 the current, unpaired records.
 
@@ -3373,7 +3373,7 @@ show_fig(
 
 | Target date | Milestone |
 |---|---|
-| Oct-Nov 2026 | Submit this proposal and program of study; begin the intensive daily-to-sub-daily Cl-conductance calibration window at SBRR/SBGG (moved up from a spring 2027 start, since the conductivity loggers are already running); continue spring and well remapping at the Lower Sinter Terrace. |
+| Oct-Nov 2026 | Submit this proposal and program of study; begin the intensive daily to sub-daily Cl-conductance calibration window at SBRR/SBGG (moved up from a spring 2027 start, since the conductivity loggers are already running); continue spring and well remapping at the Lower Sinter Terrace. |
 | Dec 2026 | First monthly chloride sample of the full-year cadence (early winter baseflow conditions). |
 | Jan 2027 | Monthly chloride sample; winter-season logger maintenance and remapping. |
 | Feb 2027 | Monthly chloride sample. |
@@ -3439,27 +3439,19 @@ The other costs are listed in @tbl-costother with who is expected to carry them.
 
 # Expected products
 
-- A chloride-to-specific-conductance calibration equation, or set of
-site-specific equations, with stated uncertainty. - A quantitative
-minimum-sampling-frequency recommendation for ongoing chloride monitoring
-at Steamboat. - A PHREEQC-based physical justification (or documented
-limitation) for using specific conductance as a chloride proxy at this
-site. - An updated interpretation of thermal-water discharge and
-conservative-tracer behavior before and after the 2025 eruption. - Two
-candidate manuscripts: *Conductivity-Based Monitoring of Chloride Discharge
-at Steamboat Hills* (targeting *Geothermics* or *Geothermal Energy*), and
-*Hydrochemical Evolution of the Lower Sinter Terrace System Following the
-2025 Eruption* (drawing on the PHREEQC, tracer-ratio, and
-historical-comparison results above). - A three-dimensional conceptual
-geologic framework for the monitored wells and springs, explicitly scoped
-as context rather than a flow model.
- - A source-by-source map of surface heat and a resort-share estimate for the Lower Sinter Terrace, and a bounded Leapfrog compartment model used to group the chemistry.
+- A calibration equation relating chloride to specific conductance, or a set of site-specific equations, with stated uncertainty.
+- A quantitative recommendation for the minimum sampling frequency needed for ongoing chloride monitoring at Steamboat.
+- A PHREEQC-based physical justification (or documented limitation) for using specific conductance as a chloride proxy at this site.
+- An updated interpretation of thermal-water discharge and conservative-tracer behavior before and after the 2025 eruption.
+- Two candidate manuscripts: *Conductivity-Based Monitoring of Chloride Discharge at Steamboat Hills* (targeting *Geothermics* or *Geothermal Energy*), and *Hydrochemical Evolution of the Lower Sinter Terrace System Following the 2025 Eruption* (drawing on the PHREEQC, tracer-ratio and historical-comparison results above).
+- A three-dimensional conceptual geologic framework for the monitored wells and springs, explicitly scoped as context rather than a flow model.
+- A source by source map of surface heat and a resort-share estimate for the Lower Sinter Terrace, and a bounded Leapfrog compartment model used to group the chemistry.
 
 # Conclusion
 
 After the June 2025 eruption, the plain question at Steamboat is whether the system has a new source or an old one with a new outlet. Sorey asked a version of it after the spring decline of the 1980s, and the 2026 poster written with Cary Lindsey asked it again from a handful of samples [@irvinlindsey2026]. The evidence there points to an old conduit reactivating, but it was gathered at poster speed. This proposal replaces that handful of samples with a method that can be repeated and whose uncertainty is stated.
 
-The work will deliver three things. The first is a tested relation between specific conductance and chloride at two creek stations, with an error bound and a sampling interval no coarser than the data allow. If it holds across seasons, a logger that costs little to run can supply most of the record that has so far had to be assembled from sparse chloride samples, and the thermal discharge of Steamboat Creek stops being a once-in-several-years estimate. The second is a source-by-source account of the Lower Sinter Terrace: where heat reaches the surface (488 m^2^ at or above 30 degrees Celsius), which discharge points share the fissure's fluid, how much of the creek's thermal inflow is pumped from the resort well, and how the water changes chemically between the fissure and the creek. The third is a modest geologic frame, built from the wells, logs, faults and fissures already on file, that lets samples be grouped by what they have flowed through and lets the choice of reactions in the geochemical models rest on the rock.
+The work will deliver three things. The first is a tested relation between specific conductance and chloride at two creek stations, with an error bound and a sampling interval no coarser than the data allow. If it holds across seasons, a logger that costs little to run can supply most of the record that has so far had to be assembled from sparse chloride samples, and the thermal discharge of Steamboat Creek stops being a once in several years estimate. The second is a source by source account of the Lower Sinter Terrace: where heat reaches the surface (488 m^2^ at or above 30 degrees Celsius), which discharge points share the fissure's fluid, how much of the creek's thermal inflow is pumped from the resort well, and how the water changes chemically between the fissure and the creek. The third is a modest geologic frame, built from the wells, logs, faults and fissures already on file, that lets samples be grouped by what they have flowed through and lets the choice of reactions in the geochemical models rest on the rock.
 
 These results matter for different reasons to different readers. For the science, the 2025 eruption is the first event at Steamboat whose aftermath can be followed at this resolution, in a system with a 70-year discharge record to compare against, and a chloride-conductance proxy that works in thermal outflow would be useful at other geothermal systems where outflow is monitored by sampling. For regulators and operators, a calibrated proxy and a defensible sampling interval are a cheaper way to watch outflow than the current campaigns. For the owners of the Lower Terrace properties, the maps and the source attribution document what is changing and where.
 
