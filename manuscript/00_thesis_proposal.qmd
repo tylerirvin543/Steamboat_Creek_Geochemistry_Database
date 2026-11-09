@@ -23,6 +23,9 @@ format:
     number-sections: true
     embed-resources: true
   docx:
+    filters:
+      - at: post-quarto
+        path: docx_alt_text.lua
     toc: true
     toc-depth: 2
     number-sections: true
