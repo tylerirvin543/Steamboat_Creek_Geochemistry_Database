@@ -241,7 +241,7 @@ and this project's own response.
 show_fig(
   "output/figures/manuscript/steamboat_timeline.png",
   "Steamboat Hills events, 1950-2026, in two panels: (A) the historical/development record, with the documented 1987-2022 absence of natural terrace spring flow shown as a shaded band rather than a single date; (B) the 2022-2026 reactivation in Lindsey et al. (2026)'s own stage-by-stage detail, with Ormat's May 2025 injection-limit increase flagged (triangle) as a candidate contributing factor, not a confirmed cause.",
-  alt = "Two-panel horizontal timeline of Steamboat Hills events: a long historical/development record from 1950 to 2007 with a shaded quiescent-spring-flow band, and a detailed 2022-2026 reactivation panel with a distinct marker for a candidate contributing-factor event.",
+  alt = "Two-panel timeline: 1950-2007 development record with a shaded quiet-spring band, and a 2022-2026 reactivation panel with a marked candidate factor.",
   id = "fig-timeline"
 )
 ```
@@ -348,7 +348,7 @@ have.
 show_fig(
   "output/figures/injection_operations/injection_pressure_and_rate.png",
   "Injection wellhead pressure (A: historic peak, current, newly authorized) and injection rate (B: current full-production rate versus the pressure-limited maximum), per well, from NDEP UIC Temporary Permit UNEV2007204T2025-1 (issued 2025-05-30), Tables B and C.",
-  alt = "Two stacked grouped horizontal bar charts by injection well: wellhead pressure for historic peak, current, and newly authorized values, and injection rate for current versus pressure-limited maximum.",
+  alt = "Two stacked bar charts by injection well: wellhead pressure (historic peak, current, authorized) and injection rate (current versus maximum).",
   id = "fig-injpressure",
   width = "85%"
 )
@@ -418,7 +418,7 @@ be excluded.
 show_fig(
   "output/figures/manuscript/precip_cumulative_departure.png",
   "Cumulative departure from mean water-year precipitation at Reno Airport, 1938-2026 (NOAA GHCN-Daily USW00023185; complete water years only). The shaded band marks 2022 onset to the June 2025 eruption.",
-  alt = "Line chart of cumulative precipitation departure at Reno Airport from 1938 to 2026, with a shaded band for 2022 to 2025 where the curve rises from about minus 220 millimeters to near zero.",
+  alt = "Line chart of cumulative precipitation departure at Reno Airport, 1938-2026, rising from about -220 mm to near zero across a shaded 2022-2025 band.",
   id = "fig-precipdeparture"
 )
 ```
@@ -1129,7 +1129,7 @@ the next download.
 show_fig(
   "output/figures/manuscript/conductivity_timeseries.png",
   "SBRR and SBGG conductivity record, 2026-07-15 to 2026-10-10. Orange points are readings the QC detector flagged at retrieval and relaunch events; the dashed line marks the last flagged reading. They do not bound the longer interval before each pull when the sensor sat partly or fully out of flowing water, which is not detectable in the conductance record.",
-  alt = "Two-panel time series of specific conductance at SBGG and SBRR with orange points flagging readings at two retrieval events and dashed lines at the last flagged reading.",
+  alt = "Two-panel conductance time series at SBGG and SBRR, with orange points flagging readings at retrieval events.",
   id = "fig-conductivity-timeseries"
 )
 ```
@@ -1205,7 +1205,7 @@ show_fig(
 show_fig(
   "output/figures/monthly_indicator_timeline/water_level_field_vs_stmgid_standardized.png",
   "Standardized (z-score) water-level trajectories, five monitoring wells, June-December 2025.",
-  alt = "Line plot of standardized water-level z-scores for five wells over six months, showing Herz Domestic Well tracking STMGID MW3 more closely than STMGID MW10.",
+  alt = "Standardized water-level lines for five wells over six months; Herz Domestic Well tracks STMGID MW3 more closely than MW10.",
   id = "fig-wlstandardized"
 )
 ```
@@ -1355,7 +1355,7 @@ that in mind.
 show_fig(
   "output/figures/manuscript/collar_creek_chloride_comparison.png",
   "Steamboat Creek chloride at the Rhodes Road and Geiger Grade reaches: Collar's 1988-89 stations S10 and S70 (S70 provisional) against NDEP samples and this project's 2026 SBRR sample.",
-  alt = "Two-panel scatter plot of chloride through time, 1988 to 2026, for the Rhodes Road and Geiger Grade reaches, showing Collar's stations, NDEP samples, and this project's sample.",
+  alt = "Two-panel scatter of chloride, 1988-2026, for the Rhodes Road and Geiger Grade reaches: Collar's stations, NDEP samples and this project's sample.",
   id = "fig-collarcl",
   width = "85%"
 )
@@ -1578,7 +1578,7 @@ the least chemically mature of the group.
 show_fig(
   "output/figures/manuscript/giggenbach_ternary.png",
   "Giggenbach (1988) Na-K-sqrt(Mg) maturity ternary, PHREEQC-conditioned chemistry, all seven flowpath samples.",
-  alt = "Ternary diagram with Na, K, and square-root-Mg vertices, showing seven labeled points relative to Full Equilibrium, Partial Equilibrium, and Immature Waters fields.",
+  alt = "Na-K-square-root-Mg ternary diagram with seven labeled points against full equilibrium, partial equilibrium and immature water fields.",
   id = "fig-giggenbach"
 )
 ```
@@ -1596,7 +1596,7 @@ thermal cluster.
 show_fig(
   "output/figures/manuscript/anion_ternary.png",
   "Cl-SO4-HCO3 ternary (Giggenbach 1991), PHREEQC-conditioned chemistry, all seven flowpath samples.",
-  alt = "Ternary diagram with chloride, sulfate, and bicarbonate vertices, showing seven labeled points relative to Mature Waters, Steam-heated, and Peripheral Waters fields.",
+  alt = "Chloride-sulfate-bicarbonate ternary diagram with seven labeled points against mature, steam-heated and peripheral water fields.",
   id = "fig-anionternary"
 )
 ```
@@ -1628,7 +1628,7 @@ different story.
 show_fig(
   "output/figures/manuscript/mineral_equilibration.png",
   "Multicomponent mineral-equilibration diagram: saturation index vs. temperature for six candidate minerals at the six thermal samples plus SBBV (downstream creek, not itself thermal), from the stored PHREEQC_Temp_Sweep output.",
-  alt = "Six-panel faceted line plot of saturation index versus temperature for calcite, dolomite, quartz, chalcedony, anhydrite, and fluorite, one panel per thermal sample, with a dashed vertical line at each sample's measured discharge temperature.",
+  alt = "Six-panel plot of saturation index versus temperature for six minerals, one panel per thermal sample, with a line at each measured temperature.",
   id = "fig-mineraleq"
 )
 ```
@@ -1717,7 +1717,7 @@ show_fig(
 show_fig(
   "output/figures/manuscript/gas_geothermometry_comparison.png",
   "D'Amore-Panichi gas-geothermometer estimates versus measured field temperature for the three fissure gas samples.",
-  alt = "Point plot comparing gas-geothermometer temperature estimates to measured field temperature for three fissure gas samples, with the historical well 23-5 range shown as reference lines.",
+  alt = "Gas-geothermometer temperatures against measured field temperature for three fissure gas samples, with well 23-5's historical range as lines.",
   id = "fig-gastherm"
 )
 ```
@@ -1909,7 +1909,7 @@ values do) holds under both the original and corrected temperatures.
 show_fig(
   "output/figures/manuscript/parent_fluid_comparison.png",
   "A. Measured versus gas-informed reconstructed parent-fluid composition for the fissure sample. B. The resulting conservative-chloride thermal mixing fraction for three Lower Sinter Terrace samples, computed with the measured fluid versus the reconstructed parent fluid as the thermal end-member.",
-  alt = "Two-panel figure: bar chart comparing measured and parent-fluid concentrations of ten conservative species; point plot comparing mixing fractions under two end-member choices for three target samples.",
+  alt = "Two panels: measured versus parent-fluid concentrations of ten conservative species, and mixing fractions under two end-member choices.",
   id = "fig-parentfluid"
 )
 ```
@@ -2001,7 +2001,7 @@ specific well.
 show_fig(
   "output/figures/manuscript/reaction_path_titration.png",
   "Forward PHREEQC REACTION-path titration of calcite and dolomite into the fissure+SBRR conservative mix, compared against SBW_0001's observed Ca/Mg/Alkalinity (dashed lines) and the best-fit reaction progress (dotted line).",
-  alt = "Five-panel figure: calcium, magnesium, alkalinity, calcite saturation index, and dolomite saturation index, each plotted against net reaction progress, with a dashed horizontal reference line for the observed value and a dotted vertical line marking the best-fit reaction progress.",
+  alt = "Five panels of calcium, magnesium, alkalinity and two saturation indices against net reaction progress, with observed values and the best fit marked.",
   id = "fig-reactionpath"
 )
 ```
@@ -2038,7 +2038,7 @@ different, specific reason.
 show_fig(
   "output/figures/manuscript/reaction_path_fit_comparison.png",
   "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all five downgradient targets.",
-  alt = "Dumbbell plot comparing fit error (percent) at pure mixing versus best-fit reaction progress for five samples: SBW_0001, SBW_0002, SBS_0001, SBS_0002, and SBS_0003.",
+  alt = "Dumbbell plot of fit error (percent) at pure mixing versus best-fit reaction progress for SBW_0001, SBW_0002, SBS_0001, SBS_0002 and SBS_0003.",
   id = "fig-reactionpath-comparison"
 )
 ```
@@ -2099,7 +2099,7 @@ close together.
 show_fig(
   "output/figures/manuscript/lst_proximity_map.png",
   "Lat/lon positions of the seven flowpath samples, with the five downgradient targets colored and sized by their own best-fit reaction-path RMSE.",
-  alt = "Map of seven points with latitude and longitude axes, two grey triangles for the fissure and SBRR reference end-members, and five colored circles for the downgradient targets sized by fit error.",
+  alt = "Map of seven points: two grey triangles for the fissure and SBRR end-members, and five circles for downgradient targets sized by fit error.",
   id = "fig-proximity-map"
 )
 ```
@@ -2169,7 +2169,7 @@ which stays dominated by meteoric water.
 show_fig(
   "output/figures/manuscript/fluid_evolution_flowpath.png",
   "Chemistry, PHREEQC saturation indices, geothermometer estimates, and stable isotopes across the sampled Lower Sinter Terrace flowpath, from the two reconstructed parent fluids through measured discharge, a nearby well, and the two Steamboat Creek chloride-mass-balance stations.",
-  alt = "Twelve-panel scatter plot showing chloride, sodium, sulfate, silica, boron, pH, calcite and quartz saturation indices, two geothermometer estimates, and two stable isotopes across seven or reconstructed flowpath nodes.",
+  alt = "Twelve-panel scatter of major ions, boron, pH, saturation indices, geothermometers and isotopes across the flowpath nodes.",
   id = "fig-evolution"
 )
 ```
@@ -2237,7 +2237,7 @@ confirmed observation rather than one based on images shared informally. The nex
 show_fig(
   "output/figures/manuscript/tir_broad_thermal_map_july2025.png",
   "Broad Lower Sinter Terrace thermal-infrared survey, July 2025 (NBMG/Owen Callahan), with labeled ground-control and water-temperature measurement points.",
-  alt = "Thermal-infrared overlay on satellite imagery of the Lower Sinter Terrace, showing a warm channel tracking Steamboat Creek and several labeled ground-control points.",
+  alt = "Thermal-infrared overlay on satellite imagery of the Lower Sinter Terrace, with a warm channel along Steamboat Creek and ground-control points.",
   id = "fig-tirbroad",
   width = "45%"
 )
@@ -2293,7 +2293,7 @@ testable prediction for the planned spring/seep remapping fieldwork.
 show_fig(
   "output/figures/manuscript/lst_conceptual_flowpath.png",
   "Conceptual flowpath from the reconstructed deep parent fluid through degassing, the three measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, with chloride values annotated at each node.",
-  alt = "Schematic box-and-arrow diagram showing the conceptual flowpath from a deep parent fluid through degassing and discharge points to Steamboat Creek and a downstream conductivity logger.",
+  alt = "Box-and-arrow diagram of the flowpath from a deep parent fluid through degassing and discharge points to Steamboat Creek and a downstream logger.",
   id = "fig-conceptual"
 )
 ```
@@ -2409,7 +2409,7 @@ geothermal boundary, and a pixel at 30 degrees Celsius is not necessarily geothe
 show_fig(
   "output/figures/manuscript/thermal_area_attribution.png",
   "Area at or above 30 degrees Celsius by source. Left: the terrace and creek corridor in EPSG:26911, with polygons drawn 4 m wider for visibility and colored by source. Right: area by source.",
-  alt = "Map of the terrace with colored polygon outlines beside a bar chart of hot area for each source: channel, resort, fissure zone, creek springs, circles, pipe-end streak and other.",
+  alt = "Terrace map with colored polygons beside a bar chart of hot area by source: channel, resort, fissure zone, creek springs and others.",
   id = "fig-thermalsources",
   width = "95%"
 )
@@ -2433,7 +2433,7 @@ means has not been confirmed.
 show_fig(
   "output/figures/manuscript/map_fissure_zone.png",
   "Fissure zone in a common coordinate system (EPSG:26911): thermal map with polygons at or above 30 degrees Celsius (colored by class), mapped fissures (white), faults (dashed blue), the project's points (cyan), temperature loggers (green triangles), NV26-1 (magenta), and historical White and Collar features (yellow diamonds).",
-  alt = "Map of the fissure zone showing a hot streak lying along mapped fissures with SBF_0001, SBF_0002, SBW_0003 and NV26-1 clustered on it and historical spring names along it.",
+  alt = "Map of the fissure zone: a hot streak along mapped fissures, with SBF_0001, SBF_0002, SBW_0003 and NV26-1 on it and historical spring names.",
   id = "fig-map-fissure",
   width = "80%"
 )
@@ -2518,7 +2518,7 @@ of the thermal inflow.
 show_fig(
   "output/figures/manuscript/a009_hourly_profile.png",
   "Mean temperature of the resort holding tank (logger A009) by hour of day, April to September 2026, for weekdays and weekends.",
-  alt = "Line plot of tank temperature falling from midnight to a minimum near 9 AM, rising through the day, and flattening in the evening, with weekday and weekend curves close together.",
+  alt = "Line plot of tank temperature falling from midnight to a 9 AM minimum, rising through the day, flattening in the evening; weekday and weekend match.",
   id = "fig-a009",
   width = "60%"
 )
@@ -2546,7 +2546,7 @@ Two limits apply. The July 2025 resort-tank trace in Lindsey and others [@lindse
 show_fig(
   "output/figures/manuscript/lindsey_vs_our_loggers.png",
   "Logger traces from Lindsey and others (2026, Figure 3; 1-8 July 2025) compared with this project's A009 (resort tank) and A005 (fumarole) loggers, 16-24 July 2026.",
-  alt = "Two panels. Top, fissure or fumarole: a flat line near 76 degrees from 2025 above a strongly oscillating line from 35 to 72 degrees from 2026. Bottom, resort tank: a line between 61 and 68 degrees from 2025 below a steady line near 76 degrees from 2026.",
+  alt = "Two panels, fissure and resort tank: 2025 traces from Lindsey and others against this project's 2026 loggers, which run warmer at the tank.",
   id = "fig-lindsey-loggers",
   width = "85%"
 )
@@ -2557,7 +2557,7 @@ show_fig(
 show_fig(
   "output/figures/manuscript/resort_share_curve.png",
   "Share of the 1 May 2026 thermal inflow that would be resort water against the discharge rate while pumping, if pumped continuously and scaled by the A009 duty cycle (58 percent of the day), with the historical spa-well rates marked.",
-  alt = "Two straight lines rising with discharge rate, one for continuous pumping and a lower one scaled by the duty cycle, with dashed vertical lines at 30, 60 and 155 gallons per minute.",
+  alt = "Two rising lines of resort share against discharge rate, continuous pumping above duty-cycle scaled, with dashed lines at 30, 60 and 155 gpm.",
   id = "fig-resort-curve",
   width = "70%"
 )
@@ -2721,7 +2721,7 @@ noted above) cannot provide on its own.
 show_fig(
   "output/figures/manuscript/temperature_flowpath_profile.png",
   "A. Three-stage cooling (Na/K reservoir estimate, quartz-equilibration estimate, measured discharge) for all six thermal features, colored by feature type. B. Steamboat Creek's measured temperature rise from SBRR to SBBV.",
-  alt = "Two-panel figure: a line plot of temperature across three cooling stages for six features colored by type, and a two-point line plot showing creek temperature rising downstream.",
+  alt = "Two panels: temperature across three cooling stages for six features colored by type, and creek temperature rising downstream.",
   id = "fig-tempprofile"
 )
 ```
@@ -3223,7 +3223,7 @@ Rachel Micander's proposal builds a 3-D structural model in Leapfrog and ArcGIS 
 show_fig(
   "output/figures/manuscript/phreeqc_pca.png",
   "Principal components of the PHREEQC speciation output for 381 samples (17 variables), colored by the database's site type, with variable loadings. The first component is salinity and the second is pH and carbonate saturation.",
-  alt = "Scatter plot of two principal components with creek samples to the left and well and outlet samples to the right, and arrows for ionic strength, sodium, chloride, pH and carbonate saturation indices.",
+  alt = "Scatter of two principal components: creek samples on the left, well and outlet samples on the right, with arrows for variable loadings.",
   id = "fig-phreeqc-pca",
   width = "75%"
 )
@@ -3365,7 +3365,7 @@ schedule failure.
 show_fig(
   "output/figures/manuscript/data_availability_schedule.png",
   "Data on file and the planned schedule. A: the span of each long record, 1938 to 2026. B: records on file since 2025 and the planned field work, analysis and writing through December 2027; grey bars depend on access or on NBMG's flight schedule.",
-  alt = "Two-panel timeline: long data records since 1938 above, and below a Gantt chart of the 2025 to 2027 records and the planned sampling, analysis and writing.",
+  alt = "Two-panel timeline of data records on file and the planned sampling schedule through 2027.",
   id = "fig-schedule",
   width = "90%"
 )
