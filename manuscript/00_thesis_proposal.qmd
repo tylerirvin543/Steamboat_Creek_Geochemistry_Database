@@ -1569,158 +1569,25 @@ These sections hold the detail behind the main chapters: the PHREEQC workflow, d
 ## PHREEQC workflow in detail {.unnumbered}
 
 
-Aqueous speciation and saturation-index modeling is run through the
-PHREEQC 3 executable [@phreeqc] (the standalone program itself, not an R
-reimplementation) against every sample with complete enough chemistry to
-support it (312 samples as of this writing), with a thermodynamic
-database auto-selected per sample by temperature and total dissolved solids
-and a documented fallback when the first choice fails to converge, as
-described in the Background section above. What follows is the actual
-workflow behind that number: which samples get modeled, how their chemistry
-is assembled and cleaned up before PHREEQC ever sees it, and what the
-output is actually used to decide.
+Aqueous speciation and saturation-index modeling is run through the PHREEQC 3 executable [@phreeqc] (the standalone program, not an R reimplementation) against every sample with complete enough chemistry (404 samples as of this writing), with a thermodynamic database chosen per sample by temperature and total dissolved solids and a fallback when the first choice does not converge. This section describes which samples are modeled, how their chemistry is assembled and cleaned first, and what the output is used to decide.
 
-**Sample eligibility.** Not every sample in the database gets run through
-PHREEQC. A sample qualifies once it has pH, temperature, and major-ion
-concentrations for chloride, sodium, potassium, calcium, magnesium, and
-alkalinity: the minimum set a speciation calculation needs, not just
-whatever happens to be on hand. Field-measured pH and temperature are
-preferred over laboratory-reported values when both exist, since a lab
-reading taken days after collection has already drifted from in-situ
-conditions; lab values are used only when no field measurement exists.
-Additional analytes (silica, sulfate, lithium, boron, and a handful of
-trace metals) are pulled in when available but aren't themselves
-gatekeeping. Samples that don't clear this bar aren't silently dropped,
-either: each is logged with the specific field it's missing, so the 
-and currently still substantial, gap between how many samples exist and how
-many are PHREEQC-ready stays visible instead of disappearing into an
-unexplained smaller number.
+**Sample eligibility.** A sample is modeled once it has pH, temperature and concentrations of chloride, sodium, potassium, calcium, magnesium and alkalinity, the minimum a speciation calculation needs. Field pH and temperature are preferred over laboratory values, since a laboratory reading taken days after collection has drifted from in-situ conditions. Silica, sulfate, lithium, boron and a few trace metals are used when available but do not decide eligibility. A sample that does not qualify is logged with the field it is missing, so the gap between the samples that exist and those that are modeled stays visible.
 
-**Assembling and cleaning the chemistry first.** Samples come from several
-sources spanning more than seventy years (field sampling, NDEP's routine
-and public-records-request chemistry, and historical literature (Sorey and
-Colvard, Mariner and Janik, and Skalbeck) transcribed directly rather than
-merely cited) and those sources don't agree on units or on how alkalinity
-is reported. Every concentration is standardized to mg/L before it reaches
-a SOLUTION block, and any alkalinity value reported on a CaCO3 basis is
-converted to this project's standard HCO3-mass-equivalent basis using the
-50.05/61.02 equivalent-weight ratio (a conversion factor of 1.2189).
-Getting this right turned out to matter more than it sounds like it should:
-an earlier version of the data processing simply left alkalinity out for one
-major chemistry source, which alone pushed median charge-balance error
-from a ~0.7% up to a misleadingly bad ~60% for the exact same samples:
-a data-handling artifact, not an actual analytical problem, and a good
-reminder to check a "bad" charge balance before assuming the chemistry
-itself is at fault.
+**Assembling and cleaning the chemistry first.** Samples come from several sources spanning more than seventy years (field sampling, NDEP routine and public-records chemistry, and historical literature transcribed from Sorey and Colvard, Mariner and Janik, and Skalbeck), and the sources disagree on units and on how alkalinity is reported. Every concentration is converted to mg/L, and alkalinity reported as CaCO3 is converted to bicarbonate mass using the 61.02/50.05 equivalent-weight ratio (1.2189). This mattered: an earlier version left alkalinity out for one major source, which pushed the median charge-balance error from about 0.7 percent to a misleading 60 percent for the same samples. A bad charge balance should be checked as a data-handling problem before the chemistry is blamed.
 
-**End-member grouping.** Samples with complete chemistry are assigned to
-one of three groups (a thermal end-member (outlet and thermal-well
-samples), mixed waters (chemistry carrying a partial but thermal
-signature), and dilute background waters) using the hydrochemical-facies
-clustering described in the next section, cross-checked against PHREEQC's
-own fluid-type classification rather than just asserted from the site-type
-label on file. This is what makes the conservative-tracer check below, and
-the Cl/B comparison in the preliminary results section,
-chemically-defined groups rather than an arbitrary site-based split.
+**End-member grouping.** Samples with complete chemistry are assigned to a thermal end-member (outlet and thermal-well samples), mixed waters (a partial thermal signature) or dilute background waters, using the hydrochemical-facies clustering described below and cross-checked against PHREEQC's own fluid-type classification, not only the site-type label on file. This makes the conservative-tracer check and the Cl/B comparison below depend on chemistry and not on an arbitrary site-based split.
 
-**Conservative-tracer evaluation.** Four ratios (Cl/B, Na/Cl, Li/Cl, and
-SiO2/Cl) are tracked across every era of chemistry on file (the 1950s, the
-1990s, and the present) specifically to ask whether the thermal
-end-member's composition has stayed stable over seven decades, independent
-of whatever a chloride-conductance calibration eventually finds. A ratio
-that drifts meaningfully through time, or differs systematically between
-eras constitutes evidence about source-fluid stability (see the
-preliminary Cl/B result in @fig-clb below) rather than folded into
-one pooled average that would hide exactly that question.
+**Conservative-tracer evaluation.** Four ratios (Cl/B, Na/Cl, Li/Cl and SiO2/Cl) are tracked across the 1950s, the 1990s and the present to ask whether the thermal end-member's composition has stayed stable, independent of what a chloride-conductance calibration finds. A ratio that drifts through time or differs between eras is evidence about source-fluid stability (see the Cl/B result in @fig-clb below), and pooling the eras into one average would hide it.
 
-**Mixing and inverse modeling.** A two end-member conservative-mixing
-fraction is computed directly from chloride, then used to build a
-a PHREEQC mixing step combining the two end-member solutions at that fraction
-and comparing PHREEQC's own predicted speciation against the sample's
-observed chemistry: a test of the mixing hypothesis, not just an
-arithmetic ratio. PHREEQC's inverse-modeling mode goes further, solving for mixing
-fractions and mineral mass transfer simultaneously, within stated elemental
-uncertainty bounds. One mixing run and two inverse-modeling runs exist
-as of this writing, and both inverse runs now report zero feasible models
-(a correction from earlier text in this project: a parser bug (fixed
-2026-10-25) had been reading PHREEQC's own echoed-back input-solution
-composition as if it were a found solution, reporting a false "1 candidate
-solution" for the first inverse run (target: Soccer Field Monitoring
-Well, end-members: sample 816/829) when PHREEQC's own raw output in fact
-says "Number of models found: 0." That first run uses a representative (not
-time-paired) thermal/meteoric end-member pair, because no two chloride
-samples have yet been collected close enough together in time to serve as a
-paired end-member set) exactly the gap the calibration sampling
-plan above is meant to close. A second, gas-informed inverse run, described
-in the Results section below, uses a reconstructed deep parent-fluid
-composition as the thermal end-member and also finds zero feasible
-solutions, traced to post-mortem residuals (on Alkalinity, C(4), Ca,
-and K) exceeding the stated uncertainty bound: an infeasibility, not
-a numerical-plumbing artifact this time. The automated parser's own
-remaining gap (it has never correctly extracted a solution's
-mineral-mass-transfer numbers from PHREEQC's raw text output) is now moot
-for both of this project's runs, since neither found a feasible
-solution for it to extract from.
+**Mixing and inverse modeling.** A two end-member mixing fraction is computed from chloride, and a PHREEQC mixing step then combines the end-member solutions at that fraction and compares the predicted chemistry with the sample's, which tests the mixing hypothesis and is more than an arithmetic ratio. PHREEQC's inverse mode solves for mixing fractions and mineral mass transfer together within stated uncertainty bounds. One mixing run and several inverse runs exist. The first inverse run (target Soccer Field Monitoring Well, end-members samples 816 and 829) was once reported as finding one solution; that came from a parser reading PHREEQC's echoed input solutions as a result, and PHREEQC's own output says "Number of models found: 0." The parser was fixed on 2026-10-25. That run also used a representative, not time-paired, end-member pair, because no two chloride samples have yet been collected close enough in time, which is the gap the calibration sampling plan is meant to close. The inverse runs for the Lower Sinter Terrace targets, including the one that finds a solution only at 12 percent uncertainty, are described at the end of this appendix.
 
-**Forward reaction-path titration.** Given that inverse-modeling
-attempts against the Lower Sinter Terrace flowpath consistently find zero
-feasible solutions, a complementary forward method was built: mix two named
-end-members at a known (stored or freshly computed) conservative fraction
-with a PHREEQC mixing step, then use a PHREEQC reaction step to
-explicitly step one or more candidate mineral phases' mass transfer, in
-both directions (net precipitation and net dissolution), and compare the
-resulting modeled trajectory against the target sample's own chemistry
-at each step. The method was also used to test two hypotheses
-against SBS_0001, whose own chemistry (the highest sulfate and lowest
-alkalinity of its peer group) pointed toward a non-carbonate explanation:
-adding sulfate or fluoride mineral phases as additional candidates, and
-substituting a different, higher-sulfate meteoric end-member in place of
-the standard one. Full results are reported below.
+**Forward reaction-path titration.** Because the inverse models for the Lower Sinter Terrace find no solution at the standard uncertainty, a forward method was built. Two named end-members are mixed at a known conservative fraction, and a PHREEQC reaction step then moves one or more candidate mineral phases through net precipitation and net dissolution, comparing the modeled trajectory with the target sample at each step. It was also used to test two ideas for SBS_0001, whose chemistry (the highest sulfate and lowest alkalinity of its peer group) points away from a carbonate explanation: adding sulfate or fluoride phases, and substituting a higher-sulfate meteoric end-member. Results are reported below.
 
-**Assumptions and limitations of the forward titration method.** Four are
-stated here since they bear directly on how much weight the
-results below can carry. First, every candidate phase supplied to a given
-run is titrated by the identical reaction-progress amount at each step:
-there is no constraint, chemical or otherwise, that the system actually
-dissolves or precipitates two phases in a one to one ratio; a result is
-only as good as that simplifying choice. Second, a single mixing fraction
-is held fixed for the whole titration, computed once from chloride before
-the reaction is explored: the two are not jointly fit, so a sample
-whose best explanation actually involves *both* a different mixing fraction
-and reaction could be mis-scored under this method. Third, the fit metric
-compares PHREEQC's modeled values directly against reported lab
-concentrations with no allowance for analytical uncertainty; a sample
-within ordinary analytical error of the model looks exactly as "wrong" as
-one with a geologically meaningful discrepancy. Fourth, and
-demonstrated concretely rather than just asserted, results are conditional
-on which candidate phases are supplied at all: the sensitivity test run
-against SBS_0001, below, shows the same target's best-fit error ranging
-from 44.5 percent down to 30.6 percent depending on phase and end-member
-choices alone, with no single choice fully resolving the underlying
-tension. SBRR's own status as a conservative, not theoretically pure,
-meteoric reference (stated above) compounds all four points, since every
-one of these tests inherits that same starting assumption.
+**Assumptions and limitations of the forward titration method.** Four limits bear on how much weight the results can carry. First, every phase supplied to a run is titrated by the same reaction-progress amount at each step, with no constraint that two phases dissolve or precipitate one to one. Second, one mixing fraction, computed from chloride, is held fixed during the titration, so a sample whose best explanation needs both a different fraction and a reaction could be mis-scored. Third, the fit compares modeled values with reported concentrations with no allowance for analytical error, so a sample within ordinary error of the model looks as wrong as one with a real discrepancy. Fourth, results depend on which phases are supplied: the sensitivity test on SBS_0001 below moves its best-fit error from 44.5 to 30.6 percent on phase and end-member choices alone. SBRR's role as a conservative, not pure, meteoric reference carries into every one of these tests.
 
-**Interpretation framework.** Every PHREEQC run in this project is
-ultimately answering one of three questions, not run just because the
-chemistry happened to be complete enough to try: are the water
-types here chemically distinct from each other, is conductance
-behaving conservatively enough to stand in for chloride, and has the
-thermal end-member's own composition held up over the full
-seventy-year record. A modeling result that doesn't actually bear on
-one of those three questions isn't reported here just because it's
-available.
+**Interpretation framework.** Every PHREEQC run here answers one of three questions: whether the water types are chemically distinct, whether conductance behaves conservatively enough to stand in for chloride, and whether the thermal end-member's composition has held up over the seventy-year record. A result that bears on none of them is not reported.
 
-**Chloride to boron ratio across seven decades.** A two-sample comparison
-of the curated thermal end-member (seven historical samples from Sorey and
-Colvard [@sorey1992]; six modern samples from this project's own field
-campaign) finds the ratio is similar in magnitude but not statistically
-identical: 19.6 for 1950-1991 versus 21.9 for 2024-2026 (t = -2.92, 9.9
-degrees of freedom, p = 0.015), shown in @fig-clb. This is evidence
-against a wholesale change in source water, alongside a small, shift
-whose cause (an analytical-method difference between eras, versus a genuine
-geochemical change of roughly 12%) remains an open question this proposal's
-work is designed to resolve further.
+**Chloride to boron ratio across seven decades.** A two-sample comparison of the curated thermal end-member (seven historical samples from Sorey and Colvard [@sorey1992]; six modern samples from this project's field campaign) finds the ratio similar in size but not identical: 19.6 for 1950-1991 versus 21.9 for 2024-2026 (t = -2.92, 9.9 degrees of freedom, p = 0.015; @fig-clb). This is evidence against a wholesale change in source water. The small shift of roughly 12 percent could come from an analytical-method difference between eras or from a real geochemical change, and the proposed work is designed to help decide which.
 
 ```{r fig-clb}
 #| results: asis
@@ -1732,13 +1599,7 @@ show_fig(
 )
 ```
 
-**Geothermometer divergence.** Sodium/potassium and quartz/chalcedony
-geothermometers, applied to the same thermal samples, diverge
-systematically: quartz sits below measured discharge temperature,
-sodium/potassium sits above it, exactly as expected for a single
-cooling, diluting flow path from a hot (roughly
-150-250 degree Celsius) reservoir rather than two disconnected water
-types, as shown in @fig-geo.
+**Geothermometer divergence.** Sodium/potassium and quartz/chalcedony geothermometers applied to the same thermal samples diverge systematically: quartz sits below the measured discharge temperature and sodium/potassium above it (@fig-geo). That is the pattern expected for one cooling, diluting flow path from a reservoir of roughly 150-250 degrees Celsius, and not for two disconnected water types.
 
 ```{r fig-geo}
 #| results: asis
@@ -1750,21 +1611,7 @@ show_fig(
 )
 ```
 
-**Are these samples equilibrated enough to trust Na/K at face value?**
-Every Na/K reservoir-temperature estimate already reported in this proposal
-assumes the sampled fluid has reacted long enough with its host rock to
-approach chemical equilibrium: an assumption that has not, until now, been
-tested directly. A Giggenbach (1988) Na-K-square-root-Mg ternary, built
-from the same PHREEQC-conditioned chemistry for all seven flowpath
-samples, answers this directly, shown in @fig-giggenbach: the fissure and
-resort tank plot inside the Full Equilibrium field, the three springs
-and seep sit in the Partial Equilibrium band, SBW_0001 sits just into the
-Immature field, and SBRR (the dilute meteoric reference) plots at the
-magnesium-rich corner, exactly where a cold, unreacted water should. This
-is independent support for trusting the Na/K estimates already used
-throughout this proposal for the fissure, resort tank, and the three
-springs, and a specific, caution that SBW_0001's own Na/K estimate is
-the least chemically mature of the group.
+**Are these samples equilibrated enough to trust Na/K at face value?** Every Na/K reservoir temperature in this proposal assumes the fluid reacted with its host rock long enough to approach equilibrium. A Giggenbach (1988) Na-K-square-root-Mg ternary built from the PHREEQC-conditioned chemistry of the seven flowpath samples tests that (@fig-giggenbach). The fissure and resort tank plot inside the Full Equilibrium field, the three springs and the seep in the Partial Equilibrium band, SBW_0001 just inside the Immature field, and SBRR (the dilute meteoric reference) at the magnesium-rich corner, where a cold, unreacted water belongs. This supports the Na/K estimates for the fissure, resort tank and springs, and cautions that SBW_0001's estimate is the least mature of the group.
 
 ```{r fig-giggenbach}
 #| results: asis
@@ -1776,13 +1623,7 @@ show_fig(
 )
 ```
 
-**A second, independent water-type check.** A Cl-SO4-HCO3 ternary
-(Giggenbach 1991), shown in @fig-anionternary, cross-checks the Piper
-diagram's own water-type read with a different classification scheme: all
-six thermal samples fall inside the Mature Waters field, and SBRR
-falls inside Peripheral Waters near the bicarbonate corner: agreeing with,
-not contradicting, the Piper diagram's own separation of SBRR from the
-thermal cluster.
+**A second, independent water-type check.** A Cl-SO4-HCO3 ternary (Giggenbach 1991, @fig-anionternary) cross-checks the Piper diagram with a different scheme: all six thermal samples fall in the Mature Waters field and SBRR in Peripheral Waters near the bicarbonate corner, agreeing with the Piper diagram's separation of SBRR from the thermal cluster.
 
 ```{r fig-anionternary}
 #| results: asis
@@ -1794,27 +1635,7 @@ show_fig(
 )
 ```
 
-**Does a multicomponent equilibrium exist, or only the
-quartz/chalcedony pair already reported?** The quartz versus Na/K
-divergence already described above only ever compares two minerals at a
-time. The test for a shared equilibration temperature (Reed and Spycher
-1980) is whether several candidate minerals' saturation indices cross zero
-at approximately the same temperature at once, using the full 25-300
-degree Celsius, 13-step temperature sweep already stored in
-the temperature-sweep results for all six thermal samples: no new PHREEQC
-execution was needed to check this. the answer, shown in
-@fig-mineraleq, is that it does not: quartz and chalcedony cross zero
-within roughly 15-50 degrees Celsius of each sample's own measured
-discharge temperature, but calcite and dolomite stay supersaturated across
-almost the entire explored range, and anhydrite and fluorite stay
-undersaturated throughout. At no sample do two or more minerals
-besides the quartz/chalcedony pair itself converge within 15 degrees
-Celsius of one another (confirmed directly, not assumed, for every sample
-in @tbl-geotherm). This does not undermine the quartz versus Na/K story
-already told throughout this proposal; it sharpens it, by confirming that
-quartz/chalcedony's own apparent agreement is real and not an artifact of
-only checking two minerals while ignoring others that might have told a
-different story.
+**Does a multicomponent equilibrium exist, or only the quartz/chalcedony pair?** The quartz versus Na/K divergence compares two minerals at a time. A shared equilibration temperature (Reed and Spycher 1980) would show as several minerals' saturation indices crossing zero at about the same temperature, which can be checked in the stored 25-300 degree Celsius, 13-step temperature sweep for the six thermal samples with no new PHREEQC run. It does not appear (@fig-mineraleq). Quartz and chalcedony cross zero within roughly 15-50 degrees Celsius of each sample's measured discharge temperature, calcite and dolomite stay supersaturated across almost the whole range, and anhydrite and fluorite stay undersaturated throughout. At no sample do two or more minerals besides the quartz/chalcedony pair converge within 15 degrees Celsius of one another (@tbl-geotherm). That sharpens the quartz versus Na/K result: the apparent quartz/chalcedony agreement is not an artifact of checking only two minerals.
 
 ```{r fig-mineraleq}
 #| results: asis
@@ -1925,7 +1746,7 @@ direct equivalent.
 ## Hydrochemical endmember characterization {.unnumbered}
 
 
-Following Objectives 1 and 3 above, every water sample with complete
+Following RQ1 and RQ3, every water sample with complete
 major-ion chemistry (157 samples as of this writing) is assigned to a
 hydrochemical facies using unsupervised clustering, cross-checked by
 principal component analysis and an independent statistical classification
@@ -1983,177 +1804,35 @@ interpretive diagram, will be developed once the calibration and
 tracer-ratio results above are complete: it is not sketched in
 advance of that evidence.
 
-**The three September 27, 2026 field photographs** above (@fig-hotspring,
-@fig-sulfur, @fig-seep) carry GPS coordinates and timestamps in their
-own camera EXIF data, confirmed directly rather than assumed, but have not
-yet been run through this project's formal photo-location workflow
-to become dated, located records in the underlying
-database: that cataloguing step, not the figures themselves, is the remaining
-task. The earlier-visit photo of this same seep used in @fig-seep-compare
-and the SBGG installation photo in @fig-sbgg-install are field images
-from this project's own work but, unlike the three September 27 photos,
-their EXIF metadata no longer carries a capture date or GPS fix (confirmed
-directly via exiftool, not assumed): both await the same cataloguing step once a coordinate and date are recovered or re-recorded.
+**The three September 27, 2026 field photographs** above (@fig-hotspring, @fig-sulfur, @fig-seep) carry GPS coordinates and timestamps in their camera EXIF data, confirmed directly, but have not yet been run through the project's photo-location workflow to become dated, located database records; that cataloguing step is the remaining task. The earlier-visit photo of the same seep (@fig-seep-compare) and the SBGG installation photo (@fig-sbgg-install) no longer carry a capture date or GPS fix in their EXIF data (confirmed with exiftool), so both await cataloguing once a coordinate and date are recovered or re-recorded.
 
 
 
 ## Resort-tank history and a limitation of its sample {.unnumbered}
 
-**What well actually feeds the resort tank, and what does its history
-say?** The fissure well (SBF_0001) itself has no well record at all in
-this project's database: its total depth, casing, and completion interval
-are unknown, not just unrecorded by oversight. What stands in for
-that missing construction record is the fissure's own temperature-logger
-behavior at the eruption site itself (the inverse correlation between
-paired loggers already cited as poster-stage evidence) and the gas
-chemistry's own reservoir-temperature read (the D'Amore-Panichi estimate
-above), neither of which needs a known well depth to be informative, but
-neither of which can substitute for one either. The resort tank's own well
-is better constrained, though not confirmed: an NBMG geothermal-wells
-proximity check finds SBW_0002 sitting within 10-24 meters of three named
-historic wells: Carver Geothermal Well (8.6 meters deep), and two wells
-explicitly operated by Steamboat Resort itself, Steamboat No. 2 (36.6
-meters, roughly 120 feet) and Steamboat No. 4 (68.6 meters, roughly 225
-feet), both listed as abandoned production wells. Steamboat No. 4 is very
-plausibly the same well White [-@white1968c] describes as erupting
-continuously once drilling intersected its aquifer in 1947-48 (see Previous work
-background on the Low Terrace): a historical precedent for an
-uncontrolled discharge at essentially this same spot, decades before the
-resort tank's current air-lift pump was installed. This places the resort
-tank's own history inside the field's broader operational arc: a
-resort-operated production well predating Ormat's and SB Geo's later,
-field-wide development [@dhakal2025] (see Previous work), now repurposed as a
-pumped outflow tap rather than a free-flowing or company-operated
-production well. Framed this way, the resort tank is best read as a deep
-fluid source whose chemistry is measurably altered by the act of extraction
-itself (the air-lift pump's forced aeration), not as a naturally
-discharging point comparable to the fissure or the springs: a
-distinction already built into how this proposal treats its chemistry
-throughout (as-measured, as-pumped, never reconstructed as a free-flowing
-parent fluid). Three candidate wells sitting within 24 meters of each other
-is too close to confidently pick one without more information, so this
-remains a named lead, not a confirmed well identity.
+**What well feeds the resort tank, and what does its history say?** The fissure (SBF_0001) has no well record in the database: its depth, casing and completion are unknown. In place of one, the fissure's logger behavior (the inverse correlation between paired loggers already cited from the poster) and the gas geothermometer's reservoir temperature are informative, though neither substitutes for a construction record. The resort tank's well is better constrained but not confirmed. A proximity check against NBMG's geothermal-wells layer finds SBW_0002 within 10-24 m of three named historic wells: Carver Geothermal Well (8.6 m deep) and two wells operated by Steamboat Resort, Steamboat No. 2 (36.6 m) and Steamboat No. 4 (68.6 m), both listed as abandoned production wells. Steamboat No. 4 is plausibly the well White [-@white1968c] describes as erupting continuously once drilling reached its aquifer in 1947-48, a precedent for uncontrolled discharge at about this spot, long before the present air-lift pump. The tank is then a resort-operated deep-fluid well that predates Ormat's and SB Geo's field-wide development [@dhakal2025], now used as a pumped outflow tap. Its chemistry is altered by the extraction itself (forced aeration), so it is not comparable to the naturally discharging fissure and springs, and this proposal uses its as-measured, as-pumped chemistry throughout and never reconstructs it as a free-flowing parent fluid. Three candidate wells within 24 m cannot be separated without more information, so the identity remains a lead.
 
-**A limitation specific to the resort-tank sample.** The well feeding the
-resort tank is pumped with a true air-lift pump, confirmed by its
-intermittent discharge pattern: compressed air is injected into the well to
-lift the water, rather than the water flowing or flashing naturally. That
-is a fundamentally different degassing pathway from the fissure's natural
-adiabatic boiling that this method's steam-loss correction assumes, and it
-is a more parsimonious explanation for the resort tank's own behavior than
-the method's own physics: forced, intermittent contact with injected air
-plausibly strips carbon dioxide (and may add oxygen) regardless of how
-much, if any, the deep fluid itself boiled on the way up, which would
-explain both the resort tank's unusually high measured field pH and the
-gas-equilibration convergence failure reported below without invoking any
-property of the deep reservoir fluid at all. The resort tank's own "parent
-fluid" reconstruction is still computed and reported below, for
-completeness and because the exercise is instructive about the method's
-limits, but it should not be read as a reliable estimate of the deep
-reservoir fluid at the resort well: its as-measured (as-pumped) chemistry
-is used instead everywhere it appears as a target or end-member elsewhere
-in this proposal (the reaction-path titration and inverse-modeling sections
-below). Every PHREEQC run in this reconstruction uses the LLNL
-thermodynamic database (automatically recommended for every sample here,
-since all are geothermal-temperature fluids), explicitly logged (along with
-each input sample's own charge-balance error and each gas-equilibration
-step's convergence status) to
-a diagnostics table, so a convergence
-failure is reported, not hidden (see Results).
+**A limitation specific to the resort-tank sample.** The well feeding the resort tank is pumped by a true air-lift, confirmed by its intermittent discharge: compressed air is injected to lift the water, so it does not flow or flash naturally. That is a different degassing pathway from the natural adiabatic boiling that the steam-loss correction assumes. Forced contact with air plausibly strips carbon dioxide (and may add oxygen) whether or not the deep fluid boiled on its way up, which would explain both the tank's high field pH and the gas-equilibration convergence failure without invoking any property of the deep fluid. The tank's parent-fluid reconstruction is still computed and reported, because it shows the method's limits, but it is not a reliable estimate of the deep fluid at that well. Every PHREEQC run in the reconstruction uses the LLNL database (recommended for all of these geothermal-temperature fluids), and each input sample's charge-balance error and each gas-equilibration step's convergence status are logged to a diagnostics table, so a convergence failure is reported and not hidden.
 
-The reconstructed parent fluid, the as-measured fissure and resort-tank
-fluids, a nearby Lower Sinter Terrace well (SBW_0001), and this project's
-two Steamboat Creek chloride mass balance stations (SBRR, near-field; SBBV,
-downstream: the same two stations used in the chloride mass balance)
-are assembled into one flowpath table and figure, tracking chloride,
-sodium, sulfate, silica, boron, pH, calcite and quartz saturation indices,
-sodium/potassium and quartz geothermometer estimates, and
-delta-18-O/delta-2-H across every node with data. A
-small statistical check (three thermal points: fissure,
-resort tank, and the nearby well) asks whether their independently derived
-sodium/potassium reservoir-temperature estimates are consistent with one
-shared parent fluid.
+The reconstructed parent fluid, the as-measured fissure and resort-tank fluids, a nearby Lower Sinter Terrace well (SBW_0001) and the two chloride mass-balance stations (SBRR, near-field; SBBV, downstream) are assembled into one flowpath table and figure, tracking chloride, sodium, sulfate, silica, boron, pH, calcite and quartz saturation indices, the Na/K and quartz geothermometers, and delta-18-O and delta-2-H at every node with data. A small check on the three thermal points (fissure, resort tank and the nearby well) asks whether their independently derived Na/K reservoir temperatures are consistent with one shared parent fluid.
 
 
 ## Database choice and the field-temperature correction {.unnumbered}
 
-**A note on the field-temperature correction.** A field-temperature unit
-bug (the project's Fluke field thermometer reports Fahrenheit, mislabeled
-as Celsius when entered into the database) was found and fixed after these
-reconstructions were first run, and every number above reflects the
-corrected temperatures. The steam-loss fractions and reconstructed parent
-chloride changed materially (the fissure's steam-loss fraction moved from
-an originally-miscalculated 4.2 percent to the corrected 19.4 percent, for
-example), but the qualitative conclusion (the two independently
-reconstructed parent fluids converge more tightly than the raw measured
-values do) holds under both the original and corrected temperatures.
+**A note on the field-temperature correction.** The project's Fluke field thermometer reports Fahrenheit, and those values had been entered in the database as Celsius. This was found and fixed after the reconstructions were first run, and every number above uses the corrected temperatures. The steam-loss fractions and parent chlorides changed materially (the fissure's steam-loss fraction moved from 4.2 to 19.4 percent), but the qualitative result, that the two reconstructed parent fluids agree more closely than the measured fluids do, held under both.
 
 
 
-**Does the choice of thermodynamic database matter here, especially given
-the resort-tank fluid's convergence failure?** No: a six-database
-sensitivity sweep traced the resort tank's gas-equilibration convergence
-failure to its own unusually high measured field pH (9.0 versus the
-fissure's 8.3), not to database choice: forcing its starting pH down to
-match the fissure's converges cleanly on every database tested and lands
-within 0.1 pH units of the fissure's own result. That high starting pH most
-plausibly reflects the resort well's own air-lift pump (above), not a
-deep-fluid property. The full method is documented in the project's PHREEQC notebook, since this result feeds
-a planned second manuscript, not the calibration thesis itself.
+**Does the choice of thermodynamic database matter, given the resort-tank convergence failure?** No. A six-database sweep traced the failure to the tank's high measured field pH (9.0 versus the fissure's 8.3) and not to the database: forcing the starting pH to the fissure's value converges on every database tested and lands within 0.1 pH units of the fissure's result. The high pH most plausibly reflects the air-lift pump (above) and not a deep-fluid property. The full method is in the project's PHREEQC notebook, since this result feeds a planned second manuscript and not the calibration thesis.
 
 
 ## More reaction-path targets and the sulfate test {.unnumbered}
 
-**A fifth target: the resort tank (SBW_0002), run with a necessary
-adjustment.** SBW_0002's own stored conservative mixing fraction against
-the fissure and SBRR is 1.043, slightly above the valid 0 to 1 range: a
-already-documented finding (this project's own earlier work), that
-SBW_0002 is *more* concentrated than the fissure reference itself, not a
-new problem. A fraction outside this range cannot be represented as a
-mixture of the two named end-members, so the fraction is clamped to 1.0
-(pure fissure end-member, no meteoric dilution), before running the
-titration, with the modeling implication stated explicitly rather than
-silently worked around: the question being asked shifts from "does mixing
-plus reaction explain this sample" to "does reaction alone, starting from
-the pure thermal end-member, explain the small remaining gap." Under that
-explicitly adjusted question, SBW_0002 fits extremely well: a combined
-Ca/Mg/Alkalinity error of only 4.6 percent at a tiny net precipitation (on
-the order of one-millionth of a mole), by far the best fit of any
-target tested on this flowpath, shown in @fig-reactionpath-comparison. This
-titration uses SBW_0002's as-measured (as-pumped) composition
-throughout, not a reconstructed parent fluid, so the air-lift pump's effect
-on gas chemistry and pH does not bear on it: calcium, magnesium, and
-alkalinity are not the species an air-lift pump would be expected to alter,
-so this close fit is a reliable result about how
-closely SBW_0002's major-ion chemistry resembles the fissure's, independent
-of the separate pH/gas-equilibration concerns raised above.
+**A fifth target: the resort tank (SBW_0002).** SBW_0002's chloride-based mixing fraction against the fissure and SBRR is 1.043, slightly above the valid 0 to 1 range, because the tank is more concentrated than the fissure reference. A fraction outside that range cannot be represented as a mixture of the two end-members, so it is clamped to 1.0 (pure fissure end-member) before titration. The question then changes from whether mixing plus reaction explains the sample to whether reaction alone, starting from the pure thermal end-member, explains the small remaining gap. On that basis SBW_0002 fits extremely well: a combined Ca/Mg/Alkalinity error of 4.6 percent at a net precipitation of about one-millionth of a mole, the best fit of any target on this flowpath (@fig-reactionpath-comparison). The titration uses the as-pumped composition, and calcium, magnesium and alkalinity are not species an air-lift pump would be expected to alter, so the close fit is a reliable result about how closely the tank's major-ion chemistry resembles the fissure's, apart from the pH and gas concerns above.
 
-**Does a sulfate phase, or a different meteoric input, resolve SBS_0001's
-own reaction-path tension?** SBS_0001's own chemistry (the highest sulfate,
-lowest alkalinity of its peer group) suggested a non-carbonate explanation,
-so seven model variants (alternate mineral phases, alternate meteoric
-end-members, and a combined variant) were tested against it directly. None
-fully resolves the tension: the best result (30.6 percent combined error)
-still falls short of SBS_0002's and SBS_0003's own baseline fits, and the
-ranking of variants changes once a scoring bug affecting fluorite's own
-fluoride prediction is fixed: a modest lesson in how sensitive this kind of
-sensitivity test is to exactly what is scored. The full method and all seven
-variants are documented in the project's PHREEQC notebook, since this result feeds
-a planned second manuscript, not the calibration thesis itself.
+**Does a sulfate phase, or a different meteoric input, resolve SBS_0001's reaction-path tension?** SBS_0001 has the highest sulfate and lowest alkalinity of its peer group, which suggested a non-carbonate explanation, so seven variants (alternate mineral phases, alternate meteoric end-members and a combined variant) were tested. None resolves it. The best (30.6 percent combined error) is still worse than the baseline fits of SBS_0002 and SBS_0003, and the ranking changed once a scoring bug in fluorite's fluoride prediction was fixed, a reminder of how sensitive such a test is to what is scored. The method and all seven variants are in the project's PHREEQC notebook, since this result feeds a planned second manuscript.
 
-**Close on a map, far apart chemically.** SBS_0001 and SBW_0001 sit only
-109 meters apart by their own coordinates, shown in
-@fig-proximity-map, yet behave about as differently as any two
-targets on this flowpath can: SBS_0001 is the worst-fitting target
-tested (even after every sensitivity variant above), while SBW_0001
-needs the largest reaction-progress correction of the original four
-targets but also shows one of the largest improvements once that
-correction is applied. This is a mappable instance of the
-principle already stated in this proposal's discussion of modeling
-assumptions: physical proximity does not imply shared chemistry or a
-shared flow path, and a defensible model has to be built from which
-samples are chemically alike, not which ones happen to sit
-close together.
+**Close on a map, far apart chemically.** SBS_0001 and SBW_0001 are only 109 m apart (@fig-proximity-map), yet they behave about as differently as any two targets on this flowpath. SBS_0001 is the worst-fitting target even after every sensitivity variant, while SBW_0001 needs the largest reaction-progress correction of the original four targets but also shows one of the largest improvements once it is applied. Physical proximity does not imply shared chemistry or a shared flow path, and a defensible model has to group samples by chemical similarity and not by distance.
 
 ```{r fig-proximity-map}
 #| results: asis
@@ -2168,22 +1847,7 @@ show_fig(
 
 ## A Piper diagram of the flowpath samples {.unnumbered}
 
-**A Piper diagram, independent of any PHREEQC modeling.** As a
-direct, model-free check of the sulfate hypothesis above, a trilinear
-Piper diagram was built from the same seven samples' mg/L
-chemistry converted to charge-equivalent percentages, shown in
-@fig-piper. The result is a slightly deflating, negative one:
-SBS_0001 does not visibly separate from SBS_0002 or
-SBS_0003 toward the anion triangle's sulfate corner. Chloride dominates
-the anion budget so heavily in every thermal sample on this
-flowpath that SBS_0001's absolute sulfate excess (187 versus
-63 to 167 milligrams per liter at the other targets) does not translate
-into a large shift in charge-equivalent percentage terms. The diagram
-still does useful work: it visually separates SBRR from the
-thermal cluster exactly as expected, and groups the thermal samples
-together on both the cation and anion triangles, a plain visual
-confirmation of the facies picture already established statistically in
-the hierarchical clustering and principal-components work.
+**A Piper diagram, independent of any PHREEQC modeling.** As a model-free check of the sulfate idea, a Piper diagram was built from the same seven samples' mg/L chemistry converted to charge-equivalent percentages (@fig-piper). The result is negative: SBS_0001 does not separate from SBS_0002 or SBS_0003 toward the sulfate corner. Chloride dominates the anion budget so heavily in every thermal sample that SBS_0001's sulfate excess (187 versus 63 to 167 mg/L at the other targets) barely changes the percentages. The diagram still separates SBRR from the thermal cluster as expected and groups the thermal samples together on both triangles, which agrees with the facies clustering and principal-components work.
 
 ```{r fig-piper}
 #| results: asis
@@ -2198,22 +1862,7 @@ show_fig(
 
 ## The thermal imagery and a dated field sketch {.unnumbered}
 
-**The thermal-infrared imagery itself.** The raster files behind this
-project's previously qualitative-only description of the terrace's surface
-thermal signature are now on file (closing an earlier gap in the project's data). The broad July 2025 drone
-thermal-infrared survey, shown in @fig-tirbroad, overlays the full Lower
-Sinter Terrace against satellite imagery, with labeled ground-control
-points, a visible warm channel tracking Steamboat Creek, and the resort
-well/pools area. A calibrated, zoomed-in thermal orthophoto of the fissure
-area, shown in @fig-tirzoom, makes the two-discharge claim concrete
-rather than only described in prose: discrete, bright point sources cluster
-along the terrace's western margin (plausible active degassing/boiling
-vents), while a broader, more diffuse warm signature tracks the creek
-channel itself (more consistent with shallow seepage and mixing than
-point-source degassing). This is still a qualitative, visual read, not a
-digitized layer (turning either image into a georeferenced vector layer, as was done for other literature figures, remains a
-next step), but it is now a visually
-confirmed observation rather than one based on images shared informally. The next subsection puts a georeferenced version of this imagery on the same map as the database points and quantifies it.
+**The thermal-infrared imagery itself.** The raster files behind the earlier qualitative description of the terrace's thermal signature are now on file. The broad July 2025 drone survey (@fig-tirbroad) overlays the Lower Sinter Terrace on satellite imagery, with labeled ground-control points, a warm channel along Steamboat Creek and the resort well and pools. A calibrated, zoomed orthophoto of the fissure area (@fig-tirzoom) shows two discharge styles side by side: discrete, bright point sources along the terrace's western margin (plausible active degassing or boiling vents) and a broader, diffuse warm signature along the creek channel (more consistent with shallow seepage and mixing). This is a visual read of the images, not a digitized layer. The next subsection puts a georeferenced version of the imagery on the same map as the database points and quantifies it.
 
 ```{r fig-tirbroad}
 #| results: asis
@@ -2237,16 +1886,7 @@ show_fig(
 )
 ```
 
-**A dated field sketch from five days after the first 2025 eruption
-pulse.** A hand-annotated field map from the June 6, 2025 Busick property
-visit, shown in @fig-busicksketch, documents named features directly
-relevant to this proposal's own chronology: the Driveway Spring (95.1
-degrees Celsius), the New North Fumarole (95.8 degrees Celsius), a 2024
-small fumarole already inactive by this date, the Geyser/Pipe eruption site
-itself, Big Pool, and a small warm seep roughly 80 meters away: dated
-ground truth for the terrace's condition immediately after the first
-documented eruption pulse, independent of either thermal-infrared survey
-above.
+**A dated field sketch from five days after the first eruption pulse.** A hand-annotated map from the 6 June 2025 visit to the Busick property (@fig-busicksketch) names features that bear on the chronology: the Driveway Spring (95.1 degrees Celsius), the New North Fumarole (95.8), a 2024 fumarole already inactive by that date, the geyser and pipe eruption site, Big Pool and a small warm seep about 80 m away. It is dated ground truth for the terrace immediately after the first pulse, independent of either thermal survey.
 
 ```{r fig-busicksketch}
 #| results: asis
@@ -2368,7 +2008,7 @@ Rachel Micander's proposal builds a 3-D structural model in Leapfrog and ArcGIS 
 
 **What the model would do.** It has four jobs. First, compartments: grouping samples by lithology and fault block, so that end-members and mixing pairs are chosen within and across compartments on stated geologic grounds. Second, pathways: giving path lengths and orientations for the 1-D mixing models along the fissure to creek flowpath, so that mixing fraction can be plotted against distance. Third, reaction paths: showing which rock the water meets (altered alluvium, volcanics, altered granodiorite, sinter), so that the phases supplied to the PHREEQC reaction-path titration are chosen from the geology and not by trial; the calcium-alkalinity tension at SBS_0001, which no simple phase set resolved, is the open question this targets. Fourth, a check on the chemistry: comparing the principal components of the PHREEQC output by compartment.
 
-**Data on hand.** Collars, depths and elevations for 110 wells (elevations from the 1 m DEM unless a permit or survey value exists); 140 lithology intervals from the NBMG permit compilation and 158 from the 27 well logs in Collar's thesis (86 linked to wells); Skalbeck's cross-sections and 241 point depths to the units Qal, Tv, AltKgdpKm and Kgd; 9 faults, 53 fissure traces and the sinter-terrace outline; and the thermal polygons. All are exported in UTM zone 11N with Z from the DEM. The limits are that every hole is treated as vertical except 83C-6ST1, which has a deviation survey, that lithology quality varies, and that no permeability data exist.
+**Data on hand.** Collars, depths and elevations for 236 wells (elevations from the 1 m DEM unless a permit or survey value exists); 140 lithology intervals from the NBMG permit compilation and 158 from the 27 well logs in Collar's thesis (86 linked to wells); Skalbeck's cross-sections and 241 point depths to the units Qal, Tv, AltKgdpKm and Kgd; 9 faults, 53 fissure traces and the sinter-terrace outline; and the thermal polygons. All are exported in UTM zone 11N with Z from the DEM. The limits are that every hole is treated as vertical except 83C-6ST1, which has a deviation survey, that lithology quality varies, and that no permeability data exist.
 
 **Workflow.** The database is exported to Leapfrog (fault network, lithologic units, intersections with the wells); compartment labels are written back to the database; the PHREEQC and mixing runs are grouped by compartment; the principal-component analysis is repeated by compartment. The fault traces digitized in ArcGIS are the main dependency, and nine are on file.
 
@@ -2389,43 +2029,9 @@ show_fig(
 ## Geologic and hydraulic context beyond what exists {.unnumbered}
 
 
-Beyond the bounded Leapfrog model proposed above, three further steps would eventually let this project's chemistry be tested
-against subsurface structure and flow paths, rather than inferred
-from chemistry and proximity alone: a digitized fault geometry, a full
-three-dimensional Leapfrog geologic model built on top of it, and a MODFLOW
-groundwater-flow model built on top of that. None of the three is pursued
-as an active deliverable of this thesis, for the same reason in each case:
-each needs an input this project does not yet have, and building any of
-them without that input would produce a model dominated by untested
-assumptions rather than constraints, exactly the outcome the batch-modeling
-framing above is meant to avoid, not just defer elsewhere. Digitized fault
-traces need a committed ArcGIS georeferencing session against the
-fracture and air-photo-lineament map in Collar's thesis (Plate 3 and Figure 14 [@collar1990thesis]; a shorter version is in Collar and Huntley [@collar1990])
-(chosen because it also shows selected wells and hot springs, several already resolved in this
-database, giving natural control points; his Plate 1 (springs) and Plate 4 (stream stations) are the matching targets for tying White's spring numbers and his gaging stations to present locations); a calibrated hydraulic-
-conductivity and storage-coefficient field needs pump-test drawdown
-data, which does not yet exist for any Lower Sinter Terrace well (an
-Aqtesolv analysis of such data, once collected, is a near-term
-opportunity given the author's own ongoing groundwater hydrology
-coursework, but is not assumed here on any fixed timeline). The only 
-site-area transmissivity/storage-coefficient values on file today are
-literature reference points, not a calibrated field: four dated aquifer
-tests summarized by Sorey and Colvard [-@sorey1992] (roughly 1,250-9,500
-square feet per day) and the thesis values of Collar [-@collar1990thesis]: 2,950-9,500 square feet per day from well and spring response, with a storage coefficient of 2.6e-3 (spring 42w, about
-3,000 square feet per day, also in Collar and Huntley [-@collar1990]).
+Beyond the bounded Leapfrog model proposed above, three further steps would let the chemistry be tested against structure and flow paths and not inferred from chemistry and proximity alone: a digitized fault geometry, a full three-dimensional Leapfrog model built on it, and a MODFLOW groundwater-flow model built on that. None is a deliverable of this thesis, because each needs an input the project does not have, and a model built without it would be dominated by untested assumptions. Digitized fault traces need a committed ArcGIS georeferencing session against the fracture and air-photo-lineament map in Collar's thesis (Plate 3 and Figure 14 [@collar1990thesis]; a shorter version is in Collar and Huntley [@collar1990]), chosen because it also shows selected wells and hot springs, several already resolved in the database, which give control points; his Plate 1 (springs) and Plate 4 (stream stations) are the matching targets for tying White's spring numbers and his gaging stations to present locations. A calibrated hydraulic-conductivity and storage field needs pump-test drawdown data, which does not exist for any Lower Sinter Terrace well; an Aqtesolv analysis of such data, once collected, is a near-term opportunity given the author's groundwater hydrology coursework, but no timeline is assumed. The only transmissivity and storage values on file are literature reference points: four dated aquifer tests summarized by Sorey and Colvard [-@sorey1992] (roughly 1,250-9,500 square feet per day) and Collar's [-@collar1990thesis] 2,950-9,500 square feet per day with a storage coefficient of 2.6e-3 (spring 42w, about 3,000 square feet per day, also in Collar and Huntley [-@collar1990]).
 
-What already exists and is usable today, at essentially no
-further cost, is worth naming so it is not lost alongside what is being
-deferred: well collar, total-depth, and
-completion-interval data for roughly half the wells on file, already
-exported in Leapfrog's own input format and standing ready the moment
-fault geometry exists to build on top of it; and a standing NDEP data
-request for deeper-well water levels that would, if it comes through,
-support a field-specific potentiometric surface (today, only two or
-three wells inside the Steamboat field itself carry continuous, current
-water-level data). Both are named here as next steps for whoever
-picks this thread up next (the author included, time permitting) not as
-deliverables of this proposal.
+Two things already exist and cost little to use. Well collar, total-depth and completion-interval data for roughly half the wells on file are exported in Leapfrog's input format, ready once fault geometry exists. And a standing NDEP request for deeper-well water levels would, if granted, support a field-specific potentiometric surface; today only two or three wells inside the Steamboat field carry continuous, current water levels. Both are next steps for whoever takes the thread up next (the author included, time permitting) and not deliverables of this proposal.
 
 
 ## Inverse and forward modeling, geothermometers, and the gas-phase test {.unnumbered}
