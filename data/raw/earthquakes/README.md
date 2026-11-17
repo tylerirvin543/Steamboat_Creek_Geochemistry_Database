@@ -76,7 +76,7 @@ profiles 1/2).
   analysis: no completeness-magnitude analysis, no declustering, no
   focal-mechanism/stress-tensor data. It answers "did anything nearby
   happen around this date," not "what caused it."
-- The 2025-01-01 to 2026-09-25 window was chosen to match this
+- The first window (2025-01-01 to 2026-09-25) was chosen to match this
   project's real overlapping barometric-pressure/water-level/
   temperature-logger records — extend the window if a longer
   historical comparison (e.g., against Sorey & Colvard's own 1988-1992
@@ -88,3 +88,10 @@ profiles 1/2).
   varies by network and by automatic-vs-reviewed status (see the
   `status`/`horizontalError` columns); treat sub-km distance
   differences between nearby events as not meaningfully distinguishable.
+
+## 2026-11-16 user download (Reno-area selection)
+
+`usgs_query_20261116_reno_area.csv` is a USGS catalog export for a user-drawn area around Reno
+(4 events, 2026-06-12 to 2026-10-11, M1.5 and above). Box: latitude 39.261 to 39.552, longitude -119.946 to -119.583. The selection area is shown in
+`Earthquake_USGS_dataarea_11_16_2026.png` (same folder; original in `docs/figures/`).
+Events already in the database are skipped by event id.

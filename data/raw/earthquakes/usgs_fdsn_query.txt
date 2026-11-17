@@ -3,3 +3,7 @@ Query used (2026-09-25):
 https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2025-01-01&endtime=2026-09-25&minlatitude=38.8&maxlatitude=40.0&minlongitude=-120.3&maxlongitude=-119.2&minmagnitude=1.5
 Bounding box: greater Reno-Washoe Valley-Lake Tahoe seismic region (loosely centered on Steamboat Hills, 39.38 N / -119.75 W).
 Retrieved via webfetch, saved verbatim as usgs_earthquakes_20250101_20260925.csv (raw=true, no reformatting).
+
+Second query (2026-11-14), same bounding box and magnitude, covers the update window:
+https://earthquake.usgs.gov/fdsnws/event/1/query?format=csv&starttime=2026-09-25&endtime=2026-11-14&minlatitude=38.8&maxlatitude=40.0&minlongitude=-120.3&maxlongitude=-119.2&minmagnitude=1.5&orderby=time-asc
+Saved as usgs_earthquakes_20260925_20261114.csv. Catalog now spans 2025-01-01 to 2026-11-14. Rows already present are skipped by event id.

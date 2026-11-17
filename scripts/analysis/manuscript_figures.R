@@ -622,6 +622,8 @@ build_manuscript_figures <- function(con) {
   build_gas_geothermometry_figure(con)
   build_parent_fluid_comparison_figure(con)
   build_conductivity_timeseries_figure(con)
+  tryCatch({ source("scripts/analysis/proposal_timeseries_figures.R"); build_proposal_timeseries_figures(con) },
+           error = function(e) warning("proposal time-series figures skipped: ", conditionMessage(e)))
   source("scripts/analysis/lst_phreeqc_illustration_figures.R")
   build_lst_phreeqc_illustration_figures(con)
   # Thermal map overlays and the A009 resort-tank profile (needs Thermal_Areas; see

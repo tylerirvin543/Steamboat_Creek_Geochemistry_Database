@@ -1,0 +1,63 @@
+---
+title: "Sampling plan for the chloride-conductance calibration"
+subtitle: "Steamboat Creek (SBRR and SBGG): what to sample, how often, and what it costs"
+author: "Tyler Irvin, University of Nevada, Reno"
+date: today
+format:
+  pdf:
+    documentclass: scrartcl
+    geometry: [margin=0.9in]
+    fontsize: 10.5pt
+    colorlinks: true
+  docx: default
+execute:
+  echo: false
+  warning: false
+---
+
+```{r setup}
+find_root <- function(p = getwd()) { for (i in 1:5) { if (file.exists(file.path(p, "scripts/analysis/sampling_cost_model.R"))) return(p); p <- dirname(p) }; stop("project root not found") }
+source(file.path(find_root(), "scripts/analysis/sampling_cost_model.R"))
+uc <- unit_costs(); so <- sampling_options(); ps <- phase_split()
+```
+
+## What I am asking
+
+Two conductivity loggers have run in Steamboat Creek since 15 July 2026, at Rhodes Road above the thermal inflow (SBRR) and at Geiger Grade below it (SBGG). No chloride sample yet falls inside that record, so the relation between conductance and chloride has not been fitted. I want to sample chloride at both stations in two phases and then use the loggers to give a continuous chloride and thermal-discharge record. I would like your view on the interval, the window length and whether the budget is reasonable.
+
+## The plan
+
+**Phase 1, calibration window.** Daily samples at both stations for 14 days (2 weeks; 4 weeks is the alternative), at the same time of day, with isotopes every third day. This gives the first matched chloride and conductance pairs and shows whether chloride follows the daily conductance cycle.
+
+**Phase 2, seasonal sampling.** Monthly or biweekly samples from December 2026 to September 2027, ending in early fall, to test whether one relation holds through winter baseflow, runoff and summer. Biweekly samples would be held and shipped together each month. Two storm or snowmelt events are added. Every sampling date at both stations also gives a thermal-water discharge estimate by the two-station chloride balance (SBRR is at a USGS gauge; SBGG needs a manual discharge measurement at each visit).
+
+## Why these intervals
+
+I tested candidate intervals on the logger record itself: for each interval I drew 200 random start days, kept only those samples, rebuilt the full conductance record by interpolation, and measured the error as a percent of the mean (notebook 09; air-exposed days and flagged readings removed).
+
+| Interval | SBRR mean error | SBRR worst 5% | SBGG mean error | SBGG worst 5% |
+|---|---|---|---|---|
+| Daily | 3.6% | 4.0% | 3.1% | 5.0% |
+| Every other day | 4.3% | 4.8% | 4.1% | 5.0% |
+| Weekly | 6.9% | 7.7% | 7.8% | 9.8% |
+| Biweekly | 9.5% | 12.1% | 8.5% | 13.2% |
+
+Error rises smoothly, with no sharp cliff, so the choice is a trade between precision and cost. Daily sampling is the cheapest way to get an error near 3 to 4 percent, and it is only needed for a short window, which is why Phase 1 is 2 to 4 weeks. After that, a monthly or biweekly interval keeps the reconstruction error under about 10 to 13 percent at the worst start days, enough to see a seasonal change, though not a small one. Two more results shape the design. The two loggers are close to opposite in phase through the day (SBRR highest in the late morning, SBGG lowest then), so I would sample both stations in a fixed 10:00 to 13:00 window on every visit to keep clock time from looking like a trend. And the daily range is modest, so the main uncertainty after the first two weeks is the seasonal behavior, which is what Phase 2 tests.
+
+What this test does not show: it measures how well a sparse sample reproduces the conductance record, not chloride, because no chloride series exists yet. The chloride models have only been run on simulated data. The Phase 1 pairs are what make the next step possible.
+
+## Cost
+
+```{r cost}
+cp <- ps[ps$window_days == 14, ]
+knitr::kable(data.frame(`Phase 2 option` = c("Monthly", "Monthly + isotopes", "Biweekly", "Biweekly + isotopes"), `Phase 1 (14 days)` = fmt_usd(cp$phase1_cost), `Phase 2` = fmt_usd(cp$phase2_cost), `Combined` = fmt_usd(cp$combined), check.names = FALSE), align = "lrrr", caption = "Laboratory cost, central estimate, creek sites only.")
+```
+
+Prices come from my invoice for seven samples already analyzed (about `r fmt_usd(uc$sample)` per sample, a `r fmt_usd(uc$batch)` administration fee per batch, assumed per batch; isotopes $40 estimated). Shipping is not on the invoice and is taken as $20 to $50 per shipment, so the totals could move by up to about 5 percent. A 7-day Phase 1 would lower the combined cost by about $2,600, and a 28-day one would raise it by about $5,500. The Lower Terrace and fissure-area samples are extra (about `r fmt_usd(so$total[5] - so$total[4])` for the fissure-area option). Field time, bottles and travel are not included.
+
+## Questions for you
+
+1. Is a 14-day daily window enough, or would you push to 4 weeks?
+2. Monthly or biweekly for Phase 2, given the cost difference?
+3. Is the 10:00 to 13:00 fixed sampling window reasonable, or should the two stations be sampled at their own daily means?
+

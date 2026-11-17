@@ -1,0 +1,6 @@
+"kind","near","n_tests","n_events","n_abs_z_gt_2","expected_by_chance"
+"conductance","15-60 km",32,16,0,1.5
+"conductance","over 60 km",6,3,0,0.3
+"temperature","within 15 km",2,2,1,0.1
+"temperature","15-60 km",190,33,17,8.6
+"temperature","over 60 km",23,3,1,1

@@ -175,7 +175,8 @@ ingest_usgs <- function(con, base_dir = "data/raw/usgs/input") {
         value        = as.numeric(.data[[value_col]]),
         station_id   = monitoring_location_id %||% station_id,
         source_file  = folder_name,
-        parameter_code = as.character(parameter_code)
+        # USGS web exports write discharge as 00060; older files and the rest of the project use 60
+        parameter_code = sub("^00060$", "60", as.character(parameter_code))
       )
     
     # ------------------------------------------------------------
@@ -249,7 +250,8 @@ ingest_usgs <- function(con, base_dir = "data/raw/usgs/input") {
     # ✅ Fix type mismatch
     existing <- existing %>%
       mutate(datetime = as.POSIXct(datetime, tz = "UTC"),
-             parameter_code = as.character(parameter_code)
+        # USGS web exports write discharge as 00060; older files and the rest of the project use 60
+        parameter_code = sub("^00060$", "60", as.character(parameter_code))
              )
     
     pre_filter <- nrow(df)

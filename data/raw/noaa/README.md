@@ -38,3 +38,15 @@ Idempotent via `Weather_Files_Processed` + an anti_join on
   other °C/mm — with `unit` carried per row; always query
   `vw_weather_metric` (or check `unit` explicitly) rather than
   assuming a consistent unit across all rows of `Weather_Observations`.
+
+## Reno Airport daily precipitation (GHCN-Daily)
+
+`reno_airport_USW00023185_PRCP_1938_2026.csv` (1938-01-01 to 2026-10-24) and
+`reno_airport_USW00023185_PRCP_20261025_20261110.csv` (update, to 2026-11-10) come from the
+NCEI Data Access service (no token needed). To extend the record, change `startDate` and `endDate`
+in this query and save the result as a new file in this folder (the ingest detects the format and
+skips rows already present):
+
+https://www.ncei.noaa.gov/access/services/data/v1?dataset=daily-summaries&stations=USW00023185&dataTypes=PRCP&startDate=2026-10-25&endDate=2026-11-14&format=csv&units=metric&includeStationName=true&includeStationLocation=true&includeAttributes=true
+
+The most recent days can be revised or missing for a few days after the date. Current record end: 2026-11-10.

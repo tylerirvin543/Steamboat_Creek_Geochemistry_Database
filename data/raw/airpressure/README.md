@@ -77,6 +77,7 @@ table (`station_id`, `date`, `parameter`, `value`, `unit`) designed so
 a new variable at an already-known station is just a new `parameter`
 value, not a schema change.
 
+- A second download covering 2026-05-01 to 2026-11-12 (all IEM columns, 30 in total) was added on 2026-11-13 in `data_11_13_mesonet.agron.iastate/`; the ingest only reads station, valid and mslp, skips rows already present, and brings the record to 2026-11-12.
 - `station_id` is deliberately set to **`USW00023185`** — the same
   station_id already used for Reno Airport's GHCN daily
   temperature/precipitation data — so pressure joins to those series

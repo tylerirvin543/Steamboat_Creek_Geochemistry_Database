@@ -623,6 +623,30 @@ hand-flagged row exactly, while also catching a short relaunch dip
 and the full width of the 2026-10-10 retrieval excursion that a
 simple point-outlier check would have missed on its own.
 
+The conductivity record and the creek chloride samples are shown together below, with chloride as its own series. The loggers began on 2026-07-15. The only recent chloride pair (SBRR and SBBV, 2026-05-01) was taken before deployment, so no chloride sample yet falls inside the logger record. The only conductance and chloride pairs on file are 181 historical NDEP pairs at Rhodes Road, which give a linear relation with an R-squared of 0.65 and serve as a reference for the logger calibration. The chloride and Cl/B values in the fissure area and other thermal wells and springs, which are not part of the calibration, are plotted separately and sit within the range seen since 1950.
+
+```{r cond-chloride-fig}
+#| echo: false
+#| fig-cap: "SBRR and SBGG specific conductance (top) and creek chloride samples on file (bottom). Chloride has its own axis; no chloride sample falls inside the logger record."
+knitr::include_graphics("../output/figures/manuscript/conductivity_chloride_timeseries.png")
+```
+
+```{r calib-so-far-fig}
+#| echo: false
+#| fig-cap: "Chloride and Cl/B against specific conductance, historical NDEP pairs at Rhodes Road. No line is drawn for Cl/B because boron is near detection."
+knitr::include_graphics("../output/figures/manuscript/calibration_so_far.png")
+```
+
+```{r fissure-series-fig}
+#| echo: false
+#| fig-cap: "Chloride and Cl/B at the fissure area and other thermal wells and springs, 1950 to 2026. Not part of the creek calibration."
+knitr::include_graphics("../output/figures/manuscript/fissure_series.png")
+```
+
+**Do earthquakes line up with changes at the loggers?** Each earthquake in the logger record was compared with the 48 hours before and after at every temperature and conductance logger, and the difference was scored against that logger's normal 48-hour changes (z score). No conductance step exceeded 2 in 38 comparisons (about 2 would be expected by chance). The temperature loggers show more: 19 of 215 comparisons exceeded 2 in size where about 10 would be expected by chance, almost all for earthquakes 15 to 60 km away, and the largest steps are at the fumarole and spring loggers (A004 SBS_0003, A010 SBS_0006, A005 SBF_0001) whose temperatures already swing with weather and the daily cycle. Only 2 comparisons involve an earthquake within 15 km. This is an excess of about two times chance, with overlapping windows and no control for weather, so it is a lead to follow with the next download and not evidence of a response. The nearest and largest events (M2 to 3) are small, and the new Reno-area download added no events that were not already in the catalog.
+
+**Provisional chloride flux for the logger period (an estimate, not a measurement).** Chloride was not measured between 2026-07-15 and 2026-10-10, so it was predicted from conductance with the historical Rhodes Road regression (Cl = -3.3 + 0.061 SC, 181 pairs, conductance 71 to 750 uS/cm) and combined with USGS discharge (10349300 upstream, 10349849 downstream). The upstream station is inside the fitted range and gives about 17 mg/L. SBGG conductance (about 1000 to 1200 uS/cm) is above the range in every hour, so the regression gives only about 64 mg/L there and a thermal inflow of about 18 L/s (16.6 to 19.9 using the fit's confidence limits). That is probably too low: a mixing line between SBRR water and thermal water (820 mg/L, about 3600 uS/cm) gives about 206 mg/L at SBGG and a thermal inflow of about 59 L/s, close to the 58.7 L/s from the 2026-05-01 samples. The downstream gauge is also not at SBGG, so its discharge includes other inflow. Treat both numbers as bounds on what the loggers could show, and replace them with the Phase 1 calibration. Figure: `output/figures/manuscript/provisional_chloride_flux.png`; tables in `data/derived/provisional_chloride_flux/`.
+
 ## The thermal layer, the Lower Terrace sources, and the resort's share of the thermal inflow
 
 **Data and method.** The thermal map used here is a georeferenced layout export

@@ -74,6 +74,10 @@ Two real, complementary additions:
   be prioritized for a subset of samples (e.g. the Tier 1 intensive
   window below), not necessarily every single sample.
 
+## Why these intervals: the evidence in brief
+
+The intervals come from a Monte Carlo test on the real SBRR and SBGG conductance record (notebook 09, `notebooks/09_sampling_campaign_design.qmd`): 200 random start days per interval, rebuild by interpolation, error as a percent of the mean, with air-exposed days removed. Reconstruction error is 3 to 5 percent for daily and every-other-day sampling, 7 to 8 percent weekly (worst 10) and 9 to 10 percent biweekly (worst 12 to 13), rising smoothly with no cliff. That supports a short daily window (2 weeks, or 4 weeks if the budget allows) to get matched pairs and the daily cycle, followed by monthly or biweekly sampling for seasonal stability. The same notebook shows the two loggers are close to opposite in phase over the day, so both stations are sampled in a fixed 10:00 to 13:00 window each visit. Notebook 01 gives the temporal structure (diurnal cycle and persistence) behind this and notebook 02 compares conductance with discharge and weather once discharge is complete. These are results on conductance, not chloride; the chloride models have only been run on simulated data. The advisor summary is `docs/outreach/sampling_plan_advisor.qmd`; this document is the full record.
+
 ## The proposed design at a glance
 
 The campaign is centered on the two existing conductivity-logger
@@ -98,13 +102,12 @@ apparent skill.
 ## Additional candidate sampling sites
 
 - **The active steaming fissure / capped wellhead** (Lower Sinter
-  Terrace, active since June 2025): a genuinely novel end-member close
-  to the eruption vent itself. Real benefit: directly tests whether the
-  2025 event reflects a change in the deep upflow chemistry, not just a
-  surface reconfiguration. Real cost: site access and safety depend on
-  Ormat's permission and current site conditions (see
-  `docs/outreach/ormat_data_request.qmd`) -- not purely a lab-cost
-  decision.
+  Terrace, active since June 2025): a novel end-member close to the
+  eruption vent itself. The property is not Ormat's and I have access to
+  it, so access does not limit sampling here. Benefit: it directly tests
+  whether the 2025 event reflects a change in the deep upflow chemistry,
+  not just a surface reconfiguration. Cost: the laboratory cost of the
+  added samples, plus ordinary field safety around hot ground and steam.
 - **SBW_0001/SBW_0002 (the Steamboat Hot Springs "resort" wells)**:
   already real, already-sampled locations in this database (per
   `notebooks/06`'s real mixing-fraction analysis, which already includes
@@ -113,13 +116,63 @@ apparent skill.
   known, accessible sampling points -- a strong candidate for inclusion
   at essentially every tier below.
 
+
+## Laboratory cost from the actual invoice: sampling frequencies
+
+```{r setup-06cost, include = FALSE}
+root <- getwd(); for (i in 1:4) { if (file.exists(file.path(root, "scripts/analysis/sampling_cost_model.R"))) break; root <- dirname(root) }
+source(file.path(root, "scripts/analysis/sampling_cost_model.R"))
+uc <- unit_costs(); so <- sampling_options()
+lt_cost <- (34 + 4) * uc$sample + 4 * uc$batch + 4 * 35 + 2 * uc$isotope
+```
+
+
+
+The prices come from the invoice for the seven samples already analyzed. The administration fee is treated as per batch but is unconfirmed, and shipping ($20 to $50 per shipment) is not on the invoice, so every total below carries a range; isotopes are a $40 planning estimate.
+
+```{r cost-unit-06}
+li <- uc$table
+knitr::kable(data.frame(Code = li$code, Item = li$item, `Invoice, 7 samples (USD)` = sprintf("%.2f", li$invoice_usd), Charged = li$scales_with, `Unit cost (USD)` = sprintf("%.2f", li$unit_usd), check.names = FALSE), align = "llrlr", caption = "Invoice for one batch of seven samples and the derived unit costs. The administration fee is assumed to be per batch (to confirm); shipping is not on the invoice.")
+```
+
+I propose creek sampling at SBRR and SBGG from December 2026 to September 2027, ending in early fall, after a seven-day daily window in November and with two storm or snowmelt events. Monthly sampling is the minimum that spans winter baseflow, runoff and summer; biweekly sampling doubles the paired dates, with the biweekly samples held and shipped together each month. Each frequency is priced with and without isotopes. Weekly sampling is not proposed because it is not feasible for one person. Every sampling date at both stations also gives a thermal-water discharge estimate (two-station chloride balance, gauge discharge at no laboratory cost).
+
+```{r cost-options-06}
+knitr::kable(data.frame(Option = so$option, `Chemistry visits` = so$chem_cadence, `Isotope samples` = so$iso_samples, `Chemistry samples (with QA)` = so$chem_samples, Shipments = so$shipments, `Central total` = fmt_usd(so$total), Range = paste0(fmt_usd(so$total_low), "-", fmt_usd(so$total_high)), `Discharge estimates` = so$discharge_dates, `Cost per estimate` = fmt_usd(so$cost_per_discharge), check.names = FALSE), align = "llrrrrlrr", caption = "Laboratory cost by sampling option. Central: fee per batch, $35 per shipment, monthly shipments. Range: shipping $20 to $50, fee per sample, up to one shipment per visit.")
+```
+
+With the Lower Terrace samples (34 analyses, 4 duplicates and blanks, four shipments, 2 isotope samples; about `r fmt_usd(lt_cost)`), the central totals are `r fmt_usd(so$total[2] + lt_cost)` (A2), `r fmt_usd(so$total[4] + lt_cost)` (B2) and `r fmt_usd(so$total[5] + lt_cost)` (C). B2 is the working choice and A1 (`r fmt_usd(so$total[1] + lt_cost)`) the fallback. The administration-fee basis and shipping are unconfirmed, so the totals carry the ranges shown; a written quotation will replace them.
+
+**What the baseline says about detecting change.** The mixing results give each Lower Terrace feature a fingerprint: its chloride, its fraction of fissure water (from chloride, with SBRR as the dilute end), and its Cl/B and Na/Cl ratios. If two single samples are compared and each carries a 5 percent analytical error, a difference below about 14 percent in chloride cannot be told from chance, which is a change of 0.08 to 0.15 in the fissure fraction depending on the feature (the well SBW_0001 is the most sensitive, the fissure and resort tank the least). The ratios are less useful than hoped. Cl/B runs only from 20 to 23 across the features and Na/Cl from 0.77 to 0.85, differences smaller than the roughly 20 percent that two single ratios could differ by chance, so the ratios cannot yet separate the features from one another. They can still show a large change in the source, and they are the check that tells dilution (chloride moves, ratios do not) from a change in the fluid (ratios move) once repeat samples tighten the baseline.
+
+**What a change at the springs or fissure would look like at the creek.** At SBBV, thermal water is about 14 percent of the flow but about 86 percent of the chloride, so a fractional change in the thermal chloride flux shows up in creek chloride almost one for one. With the analytical error and a 9 percent reconstruction error for the biweekly record, a single creek comparison would need a change of about 33 percent in thermal chloride flux to stand out. Averaging the ten or so samples taken in each period lowers that to roughly 10 percent, which is why the repeat sampling matters more than any single round. These are planning numbers from one snapshot and no replicates, not tests, and replicate samples at the first visits will replace the assumed 5 percent.
+
+**Why a fissure-centered tier.** Option C adds four sites near the fissure (the capped pipe and fissure vent, SBW_0001, SBS_0001 and SBW_0002) to the biweekly creek program, sampled monthly with isotopes. The reason is that the creek only integrates the thermal inflow, and the sites above it are where a change in the source would appear first and in a form (ratios, silica, isotopes) that the creek chloride cannot show. A change at the fissure that is followed by a change in creek chloride and in the SBRR to SBBV chloride flux would link the two; a change at the creek with no change at the fissure and springs would point to dilution or to inflow from somewhere else. The figure shows the baseline each of these would be compared against.
+
+```{r detect-06, echo = FALSE, message = FALSE, warning = FALSE}
+source(file.path(root, "scripts/analysis/change_detection_from_mixing.R"))
+local({ con <- DBI::dbConnect(RSQLite::SQLite(), file.path(root, "database/geochem_operational.sqlite"), flags = RSQLite::SQLITE_RO); on.exit(DBI::dbDisconnect(con)); invisible(change_detection_from_mixing(con, out_dir = file.path(root, "data/derived/change_detection"), fig_dir = file.path(root, "output/figures/manuscript"))) })
+knitr::asis_output(sprintf("![Baseline fingerprint of each Lower Terrace feature with the smallest change two single samples could show (5 percent analytical error). Planning values.](%s)", normalizePath(file.path(root, "output/figures/manuscript/change_detection_fingerprint.png"), winslash = "/")))
+```
+
+### Phase 1 (calibration window) and Phase 2 (monthly or biweekly) priced separately
+
+The campaign has two parts that answer different questions. **Phase 1**, the intensive calibration window (notebook 09, Tier 1), is daily sampling at SBRR and SBGG for 2 to 4 weeks with isotopes every third day; it supplies the first real chloride and conductance pairs and is the only way to test whether chloride follows the diurnal conductance signal. **Phase 2** (Tier 2) is the monthly or biweekly sampling afterwards, which tests seasonal stability. The window length is not settled, so three lengths are priced.
+
+```{r phase-split-06}
+ps <- phase_split()
+knitr::kable(data.frame(`Window (days)` = ps$window_days, `Phase 2 option` = ps$phase2, `Phase 1 samples` = ps$phase1_samples, `Phase 1 cost` = fmt_usd(ps$phase1_cost), `Phase 2 samples` = ps$phase2_samples, `Phase 2 cost` = fmt_usd(ps$phase2_cost), `Combined` = fmt_usd(ps$combined), check.names = FALSE), align = "rllrrrr", caption = "Phase 1 and Phase 2 laboratory cost, central scenario, creek sites only (Lower Terrace and fissure-area sites extra).")
+```
+
+Not in the laboratory cost: every SBGG visit needs a manual discharge measurement because SBGG has no gauge (SBRR is read from USGS gauge 10349300), which is field time and equipment, not a laboratory charge. Without it SBGG can calibrate chloride against conductance but cannot give a flux. The earlier tables in this section used a seven-day window; the 14-day row is closer to the notebook's recommendation.
+
 ## Tiered proposal: 20 / 40 / 60+ total lab analyses across the year
 
 | Tier | Total analyses/year | What it buys | What it can't answer |
 |---|---|---|---|
 | **20** | ~20 Cl-only or Cl+major-ion analyses | A bare-minimum first Cl-EC calibration point per site, likely just for the intensive window | No seasonal resolution; can't test whether the calibration holds across a full year; no isotope cross-check |
 | **40** | ~40 analyses, Cl+major ions on all, isotopes on a subset | Real seasonal resolution across a full year (intensive fall/winter window + roughly monthly follow-through through the following fall, per `notebooks/09`); a real mixing-model check on every sample | Isotope coverage still partial; fissure/resort sites only lightly sampled |
-| **60+** | 60+ analyses, isotopes on most/all, includes SBW_0001/0002 routinely and the fissure site if access is granted | The most complete real dataset: full-year seasonal Cl-EC calibration, mixing-model validation, isotope-based evaporation/mixing discrimination, and a real fissure/resort-well comparison | Cost and lab-turnaround logistics become the real constraint, not the science |
+| **60+** | 60+ analyses, isotopes on most/all, includes SBW_0001/0002 routinely and the fissure site | The most complete real dataset: full-year seasonal Cl-EC calibration, mixing-model validation, isotope-based evaporation/mixing discrimination, and a real fissure/resort-well comparison | Cost and lab-turnaround logistics become the real constraint, not the science |
 
 **Recommendation**: Tier 2 (~40 analyses) is the realistic target for a
 one-person thesis field campaign within a year -- it is the smallest
@@ -127,8 +180,8 @@ tier that actually closes the calibration-and-seasonality gap this whole
 project's Cl-EC-proxy premise depends on, and now explicitly assumes an
 earlier (fall/winter, not spring) start to the intensive window so the
 full year of monthly follow-through sampling fits inside the proposed
-timeline. Tier 3 is worth pursuing opportunistically (e.g. if Ormat
-grants fissure access, or lab budget allows) rather than being a hard
+timeline. Tier 3 is worth pursuing (e.g. adding the fissure site,
+or if the laboratory budget allows) rather than being a hard
 requirement.
 
 ## Cross-references
@@ -137,5 +190,5 @@ requirement.
   Monte Carlo analysis behind the two-tier temporal design cited above.
 - `manuscript/02_geochemical_background.qmd` -- background on why Cl,
   major ions, and isotopes each carry distinct information.
-- `docs/outreach/ormat_data_request.qmd` -- the fissure-access ask.
+- `docs/outreach/ormat_data_request.qmd` -- the request for Ormat's data (the fissure site itself is not on Ormat property).
 - `manuscript/00_thesis_proposal.qmd`, section "The sampling plan in depth: calibration pairs, the Monte Carlo design, and Lower Terrace mapping" -- the same plan inside the proposal, extended with a source-stratified Lower Terrace sampling table built from the thermal map. Keep the two in step when either changes.

@@ -36,3 +36,13 @@ both idempotent on `(station_id, date, parameter)`.
 
 - `input/desktop.ini` is a stray Windows folder-view artifact, not
   data — harmless, ignored by the ingest scan.
+
+## Where to download new discharge exports
+
+Download continuous discharge and gage height from the USGS monitoring location pages and save each
+export as a new folder in `input/` named `mlp_continuous_USGS-<site>_<ddmmyyyy>T<ddmmyyyy>`:
+
+- https://waterdata.usgs.gov/monitoring-location/USGS-10349300/ (Steamboat Creek near Rhodes Road, co-located with SBRR)
+- https://waterdata.usgs.gov/monitoring-location/USGS-10349849/ (second gauge on file)
+
+Current discharge record ends 2026-06-06 for both sites. Discharge for the logger period (2026-07-15 onward) still has to be downloaded; it is needed for chloride flux and thermal discharge on those dates.
