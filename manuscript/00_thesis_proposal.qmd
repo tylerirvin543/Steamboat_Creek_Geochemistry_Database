@@ -300,7 +300,7 @@ show_fig(
 
 **Conduit reactivation within the existing system.** The 2026 poster [@irvinlindsey2026] found that the fissure's major-ion chemistry and stable isotopes match the fluid already seen in nearby springs and wells, and that paired temperature loggers on the terrace are inversely related (r = -0.68), consistent with discharge shifting between vents in one connected flow system. The near-constant Cl/B ratio across seven decades is independent support. Of the explanations here, this one has the most direct observational support.
 
-**Regional groundwater recovery.** Sorey [-@sorey2000] found that groundwater levels had recovered by 2000 without natural spring flow resuming, so recovery alone has not been enough to reactivate the system. Whether a slower, multi-decade continuation crossed a threshold by 2022 is untested.
+**Regional groundwater recovery.** As noted in the Introduction, recovery by 2000 did not restart spring flow [@sorey2000], so recovery alone has not been enough to reactivate the system. Whether a slower, multi-decade continuation crossed a threshold by 2022 is untested.
 
 **Local earthquakes.** White [@white1968c] saw spring responses to six of fifteen earthquakes between 1947 and 1952, all moderate (above about M5) and near. Collar [@collar1990thesis] found no link to the largest event of 1986 to 1989 (M3.9, about 11 miles north). A USGS catalog pull for 2021 to 2026 (M2.5 and above within 60 km) shows four M3.0 to 3.5 events within about 6 km of the field between January and March 2024, when Lindsey and others [@lindsey2026] describe the shift from diffuse steaming to discrete seeps and vents. Daily water levels at STMGID MW10, and MW3 from February 2024, show no consistent step at those events (standardized steps from -2.3 to +1.6 across seven comparisons, none robust to the number of tests). A later check against the 2026 temperature and conductance loggers found no conductance steps and only an excess of temperature steps at loggers that already swing with weather. That is consistent with small events having no detectable effect, but two regional wells and a short logger record cannot rule out a local response, so the 2024 cluster is a lead. The largest recent regional events (M4.7 to 4.8 in April 2026) were about 58 km away. Support for this explanation is weak.
 
@@ -399,10 +399,7 @@ springs, aquifer-test results, and a chloride mass balance that treats an
 of Steamboat Creek flow. Collar's M.S. thesis [@collar1990thesis], written
 from the same USGS grant study, applied the same chloride-flux logic to
 1988-89 discharge measurements, 35 years before this proposal's version of
-it, and is treated in detail below. Sorey [@sorey2000]
-found that groundwater levels had recovered by 2000 while spring flow
-had not resumed, the critical observation that recovery alone did not
-reactivate the terrace. Sorey and Spielman [@sorey2008; @sorey2017]
+it, and is treated in detail below. Sorey and Spielman [@sorey2008; @sorey2017]
 refined the chloride mass balance method at two Steamboat Creek gauging
 sites, Rhodes Road (SBRR) and Bella Vista (SBBV), reporting 730-1,214
 gallons per minute for 2007-08 and an average of 60 liters per second
@@ -1439,7 +1436,7 @@ The baseline does two things. It links the fissure geochemistry to the creek-sca
 #| results: asis
 show_fig(
   "output/figures/manuscript/mixing_fraction_by_target.png",
-  "Real Cl-based mixing fraction (fraction fissure end-member) for every downgradient target, colored by feature type.",
+  "Chloride-based mixing fraction (fraction fissure end-member) for every downgradient target, colored by feature type.",
   alt = "Horizontal bar chart of mixing fraction for six targets, sorted from SBBV (lowest) to the resort tank (highest, exceeding 1).",
   id = "fig-mixingfraction"
 )
@@ -1555,7 +1552,7 @@ The wells, logs, faults and fissures already in the database could be assembled 
 
 # Conclusion
 
-After the June 2025 eruption, the plain question at Steamboat is whether the system has a new source or an old one with a new outlet. Sorey asked a version of it after the spring decline of the 1980s, and the 2026 poster written with Cary Lindsey asked it again from a handful of samples [@irvinlindsey2026]. The evidence there points to an old conduit reactivating, but it was gathered at poster speed. This proposal replaces that handful of samples with a method that can be repeated and whose uncertainty is stated.
+After the June 2025 eruption, the plain question at Steamboat is whether the system has a new source or an old one with a new outlet. Sorey and Colvard asked a version of it after the spring decline of the 1980s, and the 2026 poster written with Cary Lindsey asked it again from a handful of samples [@irvinlindsey2026]. The evidence there points to an old conduit reactivating, but it was gathered at poster speed. This proposal replaces that handful of samples with a method that can be repeated and whose uncertainty is stated.
 
 The work will deliver three things. The first is a tested relation between specific conductance and chloride at two creek stations, with an error bound and a sampling interval no coarser than the data allow. If it holds across seasons, a cheap logger can supply most of the record that has so far had to be assembled from sparse chloride samples, and the thermal discharge of Steamboat Creek stops being a once-in-several-years estimate. The second is a source by source account of the Lower Sinter Terrace: where heat reaches the surface (488 m^2^ at or above 30 degrees Celsius), which discharge points share the fissure's fluid, how much of the creek's thermal inflow is pumped from the resort well, and how the water changes chemically between the fissure and the creek. The third is a modest geologic frame, built from the wells, logs, faults and fissures already on file, that lets samples be grouped by what they have flowed through.
 
@@ -1563,7 +1560,7 @@ These results matter for different reasons to different readers. For the science
 
 The thesis does not claim to explain the cause of the reactivation. Whether changes in injection, regional groundwater, or the natural behavior of the conduit system were responsible needs operator data that this project does not hold, and the proposal says so where it matters. It does not build a flow model, and the thermal map, with its 44 degree ceiling and unrecorded flight date, supports attribution and area estimates rather than a heat budget. Each of these limits has a stated next step.
 
-What holds the pieces together is that they are built to check one another. Chemistry, gas, thermal imaging, hydrology and time-series statistics share one database and one set of documented calculations, so that a conclusion reached one way, such as the gas geothermometer's reservoir temperature, can be tested against another, such as the water geothermometers or the chloride-based discharge. If the calibration holds, the same linkage lets each of those checks run continuously against a cheap sensor, and a one-time snapshot of Steamboat becomes a monitoring framework that whoever manages the system next can reuse. The 2026 logger record also calls for moving the loggers and measuring discharge by hand at the new sites, as described in the sampling plan. Until chloride samples overlap the loggers, the flux estimates in this proposal are bounds and not measurements.
+What holds the pieces together is that they are built to check one another. Chemistry, gas, thermal imaging, hydrology and time-series statistics share one database and one set of documented calculations, so that a conclusion reached one way, such as the gas geothermometer's reservoir temperature, can be tested against another, such as the water geothermometers or the chloride-based discharge. If the calibration holds, the same linkage lets each of those checks run continuously against a cheap sensor, and a one-time snapshot of Steamboat becomes a monitoring framework that whoever manages the system next can reuse. The 2026 logger record also calls for moving the loggers and measuring discharge by hand at the new sites, as described in the sampling plan. Until chloride samples overlap the loggers, the summer flux estimates in this proposal are bounds; the 1 May 2026 estimate is the one measured date.
 
 # Appendix A: supporting analyses {.unnumbered}
 
@@ -1719,7 +1716,7 @@ of the curated thermal end-member (seven historical samples from Sorey and
 Colvard [@sorey1992]; six modern samples from this project's own field
 campaign) finds the ratio is similar in magnitude but not statistically
 identical: 19.6 for 1950-1991 versus 21.9 for 2024-2026 (t = -2.92, 9.9
-degrees of freedom, p = 0.015), shown in @fig-clb. This is real evidence
+degrees of freedom, p = 0.015), shown in @fig-clb. This is evidence
 against a wholesale change in source water, alongside a small, shift
 whose cause (an analytical-method difference between eras, versus a genuine
 geochemical change of roughly 12%) remains an open question this proposal's
@@ -2071,8 +2068,8 @@ downstream: the same two stations used in the chloride mass balance)
 are assembled into one flowpath table and figure, tracking chloride,
 sodium, sulfate, silica, boron, pH, calcite and quartz saturation indices,
 sodium/potassium and quartz geothermometer estimates, and
-delta-18-O/delta-2-H across every node with data. A small,
-honestly-scoped statistical check (three thermal points: fissure,
+delta-18-O/delta-2-H across every node with data. A
+small statistical check (three thermal points: fissure,
 resort tank, and the nearby well) asks whether their independently derived
 sodium/potassium reservoir-temperature estimates are consistent with one
 shared parent fluid.
@@ -2127,7 +2124,7 @@ titration uses SBW_0002's as-measured (as-pumped) composition
 throughout, not a reconstructed parent fluid, so the air-lift pump's effect
 on gas chemistry and pH does not bear on it: calcium, magnesium, and
 alkalinity are not the species an air-lift pump would be expected to alter,
-so this excellent fit is read as a genuine, trustworthy result about how
+so this close fit is a reliable result about how
 closely SBW_0002's major-ion chemistry resembles the fissure's, independent
 of the separate pH/gas-equilibration concerns raised above.
 
