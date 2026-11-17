@@ -103,7 +103,7 @@ The central question is whether continuous conductance can be used to estimate c
 
 # Expected products and timeline
 
-The work will deliver a tested relation between conductance and chloride at two creek stations with an error bound, a minimum sampling interval, a PHREEQC-based account of whether the proxy is chemically sound, and an updated picture of thermal discharge before and after the eruption. Two manuscripts are planned: one on conductivity-based chloride monitoring, and one on the hydrochemical evolution of the Lower Sinter Terrace after the eruption. Laboratory costs for biweekly creek sampling with isotopes are estimated from my first invoice at roughly $12,000 to $14,000.
+The work will deliver a tested relation between conductance and chloride at two creek stations with an error bound, a minimum sampling interval, a PHREEQC-based account of whether the proxy is chemically sound, and an updated picture of thermal discharge before and after the eruption. Two manuscripts are planned: one on conductivity-based chloride monitoring, and one on the hydrochemical evolution of the Lower Sinter Terrace after the eruption. The schedule is below, followed by proposed costs (@tbl-costs) and the courses I plan to take (@tbl-credits).
 
 | Period | Work |
 |---------------------|----------------------------------------------------------|
@@ -113,6 +113,35 @@ The work will deliver a tested relation between conductance and chloride at two 
 | Spring to Summer 2027 | First calibration fit; Monte Carlo re-run on measured chloride; PHREEQC with time-paired end-members |
 | Fall 2027 | Final calibration, discharge comparison and thesis writing |
 | December 2027 | Defense |
+
+# Proposed costs
+
+Laboratory prices come from the invoice for the seven samples I have already had analyzed. The administration fee is assumed to be charged once per batch, which is unconfirmed, and shipping is not on the invoice, so each total carries a range. Isotopes are a planning estimate of $40 per sample, and 10 percent of samples are added for duplicates and blanks. All options assume a seven-day daily window and two storm or snowmelt events. Biweekly sampling with isotopes (B2) is my working choice, and monthly sampling without isotopes (A1) is the fallback if funding is short.
+
+```{r}
+#| results: asis
+source('../scripts/analysis/sampling_cost_model.R')
+so <- sampling_options()
+keep <- c(1, 2, 3, 4, 5)
+tab <- data.frame(Option = so$option[keep], `Chemistry visits` = so$chem_cadence[keep], `Isotope samples` = so$iso_samples[keep], `Chemistry samples (with QA)` = so$chem_samples[keep], `Central total` = fmt_usd(so$total[keep]), Range = paste0(fmt_usd(so$total_low[keep]), '-', fmt_usd(so$total_high[keep])), check.names = FALSE)
+source('../scripts/analysis/pipe_table.R')
+cat(pipe_table(tab, widths = c(14, 26, 10, 14, 12, 18), caption = 'Laboratory cost of the sampling options at the two creek stations. Option C adds four sites near the fissure, sampled monthly with isotopes.', id = 'tbl-costs'))
+```
+
+Not included in the laboratory totals are the one-day hydrologist survey of channel transects, a current meter and staff gauges for manual discharge measurements, travel, and logger replacement. These will be quoted once the new station locations are set, and NBMG, UNR and collaborators are expected to supply some of them in kind.
+
+# Program of study
+
+| Semester | Course credits | GEOL 790 (seminar) | GEOL 795 (exam) | GEOL 797 (thesis) | Degree total |
+|-----------------|----------|----------|----------|----------|----------|
+| Fall 2025 | | | | | |
+| Spring 2026 | | | | | |
+| Fall 2026 | | | | | |
+| Spring 2027 | | | | | |
+| Fall 2027 | | | | | |
+| **Total** | | | | | |
+
+: Courses and credits by semester through the planned December 2027 defense (to be completed). {#tbl-credits}
 
 # References {.unnumbered}
 
