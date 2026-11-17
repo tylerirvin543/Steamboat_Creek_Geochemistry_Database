@@ -9259,3 +9259,8 @@ Executed via an approved Plan-mode plan (`.posit/assistant/plans/2026-11-08-1414
 - Removed repeated Steamboat Ditch / SBRR / SBGG explanations: the full statement stays in the sampling-plan section; "From the 2026 record" and the Conclusion now point to it. "Work completed" now labels the 58.65 L/s as a bound.
 - HTML, PDF (128 pages, no unresolved references) and docx re-rendered. Page-by-page text read and mirroring into chapters 03-06 were not done this session.
 - `sampling_plan_costs.*` was moved to `docs/outreach/archive/` (superseded by `sampling_plan_advisor`). `chronology_table_orig.txt` left untracked (scratch; not committed).
+
+### Session 71 addendum (2026-11-17): ditch correction and number refresh
+- **Correction from the author:** the 1 May 2026 SBRR/SBBV samples were taken shortly before Steamboat Ditch began carrying water, so the ditch was not adding water below SBRR and the 58.65 L/s estimate is NOT ditch-limited. Only the July to October provisional flux (SBRR as upstream) is a bound. Fixed in the proposal, chapters 03 and 05; a sentence added to the uncertainty paragraph. The earlier "May estimate is a bound" wording in Session 70 and the first Session 71 commit is superseded.
+- Refreshed stale counts: about 1,650 samples, about 380 wells, 236 Leapfrog collars (was 110; the 300 m uncertainty cutoff applies). Exclusion-window wording aligned with the Monte Carlo section (three days before each pull).
+- Page-by-page read covered the Introduction, Previous work and proxy chapter text; later chapters and appendices were checked only by number and cross-reference search.
