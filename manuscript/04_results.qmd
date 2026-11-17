@@ -13,7 +13,7 @@ format:
 Every figure in this chapter is regenerated on demand from
 `scripts/analysis/plot_theme.R`, `scripts/analysis/manuscript_figures.R`,
 and the notebooks cited in each caption -- none is a static, hand-made
-image. This chapter presents the strongest real findings on file to
+image. This chapter presents the strongest findings on file to
 date, organized to follow the same three questions posed in Chapter 1,
 and states plainly, in its final section, what remains unresolved.
 :::
@@ -30,17 +30,17 @@ Extending Sorey and Spielman's own chloride-flux method
 [@sorey2008; @sorey2017] into a reproducible database query (rather
 than a one-time spreadsheet calculation) gives a discharge estimate of
 58.7 liters per second for the one date, May 1, 2026, on which this
-project has a real, paired chloride-and-discharge measurement at both
+project has a paired chloride-and-discharge measurement at both
 the Rhodes Road (SBRR) and Bella Vista (SBBV) stations. This is a
 single day, not the multi-date average this project's own 2026 poster
 reported (roughly 27 L/s, [@irvinlindsey2026]), and the two numbers
 are not expected to agree: Sorey and Spielman [@sorey2017] themselves
-document real seasonal chloride-flux variability at these same sites,
+document seasonal chloride-flux variability at these same sites,
 and a 70-year record spanning 1955-2026 shows discharge estimates
 ranging roughly 30-90 L/s depending on year and method. Read in that
 context, this project's own values sit at the lower end of a long,
 variable record rather than representing an unambiguous before/after
-step change. Establishing enough real, paired samples to build a true
+step change. Establishing enough paired samples to build a true
 seasonal average, rather than one date, is precisely what Chapter 6's
 sampling plan is designed to produce.
 
@@ -72,7 +72,7 @@ knitr::include_graphics("../output/figures/manuscript/collar_creek_chloride_comp
 
 ```{r cl-b-fig}
 #| echo: false
-#| fig-cap: "Chloride-to-boron ratio in real thermal end-member samples, 1950-2026 (Sorey & Colvard 1992 CPI/SB GEO wells and springs vs. this project's own 2024-2026 FIELD samples; see `notebooks/07`)."
+#| fig-cap: "Chloride-to-boron ratio in thermal end-member samples, 1950-2026 (Sorey & Colvard 1992 CPI/SB GEO wells and springs vs. this project's own 2024-2026 FIELD samples; see `notebooks/07`)."
 knitr::include_graphics("../output/figures/manuscript/cl_b_ratio_by_era.png")
 ```
 
@@ -87,8 +87,8 @@ and Colvard's own convention and the SBRR/SBBV creek mixing points)
 finds the ratio is similar in magnitude but not statistically
 identical: 19.6 for 1950-1991 versus 21.9 for 2024-2026,
 t(9.9) = -2.92, p = 0.015. The practical reading is deliberately
-conservative: this is real evidence *against* a wholesale change in
-source water, alongside a small, real shift whose cause -- an
+conservative: this is evidence *against* a wholesale change in
+source water, alongside a small shift whose cause -- an
 analytical-method difference between decades, versus a genuine
 geochemical shift of roughly 12% -- remains an open question that this
 result alone cannot settle.
@@ -97,13 +97,13 @@ result alone cannot settle.
 
 ```{r geo-fig}
 #| echo: false
-#| fig-cap: "Geothermometer estimates vs. measured discharge temperature, per-well mean across all real thermal samples with complete Na/K/quartz chemistry (see `notebooks/06`)."
+#| fig-cap: "Geothermometer estimates vs. measured discharge temperature, per-well mean across all thermal samples with complete Na/K/quartz chemistry (see `notebooks/06`)."
 knitr::include_graphics("../output/figures/manuscript/geothermometer_comparison.png")
 ```
 
 Two independent geothermometers -- sodium/potassium (Giggenbach
 [@giggenbach1988]) and quartz/chalcedony -- are applied to the same
-real thermal samples and compared against each other's disagreement,
+thermal samples and compared against each other's disagreement,
 not just their individual estimates. Quartz sits systematically below
 measured discharge temperature (partial re-equilibration and dilution
 on the way up), while sodium/potassium sits systematically above it (a
@@ -119,12 +119,12 @@ equilibrium exist?** Two new checks address both questions directly.
 
 ```{r giggenbach-fig}
 #| echo: false
-#| fig-cap: "Giggenbach (1988) Na-K-sqrt(Mg) maturity ternary, real PHREEQC-conditioned chemistry, all seven flowpath samples (see `scripts/analysis/lst_ternary_diagrams.R`)."
+#| fig-cap: "Giggenbach (1988) Na-K-sqrt(Mg) maturity ternary, PHREEQC-conditioned chemistry, all seven flowpath samples (see `scripts/analysis/lst_ternary_diagrams.R`)."
 knitr::include_graphics("../output/figures/manuscript/giggenbach_ternary.png")
 ```
 
 The fissure and resort tank plot inside the Full Equilibrium field,
-the three real springs and seep sit in the Partial Equilibrium band,
+the three springs and seep sit in the Partial Equilibrium band,
 SBW_0001 sits just into the Immature field, and SBRR plots at the
 magnesium-rich corner, exactly where a cold, unreacted water should.
 This independently supports trusting the Na/K estimates already used
@@ -133,13 +133,13 @@ Na/K estimate as the least chemically mature of the group.
 
 ```{r anion-ternary-fig}
 #| echo: false
-#| fig-cap: "Cl-SO4-HCO3 ternary (Giggenbach 1991), real PHREEQC-conditioned chemistry, all seven flowpath samples."
+#| fig-cap: "Cl-SO4-HCO3 ternary (Giggenbach 1991), PHREEQC-conditioned chemistry, all seven flowpath samples."
 knitr::include_graphics("../output/figures/manuscript/anion_ternary.png")
 ```
 
 ```{r mineraleq-fig}
 #| echo: false
-#| fig-cap: "Multicomponent mineral-equilibration diagram: saturation index vs. temperature for six candidate minerals, all six real thermal samples, from the real, already-stored PHREEQC temperature-sweep output (see `scripts/analysis/lst_mineral_equilibration.R`)."
+#| fig-cap: "Multicomponent mineral-equilibration diagram: saturation index vs. temperature for six candidate minerals, all six thermal samples, from the already-stored PHREEQC temperature-sweep output (see `scripts/analysis/lst_mineral_equilibration.R`)."
 knitr::include_graphics("../output/figures/manuscript/mineral_equilibration.png")
 ```
 
@@ -163,7 +163,7 @@ knitr::kable(
   digits = 1, row.names = FALSE,
   col.names = c("Sample", "Measured T (C)", "Na/K (Giggenbach)", "Na/K (Fournier)",
                 "Quartz", "Chalcedony", "2+ minerals converge?"),
-  caption = "Geothermometer comparison, all seven real flowpath samples. SBRR's Na/K estimate is not physically meaningful at this dilute, non-thermal site."
+  caption = "Geothermometer comparison, all seven flowpath samples. SBRR's Na/K estimate is not physically meaningful at this dilute, non-thermal site."
 )
 ```
 
@@ -177,11 +177,11 @@ knitr::include_graphics("../output/figures/manuscript/gas_composition_comparison
 
 ```{r gas-therm-fig}
 #| echo: false
-#| fig-cap: "D'Amore-Panichi [@damore1980] gas-geothermometer estimates vs. measured field temperature for the three real fissure gas samples (see `scripts/analysis/gas_air_correction.R`)."
+#| fig-cap: "D'Amore-Panichi [@damore1980] gas-geothermometer estimates vs. measured field temperature for the three fissure gas samples (see `scripts/analysis/gas_air_correction.R`)."
 knitr::include_graphics("../output/figures/manuscript/gas_geothermometry_comparison.png")
 ```
 
-Three real free-gas samples collected April 2026 at the Lower Sinter
+Three free-gas samples collected April 2026 at the Lower Sinter
 Terrace fissure and an adjacent degassing point give a second,
 independent line of evidence. After correcting for atmospheric
 entrainment (standard O2-based air correction -- geothermal gas vented
@@ -195,7 +195,7 @@ sample (NV26-2) carries a flagged contamination risk (a possible
 Giggenbach-bottle leak, at a point where sampling broke through fresh
 asphalt) and its gas ratios fall well outside the historical range,
 consistent with that flag rather than a real signal. NV26-1 is
-co-located with SBF_0001, a real water sample with its own complete
+co-located with SBF_0001, a water sample with its own complete
 chemistry and stable-isotope data from the same date range -- the
 first point in this project with paired gas and water chemistry.
 
@@ -203,28 +203,28 @@ first point in this project with paired gas and water chemistry.
 
 ```{r geotherm-water-gas-fig}
 #| echo: false
-#| fig-cap: "Water and gas geothermometer estimates vs. measured temperature, all real thermal samples (see `scripts/analysis/geothermometer_water_gas_comparison.R`)."
+#| fig-cap: "Water and gas geothermometer estimates vs. measured temperature, all thermal samples (see `scripts/analysis/geothermometer_water_gas_comparison.R`)."
 knitr::include_graphics("../output/figures/gas_analysis/geothermometer_water_gas_comparison.png")
 ```
 
 Putting the gas geothermometer estimate next to this project's existing
 water geothermometers (Na/K-Giggenbach, Na/K-Fournier, quartz,
-chalcedony; 132 real method/sample estimates across 63 thermal
-samples), the one real co-located point (NV26-1 gas / SBF_0001 water)
+chalcedony; 132 method/sample estimates across 63 thermal
+samples), the one co-located point (NV26-1 gas / SBF_0001 water)
 lands closest to the Na/K-based water estimates rather than the
 quartz/chalcedony pair -- both respond to a similarly deep, hot part of
 the system, while silica re-equilibrates faster on the way up.
 
 ```{r gas-phase-fig}
 #| echo: false
-#| fig-cap: "SBF_0001 water chemistry before and after real PHREEQC equilibration against a GAS_PHASE seeded from NV26-1's measured composition (see `scripts/phreeqc/12_run_phreeqc_gas_phase.R`)."
+#| fig-cap: "SBF_0001 water chemistry before and after PHREEQC equilibration against a GAS_PHASE seeded from NV26-1's measured composition (see `scripts/phreeqc/12_run_phreeqc_gas_phase.R`)."
 knitr::include_graphics("../output/figures/gas_analysis/gas_phase_fischer_pairing_before_after.png")
 ```
 
-For the first time, a real (not synthetic) PHREEQC gas-phase run was
+For the first time, a (not synthetic) PHREEQC gas-phase run was
 possible: SBF_0001's water chemistry was re-equilibrated against a
-`GAS_PHASE` seeded with NV26-1's real, air-corrected CO2:H2S
-proportions at 1 atmosphere. The result is a real, substantive shift --
+`GAS_PHASE` seeded with NV26-1's air-corrected CO2:H2S
+proportions at 1 atmosphere. The result is a substantial shift --
 pH drops from the measured 8.3 to a modeled 5.7, and calcite,
 aragonite, and dolomite move from supersaturated to undersaturated.
 Taken at face value, this says the water as sampled is not simply in
@@ -245,7 +245,7 @@ Working backward from the fissure sample toward a pre-boiling parent
 fluid (19.4 percent steam loss, reservoir 173.4 degrees Celsius) gives a
 reconstructed parent chloride of 657 mg/L, below the measured
 815 mg/L -- boiling concentrates the residual liquid, so the parent is
-more dilute, not less. Re-equilibrating that parent with NV26-1's real
+more dilute, not less. Re-equilibrating that parent with NV26-1's
 gas composition at reservoir pressure (8.7 atmospheres, not 1) drops
 the modeled pH from 8.3 to 5.5 and flips calcite/dolomite from
 supersaturated to undersaturated -- consistent with carbonate scaling
@@ -261,13 +261,14 @@ the close Cl agreement could be coincidental. The resort-tank sample's
 own gas-equilibration step did not converge on any of the six
 registered PHREEQC databases at its measured pH of 9.0 -- itself
 plausibly a direct consequence of the air-lift pump's forced aeration
-rather than an unusual deep-fluid property (a real PHREEQC limitation,
+rather than an unusual deep-fluid property (a PHREEQC limitation,
 logged to
 `data/derived/phreeqc/parent_fluid_diagnostics.csv` rather than
 silently dropped), so only its conservative-species reconstruction, not
 its re-equilibrated pH/saturation state, is reported. SBW_0002's
 as-measured (as-pumped) chemistry, not this reconstruction, is used
 wherever it appears later as a target or end-member.
+
 ```{r evolution-fig}
 #| echo: false
 #| fig-cap: "Real chemistry, saturation indices, geothermometry, and stable isotopes across the sampled flowpath: reconstructed parent fluids, measured fissure/resort-tank discharge, a nearby well (SBW_0001), and Steamboat Creek at SBRR then downstream SBBV. See `scripts/analysis/fluid_evolution_flowpath.R`."
@@ -284,8 +285,8 @@ declining smoothly from 99-118 to 53-62 degrees Celsius along the same
 sequence. The sodium/potassium geothermometer gives physically
 implausible values (195-255 degrees Celsius) at the two creek stations
 -- a known artifact of applying it to dilute, non-thermal water, shown
-for transparency rather than treated as a real estimate there. The
-three real thermal points' independently derived sodium/potassium
+for transparency rather than treated as an estimate there. The
+three thermal points' independently derived sodium/potassium
 reservoir temperatures (173.4, 179.2, 180.2 degrees Celsius) span only
 6.8 degrees Celsius (2.1 percent coefficient of variation) -- too few
 points for a formally powered test, but a tight spread relative to this
@@ -293,13 +294,13 @@ project's own documented 50-100 degree Celsius geothermometer
 divergence project-wide, consistent with (not proof of) one shared deep
 source. Delta-18-O/delta-2-H show both creek stations sitting close
 together and more isotopically depleted than the fissure or resort-tank
-water, consistent with the real thermal inflow being too small a
+water, consistent with the thermal inflow being too small a
 fraction of total streamflow to shift the creek's bulk isotopic
 signature even while it measurably shifts chloride.
 
 **What the geothermometers say about hot and dissolving zones in the
 shallow subsurface.** Reading Na/K, quartz, and measured discharge
-temperature together for all six real thermal features (not just the
+temperature together for all six thermal features (not just the
 three used above) makes the geothermometer divergence a real
 diagnostic rather than just a curiosity. At every single feature,
 quartz equilibration (99-127 degrees Celsius) sits above measured
@@ -309,18 +310,18 @@ around 175-190 degrees Celsius, transit through a shallower zone still
 hot enough to leave a quartz signature well above final discharge
 temperature, then a last near-surface step down to whatever is
 actually measured. That last step is not the same size everywhere:
-the two coolest real springs (SBS_0001, 47.8 degrees Celsius; SBS_0003,
+the two coolest springs (SBS_0001, 47.8 degrees Celsius; SBS_0003,
 39.6 degrees Celsius) show the largest gap between their quartz
 estimate and measured temperature (79 and 63 degrees Celsius), while
 the wells show a smaller gap (28-51 degrees Celsius) from a similar
 starting point. This does not locate a specific hot or dissolving zone
-with a depth or a coordinate -- that needs real well-log or
+with a depth or a coordinate -- that needs well-log or
 geophysical data this project does not yet have -- but it does show,
-with real numbers, that the shallow subsurface is not thermally or
+with numbers, that the shallow subsurface is not thermally or
 chemically uniform between discharge points, and that springs and
 wells experience that non-uniformity differently.
 
-Real inverse modeling against SBW_0001 -- the across-creek well sitting
+Inverse modeling against SBW_0001 -- the across-creek well sitting
 clearly above the fissure+SBRR conservative-mixing curve -- finds no
 feasible mixing-plus-mineral-transfer solution at the standard 5 percent
 analytical uncertainty, but does find one once that uncertainty is
@@ -344,21 +345,21 @@ magnitude of the correction needed -- net carbonate dissolution, order
 knitr::include_graphics("../output/figures/manuscript/reaction_path_titration.png")
 ```
 
-Running the identical titration against the three real Low Sinter
+Running the identical titration against the three Low Sinter
 Terrace springs, using full Ca/Mg/Alkalinity mass balance rather than
 saturation index alone, complicates the earlier picture (figure below).
 SBS_0002 needs almost no correction, consistent with sitting close to
 the mixing curve. SBS_0003 needs a small correction and fits well (19.7
 percent error, the best of the four). SBS_0001, despite needing only a
 modest correction, shows the *worst* fit of all four even after
-titration (44.5 percent) -- its real calcium and alkalinity pull in
+titration (44.5 percent) -- its calcium and alkalinity pull in
 opposite directions that this simple two-phase model cannot reconcile
 over a physically available range. Chloride stays exactly conservative
 at every step for every target.
 
 ```{r reactionpath-comparison-fig}
 #| echo: false
-#| fig-cap: "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target own best-fit reaction progress, across all five real downgradient targets."
+#| fig-cap: "Combined Ca/Mg/Alkalinity fit error at pure conservative mixing versus each target's own best-fit reaction progress, across all five downgradient targets."
 knitr::include_graphics("../output/figures/manuscript/reaction_path_fit_comparison.png")
 ```
 
@@ -371,18 +372,18 @@ real target tested. This titration uses SBW_0002's as-measured,
 as-pumped chemistry, not a reconstructed parent fluid -- calcium,
 magnesium, and alkalinity are not species the resort well's air-lift
 pump would be expected to alter, so this fit is read as a genuine
-result about SBW_0002's real similarity to the fissure, independent of
+result about SBW_0002's similarity to the fissure, independent of
 the pH/gas-equilibration concerns discussed above.
 
-A real, specific lead -- SBS_0001 has the highest sulfate and lowest
+A specific lead -- SBS_0001 has the highest sulfate and lowest
 alkalinity of its peer group, the classic gypsum/anhydrite signature a
 carbonate-only titration cannot reproduce -- was tested two ways:
 adding sulfate/fluoride phases, and substituting a different,
 higher-sulfate meteoric end-member (figure below). Every variant
 improves on the 44.5 percent baseline somewhat (best: 33.4 percent,
 Tick Spring end-member, scored on a fixed Ca/Mg/Alkalinity basis), but
-none fully resolves it. Honestly including fluorite's own real fluoride
-prediction (a real bug, since fixed, had left it out) flips part of the
+none fully resolves it. Including fluorite's own fluoride
+prediction (a bug, since fixed, had left it out) flips part of the
 ranking: the anhydrite+fluorite variant gets worse (50.8 percent) once
 scored on its own chemistry, while the combined variant becomes the
 single best result of any tested (30.6 percent).
@@ -401,15 +402,15 @@ shared chemistry.
 
 ```{r proximity-map-fig}
 #| echo: false
-#| fig-cap: "Real lat/lon positions of the seven flowpath samples, with the five real downgradient targets colored and sized by their own best-fit reaction-path RMSE."
+#| fig-cap: "Lat/lon positions of the seven flowpath samples, with the five downgradient targets colored and sized by their own best-fit reaction-path RMSE."
 knitr::include_graphics("../output/figures/manuscript/lst_proximity_map.png")
 ```
 
-A real, model-free Piper diagram built from the same seven samples'
-mg/L chemistry (figure below) gives an honest negative result for the
+A model-free Piper diagram built from the same seven samples'
+mg/L chemistry (figure below) gives a negative result for the
 sulfate hypothesis: SBS_0001 does not visibly separate toward the
 anion triangle's sulfate corner, since chloride dominates the anion
-budget too heavily for its real but modest sulfate excess to show up
+budget too heavily for its modest sulfate excess to show up
 in charge-equivalent percentage terms. The diagram still correctly
 separates SBRR from the thermal cluster and groups the thermal samples
 together, consistent with the facies clustering already established
@@ -417,17 +418,17 @@ statistically above.
 
 ```{r piper-fig}
 #| echo: false
-#| fig-cap: "Trilinear Piper diagram, built directly from real mg/L chemistry, for the fissure, SBRR, SBW_0001, SBW_0002, and the three real Low Sinter Terrace springs."
+#| fig-cap: "Trilinear Piper diagram, built directly from mg/L chemistry, for the fissure, SBRR, SBW_0001, SBW_0002, and the three Low Sinter Terrace springs."
 knitr::include_graphics("../output/figures/manuscript/lst_piper_diagram.png")
 ```
 
 ```{r conceptual-fig}
 #| echo: false
-#| fig-cap: "Conceptual flowpath from the reconstructed parent fluid through degassing, three real measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, annotated with real chloride values."
+#| fig-cap: "Conceptual flowpath from the reconstructed parent fluid through degassing, three measured discharge points, shallow meteoric mixing, Steamboat Creek, and the downstream conductivity logger, annotated with chloride values."
 knitr::include_graphics("../output/figures/manuscript/lst_conceptual_flowpath.png")
 ```
 
-The real thermal-infrared raster files behind this framing are now on
+The thermal-infrared raster files behind this framing are now on
 file (closing the earlier `docs/action_items_for_user.md` item 12 gap):
 
 ```{r tirzoom-fig}
@@ -438,14 +439,14 @@ knitr::include_graphics("../output/figures/manuscript/tir_fissure_zoomin_calibra
 
 Discrete, bright point sources cluster along the terrace's western
 margin, and a broader, diffuse warm signature tracks the creek channel
-itself -- the real image behind the discrete-point-source-versus-
-diffuse-seepage framing above. A real, dated field sketch from the June
+itself -- the image behind the discrete-point-source-versus-
+diffuse-seepage framing above. A dated field sketch from the June
 6, 2025 Busick property visit (five days after the first documented
 2025 eruption pulse) independently corroborates this picture with
 named, measured features: the Driveway Spring (95.1 degrees Celsius),
 the New North Fumarole (95.8 degrees Celsius), and the Geyser/Pipe
 eruption site itself. This is still a qualitative, visual read, not a
-digitized layer -- turning either image into a real georeferenced
+digitized layer -- turning either image into a georeferenced
 layer remains a concrete next step.
 
 ## How does the flowpath's chemistry change across feature types? A baseline characterization
@@ -465,11 +466,11 @@ found in August 2026 -- can be checked going forward.
 
 ```{r mixingfraction-fig}
 #| echo: false
-#| fig-cap: "Real Cl-based mixing fraction (fraction fissure end-member) for every real downgradient target, colored by feature type."
+#| fig-cap: "Chloride-based mixing fraction (fraction fissure end-member) for every downgradient target, colored by feature type."
 knitr::include_graphics("../output/figures/manuscript/mixing_fraction_by_target.png")
 ```
 
-The three real springs/seep sit at 0.77-0.89 fissure-strength fluid,
+The three springs/seep sit at 0.77-0.89 fissure-strength fluid,
 the nearby well (SBW_0001) sits lower at 0.57, and the resort tank
 exceeds the fissure reference itself (1.04). SBBV, several kilometers
 downstream, still implies about 14 percent fissure-strength fluid by
@@ -479,7 +480,7 @@ built on.
 
 ```{r gainloss-fig}
 #| echo: false
-#| fig-cap: "Real measured concentration versus the conservative-mixing prediction for six species, for every real downgradient target, expressed as percent gained or lost."
+#| fig-cap: "Measured concentration versus the conservative-mixing prediction for six species, for every downgradient target, expressed as percent gained or lost."
 knitr::include_graphics("../output/figures/manuscript/species_gainloss_heatmap.png")
 ```
 
@@ -502,13 +503,13 @@ both have more opportunity to happen before a sample is collected.
 
 ```{r tempprofile-fig}
 #| echo: false
-#| fig-cap: "A. Three-stage cooling (Na/K, quartz, measured) for all six real thermal features, by feature type. B. Steamboat Creek's real temperature rise from SBRR to SBBV."
+#| fig-cap: "A. Three-stage cooling (Na/K, quartz, measured) for all six thermal features, by feature type. B. Steamboat Creek's temperature rise from SBRR to SBBV."
 knitr::include_graphics("../output/figures/manuscript/temperature_flowpath_profile.png")
 ```
 
-Put together, the honest answer to whether these features are
-connected is neither a clean yes nor a clean no. The real Na/K
-agreement across every real thermal feature (173-190 degrees Celsius)
+Put together, the answer to whether these features are
+connected is neither a clean yes nor a clean no. The Na/K
+agreement across every thermal feature (173-190 degrees Celsius)
 supports one shared deep source for wells, springs, and the seep
 alike. But the sulfate, alkalinity, and quartz-versus-measured-
 temperature patterns above show that springs and wells diverge
@@ -534,7 +535,7 @@ knitr::include_graphics("../output/figures/facies/facies_pca_biplot.png")
 knitr::include_graphics("../output/figures/facies/facies_rf_importance.png")
 ```
 
-Clustering every real sample with complete major-ion chemistry into
+Clustering every sample with complete major-ion chemistry into
 hydrochemical facies (Ward hierarchical clustering, with k selected by
 silhouette width and cross-checked against an independent Gaussian
 mixture fit and k-means) recovers a pure sodium-chloride thermal
@@ -557,12 +558,12 @@ assumptions.
 
 ```{r sampfreq-fig}
 #| echo: false
-#| fig-cap: "Monte Carlo reconstruction-error curve for candidate chemistry-sampling intervals, computed from the real 2026 SBRR/SBGG specific-conductance record with air-exposure days removed (see `notebooks/09`)."
+#| fig-cap: "Monte Carlo reconstruction-error curve for candidate chemistry-sampling intervals, computed from the 2026 SBRR/SBGG specific-conductance record with air-exposure days removed (see `notebooks/09`)."
 knitr::include_graphics("../output/figures/manuscript/sampling_frequency_error_curve.png")
 ```
 
 This result answers this thesis's second objective directly, using
-specific conductance as a stand-in dense proxy since no dense real
+specific conductance as a stand-in dense proxy since no dense
 chloride series exists yet. Daily sampling keeps reconstruction error
 to roughly 3-4% of the mean at both logger sites (air-exposure days removed); weekly sampling
 costs roughly 7-8%; the error grows smoothly rather than showing a
@@ -571,17 +572,17 @@ two-tier calibration-sampling recommendation in Chapter 6: a short,
 intensive daily-to-sub-daily window, followed by a lower-frequency,
 biweekly-to-monthly campaign for the remainder of the year.
 
-## A real three-month, 14-site field-parameter time series (Sept-Dec 2025)
+## A three-month, 14-site field-parameter time series (Sept-Dec 2025)
 
 ```{r u230-timeseries-fig}
 #| echo: false
-#| fig-cap: "Left: pH across six injection-side ports and eight shallow monitoring/domestic wells, pooled across three real monthly rounds (Oct-Dec 2025). Right: two concrete real multi-month trends -- Herz Deep's rising specific conductance and NDOT's cooling temperature (see `scripts/analysis/manuscript_figures.R`, `AGENTS.md` Session 42)."
+#| fig-cap: "Left: pH across six injection-side ports and eight shallow monitoring/domestic wells, pooled across three monthly rounds (Oct-Dec 2025). Right: two multi-month trends -- Herz Deep's rising specific conductance and NDOT's cooling temperature (see `scripts/analysis/manuscript_figures.R`, `AGENTS.md` Session 42)."
 knitr::include_graphics("../output/figures/manuscript/u230_timeseries.png")
 ```
 
 Beyond the single-snapshot chemistry used above, this project's NDEP
 compiled U230 field-form archive (hand-transcribed and OCR-assisted,
-then user-reviewed) now provides a real, roughly monthly field-
+then user-reviewed) now provides a roughly monthly field-
 parameter time series (pH, specific conductance, temperature) spanning
 late September through December 2025 at 14 sites: all six named
 injection-side ports (Galena 1/2/3, SB2, SB3, SBHR) and eight shallow
@@ -592,7 +593,7 @@ every round, while the shallow well network holds a consistently
 neutral-to-mildly-alkaline pH (7.0-8.1) -- a stable ~1.5-2 pH-unit gap,
 not a single-date artifact, consistent with water-rock buffering
 occurring somewhere between the injection fluid and the shallow
-monitoring points. Second, two individual wells show real, opposite-
+monitoring points. Second, two individual wells show opposite-
 direction multi-month trends over the same window: Herz Deep's
 specific conductance rises from 1,877 to 3,024 uS/cm (roughly 60%)
 while NDOT's temperature falls from about 76 to 61 C. Neither trend is
@@ -729,11 +730,7 @@ the NV26-1 gas-sample position now fall within 0.2-3.4 m of a hot pixel and abou
 of Fissure 42, and SBS_0002 within 1.5 m. Loggers at SBS_0006, SBS_0001, SBW_0002 and
 SBF_0002 were already within about 1-2 m of hot pixels and SBW_0001 within 4 m.
 SBS_0003 sits where the surface shows no thermal anomaly, and SBS_0004, destroyed, is
-off the thermal map. Seven of the project's points lie within 10 m of a White or Collar
-feature and now carry nine such names as aliases, among them the SBF_0001 and SBF_0002 fumaroles
-renamed 25ss" and "spring 25ss"), SBO_00017 and SBO_00018 (spring 45), SBO_00020
-(spring 46), SBO_00015 (spring 44e) and SBO_00011 (spring 50n), now carry those names as
-aliases; the matches rest on proximity, not on a field-confirmed identity.
+off the thermal map. Seven of the project's points lie within 10 m of a White or Collar feature and now carry nine such names as aliases: SBF_0001 and SBF_0002 ("closed fissure 25s", renamed 25ss, and "spring 25ss"), SBO_00017 and SBO_00018 (spring 45), SBO_00020 (spring 46), SBO_00015 (spring 44e) and SBO_00011 (spring 50n). The matches rest on proximity, not on a field-confirmed identity.
 
 **The resort's contribution.** The A009 logger sits 7 m from the bright tank pads, so
 the pads are the resort tanks (@fig-map-resort). Resort infrastructure accounts for 109
@@ -847,11 +844,11 @@ once known confounders (which wells count as "thermal") are excluded,
 and different statistical framings of the same question do not fully
 agree with each other -- this project does **not** yet claim a
 confirmed multi-decade chloride trend, and does not overstate one
-here. The real two-end-member PHREEQC mixing and inverse-modeling runs
+here. The two-end-member PHREEQC mixing and inverse-modeling runs
 described in Chapter 3 use a representative, not a time-paired,
-end-member set, since no real chemistry sample yet overlaps the
+end-member set, since no chemistry sample yet overlaps the
 conductivity-logger deployment window closely enough to name a
-confident synoptic pair. A real barometric efficiency has been
+confident synoptic pair. A barometric efficiency has been
 computed for two wells near, but not inside, the Steamboat field
 itself, and cannot yet be treated as representative of a true thermal
 spring or production well. Each of these gaps is a concrete, testable

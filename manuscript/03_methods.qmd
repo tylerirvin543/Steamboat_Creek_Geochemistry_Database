@@ -215,176 +215,30 @@ that produced each result.
 
 ## PHREEQC and geochemical modeling methods
 
-Chapter 2 gives the full background on charge balance, saturation
-index, the five thermodynamic databases used and why, and the two
-geothermometry approaches this project relies on. In brief, aqueous
-speciation and saturation-index modeling is run through the real
-PHREEQC 3 executable [@phreeqc] against every sample with complete
-enough chemistry to support it (233 real samples as of this writing),
-with a database auto-selected per sample by temperature and total
-dissolved solids and a documented fallback when the first choice fails
-to converge. A real two-end-member conservative-mixing model has also been
-completed, using chemically distinct, not merely spatially close,
-end-members, following the modeling principle laid out at the end of
-Chapter 2. Two real PHREEQC inverse-modeling runs have also been
-attempted; both report zero feasible models (one of them only after a
-real parser bug -- fixed 2026-10-25 -- was found to have reported a
-false positive for the first attempt). The rest of this section describes the
-actual workflow -- which samples get modeled, how their chemistry is
-assembled and cleaned up before PHREEQC ever sees it, and what the
-output is actually used to decide -- rather than re-deriving the
-equations and database choices already given in Chapter 2.
+Chapter 2 gives the background on charge balance, saturation index, the thermodynamic databases and the two geothermometry approaches. In brief, aqueous speciation and saturation-index modeling is run through the PHREEQC 3 executable [@phreeqc] against every sample with complete enough chemistry (404 samples as of this writing), with a database chosen per sample by temperature and total dissolved solids and a fallback when the first choice does not converge. A two-end-member conservative-mixing model has been completed using chemically distinct, not merely spatially close, end-members, following the modeling principle at the end of Chapter 2. Two PHREEQC inverse-modeling runs were attempted and both reported zero feasible models at the standard uncertainty (one first appeared to succeed, because of a parser bug fixed on 2026-10-25). The rest of this section describes the workflow: which samples are modeled, how their chemistry is assembled and cleaned first, and what the output is used to decide.
 
-**Sample eligibility.** Not every sample in the database gets run
-through PHREEQC. A sample qualifies once it has pH, temperature, and
-major-ion concentrations for chloride, sodium, potassium, calcium,
-magnesium, and alkalinity -- the minimum set a real speciation
-calculation needs, not just whatever happens to be on hand. Field-
-measured pH and temperature are preferred over laboratory-reported
-values when both exist, since a lab reading taken days after
-collection has already drifted from in-situ conditions; lab values are
-used only when no field measurement exists. Additional analytes --
-silica, sulfate, lithium, boron, and a handful of trace metals -- are
-pulled in when available but aren't themselves gatekeeping. Samples
-that don't clear this bar aren't silently dropped, either: each is
-logged with the specific field it's missing, so the real, and
-currently still substantial, gap between how many samples exist and
-how many are PHREEQC-ready stays visible instead of disappearing into
-an unexplained smaller number.
+**Sample eligibility.** A sample is modeled once it has pH, temperature and concentrations of chloride, sodium, potassium, calcium, magnesium and alkalinity, the minimum a speciation calculation needs. Field pH and temperature are preferred over laboratory values, since a laboratory reading taken days after collection has drifted from in-situ conditions. Silica, sulfate, lithium, boron and a few trace metals are used when available but do not decide eligibility. A sample that does not qualify is logged with the field it is missing, so the gap between the samples that exist and those that are modeled stays visible.
 
-**Assembling and cleaning the chemistry first.** Samples come from
-several sources spanning more than seventy years -- field sampling,
-NDEP's routine and public-records-request chemistry, and historical
-literature (Sorey and Colvard, Mariner and Janik, and Skalbeck)
-transcribed directly rather than merely cited -- and those sources
-don't agree on units or on how alkalinity is reported. Every
-concentration is standardized to mg/L before it reaches a SOLUTION
-block, and any alkalinity value reported on a CaCO3 basis is converted
-to this project's standard HCO3-mass-equivalent basis using the real
-50.05/61.02 equivalent-weight ratio (a conversion factor of 1.2189).
-Getting this right turned out to matter more than it sounds like it
-should: an earlier version of this pipeline simply left alkalinity out
-for one major chemistry source, which alone pushed median charge-
-balance error from a real ~0.7% up to a misleadingly bad ~60% for the
-exact same samples -- a data-handling artifact, not an actual
-analytical problem, and a good reminder to check a "bad" charge
-balance before assuming the chemistry itself is at fault.
+**Assembling and cleaning the chemistry first.** Samples come from several sources spanning more than seventy years (field sampling, NDEP routine and public-records chemistry, and historical literature transcribed from Sorey and Colvard, Mariner and Janik, and Skalbeck), and the sources disagree on units and on how alkalinity is reported. Every concentration is converted to mg/L, and alkalinity reported as CaCO3 is converted to bicarbonate mass using the 61.02/50.05 equivalent-weight ratio (1.2189). This mattered: an earlier version left alkalinity out for one major source, which pushed the median charge-balance error from about 0.7 percent to a misleading 60 percent for the same samples. A bad charge balance should be checked as a data-handling problem before the chemistry is blamed.
 
-**End-member grouping.** Samples with complete chemistry are assigned
-to one of three groups -- a thermal end-member (outlet and thermal-well
-samples), mixed waters (chemistry carrying a partial but real thermal
-signature), and dilute background waters -- using the hydrochemical-
-facies clustering described above, cross-checked against PHREEQC's own
-fluid-type classification rather than just asserted from the site-type
-label on file. This is what makes the conservative-tracer check below,
-and the Chapter 4 Cl/B comparison, real chemically-defined groups
-rather than an arbitrary site-based split.
+**End-member grouping.** Samples with complete chemistry are assigned to a thermal end-member (outlet and thermal-well samples), mixed waters (a partial thermal signature) or dilute background waters, using the hydrochemical-facies clustering described above and cross-checked against PHREEQC's own fluid-type classification, not only the site-type label on file. The conservative-tracer check below and the Chapter 4 Cl/B comparison therefore rest on chemistry and not on an arbitrary site-based split.
 
-**Conservative-tracer evaluation.** Four ratios -- Cl/B, Na/Cl, Li/Cl,
-and SiO2/Cl -- are tracked across every era of chemistry on file (the
-1950s, the 1990s, and the present) specifically to ask whether the real
-thermal end-member's composition has stayed stable over seven decades,
-independent of whatever a chloride-conductance calibration eventually
-finds. A ratio that drifts meaningfully through time, or differs
-systematically between eras, is treated as real evidence about
-source-fluid stability -- see Chapter 4's Cl/B result -- rather than
-folded quietly into one pooled average that would hide exactly that
-question.
+**Conservative-tracer evaluation.** Four ratios (Cl/B, Na/Cl, Li/Cl and SiO2/Cl) are tracked across the 1950s, the 1990s and the present to ask whether the thermal end-member's composition has stayed stable, independent of what a chloride-conductance calibration finds. A ratio that drifts through time or differs between eras is evidence about source-fluid stability (see Chapter 4's Cl/B result), and pooling the eras into one average would hide it.
 
-**Mixing and inverse modeling.** A two-end-member conservative-mixing
-fraction is computed directly from chloride, then used to build a real
-PHREEQC `MIX` block combining the two end-member solutions at that
-fraction and comparing PHREEQC's own predicted speciation against the
-sample's observed chemistry -- a genuine test of the mixing hypothesis,
-not just an arithmetic ratio. `INVERSE_MODELING` goes further, solving
-for mixing fractions and mineral mass transfer simultaneously, within
-stated elemental uncertainty bounds. In the interest of being upfront
-about where this actually stands: one real mixing run and two real
-inverse-modeling runs exist as of this writing, and both inverse runs
-report zero feasible models. The first used a representative rather
-than a time-paired thermal/meteoric end-member pair (sample 816/829),
-because no two chloride samples have yet been collected close enough
-together in time to serve as a genuinely paired end-member set --
-exactly the gap the calibration sampling plan above is meant to
-close; it was originally reported as having found one feasible
-solution, but a parser bug (fixed 2026-10-25) turned out to have
-misread PHREEQC's own echoed-back input composition as a found
-solution, when PHREEQC's own raw output actually says "Number of
-models found: 0." The second, gas-informed run (Chapter 4) also finds
-zero feasible models, this time from real post-mortem residuals
-exceeding the stated uncertainty bound, not a parser artifact. The
-automated parser's own remaining real gap -- it has never correctly
-extracted a solution's mineral-mass-transfer numbers from PHREEQC's
-raw text output -- is moot for both real runs on file, since neither
-found a feasible solution to extract numbers from.
+**Mixing and inverse modeling.** A two-end-member mixing fraction is computed from chloride, and a PHREEQC `MIX` block then combines the end-member solutions at that fraction and compares the predicted chemistry with the sample's, which tests the mixing hypothesis and is more than an arithmetic ratio. `INVERSE_MODELING` solves for mixing fractions and mineral mass transfer together within stated uncertainty bounds. One mixing run and two inverse runs existed at this writing, and both inverse runs reported zero feasible models at the standard uncertainty. The first used a representative, not time-paired, thermal and meteoric pair (samples 816 and 829), because no two chloride samples have yet been collected close enough in time; this is the gap the calibration sampling plan is meant to close. It was first reported as finding one solution, but a parser bug (fixed 2026-10-25) had read PHREEQC's echoed input composition as a result, and PHREEQC's own output says "Number of models found: 0." The second, gas-informed run (Chapter 4) also found no feasible model, because residuals exceeded the stated uncertainty bound, not because of a parser artifact. A later run for SBW_0001 finds a solution only when the uncertainty is loosened to 12 percent (Chapter 4). The parser has never extracted a solution's mineral mass-transfer numbers correctly from PHREEQC's text output; that gap matters only once a run finds a solution to extract.
 
-**Interpretation framework.** Every PHREEQC run in this project is
-ultimately answering one of three questions, not run just because the
-chemistry happened to be complete enough to try: are the real water
-types here chemically distinct from each other, is conductance
-behaving conservatively enough to stand in for chloride, and has the
-thermal end-member's own composition held up over the full
-seventy-year record. A modeling result that doesn't actually bear on
-one of those three questions isn't reported here just because it's
-available.
+**Interpretation framework.** Every PHREEQC run here answers one of three questions: whether the water types are chemically distinct, whether conductance behaves conservatively enough to stand in for chloride, and whether the thermal end-member's composition has held up over the seventy-year record. A result that bears on none of them is not reported.
 
 
-**Forward reaction-path titration.** Given that real inverse-modeling
-attempts against the Lower Sinter Terrace flowpath consistently find
-zero feasible solutions, a complementary forward method was built: mix
-two named end-members at a known (stored or freshly computed)
-conservative fraction with a PHREEQC `MIX` block, then use a PHREEQC
-`REACTION` block to explicitly step one or more candidate mineral
-phases' mass transfer, in both directions (net precipitation and net
-dissolution), and compare the resulting modeled trajectory against the
-target sample's own real chemistry at each step. This turns an open-
-ended search into a direct, visualizable question: does some specific,
-physically named amount of mineral dissolution or precipitation
-reconcile the model with reality, and if so, how much. The method was
-also used to test two concrete hypotheses against a sample (SBS_0001)
-whose own chemistry -- the highest sulfate and lowest alkalinity of its
-peer group -- pointed toward a non-carbonate explanation: adding
-sulfate or fluoride mineral phases as additional candidates, and
-substituting a different, higher-sulfate meteoric end-member in place
-of the standard one.
+**Forward reaction-path titration.** Because the inverse models for the Lower Sinter Terrace find no solution at the standard uncertainty, a forward method was built. Two named end-members are mixed at a known conservative fraction with a `MIX` block, and a `REACTION` block then steps one or more candidate mineral phases through net precipitation and net dissolution, comparing the modeled trajectory with the target sample at each step. This turns an open-ended search into a direct question: does a specific, named amount of dissolution or precipitation reconcile the model with the sample, and how much. It was also used to test two ideas for SBS_0001, whose chemistry (the highest sulfate and lowest alkalinity of its peer group) points away from a carbonate explanation: adding sulfate or fluoride phases, and substituting a higher-sulfate meteoric end-member.
 
-**Assumptions and limitations of the forward titration method.** Four
-are stated here plainly, since they bear directly on how much weight
-the results above can carry. First, every candidate phase supplied to a
-given run is titrated by the identical reaction-progress amount at each
-step -- there is no real constraint, chemical or otherwise, that the
-system actually dissolves or precipitates two phases in a one-to-one
-ratio; a result is only as good as that simplifying choice. Second, a
-single mixing fraction is held fixed for the whole titration, computed
-once from chloride before the reaction is explored -- the two are not
-jointly fit, so a real sample whose best explanation actually involves
-*both* a different mixing fraction and reaction could be mis-scored
-under this method. Third, the fit metric compares PHREEQC's modeled
-values directly against reported lab concentrations with no allowance
-for analytical uncertainty; a sample within ordinary analytical error
-of the model looks exactly as "wrong" as one with a real, geologically
-meaningful discrepancy. Fourth, and demonstrated concretely rather than
-just asserted, results are conditional on which candidate phases are
-supplied at all: the sensitivity test run against SBS_0001 (Chapter 4)
-shows the same target's best-fit error ranging from 44.5 percent down
-to 30.6 percent depending on phase and end-member choices alone, with
-no single choice fully resolving the underlying tension. SBRR's own
-status as a conservative, not theoretically pure, meteoric reference
-(stated above) compounds all four points, since every one of these
-tests inherits that same starting assumption.
+**Assumptions and limitations of the forward titration method.** Four limits bear on how much weight the results can carry. First, every phase supplied to a run is titrated by the same reaction-progress amount at each step, with no constraint that two phases dissolve or precipitate one to one. Second, one mixing fraction, computed from chloride, is held fixed during the titration, so a sample whose best explanation needs both a different fraction and a reaction could be mis-scored. Third, the fit compares modeled values with reported concentrations with no allowance for analytical error, so a sample within ordinary error of the model looks as wrong as one with a real discrepancy. Fourth, results depend on which phases are supplied: the sensitivity test on SBS_0001 (Chapter 4) moves its best-fit error from 44.5 to 30.6 percent on phase and end-member choices alone. SBRR's role as a conservative, not pure, meteoric reference carries into every one of these tests.
 
-**Geothermometer equilibrium checks.** Two Giggenbach ternary diagrams
-(Na-K-square-root-Mg maturity, and Cl-SO4-HCO3 water-source), plus a
-multicomponent mineral-equilibration diagram (Reed and Spycher 1984,
-using the already-stored PHREEQC temperature-sweep output), test
-whether the Na/K geothermometer is trustworthy here and whether any
-candidate mineral set converges on a single shared equilibration
-temperature, rather than relying on the quartz/chalcedony pair alone.
-No new PHREEQC execution is needed for any of the three.
+**Geothermometer equilibrium checks.** Two Giggenbach ternary diagrams (Na-K-square-root-Mg maturity and Cl-SO4-HCO3 water source) and a multicomponent mineral-equilibration diagram (Reed and Spycher, using the stored PHREEQC temperature-sweep output) test whether the Na/K geothermometer can be trusted here and whether any set of minerals converges on one equilibration temperature, instead of relying on the quartz/chalcedony pair alone. No new PHREEQC run is needed for any of the three.
 
 ## Fissure gas geochemistry
 
-Three real free-gas samples collected April 2026 at the Lower Sinter
+Three free-gas samples collected April 2026 at the Lower Sinter
 Terrace fissure by T. Fischer and K. Mtili (UCSB), with P. Ruprecht,
 give this project its first gas-chemistry dataset. One sample (NV26-2)
 carries a flagged contamination risk -- a possible Giggenbach-bottle

@@ -14,7 +14,7 @@ format:
 **Has thermal-water outflow at Steamboat changed since Sorey's own
 studies?** The clearest answer this proposal can give today is "not
 in kind, though perhaps somewhat in magnitude." The chloride-to-boron
-signature of the real thermal end-member is statistically
+signature of the thermal end-member is statistically
 distinguishable between the 1950-1991 baseline and the 2024-2026
 samples (19.6 versus 21.9, p = 0.015), but the shift is small, and its
 cause -- a genuine geochemical change of roughly 12%, versus a
@@ -25,7 +25,7 @@ paired chloride-and-discharge measurement (58.7 L/s) and its own
 2026 poster's multi-date average (roughly 27 L/s) both sit within,
 not clearly below, the range of discharge estimates reported across
 the 1955-2026 record, and Sorey and Spielman [@sorey2017] themselves
-document real seasonal variability large enough to explain much of
+document seasonal variability large enough to explain much of
 that spread on its own. What this proposal can rule out, at least
 provisionally, is a wholesale change in source water: the conservative
 Cl/B signature is essentially the same fluid three decades later, and
@@ -84,7 +84,7 @@ here rather than treated as settled in Chapter 4.
 
 ## What the new fissure gas data implies, and a lesson for future sampling
 
-The April 2026 fissure gas samples (Chapter 4) are a real, independent
+The April 2026 fissure gas samples (Chapter 4) are an independent
 line of evidence, not a redundant one: the gas-geothermometer pattern
 reproduces the same above/below-measured-temperature split already
 seen in the water geothermometers, strengthening the case for a single
@@ -93,14 +93,14 @@ flagged sample, NV26-2, is a concrete and low-cost lesson for the
 calibration field season proposed above -- future Giggenbach-bottle
 sampling at this terrace should avoid breaking through fresh pavement
 and should re-check bottle seals before leaving the site, rather than
-discovering a contamination risk after the fact. A first real PHREEQC
+discovering a contamination risk after the fact. A first PHREEQC
 gas-phase run (Chapter 4) -- equilibrating SBF_0001's water against a
-gas phase seeded with NV26-1's real composition -- found a real
+gas phase seeded with NV26-1's composition -- found a
 disequilibrium, not agreement: the modeled pH and carbonate saturation
 states both shift substantially away from what the water alone
 predicts. That is a genuinely useful constraint, not a dead end -- it
 argues against treating this system's gas and water as a single,
-always-equilibrated fluid, and motivates collecting a real time-paired
+always-equilibrated fluid, and motivates collecting a time-paired
 gas/water sample (rather than two days apart, as here) as a concrete
 next step for this thread.
 
@@ -111,9 +111,9 @@ for their Na/K estimates to be trusted, while flagging SBW_0001's own
 estimate as the least mature of the group -- a specific, testable
 reason to weight SBW_0001's Na/K result more cautiously than the
 others in any future interpretation, not just a generic caveat. The
-multicomponent mineral-equilibration diagram's honest negative result
+multicomponent mineral-equilibration diagram's negative result
 (no two minerals besides quartz/chalcedony converge within 15 degrees
-Celsius at any real sample) is itself informative: it rules out a
+Celsius at any sample) is itself informative: it rules out a
 simple, single-temperature multicomponent equilibrium as the right
 conceptual model for this system's near-surface chemistry, and
 supports treating quartz/chalcedony specifically, rather than a wider
@@ -130,17 +130,17 @@ to what this project already measures at Steamboat Creek and the
 downstream conductivity logger. What it shows now: the fissure and
 resort-tank parent fluids converge tightly on chloride and several
 other conservative species once each is corrected back toward its own
-reservoir temperature, and the three real thermal points' independently
+reservoir temperature, and the three thermal points' independently
 derived sodium/potassium reservoir temperatures sit within 7 degrees
-Celsius of each other -- both real, specific pieces of evidence for a
+Celsius of each other -- both specific pieces of evidence for a
 single shared deep source, not proof of one. What it does not yet
 show: a time-paired gas and water sample (the same limitation already
 flagged above), a converged gas-equilibration step for the resort-tank
-fluid specifically (a real PHREEQC convergence failure, reported rather
-than hidden), or any real digitized boundary between the terrace's
+fluid specifically (a PHREEQC convergence failure, reported rather
+than hidden), or any digitized boundary between the terrace's
 degassing and seepage zones -- the conceptual figure's framing of
 discrete point-source degassing versus diffuse creek-channel seepage is
-now backed by a real, calibrated thermal-infrared orthophoto (Chapter
+now backed by a calibrated thermal-infrared orthophoto (Chapter
 4), not just imagery shared informally, but it is still a qualitative,
 visual read, not a digitized layer. Turning that raster into an actual
 spatial layer (mirroring the `SBO_*` photo-survey-point convention
@@ -204,17 +204,17 @@ A separate inverse-modeling attempt -- the fissure and SBRR as
 end-members, SBW_0001 as the target, calcite and dolomite as candidate
 phases -- was infeasible at every uncertainty level up to 15 percent
 before the temperature correction. Re-run with the corrected
-temperature, it now finds a real feasible solution once the analytical
+temperature, it now finds a feasible solution once the analytical
 uncertainty is loosened to 12 percent or more: a roughly 70/30
 fissure/SBRR mixture plus net dissolution of calcite and dolomite. At
 the standard 5 percent uncertainty it remains infeasible, and at 10-11
 percent a single calcium residual shrinks cleanly toward zero without
 quite clearing it. Rather than treat the loosened-uncertainty result as
 the final word, the same two end-members were also run forward at the
-standard, un-loosened uncertainty: mix them at their real conservative
+standard, un-loosened uncertainty: mix them at their conservative
 fraction, then explicitly titrate calcite and dolomite mass transfer
 across a wide range, in both directions, and compare the resulting
-trajectory to SBW_0001's real chemistry directly. This produced a
+trajectory to SBW_0001's chemistry directly. This produced a
 genuine interior optimum, not an artifact of where the search happened
 to stop -- a modest net dissolution of both minerals roughly halves the
 combined calcium, magnesium, and alkalinity error relative to pure
@@ -223,7 +223,7 @@ now reinforce each other on both the sign and the rough magnitude of
 the correction needed: net carbonate dissolution, on the order of a few
 times 1e-4 mol, not precipitation. They agree that two-end-member
 mixing alone is insufficient at standard analytical uncertainty and
-that real carbonate reaction is part of the explanation, while leaving
+that carbonate reaction is part of the explanation, while leaving
 open exactly what else is -- alkalinity in particular resists full
 reconciliation in both the inverse and the forward result. This is the
 kind of well-posed, forward question this system's data can actually
@@ -236,7 +236,7 @@ uncertainty further as the only lever.
 eruption question, and for the Cl-conductivity work.** Treating the
 mixing, reaction-path, and geothermometer work above as a one-time
 baseline rather than a refinement target (an explicit scoping choice
-for this proposal) still produces a real answer to the connectivity
+for this proposal) still produces an answer to the connectivity
 question this thesis cares about: wells, springs, and the seep at the
 Lower Sinter Terrace share one deep source by Na/K reservoir
 temperature, but diverge consistently in near-surface process --
@@ -300,6 +300,7 @@ pressure as sufficient causes in 1986-89 also supplies the checklist this
 project is following for 2022-2025: barometric efficiency, a 2025-26 earthquake
 window, and the December 2025 storm have been examined, while the 2024
 earthquake cluster's effect on heads and earth tides remain open; a 1938-2026 Reno precipitation record now shows no drought during the 2023-2025 seep development (descriptive, offsite station).
+
 ## The chemistry-first modeling principle, and what it implies going forward
 
 A theme running through Chapters 2 and 3 is worth restating here
@@ -310,7 +311,7 @@ genuinely distinct, chemically credible end-members, not from which
 samples happen to be close together on a map. Two locations can be
 close and hydraulically unconnected, or far apart and connected
 through a fracture network that a map alone would not suggest. The
-real mixing model already run in this project followed this logic --
+mixing model already run in this project followed this logic --
 its two end-members were chosen because they are chemically distinct
 (chloride concentrations of 815 and 45 mg/L), not because they are
 near each other -- and the same discipline should be carried forward
@@ -324,14 +325,14 @@ Three roadblocks currently limit how far this work can go, and they
 are listed here in the order that resolving each one unblocks the
 next.
 
-1. **No real chloride sample yet overlaps the conductivity-logger
+1. **No chloride sample yet overlaps the conductivity-logger
    deployment window.** This blocks the entire chloride-conductivity
    calibration objective (Chapter 4's Monte Carlo result is a
-   preparatory analysis, not yet a real calibration) and blocks real,
+   preparatory analysis, not yet a calibration) and blocks
    time-paired end-member selection for PHREEQC mixing and inverse
    modeling. Extending the conductivity record through 2026-10-10
    (Chapter 4) does not by itself resolve this -- checked directly
-   against the database as of this writing, zero real chloride
+   against the database as of this writing, zero chloride
    samples fall after the loggers' 2026-07-15 deployment start. It is
    resolved only by collecting new chloride samples during an active
    logger deployment -- exactly the campaign proposed in Chapter 6,
@@ -339,9 +340,9 @@ next.
    rather than waiting for a later field season, since the loggers
    are already running.
 2. **Too few wells inside the Steamboat field itself have current,
-   usable water-level data.** This blocks a real, field-specific
+   usable water-level data.** This blocks a field-specific
    potentiometric surface and a site-specific barometric efficiency
-   (Chapter 4's two real barometric-efficiency values come from wells
+   (Chapter 4's two barometric-efficiency values come from wells
    outside the field, in the wider South Truckee Meadows basin, and
    should not be treated as representative of a true thermal well or
    spring). A standing data request to NDEP for daily water levels and
@@ -359,17 +360,17 @@ next.
 
 ## What resolving these would make possible
 
-Once real, temporally-paired chloride and conductance samples exist,
-a genuine calibration regression (not a synthetic self-test) can be
+Once temporally-paired chloride and conductance samples exist,
+a calibration regression (not a synthetic self-test) can be
 fit, and the resulting relationship can be used to reconstruct a
 continuous chloride-flux record, and by extension a continuous
 discharge estimate, rather than the single-date or multi-date-average
 snapshots this proposal currently reports. Once field-specific water
-levels exist, a real potentiometric surface can be interpolated in
+levels exist, a potentiometric surface can be interpolated in
 ArcGIS around the Lower Sinter Terrace, giving an independent,
 non-chemical line of evidence about flow direction to compare against
 the facies and mixing results in Chapter 4. Once fault geometry
-exists, a real Leapfrog model can be built from well collars,
+exists, a Leapfrog model can be built from well collars,
 completions, and the digitized structure, letting the chemistry-first
 mixing results be tested against an actual candidate geometry for the
 first time, and providing the hydrostratigraphic zonation a future
@@ -383,19 +384,19 @@ during the coming field season.
 A full MODFLOW-style groundwater flow model is the natural longer-term
 destination for this line of work, but it depends on the Leapfrog
 model and the potentiometric surface both existing first, plus a real
-recharge estimate -- for which the one real precipitation-response
+recharge estimate -- for which the one precipitation-response
 signal already detected at a South Truckee Meadows monitoring well is
 a start, not a calibration. Expanded PHREEQC reaction-path and gas-
 geochemistry modeling (the D'Amore-Panichi gas geothermometer and
 gas-mixing modules are already built and validated against published
 Mariner and Janik [@mariner1995] values, but have never been run
-against this project's own real gas chemistry, because no real
+against this project's own gas chemistry, because no real
 dissolved-gas sample yet exists) would benefit from the same
 temporally-paired sampling this proposal's calibration campaign is
 designed to produce. Both are named here as explicit future work, not
 as part of the thesis this proposal describes.
 
-## Immediate next steps, given this session's new data
+## Immediate next steps, given the new data
 
 A handful of concrete, near-term actions follow directly from this
 round of data work, listed roughly in the order they can realistically
@@ -413,7 +414,7 @@ happen:
 2. **Keep re-downloading both conductivity loggers on a regular
    schedule**, ideally matched to the temperature-logger network's
    own cadence, so the two logger networks stop drifting apart in
-   coverage the way they had before this session's download.
+   coverage the way they had before the October download.
 3. **Send the Collar and Huntley [@collar1990] fault map to ArcGIS
    digitizing** -- still the single blocker standing between this
    project's real well/location data and a Leapfrog model, unchanged
@@ -434,8 +435,8 @@ happen:
    saturation-index-only read that the three springs sit uniformly close
    to the mixing curve: SBS_0002 needs almost no correction and SBS_0003
    fits well with a small one, but SBS_0001 shows the worst combined
-   Ca/Mg/Alkalinity fit of all four real targets even after titration,
-   because its real calcium and alkalinity pull the model in opposite
+   Ca/Mg/Alkalinity fit of all four targets even after titration,
+   because its calcium and alkalinity pull the model in opposite
    directions that a two-phase calcite/dolomite titration cannot
    reconcile within the physically available reaction-progress range.
 7. ~~Work out what is actually different about SBS_0001~~ **Partially
@@ -445,15 +446,15 @@ happen:
    improves on the baseline somewhat, and the single best result (the
    combined anhydrite-plus-fluorite-plus-Tick-Spring variant, scored
    honestly on its own full chemistry) reaches 30.6 percent -- but none
-   fully resolves the tension, and a real Piper diagram built
+   fully resolves the tension, and a Piper diagram built
    independently of any PHREEQC modeling does not show SBS_0001
    visually separating toward the sulfate corner the way the hypothesis
-   predicted. The real additional chemistry at or near this spring that
+   predicted. The additional chemistry at or near this spring that
    would let this be resolved further has not been collected.
 8. **Follow up on the map/Piper-diagram pair's own implication.** The
    real finding that SBS_0001 and SBW_0001 sit only 109 meters apart yet
    behave this differently is itself now a concrete argument for
-   prioritizing a real synoptic sample at both points together, over
+   prioritizing a synoptic sample at both points together, over
    adding yet another PHREEQC sensitivity variant to either one in
    isolation.
 
@@ -479,7 +480,7 @@ knitr::include_graphics("../output/figures/manuscript/lindsey_vs_our_loggers.png
 
 The next steps that follow are practical. Walk the resort overflow and measure its flow, temperature, conductivity and chloride, with creek samples above and below its entry point, and retrieve the resort's water-right and pumping records. Ask Phil Busick and Gene Savoy for the history and logs of the Lower Terrace wells and the capped pipe. If the owners agree, ask Christopher Kratt (UNR) to run resistivity lines across the fissure zone and along the creek corridor, which would give the Leapfrog model fault and cap geometry between wells. Ask Ormat only for what bears on the Lower Terrace, and repeat the calibrated thermal flights each season, so that the 488 m^2^ baseline becomes a change metric.
 
-**Limitations on earthquake effects.** The earthquake comparison here cannot show or rule out a seismic effect on the springs, wells or creek. The catalog events near the field are small (magnitude 1.5 to 3) and most are 15 to 60 km away, only two comparisons involve an event within 15 km, conductance showed no steps, and the temperature steps were about twice the chance rate at loggers that already swing with weather and the daily cycle. A real test needs larger or closer events, a longer record and a control for weather.
+**Limitations on earthquake effects.** The earthquake comparison here cannot show or rule out a seismic effect on the springs, wells or creek. The catalog events near the field are small (magnitude 1.5 to 3) and most are 15 to 60 km away, only two comparisons involve an event within 15 km, conductance showed no steps, and the temperature steps were about twice the chance rate at loggers that already swing with weather and the daily cycle. A test needs larger or closer events, a longer record and a control for weather.
 
 **From the 2026 record to a proposed change in locations.** The 2026 record led to a refinement of the plan, which is proposed here and not yet carried out. SBRR was the upstream station all summer, but Steamboat Ditch joins just below it and, by field knowledge to be confirmed, supplies much of the flow below that point from about May to September, so, in summer, the low-flow SBRR reach is not the background water for the thermal reach. That limits the July to October provisional flux to a bound; the early-May estimate was sampled shortly before the ditch carried water and is not affected. At SBGG, dirt infill in Steamboat Creek before September 2026 lowered the flow at the site, and the logger began reading open air in late September, which removed its last weeks from the analysis. The proposed response is to use SBRR when the ditch is off, to use a station below the confluence with manual discharge measurements in summer, and to move SBGG upstream above the Cranes Ditch diversion, where flow is not reduced by the infill, with a hydrologist measuring channel transects at the new sites (see the sampling plan).
 
