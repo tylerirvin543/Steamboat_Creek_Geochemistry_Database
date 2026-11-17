@@ -1,0 +1,110 @@
+---
+title: "Using Specific Conductance as a Proxy for Chloride Discharge in the Steamboat Hills Geothermal System, Nevada"
+subtitle: "Thesis proposal (summary version)"
+author: "Tyler Irvin"
+date: today
+lang: en
+bibliography: references.bib
+csl: gsa.csl
+format:
+  pdf:
+    toc: false
+    number-sections: false
+    fig-pos: "H"
+    geometry: margin=1in
+    fontsize: 12pt
+    header-includes:
+      - \usepackage{setspace}
+      - \doublespacing
+      - \usepackage{caption}
+      - \captionsetup{font=small}
+  html:
+    toc: false
+    embed-resources: true
+  docx:
+    toc: false
+execute:
+  echo: false
+  warning: false
+  message: false
+---
+
+Tyler Irvin, M.S. Geology, University of Nevada, Reno. Advisor: Wendy Calvin. Committee: Alex Lutz and Jim Faulds. Nevada Bureau of Mines and Geology and the Great Basin Center for Geothermal Energy.
+
+*This is a summary of a longer technical proposal (`manuscript/00_thesis_proposal.qmd`), which holds the full methods, tables and supporting analyses and is available to the committee on request.*
+
+# Motivation
+
+In June 2025 an old, capped pipe on the Lower Sinter Terrace at Steamboat Hills, just south of Reno, erupted as a geyser, the first such activity documented there in decades. Capping it did not stop discharge. Thermal water moved laterally and now emerges at new seeps and vents across the terrace [@lindsey2026]. Lindsey and others traced the reawakening from renewed steaming in 2022 through discrete seeps and vents in 2024 to the eruption, and surveyed the terrace with calibrated thermal drones [@lindsey2026]. Whether this reflects a new source of thermal water or the same plumbing finding new routes to the surface is not known. A poster that Cary Lindsey and I presented in 2026 favored redistribution within an existing conduit network: the fissure's major-ion and isotope chemistry matched nearby springs and wells, and paired temperature loggers were inversely related (r = -0.68) [@irvinlindsey2026]. That conclusion rests on a handful of samples.
+
+The thermal water that leaves the system ends up in Steamboat Creek, and the standard way to track it is chloride, which is high in the thermal water and low in everything else. Chloride needs a laboratory sample, so the creek's thermal discharge has been estimated only a few times in seventy years. Specific conductance, by contrast, can be logged every few minutes at almost no cost. This thesis tests whether conductance can stand in for chloride at Steamboat, so that thermal outflow can be followed continuously after the eruption, and uses geochemical modeling to check that the proxy is chemically sound.
+
+# Background
+
+**Geology and history.** Steamboat is one of the longest-studied hydrothermal systems in the western United States. White and others established a framework of Mesozoic basement and Cretaceous granitic rock under Cenozoic volcanic cover, cut by the Steamboat Springs fault zone, and recorded geyser activity back to the 1860s [@white1964b; @white1968c]. The field has produced power since the mid-1980s and is operated by Ormat as a fully reinjected binary system [@dhakal2025]. The 2025 eruption is therefore the latest instance of a long-documented pattern, but the first for which a continuous record can be kept.
+
+**The chloride-discharge record.** White used chloride as a conservative tracer of thermal water and estimated about 810 gpm of thermal inflow to the creek in 1955 [@white1968c]. The method rests on two stations on Steamboat Creek, Rhodes Road (SBRR, upstream) and Bella Vista (SBBV, downstream). Thermal inflow between them is the difference in chloride flux divided by the thermal end-member concentration, $Q_{TW} = (Q_{BV}C_{BV} - Q_{RR}C_{RR})/C_{TW}$, with $C_{TW}$ = 820 mg/L [@sorey1992]. Sorey and Colvard documented the near-total end of natural spring flow on the main and low terraces in 1986 to 1989, attributing most of it to regional groundwater decline and a smaller share to geothermal production [@sorey1992]. Collar, working on the same decline, put more weight on production and measured thermal inflow of 490 to 660 gpm in 1988 to 1989, about 60 to 80 percent of the 1955 value [@collar1990thesis]. The two analyses disagree on the cause, which remains unresolved. Sorey and Spielman refined the method at SBRR and SBBV and reported an average of 60 L/s (range 45 to 90) for 2008 to 2016 [@sorey2008; @sorey2017]. Our poster estimated about 27 L/s after the eruption [@irvinlindsey2026].
+
+**Conductance as a proxy.** McCleskey and others showed that chloride and other geothermal solutes correlate linearly with conductance (R-squared above 0.9) in Yellowstone rivers, so that a logger can replace much of the sampling [@mccleskey2012; @mccleskey2016]. That has not been tested at Steamboat, where the creek is smaller, partly fed by irrigation ditches, and carries cold, carbonate-rich non-thermal water. Collar noted that an earlier conductivity-based estimate had to be revised for this reason [@collar1990thesis; @shump1985].
+
+```{r}
+#| results: asis
+cat("![Steamboat Hills events, 1950 to 2026. Left: the historical record, with the documented 1987 to 2022 absence of natural terrace spring flow shaded. Right: the 2022 to 2026 reactivation in Lindsey and others' stages.](../output/figures/manuscript/steamboat_timeline.png){width=75%}")
+```
+
+# Research questions and hypotheses
+
+The central question is whether continuous conductance can be used to estimate chloride discharge and geothermal outflow at Steamboat Hills, and what it shows about the system after the 2025 eruption. Four questions follow.
+
+1. **RQ1.** How stable is the chloride-conductance relationship through time and across site types? *Hypothesis:* no single calibration fits every site type, but the relation holds within a type.
+2. **RQ2.** What is the minimum chloride-sampling frequency that keeps a conductance-based flux estimate defensible? *Hypothesis:* daily to weekly sampling is adequate, and the open question is where it breaks down.
+3. **RQ3.** Is conductance driven mainly by conservative mixing, or by reactions that decouple it from chloride? *Hypothesis:* chloride is conservative, and conductance decouples from it where carbonate dissolves or precipitates.
+4. **RQ4.** Has geothermal outflow changed since the eruption? *Hypothesis:* thermal chloride has declined somewhat since the 1950 to 1991 baseline, but the thermal source's Cl/B signature is unchanged.
+
+# Methods
+
+**Conductivity loggers and the Monte Carlo design (RQ2).** Two conductance loggers have run in Steamboat Creek since 15 July 2026, at the USGS gauge near Rhodes Road (SBRR, upstream) and near Geiger Grade (SBGG, downstream). I screened the record for readings taken while loggers were out of water and excluded the three days before each retrieval. I then subsampled the measured record at intervals of 1 to 14 days, 200 random start days each, and scored how well the subsampled series reconstructs the full one. Because no chloride sample overlaps the loggers yet, this uses conductance as a stand-in for the dense chloride series.
+
+**Chloride-conductance calibration (RQ1).** I will begin an intensive window of daily samples at both stations for one to two weeks as soon as practical, then sample every two weeks (monthly as the fallback) through September 2027 so that winter baseflow, spring runoff, summer and fall are all covered, with two storm or snowmelt events. Samples are analyzed for chloride, major ions and trace elements, with isotopes on a subset to separate evaporative concentration from mixing. I will compare three model forms against time-ordered cross-validation: a linear regression of chloride on conductance and temperature, a generalized additive model, and a random forest [@mccleskey2012]. About 30 to 40 pairs is a reasoned target for a stable calibration across seasons; no paired data exist yet to compute a formal power analysis.
+
+**Geochemical modeling (RQ3).** I use PHREEQC [@phreeqc] to speciate every sample with complete chemistry (404 so far), to test whether carbonate or silica reactions could change conductance independently of chloride, and to follow the fluid from the fissure to the creek. This includes two-end-member mixing, a forward reaction-path titration, and a gas-informed reconstruction of the deep parent fluid from a paired fissure water and gas sample collected in 2026 with T. Fischer and P. Ruprecht. Sodium/potassium and quartz geothermometers [@giggenbach1988] provide independent reservoir temperatures.
+
+**Station refinement.** Steamboat Ditch joins the creek just below SBRR and, by my field knowledge still to be confirmed, supplies much of the flow below that point from about May to September. In that season SBRR is a low-flow reach above the confluence and is not the background water for the thermal reach. I therefore propose to use a station below the confluence in summer, to measure discharge there by hand, and to move SBGG upstream above the Cranes Ditch diversion, where dirt infill in the creek reduced flow and exposed the logger to air in September 2026. A hydrologist would measure channel transects at both sites in one field day.
+
+# Preliminary results
+
+**The 2026 discharge estimate.** On 1 May 2026, the one date with paired chloride and discharge at both stations, the creek chloride fluxes differ by 48.1 g/s, which at 820 mg/L is a thermal inflow of 58.7 plus or minus about 7.6 L/s (13 percent). Those samples were taken shortly before the ditch began carrying water, so it was not adding flow below SBRR. This sits within the 1955 to 2016 range of 30 to 90 L/s, so a single date does not show a change (@fig-discharge). It also differs from the poster's multi-date 27 L/s, but the two are not the same quantity, and the difference exceeds the single-date error.
+
+![Thermal-water discharge to Steamboat Creek, 1955 to 2026, on a creek-inflow basis except where labeled. White's 1955 point excludes wells and the 1964 point includes them; Shump's is conductivity based.](../output/figures/manuscript/discharge_through_time.png){#fig-discharge width=60%}
+
+**Sampling interval.** Reconstruction error of the conductance record grows smoothly with the interval and shows no cliff (@fig-mc). Daily sampling gives a mean error of 3.6 percent of mean conductance at SBRR and 3.1 percent at SBGG, every other day 4.3 and 4.1, weekly 6.9 and 7.8, and every two weeks 9.5 and 8.5. The worst case is larger, so a short daily window should precede any coarser interval. The chloride models have not yet been fit to measured pairs, because no chloride sample overlaps the loggers. Historical NDEP pairs at Rhodes Road (181 pairs) give a linear relation with an R-squared of 0.65, which serves as a reference for what the logger calibration should be compared with.
+
+![Mean reconstruction error of the 2026 conductance record against sampling interval, 200 random campaigns per interval, at SBRR and SBGG.](../output/figures/manuscript/sampling_frequency_error_curve.png){#fig-mc width=55%}
+
+**Then and now.** Chloride at the upstream control is unchanged across 38 years: Collar's Rhodes Road values of 17 and 24 mg/L in 1988 to 1989 fall inside the NDEP record (median 14 mg/L, 1987 to 2024), as does my May 2026 sample (17.1 mg/L) (@fig-histcl). The Cl/B ratio of the thermal end-member is similar in size but not identical across decades: 19.6 in 1950 to 1991 against 21.9 in 2024 to 2026 (p = 0.015). This is evidence against a wholesale change in source water. The shift of about 12 percent could reflect a difference in analytical method between eras or a real geochemical change, and the proposed sampling is designed to help decide which. Sodium/potassium geothermometers give reservoir temperatures of 173 to 190 C for the terrace's wells and springs, with quartz estimates well below measured temperature, the pattern expected for one cooling, diluting flow path rather than two unrelated waters.
+
+![Chloride at fissure-area wells, springs and creek sites with documented chemistry, 1950 to 2026.](../output/figures/manuscript/historical_cl_by_well.png){#fig-histcl width=60%}
+
+**Fluid evolution from the fissure to the creek.** A reconstruction of the deep parent fluid from the paired fissure gas and water sample gives a parent chloride of about 657 mg/L, within the historical range of 700 to 820 mg/L. Using SBRR as the dilute end, chloride-based mixing fractions place the terrace's springs and seep at 0.77 to 0.89 fissure-strength fluid, the nearby well SBW_0001 at 0.57, and SBBV at about 0.14 (@fig-mixing). Sodium behaves conservatively everywhere (within 6 percent), supporting chloride and sodium as tracers, while sulfate and alkalinity differ between springs and wells. Inverse modeling for SBW_0001 finds a feasible solution (a 70/30 fissure and SBRR mixture plus net carbonate dissolution) only when the allowed uncertainty is loosened to 12 percent, a result that agrees in sign and size with a forward titration. Mixing is therefore a good first description but does not fully explain every sample, and part of the thesis is to say where it fails.
+
+![Chloride-based mixing fraction of fissure-strength fluid for each downgradient target, with SBRR as the dilute end member.](../output/figures/manuscript/mixing_fraction_by_target.png){#fig-mixing width=55%}
+
+**What is not yet shown.** No chloride sample overlaps the logger record, so the calibration itself has not been tested; the July to October flux I estimated from the historical regression is a bound and not a measurement, because Steamboat Ditch may add water below SBRR in summer. The PHREEQC mixing and inverse runs use representative, not time-paired, end-members. And the thesis does not explain what caused the reactivation: injection, regional groundwater and the natural behavior of the conduit are all candidates that need operator data this project does not hold. A permit raised the field's authorized injection limit from 49,500 to 55,000 gpm two weeks before the eruption [@nevadadep2025uic]; the timing is suggestive, but the permit records limits and not the rates actually injected.
+
+# Expected products and timeline
+
+The work will deliver a tested relation between conductance and chloride at two creek stations with an error bound, a minimum sampling interval, a PHREEQC-based account of whether the proxy is chemically sound, and an updated picture of thermal discharge before and after the eruption. Two manuscripts are planned: one on conductivity-based chloride monitoring, and one on the hydrochemical evolution of the Lower Sinter Terrace after the eruption. Laboratory costs for biweekly creek sampling with isotopes are estimated from my first invoice at roughly $12,000 to $14,000.
+
+| Period | Work |
+|---------------------|----------------------------------------------------------|
+| Fall 2026 | Committee approval; confirm ditch season; set up new upstream station and transects |
+| Dec 2026 to Jan 2027 | Intensive daily calibration window; begin biweekly sampling |
+| Feb to Sep 2027 | Biweekly sampling through winter baseflow, runoff and summer; two storm or snowmelt events; logger downloads |
+| Spring to Summer 2027 | First calibration fit; Monte Carlo re-run on measured chloride; PHREEQC with time-paired end-members |
+| Fall 2027 | Final calibration, discharge comparison and thesis writing |
+| December 2027 | Defense |
+
+# References {.unnumbered}
+
+::: {#refs}
+:::
