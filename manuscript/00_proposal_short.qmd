@@ -143,8 +143,8 @@ The degree requires 31 graduate credits: 20 course credits (at least 10 at the 7
 | Semester | Courses | Credits |
 |----------------|----------------------------------------------------------------|----------|
 | Spring 2026 (taken) | NRES 701B Reproducible data science (2); GEOL 790 Seminar (1); GEOL 607 Earth resources and energy (3); ENGR 670 Geologic fundamentals of geothermal energy (3) | 9 |
-| Fall 2026 (current) | GEOL 790 Seminar (1); NRES 746 Advanced analytical methods (3); GE 684 Groundwater hydrology (3); GEOL 710 Introduction to UNR (1) | 8 |
-| Spring 2027 (planned) | One 700-level course; one 600-level course; GEOL 790 Seminar (1); GEOL 795 comprehensive exam (1), timing to confirm with advisor | to set |
+| Fall 2026 (current) | GEOL 790 Seminar (1); NRES 746 Advanced analytical methods (3); GE 684 Groundwater hydrology (3); GEOL 710 Introduction to UNR (1); GEOL 795 Comprehensive exam (1) | 9 |
+| Spring 2027 (planned) | One 700-level course; one 600-level course; GEOL 790 Seminar (1) | to set |
 | Fall 2027 (planned) | GEOL 797 thesis credits | to set |
 
 : Courses and credits by semester through the planned December 2027 defense. Thesis credits (10 in total) are distributed with my advisor. {#tbl-credits}
