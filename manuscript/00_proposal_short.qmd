@@ -144,13 +144,12 @@ The degree requires 31 graduate credits: 20 course credits (at least 10 at the 7
 |---------------|-------------------------|-------------------|--------|--------|--------|
 | Spring 2026 (taken) | NRES 701B (2); GEOL 790 (1) = 3 | GEOL 607 (3); ENGR 670 (3) = 6 | | | 9 |
 | Fall 2026 (current) | GEOL 790 (1); NRES 746 (3); GEOL 710 (1) = 5 | GE 684 (3) = 3 | 1 | | 9 |
-| Spring 2027 (planned) | GEOL 790 (1) plus one 700-level course | One 600-level course | | | to set |
-| Fall 2027 (planned) | | | | Thesis credits | to set |
-| **Total so far** | **8** | **9** | **1** | **0** | **18** |
+| Spring 2027 (planned) | One 700-level course (3); GEOL 790 (1) = 4 | | | 5 | 9 |
+| Fall 2027 (planned) | | | | 5 | 5 |
+| **Total after Fall 2027** | **12** | **9** | **1** | **10** | **32** |
 | **UNR requirement** | **at least 10 (20 course credits in total, 3 of them GEOL 790)** | | **1** | **10** | **31** |
-| **Still needed** | **at least 2** | **course credits to reach 20 in total (3 more)** | **0** | **10** | **13** |
 
-: Credits by level and semester against the UNR requirements, through the planned December 2027 defense. The 20 course credits are the 700-level and 600-level columns together, and GEOL 790 counts toward the 700-level credits. Thesis credits (10 in total) are distributed with my advisor. {#tbl-credits}
+: Credits by level and semester against the UNR requirements, through the planned December 2027 defense. The 20 course credits are the 700-level and 600-level columns together (21 planned), and GEOL 790 counts toward the 700-level credits. Thesis credits are split 5 and 5 over the last two semesters.
 
 # References {.unnumbered}
 
