@@ -48,7 +48,7 @@ The thermal water that leaves the system ends up in Steamboat Creek, and the sta
 **Conductance as a proxy.** McCleskey and others showed that chloride and other geothermal solutes correlate linearly with conductance (R-squared above 0.9) in Yellowstone rivers, so that a logger can replace much of the sampling [@mccleskey2012; @mccleskey2016]. That has not been tested at Steamboat, where the creek is smaller, partly fed by irrigation ditches, and carries cold, carbonate-rich non-thermal water. The approach also has limits. It can work only where thermal water, from discrete springs or diffuse seepage, reaches a moving body of water that integrates it; outflow that stays in the groundwater or passes the downstream station below the surface is not captured. And chloride is a true tracer only where the thermal fluid is dominantly sodium-chloride water, so the result should not be assumed to transfer to acid-sulfate, bicarbonate or blind systems. Steamboat meets both conditions: its thermal water is sodium-chloride type and discharges to Steamboat Creek. Collar noted that an earlier conductivity-based estimate had to be revised for this reason [@collar1990thesis; @shump1985].
 
 | Year | Event | Source |
-|------|------------------------------------------------------|------------------|
+|---------------|--------------------------------------------------|------------------------|
 | 1860-62 | Earliest published geyser observations at Steamboat | White, 1968 |
 | 1950-68 | Geology, hydrology and chloride tracer work; thermal inflow to the creek about 810 gpm in 1955 | White and others |
 | 1986 | Commercial power production begins | Dhakal and others, 2025 |
@@ -57,7 +57,7 @@ The thermal water that leaves the system ends up in Steamboat Creek, and the sta
 | 2008-16 | Thermal inflow averages 60 L/s (range 45 to 90) | Sorey and Spielman, 2008, 2017 |
 | 2022-24 | Steaming ground expands, then shifts to discrete seeps and vents | Lindsey and others, 2026 |
 | 30 May 2025 | Authorized injection limit raised from 49,500 to 55,000 gpm | NDEP permit |
-| June 2025 | Geyser eruption from a capped pipe; discharge moves laterally | Lindsey and others, 2026 |
+| June 2025 | Geyser eruption from a capped pipe; discharge moves laterally in the subsurface | Lindsey and others, 2026 |
 | 2026 | Poster (about 27 L/s); conductivity loggers installed 15 July | Irvin and Lindsey, 2026 |
 
 : Key events at Steamboat Hills and the Lower Sinter Terrace, 1860 to 2026. {#tbl-timeline}
@@ -79,7 +79,7 @@ The central question is whether continuous conductance can be used to estimate c
 
 **Geochemical modeling (RQ3).** I use PHREEQC [@phreeqc] to speciate every sample with complete chemistry (404 so far), to test whether carbonate or silica reactions could change conductance independently of chloride, and to follow the fluid from the fissure to the creek. This includes two-end-member mixing, a forward reaction-path titration, and a gas-informed reconstruction of the deep parent fluid from a paired fissure water and gas sample. The gas was collected in early May 2026 with T. Fischer and P. Ruprecht, a few days after water samples were taken at springs and wells around the Lower Sinter Terrace. Sodium/potassium and quartz geothermometers [@giggenbach1988] provide independent reservoir temperatures.
 
-**Station refinement.** SBRR and Bella Vista (SBBV) are the classic Sorey and Spielman sampling stations, which our poster repeated. The 2026 loggers at SBRR and SBGG showed that these points are not adequate for continuous monitoring, and I propose to change the locations. Steamboat Ditch joins the creek just below SBRR and, by my field knowledge still to be confirmed, supplies much of the flow below that point from about May to September. In that season SBRR is a low-flow reach above the confluence and is not the background water for the thermal reach. At SBGG the water was lower than expected because of dirt infill in the creek, and the logger was exposed to air in September 2026. I therefore propose a summer upstream station below the confluence, with discharge measured by hand there, and moving SBGG upstream above the Cranes Ditch diversion. A hydrologist would make a one-time survey of channel transects at both sites in one field day to measure the cross-sectional area. Visits that overlap the old and new points would tie them back to the Sorey record.
+**Station refinement.** SBRR and Bella Vista (SBBV) are the classic Sorey and Spielman sampling stations, which our poster repeated. The 2026 loggers at SBRR and SBGG showed that these points are not adequate for continuous monitoring, and I propose to change the locations. Steamboat Ditch joins the creek just below SBRR and, by my field knowledge still to be confirmed, supplies much of the flow below that point from about May to September. In that season SBRR is a low-flow reach above the confluence and is not the background water for the thermal reach. At SBGG the water was lower than expected because of dirt infill in the creek, and the logger was exposed to air in September 2026. I therefore propose a summer upstream station below the confluence, with discharge measured by hand there, and moving SBGG upstream above the Cranes Ditch diversion. On one field day I will make a one-time survey of channel transects at both sites to measure the cross-sectional area, with help from a committee member such as Alex Lutz or Kelly Loria; I already have a current meter. Visits that overlap the old and new points would tie them back to the Sorey record.
 
 # Preliminary results
 
@@ -91,9 +91,15 @@ The central question is whether continuous conductance can be used to estimate c
 
 ![Mean reconstruction error of the 2026 conductance record against sampling interval, 200 random campaigns per interval, at SBRR and SBGG.](../output/figures/manuscript/sampling_frequency_error_curve.png){#fig-mc width=55%}
 
-**Then and now.** Chloride at the upstream control is unchanged across 38 years: Collar's Rhodes Road values of 17 and 24 mg/L in 1988 to 1989 fall inside the NDEP record (median 14 mg/L, 1987 to 2024), as does my May 2026 sample (17.1 mg/L) (@fig-histcl). The Cl/B ratio of the thermal end-member is similar in size but not identical across decades: 19.6 in 1950 to 1991 against 21.9 in 2024 to 2026 (p = 0.015). This is evidence against a wholesale change in source water. The shift of about 12 percent could reflect a difference in analytical method between eras or a real geochemical change, and the proposed sampling is designed to help decide which. Sodium/potassium geothermometers give reservoir temperatures of 173 to 190 C for the Lower Sinter Terrace's wells and springs, with quartz estimates well below measured temperature, the pattern expected for one cooling, diluting flow path rather than two unrelated waters.
+**Then and now.** Chloride at the upstream control is unchanged across 38 years: Collar's Rhodes Road values of 17 and 24 mg/L in 1988 to 1989 fall inside the NDEP record (median 14 mg/L, 1987 to 2024), as does my May 2026 sample (17.1 mg/L) (@fig-histcl). The Cl/B ratio of the thermal end-member is similar in size but not identical across decades: 19.6 in 1950 to 1991 against 21.9 in 2024 to 2026 (p = 0.015). This is evidence against a wholesale change in source water. The shift of about 12 percent could reflect a difference in analytical method between eras, including different boron detection limits, or a real geochemical change, and the proposed sampling is designed to help decide which. Detection limits matter most at dilute sites such as SBRR, where NDEP reported boron at its 100 ug/L detection limit in nearly every sample, so Cl/B is not usable there; the thermal comparison above excludes those sites. Sodium/potassium geothermometers give reservoir temperatures of 173 to 190 C for the Lower Sinter Terrace's wells and springs, with quartz estimates well below measured temperature, the pattern expected for one cooling, diluting flow path rather than two unrelated waters.
 
 ![Chloride at fissure-area wells, springs and creek sites with documented chemistry, 1950 to 2026.](../output/figures/manuscript/historical_cl_by_well.png){#fig-histcl width=60%}
+
+**Where the sampled features are.** @fig-map shows my sampling locations over the thermal layer from the NBMG drone survey (O. Callahan), the same survey described by Lindsey and others [@lindsey2026]; the color scale tops out at 44 C and the yellow outlines are analyst annotations. At the north end, SBF_0001 and SBF_0002 are steaming rock crevices (fumaroles) along the fissure, and SBW_0003 is the shallow pipe, about 15 to 20 m deep, that erupted in June 2025 and was capped. SBW_0002 is the resort's outflow tank, pumped by an air-lift, and SBW_0001 is an abandoned, discharging well east of the creek on Phil Busick's property. To the south, SBS_0001 is a very low-flow, mossy, steamy and sulfurous spring out of rock, SBS_0002 is a seep in a rock cove on the west side, and a logger sits at a second spring (SBS_0006). In August 2026 Dave and I found a new bubbling hot spring among bedrock boulders near the creek, which I photographed on 27 September (@fig-hotspring). It has no name yet, and the photo's GPS position falls within a few meters of SBS_0002, so whether it is SBS_0002 or a separate vent beside it must be confirmed in the field.
+
+![Sampling locations over the thermal layer, Lower Sinter Terrace. Thermal layer: NBMG drone survey (O. Callahan). Brighter colors are warmer; the scale tops out at 44 C.](../output/figures/manuscript/proposal_location_map.png){#fig-map width=62%}
+
+![The new bubbling hot spring among bedrock boulders near Steamboat Creek, photographed 27 September 2026. The spring has not been named.](../output/figures/manuscript/field_photo_new_hot_spring_20260927.jpg){#fig-hotspring width=50%}
 
 **Fluid evolution from the fissure to the creek.** A reconstruction of the deep parent fluid from the paired fissure gas and water sample gives a parent chloride of about 657 mg/L, within the historical range of 700 to 820 mg/L. Using SBRR as the dilute end, chloride-based mixing fractions place the Lower Sinter Terrace's springs and seep at 0.77 to 0.89 fissure-strength fluid, the nearby well SBW_0001 at 0.57, and SBBV at about 0.14 (@fig-mixing). Sodium behaves conservatively everywhere (within 6 percent), supporting chloride and sodium as tracers, while sulfate and alkalinity differ between springs and wells. Inverse modeling for SBW_0001 finds a feasible solution (a 70/30 fissure and SBRR mixture plus net carbonate dissolution) only when the allowed uncertainty is loosened to 12 percent, a result that agrees in sign and size with a forward titration. Mixing is therefore a good first description but does not fully explain every sample, and part of the thesis is to say where it fails.
 
@@ -116,32 +122,32 @@ The work will deliver a tested relation between conductance and chloride at two 
 
 # Proposed costs
 
-Laboratory prices come from the invoice for the seven samples I have already had analyzed. The administration fee is assumed to be charged once per batch, which is unconfirmed, and shipping is not on the invoice, so each total carries a range. Isotopes are a planning estimate of $40 per sample, and 10 percent of samples are added for duplicates and blanks. All options assume a seven-day daily window and two storm or snowmelt events. Biweekly sampling with isotopes (B2) is my working choice, and monthly sampling without isotopes (A1) is the fallback if funding is short.
+Laboratory prices come from the invoice for the seven samples I have already had analyzed. The administration fee is assumed to be charged once per batch, which is unconfirmed, and shipping is not on the invoice, so each total carries a range. Isotopes are a planning estimate of $40 per sample. All options assume a seven-day daily window and two storm or snowmelt events, with no duplicates or blanks. Biweekly sampling with isotopes (B2) is my working choice, and monthly sampling without isotopes (A1) is the fallback if funding is short.
 
 ```{r}
 #| results: asis
 source('../scripts/analysis/sampling_cost_model.R')
-so <- sampling_options()
+options(steamboat.qa_frac = 0); so <- sampling_options()
 keep <- c(1, 2, 3, 4, 5)
-tab <- data.frame(Option = so$option[keep], `Chemistry visits` = so$chem_cadence[keep], `Isotope samples` = so$iso_samples[keep], `Chemistry samples (with QA)` = so$chem_samples[keep], `Central total` = fmt_usd(so$total[keep]), Range = paste0(fmt_usd(so$total_low[keep]), '-', fmt_usd(so$total_high[keep])), check.names = FALSE)
+tab <- data.frame(Option = so$option[keep], `Chemistry visits` = so$chem_cadence[keep], `Isotope samples` = so$iso_samples[keep], `Chemistry samples` = so$chem_samples[keep], `Central total` = fmt_usd(so$total[keep]), Range = paste0(fmt_usd(so$total_low[keep]), '-', fmt_usd(so$total_high[keep])), check.names = FALSE)
 source('../scripts/analysis/pipe_table.R')
 cat(pipe_table(tab, widths = c(14, 26, 10, 14, 12, 18), caption = 'Laboratory cost of the sampling options at the two creek stations. Option C adds four sites near the fissure, sampled monthly with isotopes.', id = 'tbl-costs'))
 ```
 
-Not included in the laboratory totals are the one-day hydrologist survey of channel transects, a current meter and staff gauges for manual discharge measurements, travel, and logger replacement. These will be quoted once the new station locations are set, and NBMG, UNR and collaborators are expected to supply some of them in kind.
+These are laboratory costs only; field equipment is already on hand.
 
 # Program of study
 
-| Semester | Course credits | GEOL 790 (seminar) | GEOL 795 (exam) | GEOL 797 (thesis) | Degree total |
-|-----------------|----------|----------|----------|----------|----------|
-| Fall 2025 | | | | | |
-| Spring 2026 | | | | | |
-| Fall 2026 | | | | | |
-| Spring 2027 | | | | | |
-| Fall 2027 | | | | | |
-| **Total** | | | | | |
+The degree requires 31 graduate credits: 20 course credits (at least 10 at the 700 level, including three semesters of GEOL 790 seminar), 1 credit of GEOL 795 comprehensive exam, and 10 thesis credits (GEOL 797). @tbl-credits lists what I have taken and what remains.
 
-: Courses and credits by semester through the planned December 2027 defense (to be completed). {#tbl-credits}
+| Semester | Courses | Credits |
+|----------------|----------------------------------------------------------------|----------|
+| Spring 2026 (taken) | NRES 701B Reproducible data science (2); GEOL 790 Seminar (1); GEOL 607 Earth resources and energy (3); ENGR 670 Geologic fundamentals of geothermal energy (3) | 9 |
+| Fall 2026 (current) | GEOL 790 Seminar (1); NRES 746 Advanced analytical methods (3); groundwater hydrology (number and credits to confirm); GEOL 710 Introduction to UNR (credits to confirm) | 4 plus to confirm |
+| Spring 2027 (planned) | One 700-level course; one 600-level course; GEOL 790 Seminar (1); GEOL 795 comprehensive exam (1), timing to confirm with advisor | to set |
+| Fall 2027 (planned) | GEOL 797 thesis credits | to set |
+
+: Courses and credits by semester through the planned December 2027 defense. Thesis credits (10 in total) are distributed with my advisor. {#tbl-credits}
 
 # References {.unnumbered}
 

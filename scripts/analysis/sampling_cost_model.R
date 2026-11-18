@@ -47,7 +47,7 @@ routine_months <- 10
 # Cost of one design. `visits` = routine visits to SBRR + SBGG; extra_* = add-on sites.
 design_cost <- function(visits, iso_samples, scenario = "central", months = routine_months,
                         window_days = 7, storm_events = 2, sites = 2,
-                        extra_sites = 0, extra_visits = 0, extra_iso = 0, qa_frac = 0.10) {
+                        extra_sites = 0, extra_visits = 0, extra_iso = 0, qa_frac = getOption("steamboat.qa_frac", 0.10)) {
   u <- unit_costs(); sc <- cost_scenarios[[scenario]]
   chem <- visits * sites + window_days * sites + storm_events * sites + extra_sites * extra_visits
   qa <- ceiling(chem * qa_frac)
