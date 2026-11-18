@@ -24,5 +24,12 @@ build_proposal_location_map <- function(con, out = "output/figures/manuscript/pr
     theme_minimal(base_size = 9) + theme(legend.position = "bottom")
   w <- 6.2; h <- w * diff(ex[3:4]) / diff(ex[1:2]) + 0.9
   ggsave(out, p, width = w, height = min(h, 8.5), dpi = 200, bg = "white")
+  # Legend cropped from the original calibrated orthophoto (same 7-44 C ramp; assumed to apply to this layer)
+  lg <- magick::image_crop(magick::image_read("output/figures/manuscript/tir_fissure_zoomin_calibrated_july2025.png"), "215x125+985+2070")
+  base <- magick::image_read(out)
+  lg <- magick::image_resize(magick::image_border(lg, "white", "4x4"), "220x")
+  bi <- magick::image_info(base)
+  base <- magick::image_composite(base, lg, offset = sprintf("+%d+%d", bi$width - 260, bi$height - 430))
+  magick::image_write(base, out)
   invisible(loc)
 }
